@@ -1,15 +1,18 @@
 import { useState } from 'react';
+import { useTaskContext } from '../context/TaskContext';
 
 const useTaskManager = () => {
   const [lastAction, setLastAction] = useState('No actions yet');
+  const { addTask: contextAddTask, deleteTask: contextDeleteTask, updateTask: contextUpdateTask } = useTaskContext();
 
   const addTask = () => {
-    console.log('Task added');
+    const newTask = contextAddTask();
     setLastAction('Add Task');
+    return newTask;
   };
 
   const deleteTask = () => {
-    console.log('Task deleted');
+    console.log('Delete Task - Select a task first');
     setLastAction('Delete Task');
   };
 
@@ -80,4 +83,4 @@ const useTaskManager = () => {
   };
 };
 
-export default useTaskManager; 
+export default useTaskManager;
