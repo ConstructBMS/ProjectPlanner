@@ -6,3 +6,25 @@ html,
 body {
   @apply h-full w-full bg-white text-sm font-sans;
 }
+
+/* Custom resize cursors */
+.cursor-col-resize {
+  cursor: col-resize;
+}
+
+.cursor-row-resize {
+  cursor: row-resize;
+}
+
+/* Smooth transitions for resizable elements */
+.resizable-transition {
+  transition: width 0.2s ease, height 0.2s ease;
+}
+
+/* Prevent text selection during resize */
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
