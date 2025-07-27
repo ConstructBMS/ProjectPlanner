@@ -41,65 +41,65 @@ export default function HomeTab() {
 
       {/* 2. Font Group (Disabled) */}
       <RibbonGroup title="Font" disabled={true}>
-        <RibbonButton 
-          icon="B" 
-          label="Bold" 
-          disabled={true} 
+        <RibbonButton
+          icon="B"
+          label="Bold"
+          disabled={true}
           className="font-bold text-xs"
         />
-        <RibbonButton 
-          icon="I" 
-          label="Italic" 
-          disabled={true} 
+        <RibbonButton
+          icon="I"
+          label="Italic"
+          disabled={true}
           className="italic text-xs"
         />
-        <RibbonButton 
-          icon="U" 
-          label="Underline" 
-          disabled={true} 
+        <RibbonButton
+          icon="U"
+          label="Underline"
+          disabled={true}
           className="underline text-xs"
         />
       </RibbonGroup>
 
       {/* 3. Tasks Group */}
       <RibbonGroup title="Tasks">
-        <RibbonButton 
-          icon="➕" 
-          label="Add Task" 
+        <RibbonButton
+          icon="➕"
+          label="Add Task"
           onClick={() => handleAction('Add Task')}
         />
-        <RibbonButton 
-          icon="❌" 
-          label="Delete Task" 
+        <RibbonButton
+          icon="❌"
+          label="Delete Task"
           onClick={() => handleAction('Delete Task')}
         />
-        <RibbonButton 
-          icon="🔗" 
-          label="Link Tasks" 
+        <RibbonButton
+          icon="🔗"
+          label="Link Tasks"
           onClick={() => handleAction('Link Tasks')}
         />
-        <RibbonButton 
-          icon="✖️" 
-          label="Unlink Tasks" 
+        <RibbonButton
+          icon="✖️"
+          label="Unlink Tasks"
           onClick={() => handleAction('Unlink Tasks')}
         />
       </RibbonGroup>
 
       {/* 4. Properties Group */}
       <RibbonGroup title="Properties">
-        <RibbonButton 
-          icon="📄" 
-          label="Task Details" 
+        <RibbonButton
+          icon="📄"
+          label="Task Details"
           onClick={() => handleAction('Task Details')}
         />
-        <RibbonButton 
-          icon="📝" 
-          label="Task Notes" 
+        <RibbonButton
+          icon="📝"
+          label="Task Notes"
           onClick={() => handleAction('Task Notes')}
         />
-        <RibbonButton 
-          icon="🔢" 
-          label="Add Code" 
+        <RibbonButton
+          icon="🔢"
+          label="Add Code"
           onClick={() => handleAction('Add Code')}
         />
       </RibbonGroup>
@@ -107,14 +107,14 @@ export default function HomeTab() {
       {/* 5. Grouping Group */}
       <RibbonGroup title="Grouping">
         <div className="flex flex-col gap-1">
-          <RibbonButton 
-            icon="🗂️" 
-            label="Create Group" 
+          <RibbonButton
+            icon="🗂️"
+            label="Create Group"
             onClick={() => handleAction('Create Group')}
           />
-          <RibbonButton 
-            icon="🚫" 
-            label="Ungroup" 
+          <RibbonButton
+            icon="🚫"
+            label="Ungroup"
             onClick={() => handleAction('Ungroup')}
           />
         </div>
@@ -122,33 +122,33 @@ export default function HomeTab() {
 
       {/* 6. Selection Group */}
       <RibbonGroup title="Selection">
-        <RibbonButton 
-          icon="✅" 
-          label="Select All" 
+        <RibbonButton
+          icon="✅"
+          label="Select All"
           onClick={() => handleAction('Select All')}
         />
-        <RibbonButton 
-          icon="❎" 
-          label="Deselect" 
+        <RibbonButton
+          icon="❎"
+          label="Deselect"
           onClick={() => handleAction('Deselect')}
         />
       </RibbonGroup>
 
       {/* 7. Navigation Group */}
       <RibbonGroup title="Navigation">
-        <RibbonButton 
-          icon="📆" 
-          label="Scroll to Today" 
+        <RibbonButton
+          icon="📆"
+          label="Scroll to Today"
           onClick={() => handleAction('Scroll to Today')}
         />
-        <RibbonButton 
-          icon="📂" 
-          label="Expand All" 
+        <RibbonButton
+          icon="📂"
+          label="Expand All"
           onClick={() => handleAction('Expand All')}
         />
-        <RibbonButton 
-          icon="📁" 
-          label="Collapse All" 
+        <RibbonButton
+          icon="📁"
+          label="Collapse All"
           onClick={() => handleAction('Collapse All')}
         />
       </RibbonGroup>
