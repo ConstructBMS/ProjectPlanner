@@ -147,13 +147,9 @@ const TreeNode = ({
 
 // Main SidebarTree component with forwardRef for external control
 const SidebarTree = forwardRef((props, ref) => {
-  // Start with programme and main categories expanded
+  // Start with only the root programme node expanded
   const [expandedIds, setExpandedIds] = useState(new Set([
-    'programme',
-    'resources',
-    'works',
-    'calendars',
-    'costcodes'
+    'programme'
   ]));
   const [selectedId, setSelectedId] = useState(null);
 
