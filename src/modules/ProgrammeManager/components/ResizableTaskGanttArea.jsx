@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React from 'react';
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import TaskGrid from './TaskGrid';
 import GanttChart from './GanttChart';
 
@@ -7,89 +8,28 @@ const ResizableTaskGanttArea = ({
   minGanttHeight = 100, 
   defaultTaskHeight = '50%' 
 }) => {
-  const [taskHeight, setTaskHeight] = useState(defaultTaskHeight);
-  const [isDragging, setIsDragging] = useState(false);
-  const startYRef = useRef(0);
-  const startHeightRef = useRef(0);
-  const containerRef = useRef(null);
-
-  const handleMouseDown = (e) => {
-    console.log('Mouse down on task/gantt divider');
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-    startYRef.current = e.clientY;
-    startHeightRef.current = containerRef.current?.offsetHeight || 0;
-    
-    // Add global mouse event listeners
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    
-    // Change cursor globally
-    document.body.style.cursor = 'row-resize';
-    document.body.style.userSelect = 'none';
-  };
-
-  const handleMouseMove = (e) => {
-    if (!isDragging || !containerRef.current) return;
-    
-    const containerHeight = containerRef.current.offsetHeight;
-    const deltaY = e.clientY - startYRef.current;
-    const taskHeightPx = Math.max(
-      minTaskHeight, 
-      Math.min(containerHeight - minGanttHeight, startHeightRef.current + deltaY)
-    );
-    
-    const taskHeightPercent = (taskHeightPx / containerHeight) * 100;
-    console.log('Resizing task/gantt:', { deltaY, taskHeightPercent, isDragging });
-    setTaskHeight(`${taskHeightPercent}%`);
-  };
-
-  const handleMouseUp = () => {
-    console.log('Mouse up on task/gantt divider');
-    setIsDragging(false);
-    
-    // Remove global event listeners
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleMouseUp);
-    
-    // Reset cursor and selection
-    document.body.style.cursor = '';
-    document.body.style.userSelect = '';
-  };
-
   return (
-    <div ref={containerRef} className="flex flex-col flex-1 overflow-hidden">
+    <PanelGroup direction="vertical" className="flex-1 overflow-hidden">
       {/* Task Grid Area */}
-      <div 
+      <Panel 
+        defaultSize={50} 
+        minSize={20} 
+        maxSize={80}
         className="overflow-auto border-b border-gray-300"
-        style={{ height: taskHeight, minHeight: `${minTaskHeight}px` }}
       >
         <TaskGrid />
-      </div>
+      </Panel>
       
       {/* Resizable Divider */}
-      <div
-        className="h-3 bg-gray-200 hover:bg-blue-400 cursor-row-resize transition-colors duration-200 flex items-center justify-center group"
-        onMouseDown={handleMouseDown}
-        title="Drag to resize task and Gantt areas"
-        style={{ 
-          position: 'relative',
-          zIndex: 10
-        }}
-      >
-        {/* Drag handle visual */}
+      <PanelResizeHandle className="h-3 bg-gray-200 hover:bg-blue-400 transition-colors duration-200 flex items-center justify-center group">
         <div className="h-1 w-8 bg-gray-400 group-hover:bg-blue-500 transition-colors duration-200 rounded-full" />
-      </div>
+      </PanelResizeHandle>
       
       {/* Gantt Chart Area */}
-      <div 
-        className="flex-1 overflow-auto"
-        style={{ minHeight: `${minGanttHeight}px` }}
-      >
+      <Panel className="overflow-auto">
         <GanttChart />
-      </div>
-    </div>
+      </Panel>
+    </PanelGroup>
   );
 };
 

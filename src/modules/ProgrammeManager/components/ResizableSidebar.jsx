@@ -1,75 +1,27 @@
-import React, { useState, useRef } from 'react';
+import React from 'react';
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import SidebarTree from './SidebarTree';
 
 const ResizableSidebar = ({ minWidth = 150, maxWidth = 400, defaultWidth = 250 }) => {
-  const [width, setWidth] = useState(defaultWidth);
-  const [isDragging, setIsDragging] = useState(false);
-  const startXRef = useRef(0);
-  const startWidthRef = useRef(0);
-
-  const handleMouseDown = (e) => {
-    console.log('Mouse down on sidebar divider');
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-    startXRef.current = e.clientX;
-    startWidthRef.current = width;
-    
-    // Add global mouse event listeners
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    
-    // Change cursor globally
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-  };
-
-  const handleMouseMove = (e) => {
-    if (!isDragging) return;
-    
-    const deltaX = e.clientX - startXRef.current;
-    const newWidth = Math.max(minWidth, Math.min(maxWidth, startWidthRef.current + deltaX));
-    console.log('Resizing sidebar:', { deltaX, newWidth, isDragging });
-    setWidth(newWidth);
-  };
-
-  const handleMouseUp = () => {
-    console.log('Mouse up on sidebar divider');
-    setIsDragging(false);
-    
-    // Remove global event listeners
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleMouseUp);
-    
-    // Reset cursor and selection
-    document.body.style.cursor = '';
-    document.body.style.userSelect = '';
-  };
-
   return (
-    <div className="flex h-full">
-      {/* Sidebar Content */}
-      <div 
+    <PanelGroup direction="horizontal" className="h-full">
+      <Panel 
+        defaultSize={25} 
+        minSize={15} 
+        maxSize={40}
         className="bg-white border-r border-gray-300 overflow-hidden"
-        style={{ width: `${width}px`, minWidth: `${width}px` }}
       >
         <SidebarTree />
-      </div>
+      </Panel>
       
-      {/* Resizable Divider */}
-      <div
-        className="w-3 bg-gray-200 hover:bg-blue-400 cursor-col-resize transition-colors duration-200 flex items-center justify-center group"
-        onMouseDown={handleMouseDown}
-        title="Drag to resize sidebar"
-        style={{ 
-          position: 'relative',
-          zIndex: 10
-        }}
-      >
-        {/* Drag handle visual */}
+      <PanelResizeHandle className="w-3 bg-gray-200 hover:bg-blue-400 transition-colors duration-200 flex items-center justify-center group">
         <div className="w-1 h-8 bg-gray-400 group-hover:bg-blue-500 transition-colors duration-200 rounded-full" />
-      </div>
-    </div>
+      </PanelResizeHandle>
+      
+      <Panel className="flex-1">
+        {/* This panel will be used by the parent component */}
+      </Panel>
+    </PanelGroup>
   );
 };
 
