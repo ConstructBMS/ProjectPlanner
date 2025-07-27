@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 
-const Tooltip = ({ 
-  children, 
-  label, 
+const Tooltip = ({
+  children,
+  label,
   position = 'top',
-  disabled = false 
+  disabled = false
 }) => {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -61,4 +61,4 @@ const Tooltip = ({
   );
 };
 
-export default Tooltip; 
+export default Tooltip;

@@ -1,6 +1,25 @@
 import React from 'react';
 import RibbonButton from '../shared/RibbonButton';
 import RibbonGroup from '../shared/RibbonGroup';
+import {
+  ScissorsIcon,
+  DocumentDuplicateIcon,
+  PaperClipIcon,
+  PlusIcon,
+  TrashIcon,
+  LinkIcon,
+  XMarkIcon,
+  DocumentIcon,
+  PencilIcon,
+  HashtagIcon,
+  FolderPlusIcon,
+  MinusCircleIcon,
+  CheckIcon,
+  XCircleIcon,
+  CalendarIcon,
+  ChevronDownIcon,
+  ChevronUpIcon
+} from '@heroicons/react/24/outline';
 
 export default function HomeTab() {
   // Click handlers for different actions
@@ -12,9 +31,21 @@ export default function HomeTab() {
     <div className="flex flex-row gap-3 p-3 bg-[#f9f9f9] border-t border-gray-200">
       {/* 1. Clipboard Group (Disabled) */}
       <RibbonGroup title="Clipboard" disabled={true}>
-        <RibbonButton icon="cut" label="Cut" disabled={true} />
-        <RibbonButton icon="copy" label="Copy" disabled={true} />
-        <RibbonButton icon="paste" label="Paste" disabled={true} />
+        <RibbonButton 
+          icon={<ScissorsIcon className="w-5 h-5 text-gray-700" />}
+          label="Cut" 
+          disabled={true} 
+        />
+        <RibbonButton 
+          icon={<DocumentDuplicateIcon className="w-5 h-5 text-gray-700" />}
+          label="Copy" 
+          disabled={true} 
+        />
+        <RibbonButton 
+          icon={<PaperClipIcon className="w-5 h-5 text-gray-700" />}
+          label="Paste" 
+          disabled={true} 
+        />
       </RibbonGroup>
 
       {/* 2. Font Group (Disabled) */}
@@ -45,22 +76,22 @@ export default function HomeTab() {
       {/* 3. Tasks Group */}
       <RibbonGroup title="Tasks">
         <RibbonButton 
-          icon="add" 
+          icon={<PlusIcon className="w-5 h-5 text-gray-700" />}
           label="Add Task" 
           onClick={() => handleAction('Add Task')}
         />
         <RibbonButton 
-          icon="delete" 
+          icon={<TrashIcon className="w-5 h-5 text-gray-700" />}
           label="Delete Task" 
           onClick={() => handleAction('Delete Task')}
         />
         <RibbonButton 
-          icon="link" 
+          icon={<LinkIcon className="w-5 h-5 text-gray-700" />}
           label="Link Tasks" 
           onClick={() => handleAction('Link Tasks')}
         />
         <RibbonButton 
-          icon="unlink" 
+          icon={<XMarkIcon className="w-5 h-5 text-gray-700" />}
           label="Unlink Tasks" 
           onClick={() => handleAction('Unlink Tasks')}
         />
@@ -69,17 +100,17 @@ export default function HomeTab() {
       {/* 4. Properties Group */}
       <RibbonGroup title="Properties">
         <RibbonButton 
-          icon="details" 
+          icon={<DocumentIcon className="w-5 h-5 text-gray-700" />}
           label="Task Details" 
           onClick={() => handleAction('Task Details')}
         />
         <RibbonButton 
-          icon="notes" 
+          icon={<PencilIcon className="w-5 h-5 text-gray-700" />}
           label="Task Notes" 
           onClick={() => handleAction('Task Notes')}
         />
         <RibbonButton 
-          icon="code" 
+          icon={<HashtagIcon className="w-5 h-5 text-gray-700" />}
           label="Add Code" 
           onClick={() => handleAction('Add Code')}
         />
@@ -89,12 +120,12 @@ export default function HomeTab() {
       <RibbonGroup title="Grouping">
         <div className="flex flex-col gap-1">
           <RibbonButton 
-            icon="group" 
+            icon={<FolderPlusIcon className="w-5 h-5 text-gray-700" />}
             label="Create Group" 
             onClick={() => handleAction('Create Group')}
           />
           <RibbonButton 
-            icon="ungroup" 
+            icon={<MinusCircleIcon className="w-5 h-5 text-gray-700" />}
             label="Ungroup" 
             onClick={() => handleAction('Ungroup')}
           />
@@ -104,12 +135,12 @@ export default function HomeTab() {
       {/* 6. Selection Group */}
       <RibbonGroup title="Selection">
         <RibbonButton 
-          icon="select" 
+          icon={<CheckIcon className="w-5 h-5 text-gray-700" />}
           label="Select All" 
           onClick={() => handleAction('Select All')}
         />
         <RibbonButton 
-          icon="deselect" 
+          icon={<XCircleIcon className="w-5 h-5 text-gray-700" />}
           label="Deselect" 
           onClick={() => handleAction('Deselect')}
         />
@@ -118,17 +149,17 @@ export default function HomeTab() {
       {/* 7. Navigation Group */}
       <RibbonGroup title="Navigation" isLast={true}>
         <RibbonButton 
-          icon="today" 
+          icon={<CalendarIcon className="w-5 h-5 text-gray-700" />}
           label="Scroll to Today" 
           onClick={() => handleAction('Scroll to Today')}
         />
         <RibbonButton 
-          icon="expand" 
+          icon={<ChevronDownIcon className="w-5 h-5 text-gray-700" />}
           label="Expand All" 
           onClick={() => handleAction('Expand All')}
         />
         <RibbonButton 
-          icon="collapse" 
+          icon={<ChevronUpIcon className="w-5 h-5 text-gray-700" />}
           label="Collapse All" 
           onClick={() => handleAction('Collapse All')}
         />

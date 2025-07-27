@@ -11,7 +11,7 @@ const RibbonGroup = ({ title, children, disabled = false, isLast = false }) => {
       >
         <div className="flex gap-1 mb-2">{children}</div>
       </div>
-      
+
       {/* Group Name Bar */}
       <div className="w-full mt-1">
         <div className="border-t border-gray-300 pt-1">
@@ -24,4 +24,4 @@ const RibbonGroup = ({ title, children, disabled = false, isLast = false }) => {
   );
 };
 
-export default RibbonGroup; 
+export default RibbonGroup;
