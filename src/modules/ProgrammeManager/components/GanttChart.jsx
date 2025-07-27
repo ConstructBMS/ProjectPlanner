@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useTaskContext } from '../context/TaskContext';
 
 const GanttChart = () => {
-  const { tasks, taskLinks } = useTaskContext();
+  const { tasks, taskLinks, selectedTaskId, selectTask } = useTaskContext();
   const chartRef = useRef(null);
   const taskRefs = useRef({});
   const [chartDimensions, setChartDimensions] = useState({ width: 0, height: 0 });
@@ -17,6 +17,17 @@ const GanttChart = () => {
       });
     }
   }, [tasks]);
+
+  // Handle task bar click
+  const handleTaskClick = (taskId, e) => {
+    e.stopPropagation(); // Prevent chart background click
+    selectTask(taskId);
+  };
+
+  // Handle chart background click to clear selection
+  const handleChartClick = () => {
+    selectTask(null);
+  };
 
   // Helper function to calculate task bar position and dimensions
   const getTaskBarInfo = (taskId) => {
@@ -152,12 +163,12 @@ const GanttChart = () => {
         <h3 className="text-sm font-semibold text-gray-700">Gantt Chart</h3>
         <p className="text-xs text-gray-500 mt-1">Timeline and dependencies</p>
         <p className="text-xs text-blue-600 mt-1">
-          💡 Tip: Linked tasks show dependency arrows
+          💡 Tip: Click task bars to select • Linked tasks show dependency arrows
         </p>
       </div>
 
       {/* Chart Container */}
-      <div className="flex-1 overflow-auto" ref={chartRef}>
+      <div className="flex-1 overflow-auto" ref={chartRef} onClick={handleChartClick}>
         <div className="min-w-full min-h-full relative">
           {/* SVG Overlay for Arrows */}
           <svg
@@ -186,6 +197,7 @@ const GanttChart = () => {
               const duration = getTaskDuration(task.startDate, task.endDate);
               const leftPosition = getTaskPosition(task.startDate);
               const width = duration * 40; // 40px per day
+              const isSelected = selectedTaskId === task.id;
 
               return (
                 <div
@@ -194,8 +206,14 @@ const GanttChart = () => {
                   style={{ height: '40px' }}
                 >
                   {/* Task Name */}
-                  <div className="w-48 bg-white border-r border-gray-200 p-2 flex items-center">
-                    <div className="text-sm text-gray-800 truncate">{task.name}</div>
+                  <div className={`w-48 border-r border-gray-200 p-2 flex items-center ${
+                    isSelected ? 'bg-blue-50' : 'bg-white'
+                  }`}>
+                    <div className={`text-sm truncate ${
+                      isSelected ? 'font-semibold text-blue-800' : 'text-gray-800'
+                    }`}>
+                      {task.name}
+                    </div>
                   </div>
 
                   {/* Timeline Area */}
@@ -205,13 +223,18 @@ const GanttChart = () => {
                       ref={(el) => {
                         if (el) taskRefs.current[task.id] = el;
                       }}
-                      className="absolute top-2 h-6 bg-blue-500 rounded-sm shadow-sm cursor-pointer hover:bg-blue-600 transition-colors duration-150"
+                      className={`absolute top-2 h-6 rounded-sm shadow-sm cursor-pointer transition-all duration-150 ${
+                        isSelected 
+                          ? 'bg-blue-600 border-2 border-blue-400 shadow-lg hover:bg-blue-700' 
+                          : 'bg-blue-500 hover:bg-blue-600'
+                      }`}
                       style={{
                         left: `${leftPosition}px`,
                         width: `${width}px`,
                         minWidth: '20px'
                       }}
-                      title={`${task.name} (${task.startDate} to ${task.endDate})`}
+                      title={`${task.name} (${task.startDate} to ${task.endDate})${isSelected ? ' - Selected' : ''}`}
+                      onClick={(e) => handleTaskClick(task.id, e)}
                     >
                       {/* Task Bar Label */}
                       <div className="px-2 py-1 text-xs text-white font-medium truncate">
@@ -230,6 +253,7 @@ const GanttChart = () => {
       <div className="bg-gray-50 border-t px-4 py-2">
         <div className="text-xs text-gray-500">
           {tasks.length} task{tasks.length !== 1 ? 's' : ''} • {taskLinks.length} dependency{taskLinks.length !== 1 ? 'ies' : 'y'} • 
+          {selectedTaskId ? ` Selected: ${tasks.find(t => t.id === selectedTaskId)?.name || 'Unknown'}` : ' No task selected'} • 
           Blue bars show task duration • Gray arrows show dependencies
         </div>
       </div>
