@@ -61,16 +61,6 @@ const useTaskManager = () => {
     setLastAction('Unlink Tasks');
   };
 
-  const openTaskDetails = () => {
-    if (!selectedTaskId) {
-      console.log('Open Task Details - No task selected');
-      setLastAction('Open Task Details - No selection');
-      return;
-    }
-    console.log('Open task details panel for task:', selectedTaskId);
-    setLastAction('Open Task Details');
-  };
-
   const openTaskNotes = () => {
     if (!selectedTaskId) {
       console.log('Open Task Notes - No task selected');
@@ -139,7 +129,6 @@ const useTaskManager = () => {
     deleteTask,
     linkTasks,
     unlinkTasks,
-    openTaskDetails,
     openTaskNotes,
     addCode,
     createGroup,
