@@ -477,6 +477,52 @@ export const TaskProvider = ({ children }) => {
     console.log(`Unlinked task ${fromId} → ${toId}`);
   };
 
+  // Task reordering functions
+  const reorderTasks = (sourceIndex, destinationIndex) => {
+    setTasks(prevTasks => {
+      const updated = [...prevTasks];
+      const [moved] = updated.splice(sourceIndex, 1);
+      updated.splice(destinationIndex, 0, moved);
+      return updated;
+    });
+    
+    console.log(`Task reordered from position ${sourceIndex} to ${destinationIndex}`);
+  };
+
+  // Reorder tasks by ID (for drag and drop with hierarchical data)
+  const reorderTasksById = (sourceId, destinationId, position = 'after') => {
+    setTasks(prevTasks => {
+      const sourceIndex = prevTasks.findIndex(task => task.id === sourceId);
+      const destinationIndex = prevTasks.findIndex(task => task.id === destinationId);
+      
+      if (sourceIndex === -1 || destinationIndex === -1) {
+        console.warn('Source or destination task not found');
+        return prevTasks;
+      }
+      
+      const updated = [...prevTasks];
+      const [moved] = updated.splice(sourceIndex, 1);
+      
+      // Adjust destination index based on position
+      let newIndex = destinationIndex;
+      if (position === 'after') {
+        newIndex = destinationIndex + 1;
+      } else if (position === 'before') {
+        newIndex = destinationIndex;
+      }
+      
+      // Adjust for the removed item
+      if (sourceIndex < newIndex) {
+        newIndex -= 1;
+      }
+      
+      updated.splice(newIndex, 0, moved);
+      return updated;
+    });
+    
+    console.log(`Task ${sourceId} moved ${position} ${destinationId}`);
+  };
+
   const value = {
     tasks,
     selectedTaskId,
@@ -501,6 +547,9 @@ export const TaskProvider = ({ children }) => {
     groupTasks,
     ungroupTask,
     toggleGroupCollapse,
+    // Reordering functions
+    reorderTasks,
+    reorderTasksById,
   };
 
   return (

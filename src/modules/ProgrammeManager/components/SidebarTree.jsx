@@ -1,6 +1,27 @@
 import React, { useState, forwardRef, useImperativeHandle } from 'react';
-import { ChevronRightIcon, ChevronDownIcon, FolderIcon } from '@heroicons/react/24/outline';
+import { ChevronRightIcon, ChevronDownIcon, FolderIcon, Bars3Icon } from '@heroicons/react/24/outline';
 import { useTaskContext } from '../context/TaskContext';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragOverlay,
+  defaultDropAnimationSideEffects,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 // Mock tree data for programme structure
 const treeData = [
@@ -87,19 +108,45 @@ const TreeNode = ({ node, depth = 0, expandedIds, onToggle, onSelect, selectedId
   );
 };
 
-// TaskNode component for hierarchical tasks
-const TaskNode = ({ task, depth = 0, onToggle, onSelect, selectedId }) => {
+// Sortable TaskNode component for hierarchical tasks
+const SortableTaskNode = ({ task, depth = 0, onToggle, onSelect, selectedId }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id });
+
   const hasChildren = task.children && task.children.length > 0;
   const isSelected = selectedId === task.id;
 
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
   return (
-    <div>
+    <div ref={setNodeRef} style={style}>
       <div
-        className={`py-1 pl-[${1 + depth}rem] flex items-center gap-1 hover:bg-blue-100 cursor-pointer ${
+        className={`py-1 pl-[${1 + depth}rem] flex items-center gap-1 hover:bg-blue-100 cursor-pointer transition-all duration-200 ${
           isSelected ? 'bg-blue-100' : ''
-        }`}
+        } ${isDragging ? 'shadow-lg bg-white border border-blue-300 rounded scale-105' : ''}`}
         onClick={() => onSelect(task.id)}
       >
+        {/* Drag Handle */}
+        <div
+          {...attributes}
+          {...listeners}
+          className="w-4 h-4 flex items-center justify-center cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 transition-colors"
+          title="Drag to reorder task"
+        >
+          <Bars3Icon className="w-3 h-3" />
+        </div>
+
+        {/* Group Toggle Button */}
         {task.isGroup && (
           <button
             onClick={(e) => {
@@ -115,7 +162,11 @@ const TaskNode = ({ task, depth = 0, onToggle, onSelect, selectedId }) => {
             )}
           </button>
         )}
+
+        {/* Group Icon */}
         {task.isGroup && <FolderIcon className="w-4 h-4 text-blue-500" />}
+
+        {/* Task Name */}
         <span className={`text-sm ${task.isGroup ? 'font-semibold' : ''} text-gray-800`}>
           {task.name}
         </span>
@@ -123,7 +174,7 @@ const TaskNode = ({ task, depth = 0, onToggle, onSelect, selectedId }) => {
       {hasChildren && task.isExpanded && (
         <div className="ml-2">
           {task.children.map((child) => (
-            <TaskNode
+            <SortableTaskNode
               key={child.id}
               task={child}
               depth={depth + 1}
@@ -138,15 +189,63 @@ const TaskNode = ({ task, depth = 0, onToggle, onSelect, selectedId }) => {
   );
 };
 
+// Drag Overlay component for visual feedback
+const DragOverlayComponent = ({ task, depth = 0 }) => {
+  const hasChildren = task.children && task.children.length > 0;
+
+  return (
+    <div className="py-1 pl-[${1 + depth}rem] flex items-center gap-1 bg-blue-50 border border-blue-300 rounded shadow-lg">
+      {/* Drag Handle */}
+      <div className="w-4 h-4 flex items-center justify-center text-gray-600">
+        <Bars3Icon className="w-3 h-3" />
+      </div>
+
+      {/* Group Toggle Button */}
+      {task.isGroup && (
+        <div className="w-4 h-4 flex items-center justify-center">
+          <ChevronDownIcon className="w-4 h-4 text-gray-600" />
+        </div>
+      )}
+
+      {/* Group Icon */}
+      {task.isGroup && <FolderIcon className="w-4 h-4 text-blue-500" />}
+
+      {/* Task Name */}
+      <span className={`text-sm ${task.isGroup ? 'font-semibold' : ''} text-gray-800`}>
+        {task.name}
+      </span>
+    </div>
+  );
+};
+
 // Main SidebarTree component with forwardRef for external control
 const SidebarTree = forwardRef((props, ref) => {
-  const { getHierarchicalTasks, selectTask, selectedTaskId, toggleGroupCollapse } = useTaskContext();
+  const { 
+    getHierarchicalTasks, 
+    selectTask, 
+    selectedTaskId, 
+    toggleGroupCollapse,
+    reorderTasksById
+  } = useTaskContext();
   
   // Start with only the root programme node expanded
   const [expandedIds, setExpandedIds] = useState(new Set([
     'programme'
   ]));
   const [selectedId, setSelectedId] = useState(null);
+  const [activeTask, setActiveTask] = useState(null);
+
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const toggleNode = (id) => {
     setExpandedIds((prev) => {
@@ -173,6 +272,28 @@ const SidebarTree = forwardRef((props, ref) => {
     selectTask(taskId);
   };
 
+  // Handle drag start
+  const handleDragStart = (event) => {
+    const { active } = event;
+    const task = getHierarchicalTasks().find(t => t.id === active.id);
+    setActiveTask(task);
+  };
+
+  // Handle drag end
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+
+    setActiveTask(null);
+
+    if (active.id !== over.id) {
+      const sourceId = active.id;
+      const destinationId = over.id;
+      
+      // Reorder the task
+      reorderTasksById(sourceId, destinationId, 'after');
+    }
+  };
+
   // Expose methods via forwardRef
   useImperativeHandle(ref, () => ({
     expandAll: () => {
@@ -194,6 +315,7 @@ const SidebarTree = forwardRef((props, ref) => {
   }));
 
   const hierarchicalTasks = getHierarchicalTasks();
+  const taskIds = hierarchicalTasks.map(task => task.id);
 
   return (
     <div className="h-full flex flex-col bg-white">
@@ -225,7 +347,7 @@ const SidebarTree = forwardRef((props, ref) => {
         {/* Divider */}
         <div className="border-t border-gray-200 mx-2 my-2"></div>
 
-        {/* Tasks */}
+        {/* Tasks with Drag and Drop */}
         <div className="p-2">
           <h4 className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">
             Tasks
@@ -235,15 +357,39 @@ const SidebarTree = forwardRef((props, ref) => {
               No tasks available
             </div>
           ) : (
-            hierarchicalTasks.map((task) => (
-              <TaskNode
-                key={task.id}
-                task={task}
-                onToggle={handleTaskToggle}
-                onSelect={handleTaskSelect}
-                selectedId={selectedTaskId}
-              />
-            ))
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={taskIds}
+                strategy={verticalListSortingStrategy}
+              >
+                {hierarchicalTasks.map((task) => (
+                  <SortableTaskNode
+                    key={task.id}
+                    task={task}
+                    onToggle={handleTaskToggle}
+                    onSelect={handleTaskSelect}
+                    selectedId={selectedTaskId}
+                  />
+                ))}
+              </SortableContext>
+              
+              <DragOverlay dropAnimation={{
+                sideEffects: defaultDropAnimationSideEffects({
+                  styles: {
+                    active: {
+                      opacity: '0.5',
+                    },
+                  },
+                }),
+              }}>
+                {activeTask ? <DragOverlayComponent task={activeTask} /> : null}
+              </DragOverlay>
+            </DndContext>
           )}
         </div>
       </div>
@@ -252,7 +398,8 @@ const SidebarTree = forwardRef((props, ref) => {
       <div className="bg-gray-50 border-t px-4 py-2">
         <div className="text-xs text-gray-500">
           {hierarchicalTasks.length} task{hierarchicalTasks.length !== 1 ? 's' : ''} • 
-          {selectedTaskId ? ` Selected: ${hierarchicalTasks.find(t => t.id === selectedTaskId)?.name || 'Unknown'}` : ' No task selected'}
+          {selectedTaskId ? ` Selected: ${hierarchicalTasks.find(t => t.id === selectedTaskId)?.name || 'Unknown'}` : ' No task selected'} •
+          💡 Drag the ☰ icon to reorder tasks
         </div>
       </div>
     </div>
