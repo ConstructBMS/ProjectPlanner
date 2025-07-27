@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTaskContext } from '../context/TaskContext';
+import { ChevronRightIcon, ChevronDownIcon, FolderIcon } from '@heroicons/react/24/outline';
 
 const TaskGrid = () => {
   const {
@@ -12,8 +13,12 @@ const TaskGrid = () => {
     updateTask,
     selectTask,
     selectMultipleTasks,
-    handleTaskClickForLinking
+    handleTaskClickForLinking,
+    getVisibleTasks,
+    toggleGroupCollapse
   } = useTaskContext();
+
+  const visibleTasks = getVisibleTasks();
 
   const handleDeleteTask = (taskId, e) => {
     e.stopPropagation(); // Prevent row selection when clicking delete
@@ -35,6 +40,11 @@ const TaskGrid = () => {
     // Normal selection logic
     const isMultiSelect = e.shiftKey || e.ctrlKey || e.metaKey;
     selectMultipleTasks(taskId, isMultiSelect);
+  };
+
+  const handleGroupToggle = (taskId, e) => {
+    e.stopPropagation(); // Prevent row selection when clicking expand/collapse
+    toggleGroupCollapse(taskId);
   };
 
   const getStatusColor = (status) => {
@@ -112,14 +122,14 @@ const TaskGrid = () => {
               🔗 Linking Mode Active - Click tasks to create dependencies
             </span>
           ) : (
-            '💡 Tip: Shift+Click to select multiple tasks for linking'
+            '💡 Tip: Shift+Click to select multiple tasks for grouping'
           )}
         </p>
       </div>
 
       {/* Task Table */}
       <div className="flex-1 overflow-auto">
-        {tasks.length === 0 ? (
+        {visibleTasks.length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-500">
             <div className="text-center">
               <div className="text-2xl mb-2">📋</div>
@@ -141,10 +151,11 @@ const TaskGrid = () => {
 
             {/* Task Rows */}
             <div className="divide-y divide-gray-200">
-              {tasks.map((task) => {
+              {visibleTasks.map((task) => {
                 const isSelected = selectedTaskId === task.id;
                 const isMultiSelected = selectedTaskIds.includes(task.id);
                 const isLinkStart = linkingMode && linkStartTaskId === task.id;
+                const indentLevel = task.depth || 0;
 
                 return (
                   <div
@@ -152,15 +163,41 @@ const TaskGrid = () => {
                     className={`grid grid-cols-12 gap-2 px-3 py-2 text-sm cursor-pointer transition-colors duration-150 ${getRowHighlightClass(task.id)}`}
                     onClick={(e) => handleRowClick(task.id, e)}
                   >
-                    {/* Task Name */}
-                    <div className="col-span-4">
+                    {/* Task Name with Indentation and Group Controls */}
+                    <div className="col-span-4 flex items-center">
+                      {/* Indentation */}
+                      <div 
+                        className="flex-shrink-0"
+                        style={{ width: `${indentLevel * 20}px` }}
+                      />
+                      
+                      {/* Group Toggle Button */}
+                      {task.isGroup && (
+                        <button
+                          onClick={(e) => handleGroupToggle(task.id, e)}
+                          className="flex-shrink-0 w-4 h-4 mr-1 text-gray-500 hover:text-gray-700 transition-colors"
+                        >
+                          {task.isExpanded ? (
+                            <ChevronDownIcon className="w-4 h-4" />
+                          ) : (
+                            <ChevronRightIcon className="w-4 h-4" />
+                          )}
+                        </button>
+                      )}
+                      
+                      {/* Group Icon */}
+                      {task.isGroup && (
+                        <FolderIcon className="w-4 h-4 mr-1 text-blue-500 flex-shrink-0" />
+                      )}
+                      
+                      {/* Task Name Input */}
                       <input
                         type="text"
                         value={task.name}
                         onChange={(e) => handleNameChange(task.id, e.target.value, e)}
-                        className={`w-full bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1 py-0.5 ${
+                        className={`flex-1 bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1 py-0.5 ${
                           isLinkStart ? 'bg-purple-50' : isMultiSelected ? 'bg-yellow-50' : isSelected ? 'bg-blue-50' : ''
-                        }`}
+                        } ${task.isGroup ? 'font-semibold' : ''}`}
                       />
                     </div>
 
@@ -209,7 +246,7 @@ const TaskGrid = () => {
       {/* Footer */}
       <div className="bg-gray-50 border-t px-4 py-2">
         <div className="text-xs text-gray-500">
-          {tasks.length} task{tasks.length !== 1 ? 's' : ''} • {getSelectionStatus()}
+          {visibleTasks.length} task{visibleTasks.length !== 1 ? 's' : ''} • {getSelectionStatus()}
         </div>
       </div>
     </div>

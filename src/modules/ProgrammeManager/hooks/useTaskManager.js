@@ -15,7 +15,10 @@ const useTaskManager = () => {
     clearSelection: contextClearSelection,
     linkingMode,
     startLinkingMode: contextStartLinkingMode,
-    stopLinkingMode: contextStopLinkingMode
+    stopLinkingMode: contextStopLinkingMode,
+    groupTasks: contextGroupTasks,
+    ungroupTask: contextUngroupTask,
+    toggleGroupCollapse: contextToggleGroupCollapse
   } = useTaskContext();
 
   const addTask = () => {
@@ -80,18 +83,43 @@ const useTaskManager = () => {
       setLastAction('Create Group - Need 2+ tasks');
       return;
     }
-    console.log('Create group with tasks:', selectedTaskIds);
-    setLastAction('Create Group');
+
+    // Prompt for group name
+    const groupName = prompt('Enter group name:', `Group ${selectedTaskIds.length} Tasks`);
+    if (!groupName) {
+      console.log('Create Group - Cancelled by user');
+      setLastAction('Create Group - Cancelled');
+      return;
+    }
+
+    const success = contextGroupTasks(selectedTaskIds, groupName);
+    if (success) {
+      setLastAction(`Create Group - "${groupName}"`);
+    } else {
+      setLastAction('Create Group - Failed');
+    }
   };
 
   const ungroup = () => {
-    if (selectedTaskIds.length === 0) {
-      console.log('Ungroup - No tasks selected');
+    if (!selectedTaskId) {
+      console.log('Ungroup - No task selected');
       setLastAction('Ungroup - No selection');
       return;
     }
-    console.log('Ungroup tasks:', selectedTaskIds);
-    setLastAction('Ungroup');
+
+    const selectedTask = tasks.find(task => task.id === selectedTaskId);
+    if (!selectedTask?.isGroup) {
+      console.log('Ungroup - Selected task is not a group');
+      setLastAction('Ungroup - Not a group');
+      return;
+    }
+
+    const success = contextUngroupTask(selectedTaskId);
+    if (success) {
+      setLastAction(`Ungroup - "${selectedTask.name}"`);
+    } else {
+      setLastAction('Ungroup - Failed');
+    }
   };
 
   const selectAll = () => {

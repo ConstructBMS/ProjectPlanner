@@ -25,6 +25,9 @@ export const TaskProvider = ({ children }) => {
       priority: 'High',
       assignedTo: 'Construction Team',
       createdAt: '2025-07-28T10:00:00Z',
+      parentId: null,
+      isGroup: false,
+      isExpanded: true,
     },
     {
       id: 2,
@@ -38,6 +41,9 @@ export const TaskProvider = ({ children }) => {
       priority: 'High',
       assignedTo: 'Structural Team',
       createdAt: '2025-07-28T10:00:00Z',
+      parentId: null,
+      isGroup: false,
+      isExpanded: true,
     },
     {
       id: 3,
@@ -51,6 +57,9 @@ export const TaskProvider = ({ children }) => {
       priority: 'Medium',
       assignedTo: 'Electrical Team',
       createdAt: '2025-07-28T10:00:00Z',
+      parentId: null,
+      isGroup: false,
+      isExpanded: true,
     }
   ]);
   const [nextId, setNextId] = useState(4); // Start after sample tasks
@@ -66,6 +75,69 @@ export const TaskProvider = ({ children }) => {
   // Linking mode state
   const [linkingMode, setLinkingMode] = useState(false);
   const [linkStartTaskId, setLinkStartTaskId] = useState(null);
+
+  // Helper function to get hierarchical tasks
+  const getHierarchicalTasks = () => {
+    const taskMap = new Map();
+    const rootTasks = [];
+
+    // First pass: create map of all tasks
+    tasks.forEach(task => {
+      taskMap.set(task.id, { ...task, children: [] });
+    });
+
+    // Second pass: build hierarchy
+    tasks.forEach(task => {
+      if (task.parentId) {
+        const parent = taskMap.get(task.parentId);
+        if (parent) {
+          parent.children.push(taskMap.get(task.id));
+        }
+      } else {
+        rootTasks.push(taskMap.get(task.id));
+      }
+    });
+
+    return rootTasks;
+  };
+
+  // Helper function to get all visible tasks (expanded groups)
+  const getVisibleTasks = () => {
+    const visible = [];
+    
+    const addVisibleTasks = (taskList, depth = 0) => {
+      taskList.forEach(task => {
+        visible.push({ ...task, depth });
+        if (task.isGroup && task.isExpanded && task.children) {
+          addVisibleTasks(task.children, depth + 1);
+        }
+      });
+    };
+
+    addVisibleTasks(getHierarchicalTasks());
+    return visible;
+  };
+
+  // Helper function to get all descendants of a task
+  const getTaskDescendants = (taskId) => {
+    const descendants = [];
+    
+    const addDescendants = (task) => {
+      if (task.children) {
+        task.children.forEach(child => {
+          descendants.push(child.id);
+          addDescendants(child);
+        });
+      }
+    };
+
+    const task = tasks.find(t => t.id === taskId);
+    if (task) {
+      addDescendants(task);
+    }
+    
+    return descendants;
+  };
 
   const addTask = () => {
     const today = new Date();
@@ -84,6 +156,9 @@ export const TaskProvider = ({ children }) => {
       priority: 'Medium',
       assignedTo: '',
       createdAt: new Date().toISOString(),
+      parentId: null,
+      isGroup: false,
+      isExpanded: true,
     };
 
     setTasks(prevTasks => [...prevTasks, newTask]);
@@ -103,7 +178,16 @@ export const TaskProvider = ({ children }) => {
 
     const taskToDeleteData = tasks.find(task => task.id === taskToDelete);
 
-    setTasks(prevTasks => prevTasks.filter(task => task.id !== taskToDelete));
+    // If deleting a group, also delete all its children
+    const taskToDeleteObj = tasks.find(task => task.id === taskToDelete);
+    let tasksToDelete = [taskToDelete];
+    
+    if (taskToDeleteObj?.isGroup) {
+      const descendants = getTaskDescendants(taskToDelete);
+      tasksToDelete = [...tasksToDelete, ...descendants];
+    }
+
+    setTasks(prevTasks => prevTasks.filter(task => !tasksToDelete.includes(task.id)));
 
     // Clear selection if the deleted task was selected
     if (selectedTaskId === taskToDelete) {
@@ -111,11 +195,11 @@ export const TaskProvider = ({ children }) => {
     }
 
     // Remove from multi-selection if present
-    setSelectedTaskIds(prev => prev.filter(id => id !== taskToDelete));
+    setSelectedTaskIds(prev => prev.filter(id => !tasksToDelete.includes(id)));
 
-    // Remove any links involving the deleted task
+    // Remove any links involving the deleted tasks
     setTaskLinks(prevLinks => prevLinks.filter(link =>
-      link.fromId !== taskToDelete && link.toId !== taskToDelete
+      !tasksToDelete.includes(link.fromId) && !tasksToDelete.includes(link.toId)
     ));
 
     console.log('Task deleted:', taskToDeleteData);
@@ -171,6 +255,77 @@ export const TaskProvider = ({ children }) => {
     setSelectedTaskId(null);
     setSelectedTaskIds([]);
     console.log('Task selection cleared');
+  };
+
+  // Task grouping functions
+  const groupTasks = (selectedIds, groupName) => {
+    if (selectedIds.length < 2) {
+      console.log('Need at least 2 tasks to create a group');
+      return false;
+    }
+
+    // Create new group task
+    const groupTask = {
+      id: nextId,
+      name: groupName,
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date().toISOString().split('T')[0],
+      duration: 1,
+      status: 'Planned',
+      description: `Group containing ${selectedIds.length} tasks`,
+      progress: 0,
+      priority: 'Medium',
+      assignedTo: '',
+      createdAt: new Date().toISOString(),
+      parentId: null,
+      isGroup: true,
+      isExpanded: true,
+    };
+
+    // Update selected tasks to have the group as parent
+    setTasks(prevTasks => [
+      ...prevTasks.map(task => 
+        selectedIds.includes(task.id) 
+          ? { ...task, parentId: nextId }
+          : task
+      ),
+      groupTask
+    ]);
+
+    setNextId(prevId => prevId + 1);
+    console.log(`Group "${groupName}" created with ${selectedIds.length} tasks`);
+    return true;
+  };
+
+  const ungroupTask = (taskId) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task?.isGroup) {
+      console.log('Task is not a group');
+      return false;
+    }
+
+    // Remove parentId from all children
+    setTasks(prevTasks => 
+      prevTasks.map(t => 
+        t.parentId === taskId 
+          ? { ...t, parentId: null }
+          : t
+      ).filter(t => t.id !== taskId) // Remove the group task
+    );
+
+    console.log(`Group "${task.name}" ungrouped`);
+    return true;
+  };
+
+  const toggleGroupCollapse = (groupId) => {
+    setTasks(prevTasks =>
+      prevTasks.map(task =>
+        task.id === groupId
+          ? { ...task, isExpanded: !task.isExpanded }
+          : task
+      )
+    );
+    console.log(`Group ${groupId} ${tasks.find(t => t.id === groupId)?.isExpanded ? 'collapsed' : 'expanded'}`);
   };
 
   // Task linking functions
@@ -292,6 +447,12 @@ export const TaskProvider = ({ children }) => {
     startLinkingMode,
     stopLinkingMode,
     handleTaskClickForLinking,
+    // Grouping functions
+    getHierarchicalTasks,
+    getVisibleTasks,
+    groupTasks,
+    ungroupTask,
+    toggleGroupCollapse,
   };
 
   return (

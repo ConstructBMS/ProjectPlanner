@@ -1,35 +1,43 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useTaskContext } from '../context/TaskContext';
+import { ChevronRightIcon, ChevronDownIcon, FolderIcon } from '@heroicons/react/24/outline';
 
 const GanttChart = () => {
-  const { 
-    tasks, 
-    taskLinks, 
-    selectedTaskId, 
+  const {
+    tasks,
+    taskLinks,
+    selectedTaskId,
     selectTask,
     linkingMode,
     linkStartTaskId,
-    handleTaskClickForLinking
+    handleTaskClickForLinking,
+    getVisibleTasks,
+    toggleGroupCollapse
   } = useTaskContext();
   const chartRef = useRef(null);
   const taskRefs = useRef({});
   const [chartDimensions, setChartDimensions] = useState({ width: 0, height: 0 });
 
-  // Calculate chart dimensions
+  const visibleTasks = getVisibleTasks();
+
+  // Update chart dimensions on mount and resize
   useEffect(() => {
-    if (chartRef.current) {
-      const rect = chartRef.current.getBoundingClientRect();
-      setChartDimensions({
-        width: rect.width,
-        height: rect.height
-      });
-    }
-  }, [tasks]);
+    const updateDimensions = () => {
+      if (chartRef.current) {
+        const rect = chartRef.current.getBoundingClientRect();
+        setChartDimensions({ width: rect.width, height: rect.height });
+      }
+    };
+
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
 
   // Handle task bar click
   const handleTaskClick = (taskId, e) => {
     e.stopPropagation(); // Prevent chart background click
-    
+
     // If in linking mode, handle linking logic
     if (linkingMode) {
       handleTaskClickForLinking(taskId);
@@ -45,6 +53,12 @@ const GanttChart = () => {
     if (!linkingMode) {
       selectTask(null);
     }
+  };
+
+  // Handle group toggle
+  const handleGroupToggle = (taskId, e) => {
+    e.stopPropagation(); // Prevent task selection when clicking expand/collapse
+    toggleGroupCollapse(taskId);
   };
 
   // Helper function to calculate task bar position and dimensions
@@ -150,6 +164,7 @@ const GanttChart = () => {
           className={`w-10 h-8 flex items-center justify-center text-xs border-r border-gray-200 ${
             isToday ? 'bg-blue-50 font-semibold' : 'bg-gray-50'
           }`}
+          style={{ minWidth: '40px' }}
         >
           {date.getDate()}
         </div>
@@ -175,8 +190,8 @@ const GanttChart = () => {
         </p>
       </div>
 
-      {/* Chart Container */}
-      <div className="flex-1 overflow-auto" ref={chartRef} onClick={handleChartClick}>
+      {/* Chart Area */}
+      <div className="flex-1 overflow-auto" ref={chartRef}>
         <div className="min-w-full min-h-full relative">
           {/* SVG Overlay for Arrows */}
           <svg
@@ -201,12 +216,13 @@ const GanttChart = () => {
 
           {/* Task Rows */}
           <div className="relative">
-            {tasks.map((task, index) => {
+            {visibleTasks.map((task, index) => {
               const duration = getTaskDuration(task.startDate, task.endDate);
               const leftPosition = getTaskPosition(task.startDate);
               const width = duration * 40; // 40px per day
               const isSelected = selectedTaskId === task.id;
               const isLinkStart = linkingMode && linkStartTaskId === task.id;
+              const indentLevel = task.depth || 0;
 
               return (
                 <div
@@ -218,10 +234,38 @@ const GanttChart = () => {
                   <div className={`w-48 border-r border-gray-200 p-2 flex items-center ${
                     isLinkStart ? 'bg-purple-50' : isSelected ? 'bg-blue-50' : 'bg-white'
                   }`}>
-                    <div className={`text-sm truncate ${
-                      isLinkStart ? 'font-semibold text-purple-800' : isSelected ? 'font-semibold text-blue-800' : 'text-gray-800'
-                    }`}>
-                      {task.name}
+                    <div className="flex items-center w-full">
+                      {/* Indentation */}
+                      <div 
+                        className="flex-shrink-0"
+                        style={{ width: `${indentLevel * 16}px` }}
+                      />
+                      
+                      {/* Group Toggle Button */}
+                      {task.isGroup && (
+                        <button
+                          onClick={(e) => handleGroupToggle(task.id, e)}
+                          className="flex-shrink-0 w-4 h-4 mr-1 text-gray-500 hover:text-gray-700 transition-colors"
+                        >
+                          {task.isExpanded ? (
+                            <ChevronDownIcon className="w-4 h-4" />
+                          ) : (
+                            <ChevronRightIcon className="w-4 h-4" />
+                          )}
+                        </button>
+                      )}
+                      
+                      {/* Group Icon */}
+                      {task.isGroup && (
+                        <FolderIcon className="w-4 h-4 mr-1 text-blue-500 flex-shrink-0" />
+                      )}
+                      
+                      {/* Task Name */}
+                      <div className={`text-sm truncate flex-1 ${
+                        isLinkStart ? 'font-semibold text-purple-800' : isSelected ? 'font-semibold text-blue-800' : 'text-gray-800'
+                      } ${task.isGroup ? 'font-semibold' : ''}`}>
+                        {task.name}
+                      </div>
                     </div>
                   </div>
 
@@ -237,6 +281,8 @@ const GanttChart = () => {
                           ? 'bg-purple-600 border-2 border-purple-400 shadow-lg hover:bg-purple-700'
                           : isSelected
                           ? 'bg-blue-600 border-2 border-blue-400 shadow-lg hover:bg-blue-700'
+                          : task.isGroup
+                          ? 'bg-green-600 border-2 border-green-400 shadow-lg hover:bg-green-700'
                           : 'bg-blue-500 hover:bg-blue-600'
                       }`}
                       style={{
@@ -263,7 +309,7 @@ const GanttChart = () => {
       {/* Footer */}
       <div className="bg-gray-50 border-t px-4 py-2">
         <div className="text-xs text-gray-500">
-          {tasks.length} task{tasks.length !== 1 ? 's' : ''} • {taskLinks.length} dependency{taskLinks.length !== 1 ? 'ies' : 'y'} •
+          {visibleTasks.length} task{visibleTasks.length !== 1 ? 's' : ''} • {taskLinks.length} dependency{taskLinks.length !== 1 ? 'ies' : 'y'} •
           {linkingMode ? (
             linkStartTaskId ? (
               ` Linking from: ${tasks.find(t => t.id === linkStartTaskId)?.name || linkStartTaskId}`
@@ -273,7 +319,7 @@ const GanttChart = () => {
           ) : (
             selectedTaskId ? ` Selected: ${tasks.find(t => t.id === selectedTaskId)?.name || 'Unknown'}` : ' No task selected'
           )} •
-          Blue bars show task duration • Gray arrows show dependencies
+          Blue bars show task duration • Green bars show groups • Gray arrows show dependencies
         </div>
       </div>
     </div>
