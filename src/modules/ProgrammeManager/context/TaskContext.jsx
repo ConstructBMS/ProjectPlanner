@@ -63,7 +63,7 @@ export const TaskProvider = ({ children }) => {
     setSelectedTaskIds(prev => prev.filter(id => id !== taskToDelete));
 
     // Remove any links involving the deleted task
-    setTaskLinks(prevLinks => prevLinks.filter(link => 
+    setTaskLinks(prevLinks => prevLinks.filter(link =>
       link.fromId !== taskToDelete && link.toId !== taskToDelete
     ));
 
@@ -123,7 +123,7 @@ export const TaskProvider = ({ children }) => {
 
   const linkTasks = (fromId, toId) => {
     // Check if link already exists
-    const linkExists = taskLinks.some(link => 
+    const linkExists = taskLinks.some(link =>
       link.fromId === fromId && link.toId === toId
     );
 
@@ -155,12 +155,12 @@ export const TaskProvider = ({ children }) => {
     const checkPath = (currentId) => {
       if (currentId === fromId) return true;
       if (visited.has(currentId)) return false;
-      
+
       visited.add(currentId);
       const predecessors = taskLinks
         .filter(link => link.toId === currentId)
         .map(link => link.fromId);
-      
+
       return predecessors.some(predId => checkPath(predId));
     };
 
@@ -168,7 +168,7 @@ export const TaskProvider = ({ children }) => {
   };
 
   const unlinkTasks = (fromId, toId) => {
-    setTaskLinks(prev => prev.filter(link => 
+    setTaskLinks(prev => prev.filter(link =>
       !(link.fromId === fromId && link.toId === toId)
     ));
     console.log(`Unlinked task ${fromId} → ${toId}`);

@@ -2,14 +2,14 @@ import React from 'react';
 import { useTaskContext } from '../context/TaskContext';
 
 const TaskGrid = () => {
-  const { 
-    tasks, 
-    selectedTaskId, 
+  const {
+    tasks,
+    selectedTaskId,
     selectedTaskIds,
-    deleteTask, 
-    updateTask, 
+    deleteTask,
+    updateTask,
     selectTask,
-    selectMultipleTasks 
+    selectMultipleTasks
   } = useTaskContext();
 
   const handleDeleteTask = (taskId, e) => {
@@ -58,7 +58,7 @@ const TaskGrid = () => {
   const getRowHighlightClass = (taskId) => {
     const isSelected = selectedTaskId === taskId;
     const isMultiSelected = selectedTaskIds.includes(taskId);
-    
+
     if (isMultiSelected) {
       return 'bg-yellow-100 border-l-4 border-yellow-500';
     } else if (isSelected) {
@@ -118,7 +118,7 @@ const TaskGrid = () => {
               {tasks.map((task) => {
                 const isSelected = selectedTaskId === task.id;
                 const isMultiSelected = selectedTaskIds.includes(task.id);
-                
+
                 return (
                   <div
                     key={task.id}

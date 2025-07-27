@@ -9,7 +9,8 @@ const useTaskManager = () => {
     updateTask: contextUpdateTask,
     selectedTaskId,
     selectedTaskIds,
-    linkTasks: contextLinkTasks
+    linkTasks: contextLinkTasks,
+    unlinkTasks: contextUnlinkTasks
   } = useTaskContext();
 
   const addTask = () => {
@@ -38,7 +39,7 @@ const useTaskManager = () => {
 
     const [fromId, toId] = selectedTaskIds;
     const success = contextLinkTasks(fromId, toId);
-    
+
     if (success) {
       setLastAction('Link Tasks');
     } else {
@@ -47,7 +48,14 @@ const useTaskManager = () => {
   };
 
   const unlinkTasks = () => {
-    console.log('Tasks unlinked');
+    if (selectedTaskIds.length !== 2) {
+      console.log('Please select exactly two tasks to unlink.');
+      setLastAction('Unlink Tasks - Need 2 tasks');
+      return;
+    }
+
+    const [fromId, toId] = selectedTaskIds;
+    contextUnlinkTasks(fromId, toId);
     setLastAction('Unlink Tasks');
   };
 
