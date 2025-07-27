@@ -23,7 +23,7 @@ export default function AppShell() {
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden z-0">
       {/* Ribbon Tabs - Fixed height with proper z-index */}
-      <div className="border-b shadow-sm z-10 h-[100px] relative">
+      <div className="border-b shadow-sm z-10 h-[124px] relative">
         <RibbonTabs onAction={handleRibbonAction} />
       </div>
 
