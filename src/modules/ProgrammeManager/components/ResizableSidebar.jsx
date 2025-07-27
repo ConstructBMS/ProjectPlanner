@@ -8,6 +8,7 @@ const ResizableSidebar = ({ minWidth = 150, maxWidth = 400, defaultWidth = 250 }
   const startWidthRef = useRef(0);
 
   const handleMouseDown = useCallback((e) => {
+    console.log('Mouse down on sidebar divider');
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(true);
@@ -28,10 +29,12 @@ const ResizableSidebar = ({ minWidth = 150, maxWidth = 400, defaultWidth = 250 }
     
     const deltaX = e.clientX - startXRef.current;
     const newWidth = Math.max(minWidth, Math.min(maxWidth, startWidthRef.current + deltaX));
+    console.log('Resizing sidebar:', { deltaX, newWidth, isDragging });
     setWidth(newWidth);
   }, [isDragging, minWidth, maxWidth]);
 
   const handleMouseUp = useCallback(() => {
+    console.log('Mouse up on sidebar divider');
     setIsDragging(false);
     
     // Remove global event listeners
@@ -44,33 +47,27 @@ const ResizableSidebar = ({ minWidth = 150, maxWidth = 400, defaultWidth = 250 }
   }, [handleMouseMove]);
 
   return (
-    <div 
-      className="flex h-full bg-white border-r border-gray-300 relative"
-      style={{ width: `${width}px`, minWidth: `${width}px` }}
-    >
+    <div className="flex h-full">
       {/* Sidebar Content */}
-      <div className="flex-1 overflow-hidden">
+      <div 
+        className="bg-white border-r border-gray-300 overflow-hidden"
+        style={{ width: `${width}px`, minWidth: `${width}px` }}
+      >
         <SidebarTree />
       </div>
       
-      {/* Resizable Divider - Made more visible */}
+      {/* Resizable Divider */}
       <div
-        className="w-2 bg-gray-200 hover:bg-blue-400 cursor-col-resize transition-colors duration-200 relative group border-l border-gray-300"
+        className="w-3 bg-gray-200 hover:bg-blue-400 cursor-col-resize transition-colors duration-200 flex items-center justify-center group"
         onMouseDown={handleMouseDown}
         title="Drag to resize sidebar"
         style={{ 
-          position: 'absolute',
-          right: '-1px',
-          top: 0,
-          bottom: 0,
+          position: 'relative',
           zIndex: 10
         }}
       >
-        {/* Hover indicator */}
-        <div className="absolute inset-0 bg-blue-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-        
-        {/* Drag handle visual - Made more prominent */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1 h-12 bg-gray-400 group-hover:bg-blue-500 transition-colors duration-200 rounded-full" />
+        {/* Drag handle visual */}
+        <div className="w-1 h-8 bg-gray-400 group-hover:bg-blue-500 transition-colors duration-200 rounded-full" />
       </div>
     </div>
   );

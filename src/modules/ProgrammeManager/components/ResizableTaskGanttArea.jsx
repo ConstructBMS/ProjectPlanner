@@ -14,6 +14,7 @@ const ResizableTaskGanttArea = ({
   const containerRef = useRef(null);
 
   const handleMouseDown = useCallback((e) => {
+    console.log('Mouse down on task/gantt divider');
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(true);
@@ -40,10 +41,12 @@ const ResizableTaskGanttArea = ({
     );
     
     const taskHeightPercent = (taskHeightPx / containerHeight) * 100;
+    console.log('Resizing task/gantt:', { deltaY, taskHeightPercent, isDragging });
     setTaskHeight(`${taskHeightPercent}%`);
   }, [isDragging, minTaskHeight, minGanttHeight]);
 
   const handleMouseUp = useCallback(() => {
+    console.log('Mouse up on task/gantt divider');
     setIsDragging(false);
     
     // Remove global event listeners
@@ -56,7 +59,7 @@ const ResizableTaskGanttArea = ({
   }, [handleMouseMove]);
 
   return (
-    <div ref={containerRef} className="flex flex-col flex-1 overflow-hidden relative">
+    <div ref={containerRef} className="flex flex-col flex-1 overflow-hidden">
       {/* Task Grid Area */}
       <div 
         className="overflow-auto border-b border-gray-300"
@@ -65,23 +68,18 @@ const ResizableTaskGanttArea = ({
         <TaskGrid />
       </div>
       
-      {/* Resizable Divider - Made more visible */}
+      {/* Resizable Divider */}
       <div
-        className="h-2 bg-gray-200 hover:bg-blue-400 cursor-row-resize transition-colors duration-200 relative group border-t border-gray-300"
+        className="h-3 bg-gray-200 hover:bg-blue-400 cursor-row-resize transition-colors duration-200 flex items-center justify-center group"
         onMouseDown={handleMouseDown}
         title="Drag to resize task and Gantt areas"
         style={{ 
-          position: 'absolute',
-          left: 0,
-          right: 0,
+          position: 'relative',
           zIndex: 10
         }}
       >
-        {/* Hover indicator */}
-        <div className="absolute inset-0 bg-blue-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-        
-        {/* Drag handle visual - Made more prominent */}
-        <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 h-1 w-12 bg-gray-400 group-hover:bg-blue-500 transition-colors duration-200 rounded-full" />
+        {/* Drag handle visual */}
+        <div className="h-1 w-8 bg-gray-400 group-hover:bg-blue-500 transition-colors duration-200 rounded-full" />
       </div>
       
       {/* Gantt Chart Area */}
