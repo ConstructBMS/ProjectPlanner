@@ -1,6 +1,7 @@
 import React from 'react';
 import RibbonButton from '../shared/RibbonButton';
 import RibbonGroup from '../shared/RibbonGroup';
+import useTaskManager from '../../../hooks/useTaskManager';
 import {
   ScissorsIcon,
   DocumentDuplicateIcon,
@@ -22,6 +23,23 @@ import {
 } from '@heroicons/react/24/outline';
 
 export default function HomeTab({ onAction }) {
+  // Use the task manager hook
+  const {
+    addTask,
+    deleteTask,
+    linkTasks,
+    unlinkTasks,
+    openTaskDetails,
+    openTaskNotes,
+    addCode,
+    createGroup,
+    ungroup,
+    selectAll,
+    deselect,
+    scrollToToday,
+    lastAction,
+  } = useTaskManager();
+
   // Click handlers for different actions
   const handleAction = (actionName) => {
     console.log(`HomeTab Action: ${actionName}`);
@@ -83,22 +101,22 @@ export default function HomeTab({ onAction }) {
         <RibbonButton
           icon={<PlusIcon className="w-4 h-4 text-gray-700" />}
           label="Add Task"
-          onClick={() => handleAction('Add Task')}
+          onClick={addTask}
         />
         <RibbonButton
           icon={<TrashIcon className="w-4 h-4 text-gray-700" />}
           label="Delete Task"
-          onClick={() => handleAction('Delete Task')}
+          onClick={deleteTask}
         />
         <RibbonButton
           icon={<LinkIcon className="w-4 h-4 text-gray-700" />}
           label="Link Tasks"
-          onClick={() => handleAction('Link Tasks')}
+          onClick={linkTasks}
         />
         <RibbonButton
           icon={<XMarkIcon className="w-4 h-4 text-gray-700" />}
           label="Unlink Tasks"
-          onClick={() => handleAction('Unlink Tasks')}
+          onClick={unlinkTasks}
         />
       </RibbonGroup>
 
@@ -107,17 +125,17 @@ export default function HomeTab({ onAction }) {
         <RibbonButton
           icon={<DocumentIcon className="w-4 h-4 text-gray-700" />}
           label="Task Details"
-          onClick={() => handleAction('Task Details')}
+          onClick={openTaskDetails}
         />
         <RibbonButton
           icon={<PencilIcon className="w-4 h-4 text-gray-700" />}
           label="Task Notes"
-          onClick={() => handleAction('Task Notes')}
+          onClick={openTaskNotes}
         />
         <RibbonButton
           icon={<HashtagIcon className="w-4 h-4 text-gray-700" />}
           label="Add Code"
-          onClick={() => handleAction('Add Code')}
+          onClick={addCode}
         />
       </RibbonGroup>
 
@@ -126,12 +144,12 @@ export default function HomeTab({ onAction }) {
         <RibbonButton
           icon={<FolderPlusIcon className="w-4 h-4 text-gray-700" />}
           label="Create Group"
-          onClick={() => handleAction('Create Group')}
+          onClick={createGroup}
         />
         <RibbonButton
           icon={<MinusCircleIcon className="w-4 h-4 text-gray-700" />}
           label="Ungroup"
-          onClick={() => handleAction('Ungroup')}
+          onClick={ungroup}
         />
       </RibbonGroup>
 
@@ -140,12 +158,12 @@ export default function HomeTab({ onAction }) {
         <RibbonButton
           icon={<CheckIcon className="w-4 h-4 text-gray-700" />}
           label="Select All"
-          onClick={() => handleAction('Select All')}
+          onClick={selectAll}
         />
         <RibbonButton
           icon={<XCircleIcon className="w-4 h-4 text-gray-700" />}
           label="Deselect"
-          onClick={() => handleAction('Deselect')}
+          onClick={deselect}
         />
       </RibbonGroup>
 
@@ -154,7 +172,7 @@ export default function HomeTab({ onAction }) {
         <RibbonButton
           icon={<CalendarIcon className="w-4 h-4 text-gray-700" />}
           label="Scroll to Today"
-          onClick={() => handleAction('Scroll to Today')}
+          onClick={scrollToToday}
         />
         <RibbonButton
           icon={<ChevronDownIcon className="w-4 h-4 text-gray-700" />}
@@ -167,6 +185,11 @@ export default function HomeTab({ onAction }) {
           onClick={() => handleAction('Collapse All')}
         />
       </RibbonGroup>
+
+      {/* Debug Log Box (Development Mode) */}
+      <div className="fixed bottom-4 right-4 bg-white border p-2 shadow text-xs rounded z-50">
+        Last Action: {lastAction}
+      </div>
     </div>
   );
 }
