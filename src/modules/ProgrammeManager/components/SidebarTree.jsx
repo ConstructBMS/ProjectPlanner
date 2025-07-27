@@ -1,6 +1,7 @@
 import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import { ChevronRightIcon, ChevronDownIcon, FolderIcon, Bars3Icon } from '@heroicons/react/24/outline';
 import { useTaskContext } from '../context/TaskContext';
+import ContextMenu from './ContextMenu';
 import {
   DndContext,
   closestCenter,
@@ -109,7 +110,7 @@ const TreeNode = ({ node, depth = 0, expandedIds, onToggle, onSelect, selectedId
 };
 
 // Sortable TaskNode component for hierarchical tasks
-const SortableTaskNode = ({ task, depth = 0, onToggle, onSelect, selectedId }) => {
+const SortableTaskNode = ({ task, depth = 0, onToggle, onSelect, selectedId, onContextMenu }) => {
   const {
     attributes,
     listeners,
@@ -128,6 +129,12 @@ const SortableTaskNode = ({ task, depth = 0, onToggle, onSelect, selectedId }) =
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const handleContextMenu = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onContextMenu(e, task);
+  };
+
   return (
     <div ref={setNodeRef} style={style}>
       <div
@@ -135,6 +142,7 @@ const SortableTaskNode = ({ task, depth = 0, onToggle, onSelect, selectedId }) =
           isSelected ? 'bg-blue-100' : ''
         } ${isDragging ? 'shadow-lg bg-white border border-blue-300 rounded scale-105' : ''}`}
         onClick={() => onSelect(task.id)}
+        onContextMenu={handleContextMenu}
       >
         {/* Drag Handle */}
         <div
@@ -181,6 +189,7 @@ const SortableTaskNode = ({ task, depth = 0, onToggle, onSelect, selectedId }) =
               onToggle={onToggle}
               onSelect={onSelect}
               selectedId={selectedId}
+              onContextMenu={onContextMenu}
             />
           ))}
         </div>
@@ -225,7 +234,9 @@ const SidebarTree = forwardRef((props, ref) => {
     selectTask, 
     selectedTaskId, 
     toggleGroupCollapse,
-    reorderTasksById
+    reorderTasksById,
+    deleteTask,
+    updateTask
   } = useTaskContext();
   
   // Start with only the root programme node expanded
@@ -234,6 +245,13 @@ const SidebarTree = forwardRef((props, ref) => {
   ]));
   const [selectedId, setSelectedId] = useState(null);
   const [activeTask, setActiveTask] = useState(null);
+
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState({
+    isOpen: false,
+    position: { x: 0, y: 0 },
+    task: null
+  });
 
   // DnD sensors
   const sensors = useSensors(
@@ -270,6 +288,59 @@ const SidebarTree = forwardRef((props, ref) => {
 
   const handleTaskSelect = (taskId) => {
     selectTask(taskId);
+  };
+
+  // Handle context menu
+  const handleContextMenu = (e, task) => {
+    e.preventDefault();
+    setContextMenu({
+      isOpen: true,
+      position: { x: e.clientX, y: e.clientY },
+      task: task
+    });
+  };
+
+  const closeContextMenu = () => {
+    setContextMenu({
+      isOpen: false,
+      position: { x: 0, y: 0 },
+      task: null
+    });
+  };
+
+  const handleContextMenuAction = (action, task) => {
+    switch (action) {
+      case 'edit':
+        console.log('Edit task:', task?.name);
+        // TODO: Open task detail modal
+        break;
+      case 'delete':
+        if (task) {
+          console.log('Delete task:', task.name);
+          deleteTask(task.id);
+        }
+        break;
+      case 'link':
+        console.log('Link task:', task?.name);
+        // TODO: Activate linking mode
+        break;
+      case 'milestone':
+        if (task) {
+          console.log('Mark as milestone:', task.name);
+          updateTask(task.id, { isMilestone: true });
+        }
+        break;
+      case 'expandAll':
+        console.log('Expand all tasks');
+        // TODO: Implement expand all functionality
+        break;
+      case 'collapseAll':
+        console.log('Collapse all tasks');
+        // TODO: Implement collapse all functionality
+        break;
+      default:
+        console.log('Unknown action:', action);
+    }
   };
 
   // Handle drag start
@@ -374,6 +445,7 @@ const SidebarTree = forwardRef((props, ref) => {
                     onToggle={handleTaskToggle}
                     onSelect={handleTaskSelect}
                     selectedId={selectedTaskId}
+                    onContextMenu={handleContextMenu}
                   />
                 ))}
               </SortableContext>
@@ -399,9 +471,18 @@ const SidebarTree = forwardRef((props, ref) => {
         <div className="text-xs text-gray-500">
           {hierarchicalTasks.length} task{hierarchicalTasks.length !== 1 ? 's' : ''} • 
           {selectedTaskId ? ` Selected: ${hierarchicalTasks.find(t => t.id === selectedTaskId)?.name || 'Unknown'}` : ' No task selected'} •
-          💡 Drag the ☰ icon to reorder tasks
+          💡 Right-click for context menu • Drag ☰ to reorder
         </div>
       </div>
+
+      {/* Context Menu */}
+      <ContextMenu
+        isOpen={contextMenu.isOpen}
+        position={contextMenu.position}
+        onClose={closeContextMenu}
+        onAction={handleContextMenuAction}
+        task={contextMenu.task}
+      />
     </div>
   );
 });
