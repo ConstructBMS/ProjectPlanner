@@ -2,7 +2,15 @@ import React from 'react';
 import { useTaskContext } from '../context/TaskContext';
 
 const TaskGrid = () => {
-  const { tasks, selectedTaskId, deleteTask, updateTask, selectTask } = useTaskContext();
+  const { 
+    tasks, 
+    selectedTaskId, 
+    selectedTaskIds,
+    deleteTask, 
+    updateTask, 
+    selectTask,
+    selectMultipleTasks 
+  } = useTaskContext();
 
   const handleDeleteTask = (taskId, e) => {
     e.stopPropagation(); // Prevent row selection when clicking delete
@@ -14,8 +22,9 @@ const TaskGrid = () => {
     updateTask(taskId, { name: newName });
   };
 
-  const handleRowClick = (taskId) => {
-    selectTask(taskId);
+  const handleRowClick = (taskId, e) => {
+    const isMultiSelect = e.shiftKey || e.ctrlKey || e.metaKey;
+    selectMultipleTasks(taskId, isMultiSelect);
   };
 
   const getStatusColor = (status) => {
@@ -46,12 +55,40 @@ const TaskGrid = () => {
     }
   };
 
+  const getRowHighlightClass = (taskId) => {
+    const isSelected = selectedTaskId === taskId;
+    const isMultiSelected = selectedTaskIds.includes(taskId);
+    
+    if (isMultiSelected) {
+      return 'bg-yellow-100 border-l-4 border-yellow-500';
+    } else if (isSelected) {
+      return 'bg-blue-100 border-l-4 border-blue-500';
+    } else {
+      return 'hover:bg-gray-50';
+    }
+  };
+
+  const getSelectionStatus = () => {
+    if (selectedTaskIds.length === 0) {
+      return 'No task selected';
+    } else if (selectedTaskIds.length === 1) {
+      return '1 task selected';
+    } else if (selectedTaskIds.length === 2) {
+      return '2 tasks selected (ready to link)';
+    } else {
+      return `${selectedTaskIds.length} tasks selected`;
+    }
+  };
+
   return (
     <div className="h-full flex flex-col bg-white">
       {/* Header */}
       <div className="bg-gray-50 border-b px-4 py-3">
         <h3 className="text-sm font-semibold text-gray-700">Task Grid</h3>
         <p className="text-xs text-gray-500 mt-1">Task list and management</p>
+        <p className="text-xs text-blue-600 mt-1">
+          💡 Tip: Shift+Click to select multiple tasks for linking
+        </p>
       </div>
 
       {/* Task Table */}
@@ -80,15 +117,13 @@ const TaskGrid = () => {
             <div className="divide-y divide-gray-200">
               {tasks.map((task) => {
                 const isSelected = selectedTaskId === task.id;
+                const isMultiSelected = selectedTaskIds.includes(task.id);
+                
                 return (
-                  <div 
-                    key={task.id} 
-                    className={`grid grid-cols-12 gap-2 px-3 py-2 text-sm cursor-pointer transition-colors duration-150 ${
-                      isSelected 
-                        ? 'bg-blue-100 border-l-4 border-blue-500' 
-                        : 'hover:bg-gray-50'
-                    }`}
-                    onClick={() => handleRowClick(task.id)}
+                  <div
+                    key={task.id}
+                    className={`grid grid-cols-12 gap-2 px-3 py-2 text-sm cursor-pointer transition-colors duration-150 ${getRowHighlightClass(task.id)}`}
+                    onClick={(e) => handleRowClick(task.id, e)}
                   >
                     {/* Task Name */}
                     <div className="col-span-4">
@@ -97,7 +132,7 @@ const TaskGrid = () => {
                         value={task.name}
                         onChange={(e) => handleNameChange(task.id, e.target.value, e)}
                         className={`w-full bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1 py-0.5 ${
-                          isSelected ? 'bg-blue-50' : ''
+                          isMultiSelected ? 'bg-yellow-50' : isSelected ? 'bg-blue-50' : ''
                         }`}
                       />
                     </div>
@@ -147,7 +182,7 @@ const TaskGrid = () => {
       {/* Footer */}
       <div className="bg-gray-50 border-t px-4 py-2">
         <div className="text-xs text-gray-500">
-          {tasks.length} task{tasks.length !== 1 ? 's' : ''} • {selectedTaskId ? 'Task selected' : 'No task selected'} • Click "Add Task" to create new tasks
+          {tasks.length} task{tasks.length !== 1 ? 's' : ''} • {getSelectionStatus()} • Click "Add Task" to create new tasks
         </div>
       </div>
     </div>

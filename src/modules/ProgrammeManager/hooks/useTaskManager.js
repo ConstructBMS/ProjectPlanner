@@ -3,11 +3,13 @@ import { useTaskContext } from '../context/TaskContext';
 
 const useTaskManager = () => {
   const [lastAction, setLastAction] = useState('No actions yet');
-  const { 
-    addTask: contextAddTask, 
-    deleteTask: contextDeleteTask, 
+  const {
+    addTask: contextAddTask,
+    deleteTask: contextDeleteTask,
     updateTask: contextUpdateTask,
-    selectedTaskId 
+    selectedTaskId,
+    selectedTaskIds,
+    linkTasks: contextLinkTasks
   } = useTaskContext();
 
   const addTask = () => {
@@ -22,14 +24,26 @@ const useTaskManager = () => {
       setLastAction('Delete Task - No selection');
       return;
     }
-    
+
     contextDeleteTask(); // Uses selectedTaskId from context
     setLastAction('Delete Task');
   };
 
   const linkTasks = () => {
-    console.log('Tasks linked');
-    setLastAction('Link Tasks');
+    if (selectedTaskIds.length !== 2) {
+      console.log('Link Tasks - Need exactly 2 tasks selected');
+      setLastAction('Link Tasks - Need 2 tasks');
+      return;
+    }
+
+    const [fromId, toId] = selectedTaskIds;
+    const success = contextLinkTasks(fromId, toId);
+    
+    if (success) {
+      setLastAction('Link Tasks');
+    } else {
+      setLastAction('Link Tasks - Failed');
+    }
   };
 
   const unlinkTasks = () => {
