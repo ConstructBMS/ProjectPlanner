@@ -1,7 +1,7 @@
 import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import { ChevronRightIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 
-// Mock tree data structure
+// Mock tree data structure with better hierarchy
 const treeData = [
   {
     id: 'programme',
@@ -9,21 +9,52 @@ const treeData = [
     children: [
       {
         id: 'resources',
-        label: 'Permanent Resources',
+        label: 'Resources',
         children: [
-          { id: 'crane', label: 'Tower Crane' },
-          { id: 'engineer', label: 'Services Engineer' },
-          { id: 'supervisor', label: 'Site Supervisor' },
-          { id: 'laborer', label: 'General Laborer' },
+          {
+            id: 'permanent',
+            label: 'Permanent Resources',
+            children: [
+              { id: 'crane', label: 'Tower Crane' },
+              { id: 'engineer', label: 'Services Engineer' },
+              { id: 'supervisor', label: 'Site Supervisor' },
+              { id: 'laborer', label: 'General Laborer' },
+            ],
+          },
+          {
+            id: 'temporary',
+            label: 'Temporary Resources',
+            children: [
+              { id: 'scaffold', label: 'Scaffold Platforms' },
+              { id: 'shoring', label: 'Shoring Systems' },
+              { id: 'formwork', label: 'Formwork & Falsework' },
+            ],
+          },
         ],
       },
       {
-        id: 'tempworks',
-        label: 'Temporary Works',
+        id: 'works',
+        label: 'Works',
         children: [
-          { id: 'scaffold', label: 'Scaffold Platforms' },
-          { id: 'shoring', label: 'Shoring Systems' },
-          { id: 'formwork', label: 'Formwork & Falsework' },
+          {
+            id: 'permanentworks',
+            label: 'Permanent Works',
+            children: [
+              { id: 'foundations', label: 'Foundations' },
+              { id: 'structure', label: 'Structure' },
+              { id: 'services', label: 'Services' },
+              { id: 'finishes', label: 'Finishes' },
+            ],
+          },
+          {
+            id: 'tempworks',
+            label: 'Temporary Works',
+            children: [
+              { id: 'scaffold_works', label: 'Scaffold Platforms' },
+              { id: 'shoring_works', label: 'Shoring Systems' },
+              { id: 'formwork_works', label: 'Formwork & Falsework' },
+            ],
+          },
         ],
       },
       {
@@ -43,16 +74,6 @@ const treeData = [
           { id: 'materials', label: 'Materials' },
           { id: 'equipment', label: 'Equipment' },
           { id: 'overhead', label: 'Overhead' },
-        ],
-      },
-      {
-        id: 'permanentworks',
-        label: 'Permanent Works',
-        children: [
-          { id: 'foundations', label: 'Foundations' },
-          { id: 'structure', label: 'Structure' },
-          { id: 'services', label: 'Services' },
-          { id: 'finishes', label: 'Finishes' },
         ],
       },
     ],
@@ -126,14 +147,13 @@ const TreeNode = ({
 
 // Main SidebarTree component with forwardRef for external control
 const SidebarTree = forwardRef((props, ref) => {
-  // Start with programme and all main categories expanded
+  // Start with programme and main categories expanded
   const [expandedIds, setExpandedIds] = useState(new Set([
     'programme',
     'resources',
-    'tempworks',
+    'works',
     'calendars',
-    'costcodes',
-    'permanentworks'
+    'costcodes'
   ]));
   const [selectedId, setSelectedId] = useState(null);
 
