@@ -3,7 +3,12 @@ import { useTaskContext } from '../context/TaskContext';
 
 const useTaskManager = () => {
   const [lastAction, setLastAction] = useState('No actions yet');
-  const { addTask: contextAddTask, deleteTask: contextDeleteTask, updateTask: contextUpdateTask } = useTaskContext();
+  const { 
+    addTask: contextAddTask, 
+    deleteTask: contextDeleteTask, 
+    updateTask: contextUpdateTask,
+    selectedTaskId 
+  } = useTaskContext();
 
   const addTask = () => {
     const newTask = contextAddTask();
@@ -12,7 +17,13 @@ const useTaskManager = () => {
   };
 
   const deleteTask = () => {
-    console.log('Delete Task - Select a task first');
+    if (!selectedTaskId) {
+      console.log('Delete Task - No task selected');
+      setLastAction('Delete Task - No selection');
+      return;
+    }
+    
+    contextDeleteTask(); // Uses selectedTaskId from context
     setLastAction('Delete Task');
   };
 

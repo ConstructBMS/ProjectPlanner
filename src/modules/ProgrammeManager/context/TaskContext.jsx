@@ -13,6 +13,7 @@ export const useTaskContext = () => {
 export const TaskProvider = ({ children }) => {
   const [tasks, setTasks] = useState([]);
   const [nextId, setNextId] = useState(1);
+  const [selectedTaskId, setSelectedTaskId] = useState(null);
 
   const addTask = () => {
     const today = new Date();
@@ -39,9 +40,24 @@ export const TaskProvider = ({ children }) => {
     return newTask;
   };
 
-  const deleteTask = (taskId) => {
-    setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
-    console.log('Task deleted:', taskId);
+  const deleteTask = (taskId = null) => {
+    const taskToDelete = taskId || selectedTaskId;
+    
+    if (!taskToDelete) {
+      console.log('No task selected for deletion');
+      return;
+    }
+
+    const taskToDeleteData = tasks.find(task => task.id === taskToDelete);
+    
+    setTasks(prevTasks => prevTasks.filter(task => task.id !== taskToDelete));
+    
+    // Clear selection if the deleted task was selected
+    if (selectedTaskId === taskToDelete) {
+      setSelectedTaskId(null);
+    }
+    
+    console.log('Task deleted:', taskToDeleteData);
   };
 
   const updateTask = (taskId, updates) => {
@@ -53,11 +69,24 @@ export const TaskProvider = ({ children }) => {
     console.log('Task updated:', taskId, updates);
   };
 
+  const selectTask = (taskId) => {
+    setSelectedTaskId(taskId);
+    console.log('Task selected:', taskId);
+  };
+
+  const clearSelection = () => {
+    setSelectedTaskId(null);
+    console.log('Task selection cleared');
+  };
+
   const value = {
     tasks,
+    selectedTaskId,
     addTask,
     deleteTask,
     updateTask,
+    selectTask,
+    clearSelection,
   };
 
   return (
