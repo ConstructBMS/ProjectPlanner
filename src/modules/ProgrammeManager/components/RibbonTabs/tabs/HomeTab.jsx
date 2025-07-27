@@ -11,46 +11,58 @@ export default function HomeTab() {
   return (
     <div className='flex flex-wrap gap-3 text-xs'>
       <Section title='Clipboard'>
-        Paste<br />
+        Paste
+        <br />
         Cut • Copy
       </Section>
 
       <Section title='Font'>
-        Bold • Italic • Underline<br />
-        Font Size ⬇️<br />
+        Bold • Italic • Underline
+        <br />
+        Font Size ⬇️
+        <br />
         Colour ▓
       </Section>
 
       <Section title='Schedule'>
-        Constraint Flag • Add/Delete Links<br />
+        Constraint Flag • Add/Delete Links
+        <br />
         Auto Reschedule
       </Section>
 
       <Section title='Hierarchy'>
-        Move Bars into Chart<br />
+        Move Bars into Chart
+        <br />
         Summarise • Show To Level ⬇️
       </Section>
 
       <Section title='Task'>
-        Make Into ⬇️<br />
-        Assign ⬇️<br />
+        Make Into ⬇️
+        <br />
+        Assign ⬇️
+        <br />
         Split/Join
       </Section>
 
       <Section title='Insert'>
-        Bar • Hammock<br />
-        Recurring Task<br />
+        Bar • Hammock
+        <br />
+        Recurring Task
+        <br />
         Text Annotation
       </Section>
 
       <Section title='Progress'>
-        Project Report ⬇️<br />
-        Enter Progress ⬇️<br />
+        Project Report ⬇️
+        <br />
+        Enter Progress ⬇️
+        <br />
         Transfer Progress
       </Section>
 
       <Section title='Editing'>
-        ❌ • 🧍‍♂️ • 🔍<br />
+        ❌ • 🧍‍♂️ • 🔍
+        <br />
         Track • Select • Edit
       </Section>
     </div>

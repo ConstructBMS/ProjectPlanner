@@ -2,7 +2,6 @@
 
 const { execSync } = require('child_process');
 const fs = require('fs');
-const path = require('path');
 
 // Configuration
 const CHANGELOG_PATH = 'CHANGELOG.md';
@@ -17,7 +16,7 @@ const getTimestamp = () => {
 const getCurrentTime = () => {
   return new Date().toLocaleTimeString('en-US', {
     hour12: false,
-    timeZone: 'UTC'
+    timeZone: 'UTC',
   });
 };
 
@@ -25,8 +24,8 @@ const getCurrentTime = () => {
 const getGitStatus = () => {
   try {
     return execSync('git status --porcelain', { encoding: 'utf8' });
-  } catch (error) {
-    console.error('Error getting Git status:', error.message);
+  } catch {
+    console.error('Error getting Git status');
     return '';
   }
 };
@@ -50,7 +49,7 @@ const getChangedFiles = () => {
 const getLastCommitHash = () => {
   try {
     return execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
-  } catch (error) {
+  } catch {
     return 'unknown';
   }
 };
@@ -88,7 +87,6 @@ const updateChangelog = (commitMessage, changedFiles) => {
 
     fs.writeFileSync(CHANGELOG_PATH, changelog);
     console.log('✅ Changelog updated successfully');
-
   } catch (error) {
     console.error('❌ Error updating changelog:', error.message);
   }
@@ -123,7 +121,9 @@ const main = () => {
 
     // Commit changes
     console.log('\n💾 Committing changes...');
-    execSync(`git commit -m "${COMMIT_MESSAGE_PREFIX}${commitMessage}"`, { stdio: 'inherit' });
+    execSync(`git commit -m "${COMMIT_MESSAGE_PREFIX}${commitMessage}"`, {
+      stdio: 'inherit',
+    });
 
     // Update changelog
     console.log('\n📝 Updating changelog...');
@@ -135,8 +135,9 @@ const main = () => {
 
     console.log('\n✅ Auto-commit completed successfully!');
     console.log(`📋 Commit: ${commitMessage}`);
-    console.log(`🔗 Repository: https://github.com/ConstructBMS/ProjectPlanner`);
-
+    console.log(
+      `🔗 Repository: https://github.com/ConstructBMS/ProjectPlanner`
+    );
   } catch (error) {
     console.error('\n❌ Error during auto-commit:', error.message);
     process.exit(1);

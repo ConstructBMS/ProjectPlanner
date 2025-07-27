@@ -34,7 +34,7 @@ export default function RibbonTabs() {
     <div className='bg-blue-100 w-full'>
       {/* Tab Buttons */}
       <div className='flex bg-[#b2c7e1] text-sm font-medium border-b border-blue-300'>
-        {tabs.map((tab) => (
+        {tabs.map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}

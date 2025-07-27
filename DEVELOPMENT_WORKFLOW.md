@@ -5,12 +5,14 @@ This document outlines the development workflow for the ProjectPlanner module, i
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Node.js (Latest LTS)
 - Git
 - PowerShell (Windows)
 - GitHub account with access to [ConstructBMS/ProjectPlanner](https://github.com/ConstructBMS/ProjectPlanner)
 
 ### Initial Setup
+
 ```bash
 # Clone the repository
 git clone https://github.com/ConstructBMS/ProjectPlanner.git
@@ -28,17 +30,20 @@ npm run dev
 ### 1. Daily Development Session
 
 #### Start Development
+
 ```bash
 # Start the development server
 npm run dev
 ```
 
 #### Make Changes
+
 - Edit files in the `src/modules/ProgrammeManager/` directory
 - The development server will automatically reload on file changes
 - Test your changes in the browser at `http://localhost:5173/`
 
 #### Save and Commit (Automated)
+
 After making changes, use one of these commands:
 
 ```bash
@@ -79,33 +84,36 @@ The `CHANGELOG.md` file is automatically updated with:
 
 ### 4. Available Scripts
 
-| Script | Description |
-|--------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm run preview` | Preview production build |
-| `npm run lint` | Run ESLint |
-| `npm run lint:fix` | Fix ESLint issues automatically |
-| `npm run format` | Format code with Prettier |
-| `npm run save` | Format + Lint + Commit + Push |
-| `npm run save:no-push` | Format + Lint + Commit (no push) |
-| `npm run commit:ps` | PowerShell auto-commit script |
+| Script                   | Description                      |
+| ------------------------ | -------------------------------- |
+| `npm run dev`            | Start development server         |
+| `npm run build`          | Build for production             |
+| `npm run preview`        | Preview production build         |
+| `npm run lint`           | Run ESLint                       |
+| `npm run lint:fix`       | Fix ESLint issues automatically  |
+| `npm run format`         | Format code with Prettier        |
+| `npm run save`           | Format + Lint + Commit + Push    |
+| `npm run save:no-push`   | Format + Lint + Commit (no push) |
+| `npm run commit:ps`      | PowerShell auto-commit script    |
 | `npm run commit:no-push` | PowerShell auto-commit (no push) |
-| `npm run commit` | Node.js auto-commit script |
+| `npm run commit`         | Node.js auto-commit script       |
 
 ## 🔧 Manual Git Operations
 
 ### Check Status
+
 ```bash
 git status
 ```
 
 ### View Changes
+
 ```bash
 git diff
 ```
 
 ### Manual Commit
+
 ```bash
 git add .
 git commit -m "Your commit message"
@@ -113,6 +121,7 @@ git push origin master
 ```
 
 ### View Commit History
+
 ```bash
 git log --oneline
 ```
@@ -145,21 +154,25 @@ projectplanner/
 ## 🎯 Development Guidelines
 
 ### Code Quality
+
 - All code is automatically formatted with Prettier
 - ESLint checks for code quality issues
 - Pre-commit hooks ensure code quality before commits
 
 ### Commit Messages
+
 - Auto-generated commit messages include timestamp and file count
 - Custom messages can be provided using the `-Message` parameter
 - All commits follow semantic versioning conventions
 
 ### File Organization
+
 - Keep related components in the same directory
 - Use descriptive file and folder names
 - Follow React component naming conventions
 
 ### Testing
+
 - Test changes in the browser before committing
 - Ensure the development server runs without errors
 - Check that all linting passes
@@ -167,11 +180,13 @@ projectplanner/
 ## 🔄 Continuous Integration
 
 ### Pre-commit Hooks
+
 - **Husky** automatically runs pre-commit hooks
 - **lint-staged** runs ESLint and Prettier on staged files
 - Commits are blocked if code quality checks fail
 
 ### Automated Workflow
+
 1. Make changes to files
 2. Run `npm run save` to automatically:
    - Format code
@@ -183,11 +198,13 @@ projectplanner/
 ## 📈 Progress Tracking
 
 ### Changelog
+
 - `CHANGELOG.md` tracks all development progress
 - Each commit adds a detailed entry
 - File changes are logged with status information
 
 ### GitHub Integration
+
 - All changes are pushed to [ConstructBMS/ProjectPlanner](https://github.com/ConstructBMS/ProjectPlanner)
 - Repository serves as backup and collaboration platform
 - Commit history provides detailed development timeline
@@ -197,12 +214,14 @@ projectplanner/
 ### Common Issues
 
 #### PowerShell Execution Policy
+
 ```bash
 # If you get execution policy errors, run:
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
 
 #### Git Authentication
+
 ```bash
 # Configure Git credentials
 git config --global user.name "Your Name"
@@ -210,18 +229,21 @@ git config --global user.email "your.email@example.com"
 ```
 
 #### Node.js Script Issues
+
 ```bash
 # If Node.js script fails, use PowerShell version
 npm run commit:ps
 ```
 
 #### Linting Errors
+
 ```bash
 # Fix linting issues automatically
 npm run lint:fix
 ```
 
 ### Getting Help
+
 - Check the terminal output for error messages
 - Review the `CHANGELOG.md` for recent changes
 - Check GitHub repository for latest updates
