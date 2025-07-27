@@ -27,11 +27,11 @@ const TextIcon = ({ text, className = "text-sm font-bold" }) => (
   <span className={className}>{text}</span>
 );
 
-const RibbonButton = ({ 
-  icon, 
-  label, 
-  onClick, 
-  disabled = false, 
+const RibbonButton = ({
+  icon,
+  label,
+  onClick,
+  disabled = false,
   className = '',
   iconType = 'svg' // 'svg' or 'text'
 }) => {

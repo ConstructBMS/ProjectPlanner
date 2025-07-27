@@ -21,53 +21,58 @@ import {
   ChevronUpIcon
 } from '@heroicons/react/24/outline';
 
-export default function HomeTab() {
+export default function HomeTab({ onAction }) {
   // Click handlers for different actions
   const handleAction = (actionName) => {
     console.log(`HomeTab Action: ${actionName}`);
+    
+    // Call the parent action handler if provided
+    if (onAction) {
+      onAction(actionName);
+    }
   };
 
   return (
     <div className="flex flex-row gap-3 p-3 bg-[#f9f9f9] border-t border-gray-200">
       {/* 1. Clipboard Group (Disabled) */}
       <RibbonGroup title="Clipboard" disabled={true}>
-        <RibbonButton 
+        <RibbonButton
           icon={<ScissorsIcon className="w-5 h-5 text-gray-700" />}
-          label="Cut" 
-          disabled={true} 
+          label="Cut"
+          disabled={true}
         />
-        <RibbonButton 
+        <RibbonButton
           icon={<DocumentDuplicateIcon className="w-5 h-5 text-gray-700" />}
-          label="Copy" 
-          disabled={true} 
+          label="Copy"
+          disabled={true}
         />
-        <RibbonButton 
+        <RibbonButton
           icon={<PaperClipIcon className="w-5 h-5 text-gray-700" />}
-          label="Paste" 
-          disabled={true} 
+          label="Paste"
+          disabled={true}
         />
       </RibbonGroup>
 
       {/* 2. Font Group (Disabled) */}
       <RibbonGroup title="Font" disabled={true}>
-        <RibbonButton 
-          icon="B" 
-          label="Bold" 
-          disabled={true} 
+        <RibbonButton
+          icon="B"
+          label="Bold"
+          disabled={true}
           iconType="text"
           className="font-bold"
         />
-        <RibbonButton 
-          icon="I" 
-          label="Italic" 
-          disabled={true} 
+        <RibbonButton
+          icon="I"
+          label="Italic"
+          disabled={true}
           iconType="text"
           className="italic"
         />
-        <RibbonButton 
-          icon="U" 
-          label="Underline" 
-          disabled={true} 
+        <RibbonButton
+          icon="U"
+          label="Underline"
+          disabled={true}
           iconType="text"
           className="underline"
         />
@@ -75,43 +80,43 @@ export default function HomeTab() {
 
       {/* 3. Tasks Group */}
       <RibbonGroup title="Tasks">
-        <RibbonButton 
+        <RibbonButton
           icon={<PlusIcon className="w-5 h-5 text-gray-700" />}
-          label="Add Task" 
+          label="Add Task"
           onClick={() => handleAction('Add Task')}
         />
-        <RibbonButton 
+        <RibbonButton
           icon={<TrashIcon className="w-5 h-5 text-gray-700" />}
-          label="Delete Task" 
+          label="Delete Task"
           onClick={() => handleAction('Delete Task')}
         />
-        <RibbonButton 
+        <RibbonButton
           icon={<LinkIcon className="w-5 h-5 text-gray-700" />}
-          label="Link Tasks" 
+          label="Link Tasks"
           onClick={() => handleAction('Link Tasks')}
         />
-        <RibbonButton 
+        <RibbonButton
           icon={<XMarkIcon className="w-5 h-5 text-gray-700" />}
-          label="Unlink Tasks" 
+          label="Unlink Tasks"
           onClick={() => handleAction('Unlink Tasks')}
         />
       </RibbonGroup>
 
       {/* 4. Properties Group */}
       <RibbonGroup title="Properties">
-        <RibbonButton 
+        <RibbonButton
           icon={<DocumentIcon className="w-5 h-5 text-gray-700" />}
-          label="Task Details" 
+          label="Task Details"
           onClick={() => handleAction('Task Details')}
         />
-        <RibbonButton 
+        <RibbonButton
           icon={<PencilIcon className="w-5 h-5 text-gray-700" />}
-          label="Task Notes" 
+          label="Task Notes"
           onClick={() => handleAction('Task Notes')}
         />
-        <RibbonButton 
+        <RibbonButton
           icon={<HashtagIcon className="w-5 h-5 text-gray-700" />}
-          label="Add Code" 
+          label="Add Code"
           onClick={() => handleAction('Add Code')}
         />
       </RibbonGroup>
@@ -119,14 +124,14 @@ export default function HomeTab() {
       {/* 5. Grouping Group */}
       <RibbonGroup title="Grouping">
         <div className="flex flex-col gap-1">
-          <RibbonButton 
+          <RibbonButton
             icon={<FolderPlusIcon className="w-5 h-5 text-gray-700" />}
-            label="Create Group" 
+            label="Create Group"
             onClick={() => handleAction('Create Group')}
           />
-          <RibbonButton 
+          <RibbonButton
             icon={<MinusCircleIcon className="w-5 h-5 text-gray-700" />}
-            label="Ungroup" 
+            label="Ungroup"
             onClick={() => handleAction('Ungroup')}
           />
         </div>
@@ -134,33 +139,33 @@ export default function HomeTab() {
 
       {/* 6. Selection Group */}
       <RibbonGroup title="Selection">
-        <RibbonButton 
+        <RibbonButton
           icon={<CheckIcon className="w-5 h-5 text-gray-700" />}
-          label="Select All" 
+          label="Select All"
           onClick={() => handleAction('Select All')}
         />
-        <RibbonButton 
+        <RibbonButton
           icon={<XCircleIcon className="w-5 h-5 text-gray-700" />}
-          label="Deselect" 
+          label="Deselect"
           onClick={() => handleAction('Deselect')}
         />
       </RibbonGroup>
 
       {/* 7. Navigation Group */}
       <RibbonGroup title="Navigation" isLast={true}>
-        <RibbonButton 
+        <RibbonButton
           icon={<CalendarIcon className="w-5 h-5 text-gray-700" />}
-          label="Scroll to Today" 
+          label="Scroll to Today"
           onClick={() => handleAction('Scroll to Today')}
         />
-        <RibbonButton 
+        <RibbonButton
           icon={<ChevronDownIcon className="w-5 h-5 text-gray-700" />}
-          label="Expand All" 
+          label="Expand All"
           onClick={() => handleAction('Expand All')}
         />
-        <RibbonButton 
+        <RibbonButton
           icon={<ChevronUpIcon className="w-5 h-5 text-gray-700" />}
-          label="Collapse All" 
+          label="Collapse All"
           onClick={() => handleAction('Collapse All')}
         />
       </RibbonGroup>
