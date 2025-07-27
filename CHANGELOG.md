@@ -127,6 +127,11 @@ projectplanner/
   - Set up ProgrammeManager module structure
   - Configured all development tools and linting
 
+- **37cdcde** - feat: Add GitHub integration with automated commits and comprehensive changelog system
+  - Files changed: 5
+  - Changed files: CHANGELOG.md, DEVELOPMENT_WORKFLOW.md, package.json, scripts/auto-commit.js, scripts/auto-commit.ps1
+  - Status: A CHANGELOG.md, A DEVELOPMENT_WORKFLOW.md, M package.json, A scripts/auto-commit.js, A scripts/auto-commit.ps1
+
 ---
 
 ## Development Notes
