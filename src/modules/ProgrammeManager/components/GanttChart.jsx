@@ -2,7 +2,15 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useTaskContext } from '../context/TaskContext';
 
 const GanttChart = () => {
-  const { tasks, taskLinks, selectedTaskId, selectTask } = useTaskContext();
+  const { 
+    tasks, 
+    taskLinks, 
+    selectedTaskId, 
+    selectTask,
+    linkingMode,
+    linkStartTaskId,
+    handleTaskClickForLinking
+  } = useTaskContext();
   const chartRef = useRef(null);
   const taskRefs = useRef({});
   const [chartDimensions, setChartDimensions] = useState({ width: 0, height: 0 });
@@ -21,12 +29,22 @@ const GanttChart = () => {
   // Handle task bar click
   const handleTaskClick = (taskId, e) => {
     e.stopPropagation(); // Prevent chart background click
+    
+    // If in linking mode, handle linking logic
+    if (linkingMode) {
+      handleTaskClickForLinking(taskId);
+      return;
+    }
+
+    // Normal selection logic
     selectTask(taskId);
   };
 
   // Handle chart background click to clear selection
   const handleChartClick = () => {
-    selectTask(null);
+    if (!linkingMode) {
+      selectTask(null);
+    }
   };
 
   // Helper function to calculate task bar position and dimensions
@@ -100,16 +118,16 @@ const GanttChart = () => {
     });
   };
 
-  // Helper function to calculate task duration in days
+  // Helper function to calculate task duration
   const getTaskDuration = (startDate, endDate) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
     const diffTime = Math.abs(end - start);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return Math.max(1, diffDays);
+    return diffDays;
   };
 
-  // Helper function to get task position from start date
+  // Helper function to calculate task position
   const getTaskPosition = (startDate) => {
     const today = new Date();
     const taskStart = new Date(startDate);
@@ -118,20 +136,18 @@ const GanttChart = () => {
     return Math.max(0, diffDays) * 40; // 40px per day
   };
 
-  // Generate timeline headers
+  // Generate timeline header
   const generateTimeline = () => {
-    const days = 30; // Show 30 days
-    const headers = [];
-
-    for (let i = 0; i < days; i++) {
+    const days = [];
+    for (let i = 0; i < 30; i++) {
       const date = new Date();
       date.setDate(date.getDate() + i);
       const isToday = i === 0;
-
-      headers.push(
+      
+      days.push(
         <div
           key={i}
-          className={`w-10 h-8 border-r border-gray-200 flex items-center justify-center text-xs ${
+          className={`w-10 h-8 flex items-center justify-center text-xs border-r border-gray-200 ${
             isToday ? 'bg-blue-50 font-semibold' : 'bg-gray-50'
           }`}
         >
@@ -139,31 +155,23 @@ const GanttChart = () => {
         </div>
       );
     }
-
-    return headers;
+    return days;
   };
 
-  if (tasks.length === 0) {
-    return (
-      <div className="w-full h-full bg-white border border-gray-200 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-2xl text-gray-400 mb-2">📊</div>
-          <div className="text-lg font-medium text-gray-600 mb-1">Gantt Chart</div>
-          <div className="text-sm text-gray-500">No tasks to display</div>
-          <div className="text-xs text-gray-400 mt-2">Add tasks to see timeline</div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="w-full h-full bg-white flex flex-col overflow-hidden">
+    <div className="h-full flex flex-col bg-white">
       {/* Header */}
       <div className="bg-gray-50 border-b px-4 py-3">
         <h3 className="text-sm font-semibold text-gray-700">Gantt Chart</h3>
-        <p className="text-xs text-gray-500 mt-1">Timeline and dependencies</p>
+        <p className="text-xs text-gray-500 mt-1">Timeline view with dependencies</p>
         <p className="text-xs text-blue-600 mt-1">
-          💡 Tip: Click task bars to select • Linked tasks show dependency arrows
+          {linkingMode ? (
+            <span className="text-purple-600 font-medium">
+              🔗 Linking Mode Active - Click task bars to create dependencies
+            </span>
+          ) : (
+            '💡 Tip: Click task bars to select • Linked tasks show dependency arrows'
+          )}
         </p>
       </div>
 
@@ -198,6 +206,7 @@ const GanttChart = () => {
               const leftPosition = getTaskPosition(task.startDate);
               const width = duration * 40; // 40px per day
               const isSelected = selectedTaskId === task.id;
+              const isLinkStart = linkingMode && linkStartTaskId === task.id;
 
               return (
                 <div
@@ -207,10 +216,10 @@ const GanttChart = () => {
                 >
                   {/* Task Name */}
                   <div className={`w-48 border-r border-gray-200 p-2 flex items-center ${
-                    isSelected ? 'bg-blue-50' : 'bg-white'
+                    isLinkStart ? 'bg-purple-50' : isSelected ? 'bg-blue-50' : 'bg-white'
                   }`}>
                     <div className={`text-sm truncate ${
-                      isSelected ? 'font-semibold text-blue-800' : 'text-gray-800'
+                      isLinkStart ? 'font-semibold text-purple-800' : isSelected ? 'font-semibold text-blue-800' : 'text-gray-800'
                     }`}>
                       {task.name}
                     </div>
@@ -224,7 +233,9 @@ const GanttChart = () => {
                         if (el) taskRefs.current[task.id] = el;
                       }}
                       className={`absolute top-2 h-6 rounded-sm shadow-sm cursor-pointer transition-all duration-150 ${
-                        isSelected
+                        isLinkStart
+                          ? 'bg-purple-600 border-2 border-purple-400 shadow-lg hover:bg-purple-700'
+                          : isSelected
                           ? 'bg-blue-600 border-2 border-blue-400 shadow-lg hover:bg-blue-700'
                           : 'bg-blue-500 hover:bg-blue-600'
                       }`}
@@ -233,7 +244,7 @@ const GanttChart = () => {
                         width: `${width}px`,
                         minWidth: '20px'
                       }}
-                      title={`${task.name} (${task.startDate} to ${task.endDate})${isSelected ? ' - Selected' : ''}`}
+                      title={`${task.name} (${task.startDate} to ${task.endDate})${isLinkStart ? ' - Link Start' : isSelected ? ' - Selected' : ''}`}
                       onClick={(e) => handleTaskClick(task.id, e)}
                     >
                       {/* Task Bar Label */}
@@ -253,7 +264,15 @@ const GanttChart = () => {
       <div className="bg-gray-50 border-t px-4 py-2">
         <div className="text-xs text-gray-500">
           {tasks.length} task{tasks.length !== 1 ? 's' : ''} • {taskLinks.length} dependency{taskLinks.length !== 1 ? 'ies' : 'y'} •
-          {selectedTaskId ? ` Selected: ${tasks.find(t => t.id === selectedTaskId)?.name || 'Unknown'}` : ' No task selected'} •
+          {linkingMode ? (
+            linkStartTaskId ? (
+              ` Linking from: ${tasks.find(t => t.id === linkStartTaskId)?.name || linkStartTaskId}`
+            ) : (
+              ' Click first task to start link'
+            )
+          ) : (
+            selectedTaskId ? ` Selected: ${tasks.find(t => t.id === selectedTaskId)?.name || 'Unknown'}` : ' No task selected'
+          )} •
           Blue bars show task duration • Gray arrows show dependencies
         </div>
       </div>

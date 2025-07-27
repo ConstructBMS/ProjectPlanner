@@ -12,7 +12,10 @@ const useTaskManager = () => {
     tasks,
     linkTasks: contextLinkTasks,
     unlinkTasks: contextUnlinkTasks,
-    clearSelection: contextClearSelection
+    clearSelection: contextClearSelection,
+    linkingMode,
+    startLinkingMode: contextStartLinkingMode,
+    stopLinkingMode: contextStopLinkingMode
   } = useTaskContext();
 
   const addTask = () => {
@@ -33,20 +36,10 @@ const useTaskManager = () => {
   };
 
   const linkTasks = () => {
-    if (selectedTaskIds.length !== 2) {
-      console.log('Link Tasks - Need exactly 2 tasks selected');
-      setLastAction('Link Tasks - Need 2 tasks');
-      return;
-    }
-
-    const [fromId, toId] = selectedTaskIds;
-    const success = contextLinkTasks(fromId, toId);
-
-    if (success) {
-      setLastAction('Link Tasks');
-    } else {
-      setLastAction('Link Tasks - Failed');
-    }
+    // Start linking mode instead of requiring 2 selected tasks
+    contextStartLinkingMode();
+    setLastAction('Link Tasks - Mode activated');
+    console.log('Link Tasks button clicked - linking mode activated');
   };
 
   const unlinkTasks = () => {
@@ -137,6 +130,7 @@ const useTaskManager = () => {
     deselect,
     scrollToToday,
     lastAction,
+    linkingMode,
   };
 };
 

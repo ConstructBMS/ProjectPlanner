@@ -63,6 +63,10 @@ export const TaskProvider = ({ children }) => {
     { fromId: 2, toId: 3 }
   ]); // Store task dependencies
 
+  // Linking mode state
+  const [linkingMode, setLinkingMode] = useState(false);
+  const [linkStartTaskId, setLinkStartTaskId] = useState(null);
+
   const addTask = () => {
     const today = new Date();
     const tomorrow = new Date(today);
@@ -169,6 +173,47 @@ export const TaskProvider = ({ children }) => {
     console.log('Task selection cleared');
   };
 
+  // Task linking functions
+  const startLinkingMode = () => {
+    setLinkingMode(true);
+    setLinkStartTaskId(null);
+    console.log('Linking mode activated');
+  };
+
+  const stopLinkingMode = () => {
+    setLinkingMode(false);
+    setLinkStartTaskId(null);
+    console.log('Linking mode deactivated');
+  };
+
+  const handleTaskClickForLinking = (taskId) => {
+    if (!linkingMode) return;
+
+    if (!linkStartTaskId) {
+      // First click - set as start task
+      setLinkStartTaskId(taskId);
+      const startTask = tasks.find(task => task.id === taskId);
+      console.log(`Link started: ${startTask?.name || taskId}`);
+    } else {
+      // Second click - create the link
+      if (linkStartTaskId === taskId) {
+        console.log('Cannot link a task to itself');
+        stopLinkingMode();
+        return;
+      }
+
+      const success = linkTasks(linkStartTaskId, taskId);
+      if (success) {
+        const startTask = tasks.find(task => task.id === linkStartTaskId);
+        const endTask = tasks.find(task => task.id === taskId);
+        console.log(`Link created: ${startTask?.name || linkStartTaskId} → ${endTask?.name || taskId}`);
+      }
+      
+      // Exit linking mode after creating link
+      stopLinkingMode();
+    }
+  };
+
   const linkTasks = (fromId, toId) => {
     // Ensure fromId and toId are different
     if (fromId === toId) {
@@ -234,6 +279,8 @@ export const TaskProvider = ({ children }) => {
     selectedTaskId,
     selectedTaskIds,
     taskLinks,
+    linkingMode,
+    linkStartTaskId,
     addTask,
     deleteTask,
     updateTask,
@@ -242,6 +289,9 @@ export const TaskProvider = ({ children }) => {
     clearSelection,
     linkTasks,
     unlinkTasks,
+    startLinkingMode,
+    stopLinkingMode,
+    handleTaskClickForLinking,
   };
 
   return (

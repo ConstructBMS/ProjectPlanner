@@ -6,10 +6,13 @@ const TaskGrid = () => {
     tasks,
     selectedTaskId,
     selectedTaskIds,
+    linkingMode,
+    linkStartTaskId,
     deleteTask,
     updateTask,
     selectTask,
-    selectMultipleTasks
+    selectMultipleTasks,
+    handleTaskClickForLinking
   } = useTaskContext();
 
   const handleDeleteTask = (taskId, e) => {
@@ -23,6 +26,13 @@ const TaskGrid = () => {
   };
 
   const handleRowClick = (taskId, e) => {
+    // If in linking mode, handle linking logic
+    if (linkingMode) {
+      handleTaskClickForLinking(taskId);
+      return;
+    }
+
+    // Normal selection logic
     const isMultiSelect = e.shiftKey || e.ctrlKey || e.metaKey;
     selectMultipleTasks(taskId, isMultiSelect);
   };
@@ -58,8 +68,11 @@ const TaskGrid = () => {
   const getRowHighlightClass = (taskId) => {
     const isSelected = selectedTaskId === taskId;
     const isMultiSelected = selectedTaskIds.includes(taskId);
+    const isLinkStart = linkingMode && linkStartTaskId === taskId;
 
-    if (isMultiSelected) {
+    if (isLinkStart) {
+      return 'bg-purple-100 border-l-4 border-purple-500';
+    } else if (isMultiSelected) {
       return 'bg-yellow-100 border-l-4 border-yellow-500';
     } else if (isSelected) {
       return 'bg-blue-100 border-l-4 border-blue-500';
@@ -69,7 +82,14 @@ const TaskGrid = () => {
   };
 
   const getSelectionStatus = () => {
-    if (selectedTaskIds.length === 0) {
+    if (linkingMode) {
+      if (linkStartTaskId) {
+        const startTask = tasks.find(task => task.id === linkStartTaskId);
+        return `Linking mode: Click another task to link from "${startTask?.name || linkStartTaskId}"`;
+      } else {
+        return 'Linking mode: Click first task to start link';
+      }
+    } else if (selectedTaskIds.length === 0) {
       return 'No task selected';
     } else if (selectedTaskIds.length === 1) {
       return '1 task selected';
@@ -87,7 +107,13 @@ const TaskGrid = () => {
         <h3 className="text-sm font-semibold text-gray-700">Task Grid</h3>
         <p className="text-xs text-gray-500 mt-1">Task list and management</p>
         <p className="text-xs text-blue-600 mt-1">
-          💡 Tip: Shift+Click to select multiple tasks for linking
+          {linkingMode ? (
+            <span className="text-purple-600 font-medium">
+              🔗 Linking Mode Active - Click tasks to create dependencies
+            </span>
+          ) : (
+            '💡 Tip: Shift+Click to select multiple tasks for linking'
+          )}
         </p>
       </div>
 
@@ -118,6 +144,7 @@ const TaskGrid = () => {
               {tasks.map((task) => {
                 const isSelected = selectedTaskId === task.id;
                 const isMultiSelected = selectedTaskIds.includes(task.id);
+                const isLinkStart = linkingMode && linkStartTaskId === task.id;
 
                 return (
                   <div
@@ -132,7 +159,7 @@ const TaskGrid = () => {
                         value={task.name}
                         onChange={(e) => handleNameChange(task.id, e.target.value, e)}
                         className={`w-full bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1 py-0.5 ${
-                          isMultiSelected ? 'bg-yellow-50' : isSelected ? 'bg-blue-50' : ''
+                          isLinkStart ? 'bg-purple-50' : isMultiSelected ? 'bg-yellow-50' : isSelected ? 'bg-blue-50' : ''
                         }`}
                       />
                     </div>
@@ -165,10 +192,10 @@ const TaskGrid = () => {
                     <div className="col-span-1">
                       <button
                         onClick={(e) => handleDeleteTask(task.id, e)}
-                        className="text-red-600 hover:text-red-800 text-xs transition-colors duration-150"
+                        className="text-red-600 hover:text-red-800 text-xs font-medium"
                         title="Delete task"
                       >
-                        🗑️
+                        Delete
                       </button>
                     </div>
                   </div>
@@ -182,7 +209,7 @@ const TaskGrid = () => {
       {/* Footer */}
       <div className="bg-gray-50 border-t px-4 py-2">
         <div className="text-xs text-gray-500">
-          {tasks.length} task{tasks.length !== 1 ? 's' : ''} • {getSelectionStatus()} • Click "Add Task" to create new tasks
+          {tasks.length} task{tasks.length !== 1 ? 's' : ''} • {getSelectionStatus()}
         </div>
       </div>
     </div>
