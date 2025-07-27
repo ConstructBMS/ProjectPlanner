@@ -60,13 +60,13 @@ const treeData = [
 ];
 
 // Individual tree node component
-const TreeNode = ({ 
-  node, 
-  depth = 0, 
-  expandedIds, 
+const TreeNode = ({
+  node,
+  depth = 0,
+  expandedIds,
   selectedId,
-  onToggle, 
-  onSelect 
+  onToggle,
+  onSelect
 }) => {
   const isExpanded = expandedIds.has(node.id);
   const isSelected = selectedId === node.id;
@@ -126,7 +126,15 @@ const TreeNode = ({
 
 // Main SidebarTree component with forwardRef for external control
 const SidebarTree = forwardRef((props, ref) => {
-  const [expandedIds, setExpandedIds] = useState(new Set(['programme'])); // Start with programme expanded
+  // Start with programme and all main categories expanded
+  const [expandedIds, setExpandedIds] = useState(new Set([
+    'programme',
+    'resources',
+    'tempworks',
+    'calendars',
+    'costcodes',
+    'permanentworks'
+  ]));
   const [selectedId, setSelectedId] = useState(null);
 
   const toggleNode = (id) => {

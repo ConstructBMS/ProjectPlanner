@@ -25,7 +25,7 @@ export default function HomeTab({ onAction }) {
   // Click handlers for different actions
   const handleAction = (actionName) => {
     console.log(`HomeTab Action: ${actionName}`);
-    
+
     // Call the parent action handler if provided
     if (onAction) {
       onAction(actionName);

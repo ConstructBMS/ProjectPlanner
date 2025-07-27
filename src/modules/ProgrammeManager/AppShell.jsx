@@ -11,7 +11,7 @@ export default function AppShell() {
   // Handler for ribbon button actions
   const handleRibbonAction = (actionName) => {
     console.log(`AppShell Action: ${actionName}`);
-    
+
     // Handle expand/collapse actions
     if (actionName === 'Expand All' && sidebarTreeRef.current) {
       sidebarTreeRef.current.expandAll();
