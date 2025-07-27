@@ -121,20 +121,18 @@ export default function HomeTab({ onAction }) {
         />
       </RibbonGroup>
 
-      {/* 5. Grouping Group */}
+      {/* 5. Grouping Group - Fixed to horizontal layout */}
       <RibbonGroup title="Grouping">
-        <div className="flex flex-col gap-1">
-          <RibbonButton
-            icon={<FolderPlusIcon className="w-4 h-4 text-gray-700" />}
-            label="Create Group"
-            onClick={() => handleAction('Create Group')}
-          />
-          <RibbonButton
-            icon={<MinusCircleIcon className="w-4 h-4 text-gray-700" />}
-            label="Ungroup"
-            onClick={() => handleAction('Ungroup')}
-          />
-        </div>
+        <RibbonButton
+          icon={<FolderPlusIcon className="w-4 h-4 text-gray-700" />}
+          label="Create Group"
+          onClick={() => handleAction('Create Group')}
+        />
+        <RibbonButton
+          icon={<MinusCircleIcon className="w-4 h-4 text-gray-700" />}
+          label="Ungroup"
+          onClick={() => handleAction('Ungroup')}
+        />
       </RibbonGroup>
 
       {/* 6. Selection Group */}
