@@ -31,9 +31,9 @@ export default function RibbonTabs({ onAction }) {
   };
 
   return (
-    <div className="bg-blue-100 w-full">
+    <div className="bg-[#eaf1fb] w-full border-b border-[#d1d5db] relative z-10 overflow-x-auto">
       {/* Tab Buttons */}
-      <div className="flex bg-[#b2c7e1] text-sm font-medium border-b border-blue-300 h-[60px]">
+      <div className="flex bg-[#b2c7e1] text-sm font-medium border-b border-blue-300 h-[36px]">
         {tabs.map((tab) => (
           <button
             key={tab}
@@ -53,7 +53,7 @@ export default function RibbonTabs({ onAction }) {
       </div>
 
       {/* Active Tab Tools */}
-      <div className="min-h-[60px]">{renderTabContent()}</div>
+      <div className="min-h-[36px] max-h-[36px] overflow-hidden">{renderTabContent()}</div>
     </div>
   );
 }

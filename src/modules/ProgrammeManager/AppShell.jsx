@@ -11,7 +11,7 @@ export default function AppShell() {
   // Handler for ribbon button actions
   const handleRibbonAction = (actionName) => {
     console.log(`AppShell Action: ${actionName}`);
-
+    
     // Handle expand/collapse actions
     if (actionName === 'Expand All' && sidebarTreeRef.current) {
       sidebarTreeRef.current.expandAll();
@@ -21,14 +21,14 @@ export default function AppShell() {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden">
-      {/* Ribbon Tabs - Fixed height */}
-      <div className="border-b shadow-sm z-10 h-[120px]">
+    <div className="h-screen w-screen flex flex-col overflow-hidden z-0">
+      {/* Ribbon Tabs - Fixed height with proper z-index */}
+      <div className="border-b shadow-sm z-10 h-[72px] relative">
         <RibbonTabs onAction={handleRibbonAction} />
       </div>
 
       {/* Main Workspace */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden z-0">
         {/* Sidebar Tree - Fixed width */}
         <SidebarTree ref={sidebarTreeRef} />
 
