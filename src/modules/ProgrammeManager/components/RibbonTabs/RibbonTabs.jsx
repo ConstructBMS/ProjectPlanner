@@ -53,7 +53,7 @@ export default function RibbonTabs({ onAction }) {
       </div>
       
       {/* Active Tab Tools */}
-      <div className="min-h-[48px] max-h-[48px] overflow-hidden">{renderTabContent()}</div>
+      <div className="min-h-[64px] max-h-[64px] overflow-hidden">{renderTabContent()}</div>
     </div>
   );
 }
