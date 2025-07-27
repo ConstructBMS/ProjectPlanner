@@ -110,7 +110,16 @@ const TreeNode = ({ node, depth = 0, expandedIds, onToggle, onSelect, selectedId
 };
 
 // Sortable TaskNode component for hierarchical tasks
-const SortableTaskNode = ({ task, depth = 0, onToggle, onSelect, selectedId, onContextMenu }) => {
+const SortableTaskNode = ({ 
+  task, 
+  depth = 0, 
+  onToggle, 
+  onSelect, 
+  selectedTaskId,
+  selectedTaskIds,
+  onMultiSelect,
+  onContextMenu 
+}) => {
   const {
     attributes,
     listeners,
@@ -121,7 +130,8 @@ const SortableTaskNode = ({ task, depth = 0, onToggle, onSelect, selectedId, onC
   } = useSortable({ id: task.id });
 
   const hasChildren = task.children && task.children.length > 0;
-  const isSelected = selectedId === task.id;
+  const isSelected = selectedTaskId === task.id;
+  const isMultiSelected = selectedTaskIds.includes(task.id);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -135,13 +145,30 @@ const SortableTaskNode = ({ task, depth = 0, onToggle, onSelect, selectedId, onC
     onContextMenu(e, task);
   };
 
+  const handleClick = (e) => {
+    e.stopPropagation();
+    
+    if (e.ctrlKey || e.metaKey) {
+      // Ctrl+Click: Toggle selection
+      onMultiSelect(task.id, 'toggle');
+    } else if (e.shiftKey) {
+      // Shift+Click: Select range
+      onMultiSelect(task.id, 'range');
+    } else {
+      // Normal click: Select single
+      onMultiSelect(task.id, 'single');
+    }
+  };
+
   return (
     <div ref={setNodeRef} style={style}>
       <div
         className={`py-1 pl-[${1 + depth}rem] flex items-center gap-1 hover:bg-blue-100 cursor-pointer transition-all duration-200 ${
-          isSelected ? 'bg-blue-100' : ''
+          isSelected ? 'bg-blue-100 border-l-4 border-blue-500' : ''
+        } ${
+          isMultiSelected ? 'bg-blue-50 border-l-4 border-blue-400' : ''
         } ${isDragging ? 'shadow-lg bg-white border border-blue-300 rounded scale-105' : ''}`}
-        onClick={() => onSelect(task.id)}
+        onClick={handleClick}
         onContextMenu={handleContextMenu}
       >
         {/* Drag Handle */}
@@ -178,6 +205,11 @@ const SortableTaskNode = ({ task, depth = 0, onToggle, onSelect, selectedId, onC
         <span className={`text-sm ${task.isGroup ? 'font-semibold' : ''} text-gray-800`}>
           {task.name}
         </span>
+
+        {/* Selection indicator */}
+        {isMultiSelected && (
+          <div className="ml-auto w-2 h-2 bg-blue-500 rounded-full"></div>
+        )}
       </div>
       {hasChildren && task.isExpanded && (
         <div className="ml-2">
@@ -188,7 +220,9 @@ const SortableTaskNode = ({ task, depth = 0, onToggle, onSelect, selectedId, onC
               depth={depth + 1}
               onToggle={onToggle}
               onSelect={onSelect}
-              selectedId={selectedId}
+              selectedTaskId={selectedTaskId}
+              selectedTaskIds={selectedTaskIds}
+              onMultiSelect={onMultiSelect}
               onContextMenu={onContextMenu}
             />
           ))}
@@ -227,6 +261,47 @@ const DragOverlayComponent = ({ task, depth = 0 }) => {
   );
 };
 
+// Bulk Actions Toolbar component
+const BulkActionsToolbar = ({ selectedCount, onBulkAction }) => {
+  if (selectedCount < 2) return null;
+
+  return (
+    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white border border-gray-200 rounded-lg shadow-lg px-4 py-2 z-40">
+      <div className="flex items-center gap-3">
+        <span className="text-sm font-medium text-gray-700">
+          {selectedCount} task{selectedCount !== 1 ? 's' : ''} selected
+        </span>
+        
+        <div className="flex gap-2">
+          <button
+            onClick={() => onBulkAction('delete')}
+            className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
+            title="Delete selected tasks"
+          >
+            🗑️ Delete
+          </button>
+          
+          <button
+            onClick={() => onBulkAction('link')}
+            className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+            title="Link selected tasks"
+          >
+            🔗 Link
+          </button>
+          
+          <button
+            onClick={() => onBulkAction('milestone')}
+            className="px-3 py-1 text-xs bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition-colors"
+            title="Mark as milestones"
+          >
+            ✨ Milestones
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Main SidebarTree component with forwardRef for external control
 const SidebarTree = forwardRef((props, ref) => {
   const { 
@@ -245,6 +320,10 @@ const SidebarTree = forwardRef((props, ref) => {
   ]));
   const [selectedId, setSelectedId] = useState(null);
   const [activeTask, setActiveTask] = useState(null);
+
+  // Multi-selection state
+  const [selectedTaskIds, setSelectedTaskIds] = useState([]);
+  const [lastSelectedIndex, setLastSelectedIndex] = useState(-1);
 
   // Context menu state
   const [contextMenu, setContextMenu] = useState({
@@ -289,6 +368,72 @@ const SidebarTree = forwardRef((props, ref) => {
   const handleTaskSelect = (taskId) => {
     selectTask(taskId);
   };
+
+  // Multi-selection logic
+  const handleMultiSelect = (taskId, mode) => {
+    const hierarchicalTasks = getHierarchicalTasks();
+    const taskIndex = hierarchicalTasks.findIndex(t => t.id === taskId);
+    
+    if (taskIndex === -1) return;
+
+    switch (mode) {
+      case 'single':
+        // Single selection - clear multi-selection
+        setSelectedTaskIds([taskId]);
+        setLastSelectedIndex(taskIndex);
+        selectTask(taskId);
+        break;
+        
+      case 'toggle':
+        // Ctrl+Click - toggle selection
+        setSelectedTaskIds(prev => {
+          const isSelected = prev.includes(taskId);
+          if (isSelected) {
+            return prev.filter(id => id !== taskId);
+          } else {
+            return [...prev, taskId];
+          }
+        });
+        setLastSelectedIndex(taskIndex);
+        break;
+        
+      case 'range':
+        // Shift+Click - select range
+        if (lastSelectedIndex === -1) {
+          // No previous selection, just select this one
+          setSelectedTaskIds([taskId]);
+          setLastSelectedIndex(taskIndex);
+        } else {
+          // Select range from last selected to current
+          const start = Math.min(lastSelectedIndex, taskIndex);
+          const end = Math.max(lastSelectedIndex, taskIndex);
+          const rangeIds = hierarchicalTasks
+            .slice(start, end + 1)
+            .map(t => t.id);
+          setSelectedTaskIds(rangeIds);
+        }
+        break;
+    }
+  };
+
+  // Clear selection when clicking empty space
+  const handleEmptySpaceClick = () => {
+    setSelectedTaskIds([]);
+    setLastSelectedIndex(-1);
+  };
+
+  // Handle escape key to clear selection
+  React.useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        setSelectedTaskIds([]);
+        setLastSelectedIndex(-1);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, []);
 
   // Handle context menu
   const handleContextMenu = (e, task) => {
@@ -340,6 +485,32 @@ const SidebarTree = forwardRef((props, ref) => {
         break;
       default:
         console.log('Unknown action:', action);
+    }
+  };
+
+  // Bulk actions
+  const handleBulkAction = (action) => {
+    console.log(`Bulk action: ${action} on ${selectedTaskIds.length} tasks:`, selectedTaskIds);
+    
+    switch (action) {
+      case 'delete':
+        selectedTaskIds.forEach(taskId => {
+          deleteTask(taskId);
+        });
+        setSelectedTaskIds([]);
+        setLastSelectedIndex(-1);
+        break;
+        
+      case 'link':
+        // TODO: Implement bulk linking
+        console.log('Bulk linking not yet implemented');
+        break;
+        
+      case 'milestone':
+        selectedTaskIds.forEach(taskId => {
+          updateTask(taskId, { isMilestone: true });
+        });
+        break;
     }
   };
 
@@ -397,7 +568,7 @@ const SidebarTree = forwardRef((props, ref) => {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto" onClick={handleEmptySpaceClick}>
         {/* Programme Structure */}
         <div className="p-2">
           <h4 className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">
@@ -444,7 +615,9 @@ const SidebarTree = forwardRef((props, ref) => {
                     task={task}
                     onToggle={handleTaskToggle}
                     onSelect={handleTaskSelect}
-                    selectedId={selectedTaskId}
+                    selectedTaskId={selectedTaskId}
+                    selectedTaskIds={selectedTaskIds}
+                    onMultiSelect={handleMultiSelect}
                     onContextMenu={handleContextMenu}
                   />
                 ))}
@@ -470,8 +643,9 @@ const SidebarTree = forwardRef((props, ref) => {
       <div className="bg-gray-50 border-t px-4 py-2">
         <div className="text-xs text-gray-500">
           {hierarchicalTasks.length} task{hierarchicalTasks.length !== 1 ? 's' : ''} • 
-          {selectedTaskId ? ` Selected: ${hierarchicalTasks.find(t => t.id === selectedTaskId)?.name || 'Unknown'}` : ' No task selected'} •
-          💡 Right-click for context menu • Drag ☰ to reorder
+          {selectedTaskIds.length > 0 ? ` ${selectedTaskIds.length} selected` : 
+           selectedTaskId ? ` Selected: ${hierarchicalTasks.find(t => t.id === selectedTaskId)?.name || 'Unknown'}` : ' No task selected'} •
+          💡 Right-click for context menu • Ctrl+Click for multi-select • Drag ☰ to reorder
         </div>
       </div>
 
@@ -482,6 +656,12 @@ const SidebarTree = forwardRef((props, ref) => {
         onClose={closeContextMenu}
         onAction={handleContextMenuAction}
         task={contextMenu.task}
+      />
+
+      {/* Bulk Actions Toolbar */}
+      <BulkActionsToolbar
+        selectedCount={selectedTaskIds.length}
+        onBulkAction={handleBulkAction}
       />
     </div>
   );
