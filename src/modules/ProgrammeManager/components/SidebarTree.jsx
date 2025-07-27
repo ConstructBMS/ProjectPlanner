@@ -2,6 +2,7 @@ import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import { ChevronRightIcon, ChevronDownIcon, FolderIcon, Bars3Icon } from '@heroicons/react/24/outline';
 import { useTaskContext } from '../context/TaskContext';
 import ContextMenu from './ContextMenu';
+import TaskModal from './TaskModal';
 import {
   DndContext,
   closestCenter,
@@ -118,7 +119,8 @@ const SortableTaskNode = ({
   selectedTaskId,
   selectedTaskIds,
   onMultiSelect,
-  onContextMenu 
+  onContextMenu,
+  onDoubleClick
 }) => {
   const {
     attributes,
@@ -160,6 +162,11 @@ const SortableTaskNode = ({
     }
   };
 
+  const handleDoubleClick = (e) => {
+    e.stopPropagation();
+    onDoubleClick(task);
+  };
+
   return (
     <div ref={setNodeRef} style={style}>
       <div
@@ -169,6 +176,7 @@ const SortableTaskNode = ({
           isMultiSelected ? 'bg-blue-50 border-l-4 border-blue-400' : ''
         } ${isDragging ? 'shadow-lg bg-white border border-blue-300 rounded scale-105' : ''}`}
         onClick={handleClick}
+        onDoubleClick={handleDoubleClick}
         onContextMenu={handleContextMenu}
       >
         {/* Drag Handle */}
@@ -224,6 +232,7 @@ const SortableTaskNode = ({
               selectedTaskIds={selectedTaskIds}
               onMultiSelect={onMultiSelect}
               onContextMenu={onContextMenu}
+              onDoubleClick={onDoubleClick}
             />
           ))}
         </div>
@@ -329,6 +338,12 @@ const SidebarTree = forwardRef((props, ref) => {
   const [contextMenu, setContextMenu] = useState({
     isOpen: false,
     position: { x: 0, y: 0 },
+    task: null
+  });
+
+  // Task modal state
+  const [taskModal, setTaskModal] = useState({
+    isOpen: false,
     task: null
   });
 
@@ -457,7 +472,11 @@ const SidebarTree = forwardRef((props, ref) => {
     switch (action) {
       case 'edit':
         console.log('Edit task:', task?.name);
-        // TODO: Open task detail modal
+        // Open task modal for editing
+        setTaskModal({
+          isOpen: true,
+          task: task
+        });
         break;
       case 'delete':
         if (task) {
@@ -486,6 +505,29 @@ const SidebarTree = forwardRef((props, ref) => {
       default:
         console.log('Unknown action:', action);
     }
+  };
+
+  // Handle double-click to open task modal
+  const handleTaskDoubleClick = (task) => {
+    console.log('Double-clicked task:', task.name);
+    setTaskModal({
+      isOpen: true,
+      task: task
+    });
+  };
+
+  // Handle task modal close
+  const closeTaskModal = () => {
+    setTaskModal({
+      isOpen: false,
+      task: null
+    });
+  };
+
+  // Handle task modal save
+  const handleTaskSave = (updatedTask) => {
+    console.log('Saving task from modal:', updatedTask);
+    updateTask(updatedTask.id, updatedTask);
   };
 
   // Bulk actions
@@ -619,6 +661,7 @@ const SidebarTree = forwardRef((props, ref) => {
                     selectedTaskIds={selectedTaskIds}
                     onMultiSelect={handleMultiSelect}
                     onContextMenu={handleContextMenu}
+                    onDoubleClick={handleTaskDoubleClick}
                   />
                 ))}
               </SortableContext>
@@ -645,7 +688,7 @@ const SidebarTree = forwardRef((props, ref) => {
           {hierarchicalTasks.length} task{hierarchicalTasks.length !== 1 ? 's' : ''} • 
           {selectedTaskIds.length > 0 ? ` ${selectedTaskIds.length} selected` : 
            selectedTaskId ? ` Selected: ${hierarchicalTasks.find(t => t.id === selectedTaskId)?.name || 'Unknown'}` : ' No task selected'} •
-          💡 Right-click for context menu • Ctrl+Click for multi-select • Drag ☰ to reorder
+          💡 Right-click for context menu • Double-click to edit • Ctrl+Click for multi-select • Drag ☰ to reorder
         </div>
       </div>
 
@@ -656,6 +699,14 @@ const SidebarTree = forwardRef((props, ref) => {
         onClose={closeContextMenu}
         onAction={handleContextMenuAction}
         task={contextMenu.task}
+      />
+
+      {/* Task Modal */}
+      <TaskModal
+        task={taskModal.task}
+        isOpen={taskModal.isOpen}
+        onClose={closeTaskModal}
+        onSave={handleTaskSave}
       />
 
       {/* Bulk Actions Toolbar */}
