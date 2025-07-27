@@ -11,11 +11,57 @@ export const useTaskContext = () => {
 };
 
 export const TaskProvider = ({ children }) => {
-  const [tasks, setTasks] = useState([]);
-  const [nextId, setNextId] = useState(1);
+  // Initialize with sample tasks for testing
+  const [tasks, setTasks] = useState([
+    {
+      id: 1,
+      name: 'Foundation Work',
+      startDate: '2025-07-28',
+      endDate: '2025-08-02',
+      duration: 5,
+      status: 'Planned',
+      description: 'Excavation and foundation construction',
+      progress: 0,
+      priority: 'High',
+      assignedTo: 'Construction Team',
+      createdAt: '2025-07-28T10:00:00Z',
+    },
+    {
+      id: 2,
+      name: 'Structural Framework',
+      startDate: '2025-08-03',
+      endDate: '2025-08-15',
+      duration: 12,
+      status: 'Planned',
+      description: 'Steel framework and concrete structure',
+      progress: 0,
+      priority: 'High',
+      assignedTo: 'Structural Team',
+      createdAt: '2025-07-28T10:00:00Z',
+    },
+    {
+      id: 3,
+      name: 'Electrical Installation',
+      startDate: '2025-08-16',
+      endDate: '2025-08-25',
+      duration: 9,
+      status: 'Planned',
+      description: 'Electrical systems and wiring',
+      progress: 0,
+      priority: 'Medium',
+      assignedTo: 'Electrical Team',
+      createdAt: '2025-07-28T10:00:00Z',
+    }
+  ]);
+  const [nextId, setNextId] = useState(4); // Start after sample tasks
   const [selectedTaskId, setSelectedTaskId] = useState(null);
   const [selectedTaskIds, setSelectedTaskIds] = useState([]); // For multi-selection
-  const [taskLinks, setTaskLinks] = useState([]); // Store task dependencies
+  const [taskLinks, setTaskLinks] = useState([
+    // Sample dependency: Foundation → Structural
+    { fromId: 1, toId: 2 },
+    // Sample dependency: Structural → Electrical
+    { fromId: 2, toId: 3 }
+  ]); // Store task dependencies
 
   const addTask = () => {
     const today = new Date();
@@ -27,8 +73,9 @@ export const TaskProvider = ({ children }) => {
       name: `New Task ${nextId}`,
       startDate: today.toISOString().split('T')[0], // YYYY-MM-DD format
       endDate: tomorrow.toISOString().split('T')[0],
+      duration: 1, // Calculate duration in days
       status: 'Planned',
-      description: '',
+      description: 'New task description',
       progress: 0,
       priority: 'Medium',
       assignedTo: '',
@@ -81,6 +128,7 @@ export const TaskProvider = ({ children }) => {
 
   const selectTask = (taskId) => {
     setSelectedTaskId(taskId);
+    setSelectedTaskIds([taskId]); // Ensure single selection also updates multi-selection array
     console.log('Task selected:', taskId);
   };
 
@@ -101,7 +149,7 @@ export const TaskProvider = ({ children }) => {
         } else {
           // Add to selection (max 2 tasks)
           if (prev.length >= 2) {
-            // Reset to just this task
+            // Reset to just this task if more than 2 are attempted
             setSelectedTaskId(taskId);
             return [taskId];
           } else {
@@ -122,9 +170,16 @@ export const TaskProvider = ({ children }) => {
   };
 
   const linkTasks = (fromId, toId) => {
+    // Ensure fromId and toId are different
+    if (fromId === toId) {
+      console.log('Cannot link a task to itself');
+      return false;
+    }
+
     // Check if link already exists
     const linkExists = taskLinks.some(link =>
-      link.fromId === fromId && link.toId === toId
+      (link.fromId === fromId && link.toId === toId) ||
+      (link.fromId === toId && link.toId === fromId) // Also check reverse for simplicity
     );
 
     if (linkExists) {
@@ -150,8 +205,8 @@ export const TaskProvider = ({ children }) => {
   };
 
   const checkForCircularDependency = (fromId, toId) => {
-    // Simple cycle detection - check if toId is already a predecessor of fromId
     const visited = new Set();
+
     const checkPath = (currentId) => {
       if (currentId === fromId) return true;
       if (visited.has(currentId)) return false;

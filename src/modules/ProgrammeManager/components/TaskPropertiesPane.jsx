@@ -13,7 +13,7 @@ const TaskPropertiesPane = () => {
     setIsResizing(true);
     setStartY(e.clientY);
     setStartHeight(paneHeight);
-    
+
     // Add global mouse event listeners
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
@@ -24,13 +24,13 @@ const TaskPropertiesPane = () => {
 
     const deltaY = startY - e.clientY; // Inverted for intuitive dragging
     const newHeight = Math.max(100, Math.min(600, startHeight + deltaY)); // Min 100px, Max 600px
-    
+
     setPaneHeight(newHeight);
   };
 
   const handleMouseUp = () => {
     setIsResizing(false);
-    
+
     // Remove global mouse event listeners
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleMouseUp);
@@ -45,7 +45,7 @@ const TaskPropertiesPane = () => {
   }, []);
 
   return (
-    <div 
+    <div
       className="bg-gray-50 border-t border-gray-200 shadow-inner flex flex-col overflow-hidden"
       style={{ height: `${paneHeight}px` }}
     >
@@ -79,34 +79,34 @@ const TaskPropertiesPane = () => {
           <div className="text-xl text-gray-400 mb-2">⚙️</div>
           <div className="text-sm font-medium text-gray-600 mb-1">Properties Panel</div>
           <div className="text-xs text-gray-500 mb-4">Task details and settings will appear here</div>
-          
+
           {/* Sample content to demonstrate scrolling */}
           <div className="space-y-3 text-left">
             <div className="bg-white border border-gray-200 rounded p-3">
               <div className="text-xs font-semibold text-gray-600 mb-1">Task Information</div>
               <div className="text-xs text-gray-500">Name, description, and basic details</div>
             </div>
-            
+
             <div className="bg-white border border-gray-200 rounded p-3">
               <div className="text-xs font-semibold text-gray-600 mb-1">Schedule</div>
               <div className="text-xs text-gray-500">Start date, end date, duration</div>
             </div>
-            
+
             <div className="bg-white border border-gray-200 rounded p-3">
               <div className="text-xs font-semibold text-gray-600 mb-1">Resources</div>
               <div className="text-xs text-gray-500">Assigned resources and costs</div>
             </div>
-            
+
             <div className="bg-white border border-gray-200 rounded p-3">
               <div className="text-xs font-semibold text-gray-600 mb-1">Dependencies</div>
               <div className="text-xs text-gray-500">Predecessors and successors</div>
             </div>
-            
+
             <div className="bg-white border border-gray-200 rounded p-3">
               <div className="text-xs font-semibold text-gray-600 mb-1">Progress</div>
               <div className="text-xs text-gray-500">Completion percentage and status</div>
             </div>
-            
+
             <div className="bg-white border border-gray-200 rounded p-3">
               <div className="text-xs font-semibold text-gray-600 mb-1">Notes</div>
               <div className="text-xs text-gray-500">Additional comments and notes</div>

@@ -9,8 +9,10 @@ const useTaskManager = () => {
     updateTask: contextUpdateTask,
     selectedTaskId,
     selectedTaskIds,
+    tasks,
     linkTasks: contextLinkTasks,
-    unlinkTasks: contextUnlinkTasks
+    unlinkTasks: contextUnlinkTasks,
+    clearSelection: contextClearSelection
   } = useTaskContext();
 
   const addTask = () => {
@@ -60,36 +62,69 @@ const useTaskManager = () => {
   };
 
   const openTaskDetails = () => {
-    console.log('Open task details panel');
+    if (!selectedTaskId) {
+      console.log('Open Task Details - No task selected');
+      setLastAction('Open Task Details - No selection');
+      return;
+    }
+    console.log('Open task details panel for task:', selectedTaskId);
     setLastAction('Open Task Details');
   };
 
   const openTaskNotes = () => {
-    console.log('Open task notes modal');
+    if (!selectedTaskId) {
+      console.log('Open Task Notes - No task selected');
+      setLastAction('Open Task Notes - No selection');
+      return;
+    }
+    console.log('Open task notes modal for task:', selectedTaskId);
     setLastAction('Open Task Notes');
   };
 
   const addCode = () => {
-    console.log('Add task code');
+    if (!selectedTaskId) {
+      console.log('Add Code - No task selected');
+      setLastAction('Add Code - No selection');
+      return;
+    }
+    console.log('Add task code for task:', selectedTaskId);
     setLastAction('Add Code');
   };
 
   const createGroup = () => {
-    console.log('Create group');
+    if (selectedTaskIds.length < 2) {
+      console.log('Create Group - Need at least 2 tasks selected');
+      setLastAction('Create Group - Need 2+ tasks');
+      return;
+    }
+    console.log('Create group with tasks:', selectedTaskIds);
     setLastAction('Create Group');
   };
 
   const ungroup = () => {
-    console.log('Ungroup');
+    if (selectedTaskIds.length === 0) {
+      console.log('Ungroup - No tasks selected');
+      setLastAction('Ungroup - No selection');
+      return;
+    }
+    console.log('Ungroup tasks:', selectedTaskIds);
     setLastAction('Ungroup');
   };
 
   const selectAll = () => {
-    console.log('Select all tasks');
+    if (tasks.length === 0) {
+      console.log('Select All - No tasks available');
+      setLastAction('Select All - No tasks');
+      return;
+    }
+    const allTaskIds = tasks.map(task => task.id);
+    // Note: This would need to be implemented in TaskContext
+    console.log('Select all tasks:', allTaskIds);
     setLastAction('Select All');
   };
 
   const deselect = () => {
+    contextClearSelection();
     console.log('Deselect all tasks');
     setLastAction('Deselect');
   };
