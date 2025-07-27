@@ -1,70 +1,157 @@
 import React from 'react';
 
-const Section = ({ title, children }) => (
-  <div className='bg-white border rounded shadow-sm p-2 w-48 min-h-[100px]'>
-    <div className='text-xs font-semibold border-b mb-1'>{title}</div>
-    <div className='text-xs text-gray-700'>{children}</div>
+// Ribbon Button Component
+const RibbonButton = ({ icon, label, onClick, disabled = false, className = '' }) => (
+  <div
+    className={`w-[48px] h-[48px] bg-gray-100 rounded flex items-center justify-center hover:bg-blue-100 cursor-pointer transition-all duration-200 ${
+      disabled ? 'opacity-50 cursor-not-allowed' : ''
+    } ${className}`}
+    onClick={disabled ? undefined : onClick}
+  >
+    <span className="text-lg">{icon}</span>
+  </div>
+);
+
+// Ribbon Group Component
+const RibbonGroup = ({ title, children, disabled = false }) => (
+  <div
+    className={`flex flex-col items-center w-fit p-2 bg-white shadow-sm rounded-md ${
+      disabled ? 'opacity-50 cursor-not-allowed' : ''
+    }`}
+  >
+    <div className="flex gap-1 mb-1">{children}</div>
+    <div className="text-[10px] font-medium text-gray-500 uppercase">{title}</div>
   </div>
 );
 
 export default function HomeTab() {
+  // Click handlers for different actions
+  const handleAction = (actionName) => {
+    console.log(`HomeTab Action: ${actionName}`);
+  };
+
   return (
-    <div className='flex flex-wrap gap-3 text-xs'>
-      <Section title='Clipboard'>
-        Paste
-        <br />
-        Cut • Copy
-      </Section>
+    <div className="flex flex-row gap-3 p-2 bg-[#f9f9f9] border-t border-gray-200">
+      {/* 1. Clipboard Group (Disabled) */}
+      <RibbonGroup title="Clipboard" disabled={true}>
+        <RibbonButton icon="✂️" label="Cut" disabled={true} />
+        <RibbonButton icon="📋" label="Copy" disabled={true} />
+        <RibbonButton icon="📎" label="Paste" disabled={true} />
+      </RibbonGroup>
 
-      <Section title='Font'>
-        Bold • Italic • Underline
-        <br />
-        Font Size ⬇️
-        <br />
-        Colour ▓
-      </Section>
+      {/* 2. Font Group (Disabled) */}
+      <RibbonGroup title="Font" disabled={true}>
+        <RibbonButton 
+          icon="B" 
+          label="Bold" 
+          disabled={true} 
+          className="font-bold text-xs"
+        />
+        <RibbonButton 
+          icon="I" 
+          label="Italic" 
+          disabled={true} 
+          className="italic text-xs"
+        />
+        <RibbonButton 
+          icon="U" 
+          label="Underline" 
+          disabled={true} 
+          className="underline text-xs"
+        />
+      </RibbonGroup>
 
-      <Section title='Schedule'>
-        Constraint Flag • Add/Delete Links
-        <br />
-        Auto Reschedule
-      </Section>
+      {/* 3. Tasks Group */}
+      <RibbonGroup title="Tasks">
+        <RibbonButton 
+          icon="➕" 
+          label="Add Task" 
+          onClick={() => handleAction('Add Task')}
+        />
+        <RibbonButton 
+          icon="❌" 
+          label="Delete Task" 
+          onClick={() => handleAction('Delete Task')}
+        />
+        <RibbonButton 
+          icon="🔗" 
+          label="Link Tasks" 
+          onClick={() => handleAction('Link Tasks')}
+        />
+        <RibbonButton 
+          icon="✖️" 
+          label="Unlink Tasks" 
+          onClick={() => handleAction('Unlink Tasks')}
+        />
+      </RibbonGroup>
 
-      <Section title='Hierarchy'>
-        Move Bars into Chart
-        <br />
-        Summarise • Show To Level ⬇️
-      </Section>
+      {/* 4. Properties Group */}
+      <RibbonGroup title="Properties">
+        <RibbonButton 
+          icon="📄" 
+          label="Task Details" 
+          onClick={() => handleAction('Task Details')}
+        />
+        <RibbonButton 
+          icon="📝" 
+          label="Task Notes" 
+          onClick={() => handleAction('Task Notes')}
+        />
+        <RibbonButton 
+          icon="🔢" 
+          label="Add Code" 
+          onClick={() => handleAction('Add Code')}
+        />
+      </RibbonGroup>
 
-      <Section title='Task'>
-        Make Into ⬇️
-        <br />
-        Assign ⬇️
-        <br />
-        Split/Join
-      </Section>
+      {/* 5. Grouping Group */}
+      <RibbonGroup title="Grouping">
+        <div className="flex flex-col gap-1">
+          <RibbonButton 
+            icon="🗂️" 
+            label="Create Group" 
+            onClick={() => handleAction('Create Group')}
+          />
+          <RibbonButton 
+            icon="🚫" 
+            label="Ungroup" 
+            onClick={() => handleAction('Ungroup')}
+          />
+        </div>
+      </RibbonGroup>
 
-      <Section title='Insert'>
-        Bar • Hammock
-        <br />
-        Recurring Task
-        <br />
-        Text Annotation
-      </Section>
+      {/* 6. Selection Group */}
+      <RibbonGroup title="Selection">
+        <RibbonButton 
+          icon="✅" 
+          label="Select All" 
+          onClick={() => handleAction('Select All')}
+        />
+        <RibbonButton 
+          icon="❎" 
+          label="Deselect" 
+          onClick={() => handleAction('Deselect')}
+        />
+      </RibbonGroup>
 
-      <Section title='Progress'>
-        Project Report ⬇️
-        <br />
-        Enter Progress ⬇️
-        <br />
-        Transfer Progress
-      </Section>
-
-      <Section title='Editing'>
-        ❌ • 🧍‍♂️ • 🔍
-        <br />
-        Track • Select • Edit
-      </Section>
+      {/* 7. Navigation Group */}
+      <RibbonGroup title="Navigation">
+        <RibbonButton 
+          icon="📆" 
+          label="Scroll to Today" 
+          onClick={() => handleAction('Scroll to Today')}
+        />
+        <RibbonButton 
+          icon="📂" 
+          label="Expand All" 
+          onClick={() => handleAction('Expand All')}
+        />
+        <RibbonButton 
+          icon="📁" 
+          label="Collapse All" 
+          onClick={() => handleAction('Collapse All')}
+        />
+      </RibbonGroup>
     </div>
   );
 }
