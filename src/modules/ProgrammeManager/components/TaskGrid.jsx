@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTaskContext } from '../context/TaskContext';
-import { ChevronRightIcon, ChevronDownIcon, FolderIcon } from '@heroicons/react/24/outline';
+import { ChevronRightIcon, ChevronDownIcon, FolderIcon, PencilIcon } from '@heroicons/react/24/outline';
 
 const TaskGrid = () => {
   const {
@@ -19,6 +19,10 @@ const TaskGrid = () => {
   } = useTaskContext();
 
   const visibleTasks = getVisibleTasks();
+  
+  // Inline editing state
+  const [editingField, setEditingField] = useState(null); // { taskId, field }
+  const [editValue, setEditValue] = useState('');
 
   const handleDeleteTask = (taskId, e) => {
     e.stopPropagation(); // Prevent row selection when clicking delete
@@ -45,6 +49,75 @@ const TaskGrid = () => {
   const handleGroupToggle = (taskId, e) => {
     e.stopPropagation(); // Prevent row selection when clicking expand/collapse
     toggleGroupCollapse(taskId);
+  };
+
+  // Inline editing functions
+  const startEditing = (taskId, field, currentValue) => {
+    setEditingField({ taskId, field });
+    setEditValue(currentValue);
+  };
+
+  const stopEditing = () => {
+    setEditingField(null);
+    setEditValue('');
+  };
+
+  const handleEditDoubleClick = (taskId, field, currentValue, e) => {
+    e.stopPropagation();
+    startEditing(taskId, field, currentValue);
+  };
+
+  const handleEditChange = (e) => {
+    setEditValue(e.target.value);
+  };
+
+  const handleEditKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      commitEdit();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      stopEditing();
+    }
+  };
+
+  const handleEditBlur = () => {
+    // Small delay to allow for Enter key processing
+    setTimeout(() => {
+      commitEdit();
+    }, 100);
+  };
+
+  const commitEdit = () => {
+    if (!editingField) return;
+
+    const { taskId, field } = editingField;
+    let finalValue = editValue;
+    
+    // Handle duration field - ensure it's a number
+    if (field === 'duration') {
+      const numericValue = parseInt(editValue.replace(' days', ''), 10);
+      if (isNaN(numericValue) || numericValue < 1) {
+        console.warn('Duration must be a positive number');
+        stopEditing();
+        return;
+      }
+      finalValue = numericValue;
+    }
+    
+    // Handle date fields - validate format
+    if (field === 'startDate' || field === 'endDate') {
+      const date = new Date(finalValue);
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date format');
+        stopEditing();
+        return;
+      }
+    }
+    
+    const updates = { [field]: finalValue };
+    updateTask(taskId, updates);
+    stopEditing();
   };
 
   const getStatusColor = (status) => {
@@ -110,6 +183,42 @@ const TaskGrid = () => {
     }
   };
 
+  // Render editable field
+  const renderEditableField = (task, field, value, type = 'text') => {
+    const isEditing = editingField?.taskId === task.id && editingField?.field === field;
+    
+    if (isEditing) {
+      // Handle duration field specially - extract numeric value
+      let inputValue = editValue;
+      if (field === 'duration') {
+        inputValue = editValue.replace(' days', '');
+      }
+      
+      return (
+        <input
+          type={type}
+          value={inputValue}
+          onChange={handleEditChange}
+          onKeyDown={handleEditKeyDown}
+          onBlur={handleEditBlur}
+          className="w-full bg-white border border-blue-500 rounded px-1 py-0.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+          autoFocus
+        />
+      );
+    }
+
+    return (
+      <div
+        className="w-full px-1 py-0.5 text-sm cursor-pointer hover:bg-blue-50 hover:border hover:border-blue-200 rounded flex items-center justify-between group"
+        onDoubleClick={(e) => handleEditDoubleClick(task.id, field, value, e)}
+        title="Double-click to edit"
+      >
+        <span className="truncate">{value}</span>
+        <PencilIcon className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+      </div>
+    );
+  };
+
   return (
     <div className="h-full flex flex-col bg-white">
       {/* Header */}
@@ -122,7 +231,7 @@ const TaskGrid = () => {
               🔗 Linking Mode Active - Click tasks to create dependencies
             </span>
           ) : (
-            '💡 Tip: Shift+Click to select multiple tasks for grouping'
+            '💡 Tip: Double-click any field to edit • Shift+Click to select multiple tasks for grouping'
           )}
         </p>
       </div>
@@ -144,8 +253,8 @@ const TaskGrid = () => {
               <div className="col-span-4">Task Name</div>
               <div className="col-span-2">Start Date</div>
               <div className="col-span-2">End Date</div>
+              <div className="col-span-1">Duration</div>
               <div className="col-span-2">Status</div>
-              <div className="col-span-1">Priority</div>
               <div className="col-span-1">Actions</div>
             </div>
 
@@ -191,37 +300,30 @@ const TaskGrid = () => {
                       )}
                       
                       {/* Task Name Input */}
-                      <input
-                        type="text"
-                        value={task.name}
-                        onChange={(e) => handleNameChange(task.id, e.target.value, e)}
-                        className={`flex-1 bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1 py-0.5 ${
-                          isLinkStart ? 'bg-purple-50' : isMultiSelected ? 'bg-yellow-50' : isSelected ? 'bg-blue-50' : ''
-                        } ${task.isGroup ? 'font-semibold' : ''}`}
-                      />
+                      <div className="flex-1">
+                        {renderEditableField(task, 'name', task.name)}
+                      </div>
                     </div>
 
                     {/* Start Date */}
-                    <div className="col-span-2 text-gray-600">
-                      {task.startDate}
+                    <div className="col-span-2">
+                      {renderEditableField(task, 'startDate', task.startDate, 'date')}
                     </div>
 
                     {/* End Date */}
-                    <div className="col-span-2 text-gray-600">
-                      {task.endDate}
+                    <div className="col-span-2">
+                      {renderEditableField(task, 'endDate', task.endDate, 'date')}
+                    </div>
+
+                    {/* Duration */}
+                    <div className="col-span-1">
+                      {renderEditableField(task, 'duration', `${task.duration} days`, 'number')}
                     </div>
 
                     {/* Status */}
                     <div className="col-span-2">
                       <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(task.status)}`}>
                         {task.status}
-                      </span>
-                    </div>
-
-                    {/* Priority */}
-                    <div className="col-span-1">
-                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(task.priority)}`}>
-                        {task.priority}
                       </span>
                     </div>
 

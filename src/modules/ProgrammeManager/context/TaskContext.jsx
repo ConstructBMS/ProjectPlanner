@@ -206,11 +206,59 @@ export const TaskProvider = ({ children }) => {
   };
 
   const updateTask = (taskId, updates) => {
-    setTasks(prevTasks =>
-      prevTasks.map(task =>
-        task.id === taskId ? { ...task, ...updates } : task
-      )
-    );
+    setTasks(prevTasks => {
+      const taskIndex = prevTasks.findIndex(task => task.id === taskId);
+      if (taskIndex === -1) return prevTasks;
+
+      const currentTask = prevTasks[taskIndex];
+      let updatedTask = { ...currentTask, ...updates };
+
+      // Intelligent date and duration calculations
+      if (updates.startDate || updates.endDate || updates.duration) {
+        const startDate = updates.startDate || currentTask.startDate;
+        const endDate = updates.endDate || currentTask.endDate;
+        const duration = updates.duration || currentTask.duration;
+
+        // If start or end date changed, recalculate duration
+        if (updates.startDate || updates.endDate) {
+          const start = new Date(startDate);
+          const end = new Date(endDate);
+          
+          // Validate dates
+          if (end < start) {
+            console.warn('End date cannot be before start date');
+            return prevTasks; // Don't update if invalid
+          }
+          
+          const diffTime = Math.abs(end - start);
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          updatedTask = {
+            ...updatedTask,
+            duration: diffDays,
+            startDate,
+            endDate
+          };
+        }
+        // If duration changed, recalculate end date
+        else if (updates.duration) {
+          const start = new Date(startDate);
+          const newDuration = Math.max(1, duration); // Minimum 1 day
+          const end = new Date(start);
+          end.setDate(start.getDate() + newDuration - 1); // -1 because start day counts as day 1
+          
+          updatedTask = {
+            ...updatedTask,
+            duration: newDuration,
+            endDate: end.toISOString().split('T')[0]
+          };
+        }
+      }
+
+      const newTasks = [...prevTasks];
+      newTasks[taskIndex] = updatedTask;
+      return newTasks;
+    });
+    
     console.log('Task updated:', taskId, updates);
   };
 
