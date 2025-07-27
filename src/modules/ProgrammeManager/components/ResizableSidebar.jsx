@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef } from 'react';
 import SidebarTree from './SidebarTree';
 
 const ResizableSidebar = ({ minWidth = 150, maxWidth = 400, defaultWidth = 250 }) => {
@@ -7,7 +7,7 @@ const ResizableSidebar = ({ minWidth = 150, maxWidth = 400, defaultWidth = 250 }
   const startXRef = useRef(0);
   const startWidthRef = useRef(0);
 
-  const handleMouseDown = useCallback((e) => {
+  const handleMouseDown = (e) => {
     console.log('Mouse down on sidebar divider');
     e.preventDefault();
     e.stopPropagation();
@@ -22,18 +22,18 @@ const ResizableSidebar = ({ minWidth = 150, maxWidth = 400, defaultWidth = 250 }
     // Change cursor globally
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
-  }, [width]);
+  };
 
-  const handleMouseMove = useCallback((e) => {
+  const handleMouseMove = (e) => {
     if (!isDragging) return;
     
     const deltaX = e.clientX - startXRef.current;
     const newWidth = Math.max(minWidth, Math.min(maxWidth, startWidthRef.current + deltaX));
     console.log('Resizing sidebar:', { deltaX, newWidth, isDragging });
     setWidth(newWidth);
-  }, [isDragging, minWidth, maxWidth]);
+  };
 
-  const handleMouseUp = useCallback(() => {
+  const handleMouseUp = () => {
     console.log('Mouse up on sidebar divider');
     setIsDragging(false);
     
@@ -44,7 +44,7 @@ const ResizableSidebar = ({ minWidth = 150, maxWidth = 400, defaultWidth = 250 }
     // Reset cursor and selection
     document.body.style.cursor = '';
     document.body.style.userSelect = '';
-  }, [handleMouseMove]);
+  };
 
   return (
     <div className="flex h-full">

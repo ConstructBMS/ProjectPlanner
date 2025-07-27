@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef } from 'react';
 import TaskGrid from './TaskGrid';
 import GanttChart from './GanttChart';
 
@@ -13,7 +13,7 @@ const ResizableTaskGanttArea = ({
   const startHeightRef = useRef(0);
   const containerRef = useRef(null);
 
-  const handleMouseDown = useCallback((e) => {
+  const handleMouseDown = (e) => {
     console.log('Mouse down on task/gantt divider');
     e.preventDefault();
     e.stopPropagation();
@@ -28,9 +28,9 @@ const ResizableTaskGanttArea = ({
     // Change cursor globally
     document.body.style.cursor = 'row-resize';
     document.body.style.userSelect = 'none';
-  }, []);
+  };
 
-  const handleMouseMove = useCallback((e) => {
+  const handleMouseMove = (e) => {
     if (!isDragging || !containerRef.current) return;
     
     const containerHeight = containerRef.current.offsetHeight;
@@ -43,9 +43,9 @@ const ResizableTaskGanttArea = ({
     const taskHeightPercent = (taskHeightPx / containerHeight) * 100;
     console.log('Resizing task/gantt:', { deltaY, taskHeightPercent, isDragging });
     setTaskHeight(`${taskHeightPercent}%`);
-  }, [isDragging, minTaskHeight, minGanttHeight]);
+  };
 
-  const handleMouseUp = useCallback(() => {
+  const handleMouseUp = () => {
     console.log('Mouse up on task/gantt divider');
     setIsDragging(false);
     
@@ -56,7 +56,7 @@ const ResizableTaskGanttArea = ({
     // Reset cursor and selection
     document.body.style.cursor = '';
     document.body.style.userSelect = '';
-  }, [handleMouseMove]);
+  };
 
   return (
     <div ref={containerRef} className="flex flex-col flex-1 overflow-hidden">
