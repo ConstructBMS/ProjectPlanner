@@ -36,7 +36,7 @@ const GanttChart = () => {
 
     const rect = taskRef.getBoundingClientRect();
     const chartRect = chartRef.current?.getBoundingClientRect();
-    
+
     if (!chartRect) return null;
 
     return {
@@ -122,12 +122,12 @@ const GanttChart = () => {
   const generateTimeline = () => {
     const days = 30; // Show 30 days
     const headers = [];
-    
+
     for (let i = 0; i < days; i++) {
       const date = new Date();
       date.setDate(date.getDate() + i);
       const isToday = i === 0;
-      
+
       headers.push(
         <div
           key={i}
@@ -139,7 +139,7 @@ const GanttChart = () => {
         </div>
       );
     }
-    
+
     return headers;
   };
 
@@ -224,8 +224,8 @@ const GanttChart = () => {
                         if (el) taskRefs.current[task.id] = el;
                       }}
                       className={`absolute top-2 h-6 rounded-sm shadow-sm cursor-pointer transition-all duration-150 ${
-                        isSelected 
-                          ? 'bg-blue-600 border-2 border-blue-400 shadow-lg hover:bg-blue-700' 
+                        isSelected
+                          ? 'bg-blue-600 border-2 border-blue-400 shadow-lg hover:bg-blue-700'
                           : 'bg-blue-500 hover:bg-blue-600'
                       }`}
                       style={{
@@ -252,8 +252,8 @@ const GanttChart = () => {
       {/* Footer */}
       <div className="bg-gray-50 border-t px-4 py-2">
         <div className="text-xs text-gray-500">
-          {tasks.length} task{tasks.length !== 1 ? 's' : ''} • {taskLinks.length} dependency{taskLinks.length !== 1 ? 'ies' : 'y'} • 
-          {selectedTaskId ? ` Selected: ${tasks.find(t => t.id === selectedTaskId)?.name || 'Unknown'}` : ' No task selected'} • 
+          {tasks.length} task{tasks.length !== 1 ? 's' : ''} • {taskLinks.length} dependency{taskLinks.length !== 1 ? 'ies' : 'y'} •
+          {selectedTaskId ? ` Selected: ${tasks.find(t => t.id === selectedTaskId)?.name || 'Unknown'}` : ' No task selected'} •
           Blue bars show task duration • Gray arrows show dependencies
         </div>
       </div>
