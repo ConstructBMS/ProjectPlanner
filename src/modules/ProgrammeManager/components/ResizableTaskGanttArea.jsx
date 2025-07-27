@@ -15,6 +15,7 @@ const ResizableTaskGanttArea = ({
 
   const handleMouseDown = useCallback((e) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsDragging(true);
     startYRef.current = e.clientY;
     startHeightRef.current = containerRef.current?.offsetHeight || 0;
@@ -55,7 +56,7 @@ const ResizableTaskGanttArea = ({
   }, [handleMouseMove]);
 
   return (
-    <div ref={containerRef} className="flex flex-col flex-1 overflow-hidden">
+    <div ref={containerRef} className="flex flex-col flex-1 overflow-hidden relative">
       {/* Task Grid Area */}
       <div 
         className="overflow-auto border-b border-gray-300"
@@ -64,17 +65,23 @@ const ResizableTaskGanttArea = ({
         <TaskGrid />
       </div>
       
-      {/* Resizable Divider */}
+      {/* Resizable Divider - Made more visible */}
       <div
-        className="h-1 bg-gray-300 hover:bg-blue-400 cursor-row-resize transition-colors duration-200 relative group"
+        className="h-2 bg-gray-200 hover:bg-blue-400 cursor-row-resize transition-colors duration-200 relative group border-t border-gray-300"
         onMouseDown={handleMouseDown}
         title="Drag to resize task and Gantt areas"
+        style={{ 
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          zIndex: 10
+        }}
       >
         {/* Hover indicator */}
         <div className="absolute inset-0 bg-blue-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
         
-        {/* Drag handle visual */}
-        <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 h-0.5 w-8 bg-gray-400 group-hover:bg-blue-500 transition-colors duration-200" />
+        {/* Drag handle visual - Made more prominent */}
+        <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 h-1 w-12 bg-gray-400 group-hover:bg-blue-500 transition-colors duration-200 rounded-full" />
       </div>
       
       {/* Gantt Chart Area */}

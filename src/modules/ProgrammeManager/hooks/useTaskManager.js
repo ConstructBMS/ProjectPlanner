@@ -11,16 +11,25 @@ const useTaskManager = () => {
     selectTask,
     clearSelection,
     selectedTaskId,
-    selectedTaskIds
+    selectedTaskIds,
+    tasks
   } = useTaskContext();
 
   const openTaskDetails = () => {
-    console.log('Open task details panel');
+    if (!selectedTaskId) {
+      console.log('No task selected for details');
+      return;
+    }
+    console.log('Open task details panel for task:', selectedTaskId);
     // This will be handled by the TaskModal component
   };
 
   const openTaskNotes = () => {
-    console.log('Open task notes modal');
+    if (!selectedTaskId) {
+      console.log('No task selected for notes');
+      return;
+    }
+    console.log('Open task notes modal for task:', selectedTaskId);
     // TODO: Implement task notes modal
   };
 
@@ -29,7 +38,7 @@ const useTaskManager = () => {
       console.log('No task selected for adding code');
       return;
     }
-    console.log('Add task code');
+    console.log('Add task code for task:', selectedTaskId);
     // TODO: Implement code library integration
   };
 
@@ -54,8 +63,13 @@ const useTaskManager = () => {
   };
 
   const selectAll = () => {
-    console.log('Select all tasks');
-    // TODO: Implement select all functionality
+    if (tasks.length === 0) {
+      console.log('No tasks available to select');
+      return;
+    }
+    const allTaskIds = tasks.map(task => task.id);
+    // Note: This would need to be implemented in TaskContext
+    console.log('Select all tasks:', allTaskIds);
   };
 
   const deselectAll = () => {

@@ -191,9 +191,25 @@ export const TaskProvider = ({ children }) => {
     console.log('Task selected:', taskId);
   }, []);
 
-  const selectMultipleTasks = useCallback((taskIds) => {
-    setSelectedTaskIds(taskIds);
-    console.log('Multiple tasks selected:', taskIds);
+  const selectMultipleTasks = useCallback((taskId, isMultiSelect = false) => {
+    if (isMultiSelect) {
+      // Multi-select mode: toggle the task in the selection
+      setSelectedTaskIds(prev => {
+        if (prev.includes(taskId)) {
+          // Remove from selection
+          const newSelection = prev.filter(id => id !== taskId);
+          return newSelection;
+        } else {
+          // Add to selection
+          return [...prev, taskId];
+        }
+      });
+    } else {
+      // Single select mode: clear multi-selection and select single task
+      setSelectedTaskId(taskId);
+      setSelectedTaskIds([]);
+    }
+    console.log('Task selection updated:', taskId, 'multi-select:', isMultiSelect);
   }, []);
 
   const clearSelection = useCallback(() => {

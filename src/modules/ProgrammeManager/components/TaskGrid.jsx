@@ -172,10 +172,12 @@ const TaskGrid = () => {
       } else {
         return 'Linking mode: Click first task to start link';
       }
-    } else if (selectedTaskIds.length === 0) {
+    } else if (selectedTaskIds.length === 0 && !selectedTaskId) {
       return 'No task selected';
-    } else if (selectedTaskIds.length === 1) {
-      return '1 task selected';
+    } else if (selectedTaskIds.length === 1 || selectedTaskId) {
+      const taskId = selectedTaskId || selectedTaskIds[0];
+      const task = tasks.find(t => t.id === taskId);
+      return `1 task selected: ${task?.name || taskId}`;
     } else if (selectedTaskIds.length === 2) {
       return '2 tasks selected (ready to link)';
     } else {
