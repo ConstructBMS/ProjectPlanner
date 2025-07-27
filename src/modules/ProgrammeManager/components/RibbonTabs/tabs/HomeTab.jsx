@@ -1,345 +1,227 @@
-import React, { useState } from 'react';
-import { 
-  PlusIcon, 
-  TrashIcon, 
-  LinkIcon, 
-  XMarkIcon, 
-  DocumentIcon, 
-  PencilIcon, 
-  HashtagIcon,
-  FolderPlusIcon,
-  MinusCircleIcon,
-  CheckIcon,
-  XCircleIcon,
-  CalendarIcon,
+import React, { useState } from "react";
+import { useTaskManager } from "../../hooks/useTaskManager";
+import RibbonButton from "../shared/RibbonButton";
+import RibbonGroup from "../shared/RibbonGroup";
+import RibbonDropdown from "../shared/RibbonDropdown";
+import RibbonToggle from "../shared/RibbonToggle";
+import {
+  ClipboardDocumentIcon,
+  DocumentDuplicateIcon,
+  ScissorsIcon,
+  BoldIcon,
+  ItalicIcon,
+  UnderlineIcon,
   ChevronDownIcon,
-  ChevronUpIcon,
-  ArrowUpIcon,
-  ArrowDownIcon,
-  CodeBracketIcon,
-  UserGroupIcon,
+  FlagIcon,
+  LinkIcon,
+  ArrowPathIcon,
+  FolderIcon,
+  ChevronDoubleDownIcon,
+  WrenchScrewdriverIcon,
+  UserIcon,
+  ScissorsIcon as SplitIcon,
+  PlusIcon,
+  ChartBarIcon,
+  DocumentTextIcon,
+  ArrowTrendingUpIcon,
+  DocumentArrowUpIcon,
   EyeIcon,
-  ChartBarIcon
-} from '@heroicons/react/24/outline';
-import RibbonButton from '../shared/RibbonButton';
-import RibbonGroup from '../shared/RibbonGroup';
-import RibbonDropdown from '../shared/RibbonDropdown';
-import RibbonToggle from '../shared/RibbonToggle';
-import useTaskManager from '../../../hooks/useTaskManager';
+  EyeSlashIcon,
+  CodeBracketIcon,
+  IndentIcon,
+  OutdentIcon,
+  BookOpenIcon,
+  ExclamationTriangleIcon,
+  ChartBarSquareIcon
+} from "@heroicons/react/24/outline";
 
-const HomeTab = () => {
-  const { 
-    addTask, 
-    deleteTask, 
-    linkTasks, 
-    unlinkTasks, 
-    openTaskDetails, 
-    openTaskNotes, 
-    addCode,
-    createGroup,
+export default function HomeTab() {
+  const {
+    addTask,
+    deleteTask,
+    linkTasks,
     ungroup,
+    createGroup,
     selectAll,
-    deselectAll
+    openTaskDetails,
+    openTaskNotes,
+    addCode
   } = useTaskManager();
 
-  // Toggle states for navigation tools
-  const [criticalPathActive, setCriticalPathActive] = useState(false);
-  const [showBaselinesActive, setShowBaselinesActive] = useState(false);
+  const [isTaskDetailModalOpen, setIsTaskDetailModalOpen] = useState(false);
+  const [isCriticalPathActive, setIsCriticalPathActive] = useState(false);
+  const [isShowBaselinesActive, setIsShowBaselinesActive] = useState(false);
 
-  // Group dropdown items
-  const groupItems = [
-    {
-      label: 'Create Group',
-      icon: <FolderPlusIcon className="w-4 h-4" />,
-      tooltip: 'Group selected tasks under a new parent task'
-    },
-    {
-      label: 'Ungroup',
-      icon: <MinusCircleIcon className="w-4 h-4" />,
-      tooltip: 'Remove selected task from its group'
-    },
-    {
-      label: 'Group by Code',
-      icon: <CodeBracketIcon className="w-4 h-4" />,
-      tooltip: 'Group tasks by their cost codes'
-    },
-    {
-      label: 'Group by Resource',
-      icon: <UserGroupIcon className="w-4 h-4" />,
-      tooltip: 'Group tasks by assigned resources'
-    }
-  ];
-
-  // Select dropdown items
-  const selectItems = [
-    {
-      label: 'Select All',
-      icon: <CheckIcon className="w-4 h-4" />,
-      tooltip: 'Select all visible tasks',
-      shortcut: 'Ctrl+A'
-    },
-    {
-      label: 'Deselect All',
-      icon: <XCircleIcon className="w-4 h-4" />,
-      tooltip: 'Clear all selections',
-      shortcut: 'Esc'
-    },
-    {
-      label: 'Select Linked Tasks',
-      icon: <LinkIcon className="w-4 h-4" />,
-      tooltip: 'Select all tasks linked to the current selection'
-    },
-    {
-      label: 'Select Summary Tasks',
-      icon: <FolderPlusIcon className="w-4 h-4" />,
-      tooltip: 'Select all group/summary tasks'
-    }
-  ];
-
-  // Handle group dropdown selection
-  const handleGroupSelect = (item) => {
-    console.log('Group action:', item.label);
-    switch (item.label) {
-      case 'Create Group':
-        createGroup();
-        break;
-      case 'Ungroup':
-        ungroup();
-        break;
-      case 'Group by Code':
-        console.log('Group by Code - not yet implemented');
-        break;
-      case 'Group by Resource':
-        console.log('Group by Resource - not yet implemented');
-        break;
-      default:
-        console.log('Unknown group action:', item.label);
-    }
-  };
-
-  // Handle select dropdown selection
-  const handleSelectSelect = (item) => {
-    console.log('Select action:', item.label);
-    switch (item.label) {
-      case 'Select All':
-        selectAll();
-        break;
-      case 'Deselect All':
-        deselectAll();
-        break;
-      case 'Select Linked Tasks':
-        console.log('Select Linked Tasks - not yet implemented');
-        break;
-      case 'Select Summary Tasks':
-        console.log('Select Summary Tasks - not yet implemented');
-        break;
-      default:
-        console.log('Unknown select action:', item.label);
-    }
-  };
-
-  // Handle toggle button clicks
-  const handleCriticalPathToggle = () => {
-    setCriticalPathActive(!criticalPathActive);
-    console.log('Critical Path:', !criticalPathActive ? 'enabled' : 'disabled');
-  };
-
-  const handleShowBaselinesToggle = () => {
-    setShowBaselinesActive(!showBaselinesActive);
-    console.log('Show Baselines:', !showBaselinesActive ? 'enabled' : 'disabled');
+  const handleTaskDetailsClick = () => {
+    setIsTaskDetailModalOpen(true);
   };
 
   return (
-    <div className="flex flex-wrap gap-3 text-xs">
+    <div className="flex flex-wrap gap-2 p-2">
       {/* Clipboard Group */}
       <RibbonGroup title="Clipboard">
         <RibbonButton
-          icon={<DocumentIcon className="w-5 h-5" />}
+          icon={<ClipboardDocumentIcon className="w-4 h-4" />}
           label="Paste"
-          onClick={() => console.log('Paste')}
-          disabled={true}
-          title="Paste from clipboard (disabled)"
+          onClick={() => console.log("Paste")}
+          tooltip="Paste (Ctrl+V)"
         />
         <RibbonButton
-          icon={<TrashIcon className="w-5 h-5" />}
+          icon={<ScissorsIcon className="w-4 h-4" />}
           label="Cut"
-          onClick={() => console.log('Cut')}
-          disabled={true}
-          title="Cut selected items (disabled)"
+          onClick={() => console.log("Cut")}
+          tooltip="Cut (Ctrl+X)"
         />
         <RibbonButton
-          icon={<DocumentIcon className="w-5 h-5" />}
+          icon={<DocumentDuplicateIcon className="w-4 h-4" />}
           label="Copy"
-          onClick={() => console.log('Copy')}
-          disabled={true}
-          title="Copy selected items (disabled)"
+          onClick={() => console.log("Copy")}
+          tooltip="Copy (Ctrl+C)"
         />
       </RibbonGroup>
 
       {/* Font Group */}
       <RibbonGroup title="Font">
         <RibbonButton
-          icon={<span className="font-bold text-sm">B</span>}
+          icon={<BoldIcon className="w-4 h-4" />}
           label="Bold"
-          onClick={() => console.log('Bold')}
-          disabled={true}
-          title="Make text bold (disabled)"
+          onClick={() => console.log("Bold")}
+          tooltip="Bold (Ctrl+B)"
         />
         <RibbonButton
-          icon={<span className="italic text-sm">I</span>}
+          icon={<ItalicIcon className="w-4 h-4" />}
           label="Italic"
-          onClick={() => console.log('Italic')}
-          disabled={true}
-          title="Make text italic (disabled)"
+          onClick={() => console.log("Italic")}
+          tooltip="Italic (Ctrl+I)"
         />
         <RibbonButton
-          icon={<span className="underline text-sm">U</span>}
+          icon={<UnderlineIcon className="w-4 h-4" />}
           label="Underline"
-          onClick={() => console.log('Underline')}
-          disabled={true}
-          title="Underline text (disabled)"
+          onClick={() => console.log("Underline")}
+          tooltip="Underline (Ctrl+U)"
         />
       </RibbonGroup>
 
       {/* Tasks Group */}
       <RibbonGroup title="Tasks">
         <RibbonButton
-          icon={<PlusIcon className="w-5 h-5" />}
-          label="Add Task"
-          onClick={addTask}
-          title="Add a new task to the project"
-        />
-        <RibbonButton
-          icon={<TrashIcon className="w-5 h-5" />}
-          label="Delete Task"
-          onClick={deleteTask}
-          title="Delete the selected task"
-        />
-        <RibbonButton
-          icon={<LinkIcon className="w-5 h-5" />}
-          label="Link Tasks"
-          onClick={linkTasks}
-          title="Link selected tasks to create dependencies"
-        />
-        <RibbonButton
-          icon={<XMarkIcon className="w-5 h-5" />}
-          label="Unlink Tasks"
-          onClick={unlinkTasks}
-          title="Remove links between selected tasks"
-        />
-        <RibbonButton
-          icon={<PlusIcon className="w-5 h-5" />}
+          icon={<PlusIcon className="w-4 h-4" />}
           label="Insert Task"
-          onClick={() => console.log('Insert Task Above')}
-          title="Insert a new task above the selected task"
+          onClick={addTask}
+          tooltip="Insert new task"
         />
         <RibbonButton
-          icon={<FolderPlusIcon className="w-5 h-5" />}
+          icon={<ChartBarIcon className="w-4 h-4" />}
           label="Insert Summary"
-          onClick={() => console.log('Insert Summary Task')}
-          title="Insert a summary task to wrap selected tasks"
+          onClick={() => console.log("Insert Summary Task")}
+          tooltip="Insert summary task"
         />
         <RibbonButton
-          icon={<ArrowDownIcon className="w-5 h-5" />}
-          label="Indent Task"
-          onClick={() => console.log('Indent Task')}
-          title="Move task under the previous task (increase hierarchy)"
+          icon={<IndentIcon className="w-4 h-4" />}
+          label="Indent"
+          onClick={() => console.log("Indent Task")}
+          tooltip="Indent task"
         />
         <RibbonButton
-          icon={<ArrowUpIcon className="w-5 h-5" />}
-          label="Outdent Task"
-          onClick={() => console.log('Outdent Task')}
-          title="Move task up one level in hierarchy"
+          icon={<OutdentIcon className="w-4 h-4" />}
+          label="Outdent"
+          onClick={() => console.log("Outdent Task")}
+          tooltip="Outdent task"
         />
       </RibbonGroup>
 
       {/* Properties Group */}
       <RibbonGroup title="Properties">
         <RibbonButton
-          icon={<DocumentIcon className="w-5 h-5" />}
+          icon={<WrenchScrewdriverIcon className="w-4 h-4" />}
           label="Task Details"
-          onClick={openTaskDetails}
-          title="Open task properties dialog"
+          onClick={handleTaskDetailsClick}
+          tooltip="Open task details"
         />
         <RibbonButton
-          icon={<PencilIcon className="w-5 h-5" />}
+          icon={<DocumentTextIcon className="w-4 h-4" />}
           label="Task Notes"
           onClick={openTaskNotes}
-          title="Add or edit task notes"
+          tooltip="Open task notes"
         />
         <RibbonButton
-          icon={<HashtagIcon className="w-5 h-5" />}
-          label="Add Code"
-          onClick={addCode}
-          title="Add cost code to selected task"
-        />
-        <RibbonButton
-          icon={<CodeBracketIcon className="w-5 h-5" />}
+          icon={<CodeBracketIcon className="w-4 h-4" />}
           label="Code Library"
-          onClick={() => console.log('Open Code Library')}
-          title="Open code library management"
+          onClick={addCode}
+          tooltip="Open code library"
         />
       </RibbonGroup>
 
-      {/* Grouping Group */}
-      <RibbonGroup title="Grouping">
-        <RibbonDropdown
-          icon={<FolderPlusIcon className="w-5 h-5" />}
-          label="Group"
-          items={groupItems}
-          onSelect={handleGroupSelect}
-          title="Group tasks and manage hierarchies"
-        />
-      </RibbonGroup>
+      {/* Grouping Dropdown */}
+      <RibbonDropdown
+        icon={<FolderIcon className="w-4 h-4" />}
+        label="Grouping"
+        items={[
+          { label: "Create Group", icon: <FolderIcon className="w-4 h-4" />, tooltip: "Group selected tasks" },
+          { label: "Ungroup", icon: <ScissorsIcon className="w-4 h-4" />, tooltip: "Ungroup tasks" },
+          { label: "Expand All", icon: <ChevronDoubleDownIcon className="w-4 h-4" />, tooltip: "Expand all groups" },
+          { label: "Collapse All", icon: <ChevronDownIcon className="w-4 h-4" />, tooltip: "Collapse all groups" }
+        ]}
+        onItemClick={(item) => {
+          if (item.label === "Create Group") createGroup();
+          else if (item.label === "Ungroup") ungroup();
+          else console.log(item.label);
+        }}
+      />
 
-      {/* Selection Group */}
-      <RibbonGroup title="Selection">
-        <RibbonDropdown
-          icon={<CheckIcon className="w-5 h-5" />}
-          label="Select"
-          items={selectItems}
-          onSelect={handleSelectSelect}
-          title="Select tasks and manage selections"
-        />
-      </RibbonGroup>
+      {/* Selection Dropdown */}
+      <RibbonDropdown
+        icon={<EyeIcon className="w-4 h-4" />}
+        label="Selection"
+        items={[
+          { label: "Select All", icon: <EyeIcon className="w-4 h-4" />, tooltip: "Select all tasks" },
+          { label: "Clear Selection", icon: <EyeSlashIcon className="w-4 h-4" />, tooltip: "Clear selection" },
+          { label: "Invert Selection", icon: <ArrowPathIcon className="w-4 h-4" />, tooltip: "Invert selection" }
+        ]}
+        onItemClick={(item) => {
+          if (item.label === "Select All") selectAll();
+          else console.log(item.label);
+        }}
+      />
 
       {/* Navigation Group */}
       <RibbonGroup title="Navigation">
         <RibbonButton
-          icon={<CalendarIcon className="w-5 h-5" />}
-          label="Scroll to Today"
-          onClick={() => console.log('Scroll to Today')}
-          title="Scroll the timeline to today's date"
+          icon={<LinkIcon className="w-4 h-4" />}
+          label="Link Tasks"
+          onClick={linkTasks}
+          tooltip="Link selected tasks"
         />
         <RibbonButton
-          icon={<ChevronDownIcon className="w-5 h-5" />}
-          label="Expand All"
-          onClick={() => console.log('Expand All')}
-          title="Expand all collapsed groups"
+          icon={<FlagIcon className="w-4 h-4" />}
+          label="Constraint Flag"
+          onClick={() => console.log("Constraint Flag")}
+          tooltip="Add constraint flag"
         />
         <RibbonButton
-          icon={<ChevronUpIcon className="w-5 h-5" />}
-          label="Collapse All"
-          onClick={() => console.log('Collapse All')}
-          title="Collapse all expanded groups"
-        />
-        <RibbonToggle
-          icon={<EyeIcon className="w-5 h-5" />}
-          label="Critical Path"
-          isActive={criticalPathActive}
-          onClick={handleCriticalPathToggle}
-          title="Show/hide critical path highlighting"
-        />
-        <RibbonToggle
-          icon={<ChartBarIcon className="w-5 h-5" />}
-          label="Show Baselines"
-          isActive={showBaselinesActive}
-          onClick={handleShowBaselinesToggle}
-          title="Show/hide baseline comparisons"
+          icon={<ArrowPathIcon className="w-4 h-4" />}
+          label="Auto Reschedule"
+          onClick={() => console.log("Auto Reschedule")}
+          tooltip="Auto reschedule tasks"
         />
       </RibbonGroup>
+
+      {/* Toggle Buttons */}
+      <RibbonToggle
+        icon={<ExclamationTriangleIcon className="w-4 h-4" />}
+        label="Critical Path"
+        isActive={isCriticalPathActive}
+        onClick={() => setIsCriticalPathActive(!isCriticalPathActive)}
+        tooltip="Show critical path"
+      />
+      
+      <RibbonToggle
+        icon={<ChartBarSquareIcon className="w-4 h-4" />}
+        label="Show Baselines"
+        isActive={isShowBaselinesActive}
+        onClick={() => setIsShowBaselinesActive(!isShowBaselinesActive)}
+        tooltip="Show baselines"
+      />
     </div>
   );
-};
-
-export default HomeTab;
+}

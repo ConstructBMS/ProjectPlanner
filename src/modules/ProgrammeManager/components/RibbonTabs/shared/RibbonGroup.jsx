@@ -1,22 +1,13 @@
-import React from 'react';
+import React from "react";
 
-const RibbonGroup = ({ title, children, disabled = false, isLast = false }) => {
+const RibbonGroup = ({ title, children }) => {
   return (
-    <div className={`flex flex-col items-center ${!isLast ? 'border-r border-gray-200 pr-1' : ''}`}>
-      {/* Group Container */}
-      <div
-        className={`flex flex-col items-center p-0.5 bg-white border border-gray-200 min-h-[88px] ${
-          disabled ? 'opacity-50 cursor-not-allowed' : ''
-        }`}
-      >
-        <div className="flex gap-x-1 mb-3">{children}</div>
+    <div className="asta-group">
+      <div className="asta-group-title">
+        {title}
       </div>
-
-      {/* Group Name Bar */}
-      <div className="w-full mt-1">
-        <div className="text-[9px] font-semibold text-gray-600 uppercase tracking-wide text-center border-t pt-1">
-          {title}
-        </div>
+      <div className="flex flex-wrap gap-1">
+        {children}
       </div>
     </div>
   );

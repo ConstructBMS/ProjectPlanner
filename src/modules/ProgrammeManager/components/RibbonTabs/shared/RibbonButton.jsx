@@ -1,85 +1,38 @@
-import React from 'react';
-import Tooltip from '../../common/Tooltip';
-import {
-  ScissorsIcon,
-  DocumentDuplicateIcon,
-  PaperClipIcon,
-  PlusIcon,
-  TrashIcon,
-  LinkIcon,
-  XMarkIcon,
-  DocumentIcon,
-  PencilIcon,
-  HashtagIcon,
-  FolderPlusIcon,
-  MinusCircleIcon,
-  CheckIcon,
-  XCircleIcon,
-  CalendarIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
-  ClipboardDocumentIcon,
-  ClipboardIcon
-} from '@heroicons/react/24/outline';
+import React from "react";
+import Tooltip from "../../common/Tooltip";
 
-// Icon mapping for text-based icons (B, I, U)
-const TextIcon = ({ text, className = "text-[14px] font-bold" }) => (
-  <span className={className}>{text}</span>
-);
-
-const RibbonButton = ({
-  icon,
-  label,
-  onClick,
-  disabled = false,
-  className = '',
-  iconType = 'svg' // 'svg' or 'text'
+const RibbonButton = ({ 
+  icon, 
+  label, 
+  onClick, 
+  disabled = false, 
+  tooltip = "", 
+  className = "" 
 }) => {
-  // Handle text-based icons (B, I, U)
-  if (iconType === 'text') {
-    return (
-      <Tooltip label={label} disabled={disabled}>
-        <div
-          className={`w-[36px] h-[36px] bg-white rounded-[2px] flex items-center justify-center hover:bg-blue-100 cursor-pointer transition-all duration-200 border border-transparent hover:border-gray-300 ${
-            disabled ? 'opacity-50 cursor-not-allowed' : ''
-          } ${className}`}
-          onClick={disabled ? undefined : onClick}
-          aria-label={label}
-          role="button"
-          tabIndex={disabled ? -1 : 0}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              if (!disabled && onClick) onClick();
-            }
-          }}
-        >
-          <TextIcon text={icon} className={className} />
-        </div>
-      </Tooltip>
-    );
-  }
-
-  // Handle SVG icons (icon prop is already a React node)
   return (
-    <Tooltip label={label} disabled={disabled}>
-      <div
-        className={`w-[36px] h-[36px] bg-white rounded-[2px] flex items-center justify-center hover:bg-blue-100 cursor-pointer transition-all duration-200 border border-transparent hover:border-gray-300 ${
-          disabled ? 'opacity-50 cursor-not-allowed' : ''
-        } ${className}`}
-        onClick={disabled ? undefined : onClick}
+    <Tooltip content={tooltip || label}>
+      <button
+        onClick={onClick}
+        disabled={disabled}
+        className={`
+          asta-button
+          flex flex-col items-center justify-center
+          w-[36px] h-[36px]
+          rounded-[2px]
+          transition-all duration-200
+          ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-50 hover:border-blue-300'}
+          ${className}
+        `}
         aria-label={label}
-        role="button"
-        tabIndex={disabled ? -1 : 0}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            if (!disabled && onClick) onClick();
-          }
-        }}
+        title={tooltip || label}
       >
-        {icon}
-      </div>
+        <div className="text-[14px] text-gray-700">
+          {icon}
+        </div>
+        <div className="text-[8px] uppercase tracking-wide text-gray-600 font-medium mt-1">
+          {label}
+        </div>
+      </button>
     </Tooltip>
   );
 };
