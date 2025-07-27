@@ -148,6 +148,11 @@ projectplanner/
   - Changed files: CHANGELOG.md, DEVELOPMENT_WORKFLOW.md, eslint.config.js, scripts/auto-commit.js, src/modules/ProgrammeManager/AppShell.jsx, src/modules/ProgrammeManager/components/RibbonTabs/RibbonTabs.jsx, src/modules/ProgrammeManager/components/RibbonTabs/tabs/HomeTab.jsx, src/modules/ProgrammeManager/components/RibbonTabs/tabs/ViewTab.jsx, src/modules/ProgrammeManager/components/SidebarTree.jsx, src/modules/ProgrammeManager/components/TaskGrid.jsx, src/modules/ProgrammeManager/components/TaskPropertiesPane.jsx, src/modules/ProgrammeManager/context/TaskContext.jsx, src/modules/ProgrammeManager/styles/gantt.css, src/modules/ProgrammeManager/utils/dateUtils.js
   - Status: M CHANGELOG.md, M DEVELOPMENT_WORKFLOW.md, M eslint.config.js, M scripts/auto-commit.js, M src/modules/ProgrammeManager/AppShell.jsx, M src/modules/ProgrammeManager/components/RibbonTabs/RibbonTabs.jsx, M src/modules/ProgrammeManager/components/RibbonTabs/tabs/HomeTab.jsx, M src/modules/ProgrammeManager/components/RibbonTabs/tabs/ViewTab.jsx, A src/modules/ProgrammeManager/components/SidebarTree.jsx, M src/modules/ProgrammeManager/components/TaskGrid.jsx, M src/modules/ProgrammeManager/components/TaskPropertiesPane.jsx, M src/modules/ProgrammeManager/context/TaskContext.jsx, M src/modules/ProgrammeManager/styles/gantt.css, M src/modules/ProgrammeManager/utils/dateUtils.js
 
+- **ac6c6d5** - feat: Build complete HomeTab ribbon with 7 functional groups matching PowerProject layout
+  - Files changed: 1
+  - Changed files: src/modules/ProgrammeManager/components/RibbonTabs/tabs/HomeTab.jsx
+  - Status: M src/modules/ProgrammeManager/components/RibbonTabs/tabs/HomeTab.jsx
+
 ---
 
 ## Development Notes
