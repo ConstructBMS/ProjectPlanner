@@ -1,53 +1,67 @@
 import React from 'react';
+import RibbonButton from '../shared/RibbonButton';
+import RibbonGroup from '../shared/RibbonGroup';
+import {
+  EyeIcon,
+  ScissorsIcon,
+  DocumentDuplicateIcon,
+  PaperClipIcon
+} from '@heroicons/react/24/outline';
 
 const ViewTab = () => {
   return (
-    <div className='flex flex-row gap-3 p-2 bg-[#f9f9f9] border-t border-gray-200'>
+    <div className="flex flex-row gap-1 p-1 bg-[#eaf1fb]">
       {/* View Group */}
-      <div className='flex flex-col items-center w-fit p-2 bg-white shadow-sm rounded-md'>
-        <div className='w-[48px] h-[48px] bg-gray-100 rounded flex items-center justify-center mb-1'>
-          <span>📊</span>
-        </div>
-        <div className='text-[10px] font-medium text-gray-500 uppercase'>
-          View
-        </div>
-      </div>
+      <RibbonGroup title="View">
+        <RibbonButton
+          icon={<EyeIcon className="w-4 h-4 text-gray-700" />}
+          label="View Options"
+        />
+      </RibbonGroup>
 
       {/* Clipboard Group (Disabled) */}
-      <div className='flex flex-col items-center w-fit p-2 bg-white shadow-sm rounded-md opacity-50 cursor-not-allowed'>
-        <div className='flex gap-2'>
-          <div className='w-[48px] h-[48px] bg-gray-100 flex items-center justify-center rounded'>
-            ✂️
-          </div>
-          <div className='w-[48px] h-[48px] bg-gray-100 flex items-center justify-center rounded'>
-            📋
-          </div>
-          <div className='w-[48px] h-[48px] bg-gray-100 flex items-center justify-center rounded'>
-            📎
-          </div>
-        </div>
-        <div className='text-[10px] font-medium text-gray-500 uppercase mt-1'>
-          Clipboard
-        </div>
-      </div>
+      <RibbonGroup title="Clipboard" disabled={true}>
+        <RibbonButton
+          icon={<ScissorsIcon className="w-4 h-4 text-gray-700" />}
+          label="Cut"
+          disabled={true}
+        />
+        <RibbonButton
+          icon={<DocumentDuplicateIcon className="w-4 h-4 text-gray-700" />}
+          label="Copy"
+          disabled={true}
+        />
+        <RibbonButton
+          icon={<PaperClipIcon className="w-4 h-4 text-gray-700" />}
+          label="Paste"
+          disabled={true}
+        />
+      </RibbonGroup>
 
       {/* Font Group (Disabled) */}
-      <div className='flex flex-col items-center w-fit p-2 bg-white shadow-sm rounded-md opacity-50 cursor-not-allowed'>
-        <div className='flex gap-1 mb-1'>
-          <div className='w-[24px] h-[24px] bg-gray-100 flex items-center justify-center rounded text-xs'>
-            B
-          </div>
-          <div className='w-[24px] h-[24px] bg-gray-100 flex items-center justify-center rounded text-xs italic'>
-            I
-          </div>
-          <div className='w-[24px] h-[24px] bg-gray-100 flex items-center justify-center rounded text-xs underline'>
-            U
-          </div>
-        </div>
-        <div className='text-[10px] font-medium text-gray-500 uppercase'>
-          Font
-        </div>
-      </div>
+      <RibbonGroup title="Font" disabled={true}>
+        <RibbonButton
+          icon="B"
+          label="Bold"
+          disabled={true}
+          iconType="text"
+          className="font-bold"
+        />
+        <RibbonButton
+          icon="I"
+          label="Italic"
+          disabled={true}
+          iconType="text"
+          className="italic"
+        />
+        <RibbonButton
+          icon="U"
+          label="Underline"
+          disabled={true}
+          iconType="text"
+          className="underline"
+        />
+      </RibbonGroup>
     </div>
   );
 };
