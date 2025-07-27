@@ -118,9 +118,12 @@ const SortableTaskNode = ({
   onSelect, 
   selectedTaskId,
   selectedTaskIds,
+  hoveredTaskId,
   onMultiSelect,
   onContextMenu,
-  onDoubleClick
+  onDoubleClick,
+  onHover,
+  onHoverLeave
 }) => {
   const {
     attributes,
@@ -134,6 +137,7 @@ const SortableTaskNode = ({
   const hasChildren = task.children && task.children.length > 0;
   const isSelected = selectedTaskId === task.id;
   const isMultiSelected = selectedTaskIds.includes(task.id);
+  const isHovered = hoveredTaskId === task.id;
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -167,17 +171,29 @@ const SortableTaskNode = ({
     onDoubleClick(task);
   };
 
+  const handleMouseEnter = () => {
+    onHover(task.id);
+  };
+
+  const handleMouseLeave = () => {
+    onHoverLeave();
+  };
+
   return (
     <div ref={setNodeRef} style={style}>
       <div
-        className={`py-1 pl-[${1 + depth}rem] flex items-center gap-1 hover:bg-blue-100 cursor-pointer transition-all duration-200 ${
+        className={`py-1 pl-[${1 + depth}rem] flex items-center gap-1 cursor-pointer transition-all duration-200 ${
           isSelected ? 'bg-blue-100 border-l-4 border-blue-500' : ''
         } ${
           isMultiSelected ? 'bg-blue-50 border-l-4 border-blue-400' : ''
+        } ${
+          isHovered ? 'bg-blue-50' : 'hover:bg-blue-100'
         } ${isDragging ? 'shadow-lg bg-white border border-blue-300 rounded scale-105' : ''}`}
         onClick={handleClick}
         onDoubleClick={handleDoubleClick}
         onContextMenu={handleContextMenu}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         {/* Drag Handle */}
         <div
@@ -230,9 +246,12 @@ const SortableTaskNode = ({
               onSelect={onSelect}
               selectedTaskId={selectedTaskId}
               selectedTaskIds={selectedTaskIds}
+              hoveredTaskId={hoveredTaskId}
               onMultiSelect={onMultiSelect}
               onContextMenu={onContextMenu}
               onDoubleClick={onDoubleClick}
+              onHover={onHover}
+              onHoverLeave={onHoverLeave}
             />
           ))}
         </div>
@@ -317,6 +336,9 @@ const SidebarTree = forwardRef((props, ref) => {
     getHierarchicalTasks, 
     selectTask, 
     selectedTaskId, 
+    hoveredTaskId,
+    setHoveredTask,
+    clearHoveredTask,
     toggleGroupCollapse,
     reorderTasksById,
     deleteTask,
@@ -659,9 +681,12 @@ const SidebarTree = forwardRef((props, ref) => {
                     onSelect={handleTaskSelect}
                     selectedTaskId={selectedTaskId}
                     selectedTaskIds={selectedTaskIds}
+                    hoveredTaskId={hoveredTaskId}
                     onMultiSelect={handleMultiSelect}
                     onContextMenu={handleContextMenu}
                     onDoubleClick={handleTaskDoubleClick}
+                    onHover={setHoveredTask}
+                    onHoverLeave={clearHoveredTask}
                   />
                 ))}
               </SortableContext>

@@ -1,176 +1,144 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { useTaskContext } from '../context/TaskContext';
+import React, { useState, useRef, useEffect } from 'react';
 import { ChevronRightIcon, ChevronDownIcon, FolderIcon } from '@heroicons/react/24/outline';
+import { useTaskContext } from '../context/TaskContext';
 
 const GanttChart = () => {
   const {
-    tasks,
-    taskLinks,
+    getVisibleTasks,
     selectedTaskId,
+    hoveredTaskId,
     selectTask,
+    setHoveredTask,
+    clearHoveredTask,
     linkingMode,
     linkStartTaskId,
     handleTaskClickForLinking,
-    getVisibleTasks,
-    toggleGroupCollapse
+    taskLinks
   } = useTaskContext();
-  const chartRef = useRef(null);
-  const taskRefs = useRef({});
-  const [chartDimensions, setChartDimensions] = useState({ width: 0, height: 0 });
 
-  const visibleTasks = getVisibleTasks();
+  const [taskRefs, setTaskRefs] = useState({});
+  const [svgContainerRef, setSvgContainerRef] = useState(null);
 
-  // Update chart dimensions on mount and resize
+  const tasks = getVisibleTasks();
+
+  // Update task refs when tasks change
   useEffect(() => {
-    const updateDimensions = () => {
-      if (chartRef.current) {
-        const rect = chartRef.current.getBoundingClientRect();
-        setChartDimensions({ width: rect.width, height: rect.height });
+    const newRefs = {};
+    tasks.forEach(task => {
+      newRefs[task.id] = React.createRef();
+    });
+    setTaskRefs(newRefs);
+  }, [tasks]);
+
+  // Draw dependency arrows
+  useEffect(() => {
+    if (!svgContainerRef) return;
+
+    const svg = svgContainerRef;
+    const containerRect = svg.getBoundingClientRect();
+
+    // Clear existing arrows
+    const existingArrows = svg.querySelectorAll('.dependency-arrow');
+    existingArrows.forEach(arrow => arrow.remove());
+
+    // Draw new arrows
+    taskLinks.forEach(link => {
+      const fromRef = taskRefs[link.fromId];
+      const toRef = taskRefs[link.toId];
+
+      if (fromRef?.current && toRef?.current) {
+        const fromRect = fromRef.current.getBoundingClientRect();
+        const toRect = toRef.current.getBoundingClientRect();
+
+        const fromX = fromRect.right - containerRect.left;
+        const fromY = fromRect.top + fromRect.height / 2 - containerRect.top;
+        const toX = toRect.left - containerRect.left;
+        const toY = toRect.top + toRect.height / 2 - containerRect.top;
+
+        // Create arrow path
+        const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        arrow.setAttribute('d', `M ${fromX} ${fromY} L ${toX} ${toY}`);
+        arrow.setAttribute('stroke', '#6B7280');
+        arrow.setAttribute('stroke-width', '2');
+        arrow.setAttribute('marker-end', 'url(#arrowhead)');
+        arrow.setAttribute('class', 'dependency-arrow');
+        arrow.style.pointerEvents = 'none';
+
+        svg.appendChild(arrow);
       }
-    };
+    });
+  }, [taskLinks, taskRefs, svgContainerRef]);
 
-    updateDimensions();
-    window.addEventListener('resize', updateDimensions);
-    return () => window.removeEventListener('resize', updateDimensions);
-  }, []);
-
-  // Handle task bar click
-  const handleTaskClick = (taskId, e) => {
-    e.stopPropagation(); // Prevent chart background click
-
-    // If in linking mode, handle linking logic
+  const handleTaskClick = (taskId) => {
     if (linkingMode) {
       handleTaskClickForLinking(taskId);
-      return;
+    } else {
+      selectTask(taskId);
     }
-
-    // Normal selection logic
-    selectTask(taskId);
   };
 
-  // Handle chart background click to clear selection
-  const handleChartClick = () => {
-    if (!linkingMode) {
+  const handleChartClick = (e) => {
+    // Only clear selection if clicking on empty space and not in linking mode
+    if (e.target === e.currentTarget && !linkingMode) {
       selectTask(null);
     }
   };
 
-  // Handle group toggle
-  const handleGroupToggle = (taskId, e) => {
-    e.stopPropagation(); // Prevent task selection when clicking expand/collapse
-    toggleGroupCollapse(taskId);
+  const handleTaskHover = (taskId) => {
+    setHoveredTask(taskId);
   };
 
-  // Helper function to calculate task bar position and dimensions
-  const getTaskBarInfo = (taskId) => {
-    const taskRef = taskRefs.current[taskId];
-    if (!taskRef) return null;
-
-    const rect = taskRef.getBoundingClientRect();
-    const chartRect = chartRef.current?.getBoundingClientRect();
-
-    if (!chartRect) return null;
-
-    return {
-      left: rect.left - chartRect.left,
-      top: rect.top - chartRect.top,
-      width: rect.width,
-      height: rect.height,
-      right: rect.left - chartRect.left + rect.width,
-      bottom: rect.top - chartRect.top + rect.height
-    };
+  const handleTaskLeave = () => {
+    clearHoveredTask();
   };
 
-  // Render dependency arrows
-  const renderArrows = () => {
-    if (!taskLinks.length || !chartRef.current) return null;
-
-    return taskLinks.map((link, index) => {
-      const fromTask = getTaskBarInfo(link.fromId);
-      const toTask = getTaskBarInfo(link.toId);
-
-      if (!fromTask || !toTask) return null;
-
-      // Calculate arrow path
-      const startX = fromTask.right;
-      const startY = fromTask.top + fromTask.height / 2;
-      const endX = toTask.left;
-      const endY = toTask.top + toTask.height / 2;
-
-      // Create elbow-style path
-      const midX = startX + (endX - startX) / 2;
-      const path = `M ${startX} ${startY} L ${midX} ${startY} L ${midX} ${endY} L ${endX} ${endY}`;
-
-      return (
-        <g key={`arrow-${link.fromId}-${link.toId}-${index}`}>
-          {/* Arrow line */}
-          <path
-            d={path}
-            stroke="#6b7280"
-            strokeWidth="2"
-            fill="none"
-            markerEnd="url(#arrowhead)"
-          />
-          {/* Arrow head */}
-          <defs>
-            <marker
-              id="arrowhead"
-              markerWidth="10"
-              markerHeight="7"
-              refX="9"
-              refY="3.5"
-              orient="auto"
-            >
-              <polygon
-                points="0 0, 10 3.5, 0 7"
-                fill="#6b7280"
-              />
-            </marker>
-          </defs>
-        </g>
-      );
-    });
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  // Helper function to calculate task duration
-  const getTaskDuration = (startDate, endDate) => {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const diffTime = Math.abs(end - start);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
+  const getTaskBarStyle = (task) => {
+    const isSelected = selectedTaskId === task.id;
+    const isHovered = hoveredTaskId === task.id;
+    const isLinkStart = linkingMode && linkStartTaskId === task.id;
 
-  // Helper function to calculate task position
-  const getTaskPosition = (startDate) => {
-    const today = new Date();
-    const taskStart = new Date(startDate);
-    const diffTime = taskStart - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return Math.max(0, diffDays) * 40; // 40px per day
-  };
-
-  // Generate timeline header
-  const generateTimeline = () => {
-    const days = [];
-    for (let i = 0; i < 30; i++) {
-      const date = new Date();
-      date.setDate(date.getDate() + i);
-      const isToday = i === 0;
-      
-      days.push(
-        <div
-          key={i}
-          className={`w-10 h-8 flex items-center justify-center text-xs border-r border-gray-200 ${
-            isToday ? 'bg-blue-50 font-semibold' : 'bg-gray-50'
-          }`}
-          style={{ minWidth: '40px' }}
-        >
-          {date.getDate()}
-        </div>
-      );
+    let baseClasses = 'h-6 rounded transition-all duration-200 cursor-pointer';
+    
+    if (task.isGroup) {
+      baseClasses += ' bg-green-500';
+    } else {
+      baseClasses += ' bg-blue-500';
     }
-    return days;
+
+    if (isSelected) {
+      baseClasses += ' stroke-blue-500 fill-blue-200 ring-2 ring-blue-500';
+    } else if (isHovered) {
+      baseClasses += ' stroke-blue-300 fill-blue-50 ring-1 ring-blue-300';
+    } else if (isLinkStart) {
+      baseClasses += ' bg-purple-500 ring-2 ring-purple-500';
+    }
+
+    return baseClasses;
+  };
+
+  const getTaskNameStyle = (task) => {
+    const isSelected = selectedTaskId === task.id;
+    const isHovered = hoveredTaskId === task.id;
+    const isLinkStart = linkingMode && linkStartTaskId === task.id;
+
+    let baseClasses = 'text-sm font-medium truncate';
+    
+    if (isSelected) {
+      baseClasses += ' text-blue-700 font-semibold';
+    } else if (isHovered) {
+      baseClasses += ' text-blue-600';
+    } else if (isLinkStart) {
+      baseClasses += ' text-purple-700 font-semibold';
+    } else {
+      baseClasses += ' text-gray-700';
+    }
+
+    return baseClasses;
   };
 
   return (
@@ -178,148 +146,124 @@ const GanttChart = () => {
       {/* Header */}
       <div className="bg-gray-50 border-b px-4 py-3">
         <h3 className="text-sm font-semibold text-gray-700">Gantt Chart</h3>
-        <p className="text-xs text-gray-500 mt-1">Timeline view with dependencies</p>
-        <p className="text-xs text-blue-600 mt-1">
-          {linkingMode ? (
-            <span className="text-purple-600 font-medium">
-              🔗 Linking Mode Active - Click task bars to create dependencies
-            </span>
-          ) : (
-            '💡 Tip: Click task bars to select • Linked tasks show dependency arrows'
-          )}
-        </p>
+        <p className="text-xs text-gray-500 mt-1">Task timeline and dependencies</p>
       </div>
 
-      {/* Chart Area */}
-      <div className="flex-1 overflow-auto" ref={chartRef}>
-        <div className="min-w-full min-h-full relative">
-          {/* SVG Overlay for Arrows */}
-          <svg
-            className="absolute inset-0 pointer-events-none z-10"
-            width={chartDimensions.width}
-            height={chartDimensions.height}
-          >
-            {renderArrows()}
-          </svg>
+      {/* Chart Content */}
+      <div className="flex-1 overflow-auto relative" onClick={handleChartClick}>
+        {/* SVG Container for Dependency Arrows */}
+        <svg
+          ref={setSvgContainerRef}
+          className="absolute inset-0 w-full h-full pointer-events-none z-10"
+        >
+          <defs>
+            <marker
+              id="arrowhead"
+              markerWidth="6"
+              markerHeight="6"
+              refX="6"
+              refY="3"
+              orient="auto"
+            >
+              <path d="M0,0 L6,3 L0,6 Z" fill="#6B7280" />
+            </marker>
+          </defs>
+        </svg>
 
-          {/* Timeline Header */}
-          <div className="sticky top-0 bg-white border-b border-gray-200 z-20">
-            <div className="flex">
-              <div className="w-48 bg-gray-50 border-r border-gray-200 p-2">
-                <div className="text-xs font-semibold text-gray-600">Tasks</div>
-              </div>
-              <div className="flex">
-                {generateTimeline()}
-              </div>
+        {/* Task Bars */}
+        <div className="relative z-20 p-4 space-y-2">
+          {tasks.length === 0 ? (
+            <div className="text-center text-gray-500 py-8">
+              No tasks available
             </div>
-          </div>
-
-          {/* Task Rows */}
-          <div className="relative">
-            {visibleTasks.map((task, index) => {
-              const duration = getTaskDuration(task.startDate, task.endDate);
-              const leftPosition = getTaskPosition(task.startDate);
-              const width = duration * 40; // 40px per day
-              const isSelected = selectedTaskId === task.id;
-              const isLinkStart = linkingMode && linkStartTaskId === task.id;
-              const indentLevel = task.depth || 0;
+          ) : (
+            tasks.map((task, index) => {
+              const startDate = new Date(task.startDate);
+              const endDate = new Date(task.endDate);
+              const duration = task.duration || 1;
+              
+              // Calculate position (simplified for demo)
+              const left = `${(index * 20) + (task.depth || 0) * 20}%`;
+              const width = `${Math.max(duration * 5, 10)}%`;
 
               return (
                 <div
                   key={task.id}
-                  className="flex border-b border-gray-100 hover:bg-gray-50"
-                  style={{ height: '40px' }}
+                  ref={taskRefs[task.id]}
+                  className="flex items-center gap-4 py-1"
+                  style={{ paddingLeft: `${(task.depth || 0) * 20}px` }}
                 >
                   {/* Task Name */}
-                  <div className={`w-48 border-r border-gray-200 p-2 flex items-center ${
-                    isLinkStart ? 'bg-purple-50' : isSelected ? 'bg-blue-50' : 'bg-white'
-                  }`}>
-                    <div className="flex items-center w-full">
-                      {/* Indentation */}
-                      <div 
-                        className="flex-shrink-0"
-                        style={{ width: `${indentLevel * 16}px` }}
-                      />
-                      
-                      {/* Group Toggle Button */}
-                      {task.isGroup && (
-                        <button
-                          onClick={(e) => handleGroupToggle(task.id, e)}
-                          className="flex-shrink-0 w-4 h-4 mr-1 text-gray-500 hover:text-gray-700 transition-colors"
-                        >
-                          {task.isExpanded ? (
-                            <ChevronDownIcon className="w-4 h-4" />
-                          ) : (
-                            <ChevronRightIcon className="w-4 h-4" />
-                          )}
-                        </button>
+                  <div className="w-48 flex items-center gap-2">
+                    {task.isGroup && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // TODO: Implement group toggle
+                        }}
+                        className="w-4 h-4 flex items-center justify-center"
+                      >
+                        {task.isExpanded ? (
+                          <ChevronDownIcon className="w-4 h-4 text-gray-600" />
+                        ) : (
+                          <ChevronRightIcon className="w-4 h-4 text-gray-600" />
+                        )}
+                      </button>
+                    )}
+                    
+                    {task.isGroup && <FolderIcon className="w-4 h-4 text-green-500" />}
+                    
+                    <span className={getTaskNameStyle(task)}>
+                      {task.name}
+                    </span>
+                  </div>
+
+                  {/* Task Bar */}
+                  <div className="flex-1 relative">
+                    <div
+                      className={getTaskBarStyle(task)}
+                      style={{
+                        left,
+                        width,
+                        position: 'absolute'
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleTaskClick(task.id);
+                      }}
+                      onMouseEnter={() => handleTaskHover(task.id)}
+                      onMouseLeave={handleTaskLeave}
+                      title={`${task.name} (${formatDate(startDate)} - ${formatDate(endDate)})`}
+                    >
+                      {/* Progress indicator */}
+                      {task.progress > 0 && (
+                        <div
+                          className="h-full bg-green-400 rounded-l transition-all duration-300"
+                          style={{ width: `${task.progress}%` }}
+                        />
                       )}
-                      
-                      {/* Group Icon */}
-                      {task.isGroup && (
-                        <FolderIcon className="w-4 h-4 mr-1 text-blue-500 flex-shrink-0" />
-                      )}
-                      
-                      {/* Task Name */}
-                      <div className={`text-sm truncate flex-1 ${
-                        isLinkStart ? 'font-semibold text-purple-800' : isSelected ? 'font-semibold text-blue-800' : 'text-gray-800'
-                      } ${task.isGroup ? 'font-semibold' : ''}`}>
-                        {task.name}
-                      </div>
                     </div>
                   </div>
 
-                  {/* Timeline Area */}
-                  <div className="flex-1 relative">
-                    {/* Task Bar */}
-                    <div
-                      ref={(el) => {
-                        if (el) taskRefs.current[task.id] = el;
-                      }}
-                      className={`absolute top-2 h-6 rounded-sm shadow-sm cursor-pointer transition-all duration-150 ${
-                        isLinkStart
-                          ? 'bg-purple-600 border-2 border-purple-400 shadow-lg hover:bg-purple-700'
-                          : isSelected
-                          ? 'bg-blue-600 border-2 border-blue-400 shadow-lg hover:bg-blue-700'
-                          : task.isGroup
-                          ? 'bg-green-600 border-2 border-green-400 shadow-lg hover:bg-green-700'
-                          : 'bg-blue-500 hover:bg-blue-600'
-                      }`}
-                      style={{
-                        left: `${leftPosition}px`,
-                        width: `${width}px`,
-                        minWidth: '20px'
-                      }}
-                      title={`${task.name} (${task.startDate} to ${task.endDate})${isLinkStart ? ' - Link Start' : isSelected ? ' - Selected' : ''}`}
-                      onClick={(e) => handleTaskClick(task.id, e)}
-                    >
-                      {/* Task Bar Label */}
-                      <div className="px-2 py-1 text-xs text-white font-medium truncate">
-                        {task.name}
-                      </div>
-                    </div>
+                  {/* Task Info */}
+                  <div className="w-32 text-xs text-gray-500">
+                    {formatDate(startDate)} - {formatDate(endDate)}
                   </div>
                 </div>
               );
-            })}
-          </div>
+            })
+          )}
         </div>
       </div>
 
       {/* Footer */}
       <div className="bg-gray-50 border-t px-4 py-2">
         <div className="text-xs text-gray-500">
-          {visibleTasks.length} task{visibleTasks.length !== 1 ? 's' : ''} • {taskLinks.length} dependency{taskLinks.length !== 1 ? 'ies' : 'y'} •
-          {linkingMode ? (
-            linkStartTaskId ? (
-              ` Linking from: ${tasks.find(t => t.id === linkStartTaskId)?.name || linkStartTaskId}`
-            ) : (
-              ' Click first task to start link'
-            )
-          ) : (
-            selectedTaskId ? ` Selected: ${tasks.find(t => t.id === selectedTaskId)?.name || 'Unknown'}` : ' No task selected'
-          )} •
-          Blue bars show task duration • Green bars show groups • Gray arrows show dependencies
+          {tasks.length} task{tasks.length !== 1 ? 's' : ''} • 
+          {taskLinks.length} link{taskLinks.length !== 1 ? 's' : ''} • 
+          {linkingMode ? '🔗 Linking mode active - click tasks to create links' : 
+           selectedTaskId ? ` Selected: ${tasks.find(t => t.id === selectedTaskId)?.name || 'Unknown'}` : ' No task selected'} •
+          💡 Click to select • Hover to highlight • Drag to resize (coming soon)
         </div>
       </div>
     </div>
