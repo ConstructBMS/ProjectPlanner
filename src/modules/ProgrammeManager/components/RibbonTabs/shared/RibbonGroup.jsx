@@ -5,11 +5,11 @@ const RibbonGroup = ({ title, children, disabled = false, isLast = false }) => {
     <div className={`flex flex-col items-center ${!isLast ? 'border-r border-gray-200 pr-1' : ''}`}>
       {/* Group Container */}
       <div
-        className={`flex flex-col items-center p-1 bg-white border border-gray-200 min-h-[72px] ${
+        className={`flex flex-col items-center p-1 bg-white border border-gray-200 min-h-[88px] ${
           disabled ? 'opacity-50 cursor-not-allowed' : ''
         }`}
       >
-        <div className="flex gap-x-1 mb-3">{children}</div>
+        <div className="flex gap-x-1 mb-4">{children}</div>
       </div>
 
       {/* Group Name Bar */}
