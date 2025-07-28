@@ -26,6 +26,7 @@ export const ViewProvider = ({ children }) => {
     zoomLevel: 'Week',
     calendarView: 'Workweek',
     timelineZoom: 1.0, // Scaling factor for timeline zoom
+    taskFilter: 'Show All', // Task filter setting
 
     // Date markers
     dateMarkers: [],

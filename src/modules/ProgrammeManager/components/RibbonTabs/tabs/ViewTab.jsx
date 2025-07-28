@@ -11,6 +11,7 @@ import {
   MagnifyingGlassPlusIcon,
   MagnifyingGlassMinusIcon,
   ArrowsPointingOutIcon,
+  FunnelIcon,
 } from '@heroicons/react/24/outline';
 
 const TimelineZoomDropdown = () => {
@@ -233,6 +234,81 @@ const CriticalPathStyleDropdown = () => {
   );
 };
 
+const TaskFiltersDropdown = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef();
+  const { viewState, updateViewState } = useViewContext();
+
+  // Load saved filter on mount
+  useEffect(() => {
+    if (viewState.taskFilter) {
+      // Filter is already loaded from viewState
+    }
+  }, [viewState.taskFilter]);
+
+  useEffect(() => {
+    const handleClickOutside = event => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSelect = filter => {
+    updateViewState({ taskFilter: filter });
+    console.log('Task Filter:', filter);
+    setIsOpen(false);
+  };
+
+  const filterOptions = [
+    { value: 'Show All', label: 'Show All', icon: '👁️' },
+    { value: 'Critical Tasks', label: 'Critical Tasks', icon: '🚨' },
+    { value: 'Milestones', label: 'Milestones', icon: '🎯' },
+    { value: 'Delayed Tasks', label: 'Delayed Tasks', icon: '⏰' },
+    { value: 'Grouped by Phase', label: 'Grouped by Phase', icon: '📊' },
+  ];
+
+  const selectedFilter = filterOptions.find(option => option.value === viewState.taskFilter) || filterOptions[0];
+
+  return (
+    <div className='relative' ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-[48px] h-[48px] rounded flex items-center justify-center transition-colors duration-150 ${
+          viewState.taskFilter !== 'Show All'
+            ? 'bg-blue-50 border-2 border-blue-500'
+            : 'bg-gray-100 hover:bg-blue-100 border-2 border-transparent'
+        }`}
+        title='Filter tasks by category or status'
+      >
+        <FunnelIcon className='w-4 h-4 text-gray-700' />
+      </button>
+
+      {isOpen && (
+        <div className='absolute top-full left-0 mt-1 z-10 w-[160px] bg-white shadow-md rounded border border-gray-200'>
+          {filterOptions.map(option => (
+            <div
+              key={option.value}
+              className={`px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors duration-150 flex items-center gap-2 ${
+                viewState.taskFilter === option.value ? 'bg-blue-50' : ''
+              }`}
+              onClick={() => handleSelect(option.value)}
+            >
+              <span className='text-sm'>{option.icon}</span>
+              <span className='text-xs text-gray-700'>{option.label}</span>
+              {viewState.taskFilter === option.value && (
+                <div className='ml-auto w-2 h-2 bg-blue-500 rounded-full'></div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const ViewTab = () => {
   return (
     <div className='flex flex-nowrap gap-0 p-2 bg-white w-full min-w-0'>
@@ -254,6 +330,11 @@ const ViewTab = () => {
       {/* Critical Path Style Group */}
       <RibbonGroup title='Critical Path Style'>
         <CriticalPathStyleDropdown />
+      </RibbonGroup>
+
+      {/* Task Filters Group */}
+      <RibbonGroup title='Task Filters'>
+        <TaskFiltersDropdown />
       </RibbonGroup>
 
       {/* View Group */}

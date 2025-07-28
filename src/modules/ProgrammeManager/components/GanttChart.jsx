@@ -27,7 +27,7 @@ const GanttChart = () => {
   const taskRefs = useRef({});
   const svgContainerRef = useRef(null);
 
-  const tasks = getVisibleTasks();
+  const tasks = getVisibleTasks(viewState.taskFilter);
 
   // Update task refs when tasks change
   useEffect(() => {

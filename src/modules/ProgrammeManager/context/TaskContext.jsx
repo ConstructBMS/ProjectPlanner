@@ -449,21 +449,51 @@ export const TaskProvider = ({ children }) => {
     return buildHierarchy();
   }, [tasks]);
 
-  const getVisibleTasks = useCallback(() => {
-    const visible = [];
+  const getVisibleTasks = useCallback(
+    (filter = 'Show All') => {
+      const visible = [];
 
-    const addVisible = hierarchicalTasks => {
-      hierarchicalTasks.forEach(task => {
-        visible.push(task);
-        if (task.isGroup && task.isExpanded && task.children) {
-          addVisible(task.children);
-        }
-      });
-    };
+      const addVisible = hierarchicalTasks => {
+        hierarchicalTasks.forEach(task => {
+          // Apply filter logic
+          let shouldInclude = true;
 
-    addVisible(getHierarchicalTasks());
-    return visible;
-  }, [getHierarchicalTasks]);
+          switch (filter) {
+            case 'Critical Tasks':
+              shouldInclude = task.priority === 'High' || task.isCritical;
+              break;
+            case 'Milestones':
+              shouldInclude = task.isMilestone;
+              break;
+            case 'Delayed Tasks':
+              const today = new Date();
+              const endDate = new Date(task.endDate);
+              shouldInclude = endDate < today && task.progress < 100;
+              break;
+            case 'Grouped by Phase':
+              shouldInclude = task.isGroup || task.parentId !== null;
+              break;
+            case 'Show All':
+            default:
+              shouldInclude = true;
+              break;
+          }
+
+          if (shouldInclude) {
+            visible.push(task);
+          }
+
+          if (task.isGroup && task.isExpanded && task.children) {
+            addVisible(task.children);
+          }
+        });
+      };
+
+      addVisible(getHierarchicalTasks());
+      return visible;
+    },
+    [getHierarchicalTasks]
+  );
 
   const getTaskDescendants = useCallback(
     taskId => {

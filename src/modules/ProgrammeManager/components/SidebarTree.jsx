@@ -1,6 +1,12 @@
 import React, { useState, forwardRef, useImperativeHandle } from 'react';
-import { ChevronRightIcon, ChevronDownIcon, FolderIcon, Bars3Icon } from '@heroicons/react/24/outline';
+import {
+  ChevronRightIcon,
+  ChevronDownIcon,
+  FolderIcon,
+  Bars3Icon,
+} from '@heroicons/react/24/outline';
 import { useTaskContext } from '../context/TaskContext';
+import { useViewContext } from '../context/ViewContext';
 import ContextMenu from './ContextMenu';
 import TaskModal from './TaskModal';
 import {
@@ -19,9 +25,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import {
-  useSortable,
-} from '@dnd-kit/sortable';
+import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
 // Mock tree data for programme structure
@@ -41,9 +45,7 @@ const treeData = [
       {
         id: 'tempworks',
         label: 'Temporary Works',
-        children: [
-          { id: 'scaffold', label: 'Scaffold Platforms' },
-        ],
+        children: [{ id: 'scaffold', label: 'Scaffold Platforms' }],
       },
       {
         id: 'calendars',
@@ -60,7 +62,14 @@ const treeData = [
 ];
 
 // TreeNode component for programme structure
-const TreeNode = ({ node, depth = 0, expandedIds, onToggle, onSelect, selectedId }) => {
+const TreeNode = ({
+  node,
+  depth = 0,
+  expandedIds,
+  onToggle,
+  onSelect,
+  selectedId,
+}) => {
   const hasChildren = node.children && node.children.length > 0;
   const isExpanded = expandedIds.has(node.id);
   const isSelected = selectedId === node.id;
@@ -75,24 +84,24 @@ const TreeNode = ({ node, depth = 0, expandedIds, onToggle, onSelect, selectedId
       >
         {hasChildren && (
           <button
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation();
               onToggle(node.id);
             }}
-            className="w-4 h-4 flex items-center justify-center"
+            className='w-4 h-4 flex items-center justify-center'
           >
             {isExpanded ? (
-              <ChevronDownIcon className="w-4 h-4 text-gray-600" />
+              <ChevronDownIcon className='w-4 h-4 text-gray-600' />
             ) : (
-              <ChevronRightIcon className="w-4 h-4 text-gray-600" />
+              <ChevronRightIcon className='w-4 h-4 text-gray-600' />
             )}
           </button>
         )}
-        <span className="text-sm text-gray-800">{node.label}</span>
+        <span className='text-sm text-gray-800'>{node.label}</span>
       </div>
       {hasChildren && isExpanded && (
-        <div className="ml-2">
-          {node.children.map((child) => (
+        <div className='ml-2'>
+          {node.children.map(child => (
             <TreeNode
               key={child.id}
               node={child}
@@ -110,11 +119,11 @@ const TreeNode = ({ node, depth = 0, expandedIds, onToggle, onSelect, selectedId
 };
 
 // Sortable TaskNode component for hierarchical tasks
-const SortableTaskNode = ({ 
-  task, 
-  depth = 0, 
-  onToggle, 
-  onSelect, 
+const SortableTaskNode = ({
+  task,
+  depth = 0,
+  onToggle,
+  onSelect,
   selectedTaskId,
   selectedTaskIds,
   hoveredTaskId,
@@ -122,7 +131,7 @@ const SortableTaskNode = ({
   onContextMenu,
   onDoubleClick,
   onHover,
-  onHoverLeave
+  onHoverLeave,
 }) => {
   const {
     attributes,
@@ -144,15 +153,15 @@ const SortableTaskNode = ({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const handleContextMenu = (e) => {
+  const handleContextMenu = e => {
     e.preventDefault();
     e.stopPropagation();
     onContextMenu(e, task);
   };
 
-  const handleClick = (e) => {
+  const handleClick = e => {
     e.stopPropagation();
-    
+
     if (e.ctrlKey || e.metaKey) {
       // Ctrl+Click: Toggle selection
       onMultiSelect(task.id, 'toggle');
@@ -165,7 +174,7 @@ const SortableTaskNode = ({
     }
   };
 
-  const handleDoubleClick = (e) => {
+  const handleDoubleClick = e => {
     e.stopPropagation();
     onDoubleClick(task);
   };
@@ -183,9 +192,7 @@ const SortableTaskNode = ({
       <div
         className={`py-1 pl-[${1 + depth}rem] flex items-center gap-1 cursor-pointer transition-all duration-200 ${
           isSelected ? 'bg-blue-100 border-l-4 border-blue-500' : ''
-        } ${
-          isMultiSelected ? 'bg-blue-50 border-l-4 border-blue-400' : ''
-        } ${
+        } ${isMultiSelected ? 'bg-blue-50 border-l-4 border-blue-400' : ''} ${
           isHovered ? 'bg-blue-50' : 'hover:bg-blue-100'
         } ${isDragging ? 'shadow-lg bg-white border border-blue-300 rounded scale-105' : ''}`}
         onClick={handleClick}
@@ -198,45 +205,47 @@ const SortableTaskNode = ({
         <div
           {...attributes}
           {...listeners}
-          className="w-4 h-4 flex items-center justify-center cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 transition-colors"
-          title="Drag to reorder task"
+          className='w-4 h-4 flex items-center justify-center cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 transition-colors'
+          title='Drag to reorder task'
         >
-          <Bars3Icon className="w-3 h-3" />
+          <Bars3Icon className='w-3 h-3' />
         </div>
 
         {/* Group Toggle Button */}
         {task.isGroup && (
           <button
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation();
               onToggle(task.id);
             }}
-            className="w-4 h-4 flex items-center justify-center"
+            className='w-4 h-4 flex items-center justify-center'
           >
             {task.isExpanded ? (
-              <ChevronDownIcon className="w-4 h-4 text-gray-600" />
+              <ChevronDownIcon className='w-4 h-4 text-gray-600' />
             ) : (
-              <ChevronRightIcon className="w-4 h-4 text-gray-600" />
+              <ChevronRightIcon className='w-4 h-4 text-gray-600' />
             )}
           </button>
         )}
 
         {/* Group Icon */}
-        {task.isGroup && <FolderIcon className="w-4 h-4 text-blue-500" />}
+        {task.isGroup && <FolderIcon className='w-4 h-4 text-blue-500' />}
 
         {/* Task Name */}
-        <span className={`text-sm ${task.isGroup ? 'font-semibold' : ''} text-gray-800`}>
+        <span
+          className={`text-sm ${task.isGroup ? 'font-semibold' : ''} text-gray-800`}
+        >
           {task.name}
         </span>
 
         {/* Selection indicator */}
         {isMultiSelected && (
-          <div className="ml-auto w-2 h-2 bg-blue-500 rounded-full"></div>
+          <div className='ml-auto w-2 h-2 bg-blue-500 rounded-full'></div>
         )}
       </div>
       {hasChildren && task.isExpanded && (
-        <div className="ml-2">
-          {task.children.map((child) => (
+        <div className='ml-2'>
+          {task.children.map(child => (
             <SortableTaskNode
               key={child.id}
               task={child}
@@ -264,24 +273,26 @@ const DragOverlayComponent = ({ task, depth = 0 }) => {
   const hasChildren = task.children && task.children.length > 0;
 
   return (
-    <div className="py-1 pl-[${1 + depth}rem] flex items-center gap-1 bg-blue-50 border border-blue-300 rounded shadow-lg">
+    <div className='py-1 pl-[${1 + depth}rem] flex items-center gap-1 bg-blue-50 border border-blue-300 rounded shadow-lg'>
       {/* Drag Handle */}
-      <div className="w-4 h-4 flex items-center justify-center text-gray-600">
-        <Bars3Icon className="w-3 h-3" />
+      <div className='w-4 h-4 flex items-center justify-center text-gray-600'>
+        <Bars3Icon className='w-3 h-3' />
       </div>
 
       {/* Group Toggle Button */}
       {task.isGroup && (
-        <div className="w-4 h-4 flex items-center justify-center">
-          <ChevronDownIcon className="w-4 h-4 text-gray-600" />
+        <div className='w-4 h-4 flex items-center justify-center'>
+          <ChevronDownIcon className='w-4 h-4 text-gray-600' />
         </div>
       )}
 
       {/* Group Icon */}
-      {task.isGroup && <FolderIcon className="w-4 h-4 text-blue-500" />}
+      {task.isGroup && <FolderIcon className='w-4 h-4 text-blue-500' />}
 
       {/* Task Name */}
-      <span className={`text-sm ${task.isGroup ? 'font-semibold' : ''} text-gray-800`}>
+      <span
+        className={`text-sm ${task.isGroup ? 'font-semibold' : ''} text-gray-800`}
+      >
         {task.name}
       </span>
     </div>
@@ -293,33 +304,33 @@ const BulkActionsToolbar = ({ selectedCount, onBulkAction }) => {
   if (selectedCount < 2) return null;
 
   return (
-    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white border border-gray-200 rounded-lg shadow-lg px-4 py-2 z-40">
-      <div className="flex items-center gap-3">
-        <span className="text-sm font-medium text-gray-700">
+    <div className='fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white border border-gray-200 rounded-lg shadow-lg px-4 py-2 z-40'>
+      <div className='flex items-center gap-3'>
+        <span className='text-sm font-medium text-gray-700'>
           {selectedCount} task{selectedCount !== 1 ? 's' : ''} selected
         </span>
-        
-        <div className="flex gap-2">
+
+        <div className='flex gap-2'>
           <button
             onClick={() => onBulkAction('delete')}
-            className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
-            title="Delete selected tasks"
+            className='px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors'
+            title='Delete selected tasks'
           >
             🗑️ Delete
           </button>
-          
+
           <button
             onClick={() => onBulkAction('link')}
-            className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
-            title="Link selected tasks"
+            className='px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors'
+            title='Link selected tasks'
           >
             🔗 Link
           </button>
-          
+
           <button
             onClick={() => onBulkAction('milestone')}
-            className="px-3 py-1 text-xs bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition-colors"
-            title="Mark as milestones"
+            className='px-3 py-1 text-xs bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition-colors'
+            title='Mark as milestones'
           >
             ✨ Milestones
           </button>
@@ -331,23 +342,24 @@ const BulkActionsToolbar = ({ selectedCount, onBulkAction }) => {
 
 // Main SidebarTree component with forwardRef for external control
 const SidebarTree = forwardRef((props, ref) => {
-  const { 
-    getHierarchicalTasks, 
-    selectTask, 
-    selectedTaskId, 
+  const {
+    getHierarchicalTasks,
+    getVisibleTasks,
+    selectTask,
+    selectedTaskId,
     hoveredTaskId,
     setHoveredTask,
     clearHoveredTask,
     toggleGroupCollapse,
     reorderTasksById,
     deleteTask,
-    updateTask
+    updateTask,
   } = useTaskContext();
-  
+
+  const { viewState } = useViewContext();
+
   // Start with only the root programme node expanded
-  const [expandedIds, setExpandedIds] = useState(new Set([
-    'programme'
-  ]));
+  const [expandedIds, setExpandedIds] = useState(new Set(['programme']));
   const [selectedId, setSelectedId] = useState(null);
   const [activeTask, setActiveTask] = useState(null);
 
@@ -359,13 +371,13 @@ const SidebarTree = forwardRef((props, ref) => {
   const [contextMenu, setContextMenu] = useState({
     isOpen: false,
     position: { x: 0, y: 0 },
-    task: null
+    task: null,
   });
 
   // Task modal state
   const [taskModal, setTaskModal] = useState({
     isOpen: false,
-    task: null
+    task: null,
   });
 
   // DnD sensors
@@ -380,8 +392,8 @@ const SidebarTree = forwardRef((props, ref) => {
     })
   );
 
-  const toggleNode = (id) => {
-    setExpandedIds((prev) => {
+  const toggleNode = id => {
+    setExpandedIds(prev => {
       const newSet = new Set(prev);
       if (newSet.has(id)) {
         newSet.delete(id);
@@ -392,24 +404,24 @@ const SidebarTree = forwardRef((props, ref) => {
     });
   };
 
-  const handleNodeSelect = (id) => {
+  const handleNodeSelect = id => {
     setSelectedId(id);
     selectTask(id);
   };
 
-  const handleTaskToggle = (taskId) => {
+  const handleTaskToggle = taskId => {
     toggleGroupCollapse(taskId);
   };
 
-  const handleTaskSelect = (taskId) => {
+  const handleTaskSelect = taskId => {
     selectTask(taskId);
   };
 
   // Multi-selection logic
   const handleMultiSelect = (taskId, mode) => {
-    const hierarchicalTasks = getHierarchicalTasks();
-    const taskIndex = hierarchicalTasks.findIndex(t => t.id === taskId);
-    
+    const filteredTasks = getVisibleTasks(viewState.taskFilter);
+    const taskIndex = filteredTasks.findIndex(t => t.id === taskId);
+
     if (taskIndex === -1) return;
 
     switch (mode) {
@@ -419,7 +431,7 @@ const SidebarTree = forwardRef((props, ref) => {
         setLastSelectedIndex(taskIndex);
         selectTask(taskId);
         break;
-        
+
       case 'toggle':
         // Ctrl+Click - toggle selection
         setSelectedTaskIds(prev => {
@@ -432,7 +444,7 @@ const SidebarTree = forwardRef((props, ref) => {
         });
         setLastSelectedIndex(taskIndex);
         break;
-        
+
       case 'range':
         // Shift+Click - select range
         if (lastSelectedIndex === -1) {
@@ -443,9 +455,7 @@ const SidebarTree = forwardRef((props, ref) => {
           // Select range from last selected to current
           const start = Math.min(lastSelectedIndex, taskIndex);
           const end = Math.max(lastSelectedIndex, taskIndex);
-          const rangeIds = hierarchicalTasks
-            .slice(start, end + 1)
-            .map(t => t.id);
+          const rangeIds = filteredTasks.slice(start, end + 1).map(t => t.id);
           setSelectedTaskIds(rangeIds);
         }
         break;
@@ -460,7 +470,7 @@ const SidebarTree = forwardRef((props, ref) => {
 
   // Handle escape key to clear selection
   React.useEffect(() => {
-    const handleEscape = (e) => {
+    const handleEscape = e => {
       if (e.key === 'Escape') {
         setSelectedTaskIds([]);
         setLastSelectedIndex(-1);
@@ -477,7 +487,7 @@ const SidebarTree = forwardRef((props, ref) => {
     setContextMenu({
       isOpen: true,
       position: { x: e.clientX, y: e.clientY },
-      task: task
+      task: task,
     });
   };
 
@@ -485,7 +495,7 @@ const SidebarTree = forwardRef((props, ref) => {
     setContextMenu({
       isOpen: false,
       position: { x: 0, y: 0 },
-      task: null
+      task: null,
     });
   };
 
@@ -496,7 +506,7 @@ const SidebarTree = forwardRef((props, ref) => {
         // Open task modal for editing
         setTaskModal({
           isOpen: true,
-          task: task
+          task: task,
         });
         break;
       case 'delete':
@@ -529,11 +539,11 @@ const SidebarTree = forwardRef((props, ref) => {
   };
 
   // Handle double-click to open task modal
-  const handleTaskDoubleClick = (task) => {
+  const handleTaskDoubleClick = task => {
     console.log('Double-clicked task:', task.name);
     setTaskModal({
       isOpen: true,
-      task: task
+      task: task,
     });
   };
 
@@ -541,20 +551,23 @@ const SidebarTree = forwardRef((props, ref) => {
   const closeTaskModal = () => {
     setTaskModal({
       isOpen: false,
-      task: null
+      task: null,
     });
   };
 
   // Handle task modal save
-  const handleTaskSave = (updatedTask) => {
+  const handleTaskSave = updatedTask => {
     console.log('Saving task from modal:', updatedTask);
     updateTask(updatedTask.id, updatedTask);
   };
 
   // Bulk actions
-  const handleBulkAction = (action) => {
-    console.log(`Bulk action: ${action} on ${selectedTaskIds.length} tasks:`, selectedTaskIds);
-    
+  const handleBulkAction = action => {
+    console.log(
+      `Bulk action: ${action} on ${selectedTaskIds.length} tasks:`,
+      selectedTaskIds
+    );
+
     switch (action) {
       case 'delete':
         selectedTaskIds.forEach(taskId => {
@@ -563,12 +576,12 @@ const SidebarTree = forwardRef((props, ref) => {
         setSelectedTaskIds([]);
         setLastSelectedIndex(-1);
         break;
-        
+
       case 'link':
         // TODO: Implement bulk linking
         console.log('Bulk linking not yet implemented');
         break;
-        
+
       case 'milestone':
         selectedTaskIds.forEach(taskId => {
           updateTask(taskId, { isMilestone: true });
@@ -578,14 +591,14 @@ const SidebarTree = forwardRef((props, ref) => {
   };
 
   // Handle drag start
-  const handleDragStart = (event) => {
+  const handleDragStart = event => {
     const { active } = event;
     const task = getHierarchicalTasks().find(t => t.id === active.id);
     setActiveTask(task);
   };
 
   // Handle drag end
-  const handleDragEnd = (event) => {
+  const handleDragEnd = event => {
     const { active, over } = event;
 
     setActiveTask(null);
@@ -593,7 +606,7 @@ const SidebarTree = forwardRef((props, ref) => {
     if (active.id !== over.id) {
       const sourceId = active.id;
       const destinationId = over.id;
-      
+
       // Reorder the task
       reorderTasksById(sourceId, destinationId, 'after');
     }
@@ -603,7 +616,7 @@ const SidebarTree = forwardRef((props, ref) => {
   useImperativeHandle(ref, () => ({
     expandAll: () => {
       const allIds = new Set();
-      const addIds = (nodes) => {
+      const addIds = nodes => {
         nodes.forEach(node => {
           allIds.add(node.id);
           if (node.children) {
@@ -616,28 +629,31 @@ const SidebarTree = forwardRef((props, ref) => {
     },
     collapseAll: () => {
       setExpandedIds(new Set(['programme']));
-    }
+    },
   }));
 
   const hierarchicalTasks = getHierarchicalTasks();
-  const taskIds = hierarchicalTasks.map(task => task.id);
+  const filteredTasks = getVisibleTasks(viewState.taskFilter);
+  const taskIds = filteredTasks.map(task => task.id);
 
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div className='h-full flex flex-col bg-white'>
       {/* Header */}
-      <div className="bg-gray-50 border-b px-4 py-3">
-        <h3 className="text-sm font-semibold text-gray-700">Programme Tree</h3>
-        <p className="text-xs text-gray-500 mt-1">Project structure and tasks</p>
+      <div className='bg-gray-50 border-b px-4 py-3'>
+        <h3 className='text-sm font-semibold text-gray-700'>Programme Tree</h3>
+        <p className='text-xs text-gray-500 mt-1'>
+          Project structure and tasks
+        </p>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-auto" onClick={handleEmptySpaceClick}>
+      <div className='flex-1 overflow-auto' onClick={handleEmptySpaceClick}>
         {/* Programme Structure */}
-        <div className="p-2">
-          <h4 className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">
+        <div className='p-2'>
+          <h4 className='text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide'>
             Programme Structure
           </h4>
-          {treeData.map((node) => (
+          {treeData.map(node => (
             <TreeNode
               key={node.id}
               node={node}
@@ -650,17 +666,15 @@ const SidebarTree = forwardRef((props, ref) => {
         </div>
 
         {/* Divider */}
-        <div className="border-t border-gray-200 mx-2 my-2"></div>
+        <div className='border-t border-gray-200 mx-2 my-2'></div>
 
         {/* Tasks with Drag and Drop */}
-        <div className="p-2">
-          <h4 className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">
+        <div className='p-2'>
+          <h4 className='text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide'>
             Tasks
           </h4>
-          {hierarchicalTasks.length === 0 ? (
-            <div className="text-xs text-gray-500 py-2">
-              No tasks available
-            </div>
+          {filteredTasks.length === 0 ? (
+            <div className='text-xs text-gray-500 py-2'>No tasks available</div>
           ) : (
             <DndContext
               sensors={sensors}
@@ -672,7 +686,7 @@ const SidebarTree = forwardRef((props, ref) => {
                 items={taskIds}
                 strategy={verticalListSortingStrategy}
               >
-                {hierarchicalTasks.map((task) => (
+                {filteredTasks.map(task => (
                   <SortableTaskNode
                     key={task.id}
                     task={task}
@@ -689,16 +703,18 @@ const SidebarTree = forwardRef((props, ref) => {
                   />
                 ))}
               </SortableContext>
-              
-              <DragOverlay dropAnimation={{
-                sideEffects: defaultDropAnimationSideEffects({
-                  styles: {
-                    active: {
-                      opacity: '0.5',
+
+              <DragOverlay
+                dropAnimation={{
+                  sideEffects: defaultDropAnimationSideEffects({
+                    styles: {
+                      active: {
+                        opacity: '0.5',
+                      },
                     },
-                  },
-                }),
-              }}>
+                  }),
+                }}
+              >
                 {activeTask ? <DragOverlayComponent task={activeTask} /> : null}
               </DragOverlay>
             </DndContext>
@@ -707,12 +723,16 @@ const SidebarTree = forwardRef((props, ref) => {
       </div>
 
       {/* Footer */}
-      <div className="bg-gray-50 border-t px-4 py-2">
-        <div className="text-xs text-gray-500">
-          {hierarchicalTasks.length} task{hierarchicalTasks.length !== 1 ? 's' : ''} • 
-          {selectedTaskIds.length > 0 ? ` ${selectedTaskIds.length} selected` : 
-           selectedTaskId ? ` Selected: ${hierarchicalTasks.find(t => t.id === selectedTaskId)?.name || 'Unknown'}` : ' No task selected'} •
-          💡 Right-click for context menu • Double-click to edit • Ctrl+Click for multi-select • Drag ☰ to reorder
+      <div className='bg-gray-50 border-t px-4 py-2'>
+        <div className='text-xs text-gray-500'>
+          {filteredTasks.length} task{filteredTasks.length !== 1 ? 's' : ''} •
+          {selectedTaskIds.length > 0
+            ? ` ${selectedTaskIds.length} selected`
+            : selectedTaskId
+              ? ` Selected: ${filteredTasks.find(t => t.id === selectedTaskId)?.name || 'Unknown'}`
+              : ' No task selected'}{' '}
+          • 💡 Right-click for context menu • Double-click to edit • Ctrl+Click
+          for multi-select • Drag ☰ to reorder
         </div>
       </div>
 
