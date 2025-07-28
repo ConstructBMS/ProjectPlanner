@@ -120,6 +120,38 @@ export const TaskProvider = ({ children }) => {
     console.log('Task added:', newTask);
   }, [nextId]);
 
+  const addMilestone = useCallback(() => {
+    const milestoneName = prompt('Enter milestone name:');
+    if (!milestoneName) return;
+
+    const milestoneDate = prompt('Enter milestone date (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
+    if (!milestoneDate) return;
+
+    const milestoneDateTime = new Date(milestoneDate + 'T00:00:00.000Z');
+
+    const newMilestone = {
+      id: `task-${nextId}`,
+      name: milestoneName,
+      startDate: milestoneDateTime.toISOString(),
+      endDate: milestoneDateTime.toISOString(),
+      duration: 0,
+      status: 'Planned',
+      priority: 'High',
+      assignee: '',
+      progress: 0,
+      color: '#8B5CF6',
+      isMilestone: true,
+      notes: `Milestone: ${milestoneName}`,
+      parentId: null,
+      isGroup: false,
+      isExpanded: true,
+    };
+
+    setTasks(prev => [...prev, newMilestone]);
+    setNextId(prev => prev + 1);
+    console.log('Milestone added:', newMilestone);
+  }, [nextId]);
+
   const deleteTask = useCallback(
     taskId => {
       setTasks(prev => {
@@ -534,6 +566,7 @@ export const TaskProvider = ({ children }) => {
 
     // Task operations
     addTask,
+    addMilestone,
     deleteTask,
     updateTask,
     selectTask,

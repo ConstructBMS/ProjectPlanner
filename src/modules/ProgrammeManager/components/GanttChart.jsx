@@ -214,7 +214,7 @@ const GanttChart = () => {
             </div>
           ) : (
             <div className='space-y-1 p-2'>
-              {tasks.map((task) => {
+              {tasks.map(task => {
                 const startDate = new Date(task.startDate);
                 const endDate = new Date(task.endDate);
                 const duration = task.duration || 1;
@@ -230,7 +230,9 @@ const GanttChart = () => {
                   baseDurationWidth * viewState.timelineZoom;
 
                 const left = `${Math.max(daysFromStart * scaledDayWidth, 0)}px`;
-                const width = `${Math.max(duration * scaledDurationWidth, 40 * viewState.timelineZoom)}px`;
+                const width = task.isMilestone
+                  ? `${20 * viewState.timelineZoom}px`
+                  : `${Math.max(duration * scaledDurationWidth, 40 * viewState.timelineZoom)}px`;
 
                 return (
                   <div
@@ -268,31 +270,55 @@ const GanttChart = () => {
 
                     {/* Timeline Bar Area */}
                     <div className='flex-1 relative h-full'>
-                      <div
-                        className={getTaskBarStyle(task)}
-                        style={{
-                          left,
-                          width,
-                          position: 'absolute',
-                          top: '2px',
-                          height: 'calc(100% - 4px)',
-                        }}
-                        onClick={e => {
-                          e.stopPropagation();
-                          handleTaskClick(task.id);
-                        }}
-                        onMouseEnter={() => handleTaskHover(task.id)}
-                        onMouseLeave={handleTaskLeave}
-                        title={`${task.name} (${formatDate(startDate)} - ${formatDate(endDate)})`}
-                      >
-                        {/* Progress indicator */}
-                        {task.progress > 0 && (
-                          <div
-                            className='h-full bg-green-400 rounded-l transition-all duration-300'
-                            style={{ width: `${task.progress}%` }}
-                          />
-                        )}
-                      </div>
+                      {task.isMilestone ? (
+                        <div
+                          className={`${getTaskBarStyle(task)} flex items-center justify-center`}
+                          style={{
+                            left,
+                            width,
+                            position: 'absolute',
+                            top: '2px',
+                            height: 'calc(100% - 4px)',
+                          }}
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleTaskClick(task.id);
+                          }}
+                          onMouseEnter={() => handleTaskHover(task.id)}
+                          onMouseLeave={handleTaskLeave}
+                          title={`Milestone: ${task.name} (${formatDate(startDate)})`}
+                        >
+                          <div className='text-lg font-bold text-purple-700'>
+                            ◆
+                          </div>
+                        </div>
+                      ) : (
+                        <div
+                          className={getTaskBarStyle(task)}
+                          style={{
+                            left,
+                            width,
+                            position: 'absolute',
+                            top: '2px',
+                            height: 'calc(100% - 4px)',
+                          }}
+                          onClick={e => {
+                            e.stopPropagation();
+                            handleTaskClick(task.id);
+                          }}
+                          onMouseEnter={() => handleTaskHover(task.id)}
+                          onMouseLeave={handleTaskLeave}
+                          title={`${task.name} (${formatDate(startDate)} - ${formatDate(endDate)})`}
+                        >
+                          {/* Progress indicator */}
+                          {task.progress > 0 && (
+                            <div
+                              className='h-full bg-green-400 rounded-l transition-all duration-300'
+                              style={{ width: `${task.progress}%` }}
+                            />
+                          )}
+                        </div>
+                      )}
 
                       {/* Baseline Bar Overlay */}
                       {viewState.showBaseline &&

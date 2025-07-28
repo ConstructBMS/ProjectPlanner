@@ -42,6 +42,7 @@ import {
 export default function HomeTab() {
   const {
     addTask,
+    addMilestone,
     deleteTask,
     linkTasks,
     ungroup,
@@ -182,9 +183,9 @@ export default function HomeTab() {
       <RibbonGroup title='Insert'>
         <RibbonButton
           icon={<FlagIcon className='w-4 h-4' />}
-          label='Milestone'
-          onClick={() => console.log('Insert Milestone clicked')}
-          tooltip='Insert a new milestone task'
+          label='Add Milestone'
+          onClick={addMilestone}
+          tooltip='Add a milestone task'
         />
         <RibbonButton
           icon={<ChartBarIcon className='w-4 h-4' />}

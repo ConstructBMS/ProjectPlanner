@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import { useTaskContext } from '../context/TaskContext';
-import { ChevronRightIcon, ChevronDownIcon, FolderIcon, PencilIcon } from '@heroicons/react/24/outline';
+import {
+  ChevronRightIcon,
+  ChevronDownIcon,
+  FolderIcon,
+  PencilIcon,
+} from '@heroicons/react/24/outline';
 
 const TaskGrid = () => {
   const {
@@ -15,11 +20,11 @@ const TaskGrid = () => {
     selectMultipleTasks,
     handleTaskClickForLinking,
     getVisibleTasks,
-    toggleGroupCollapse
+    toggleGroupCollapse,
   } = useTaskContext();
 
   const visibleTasks = getVisibleTasks();
-  
+
   // Inline editing state
   const [editingField, setEditingField] = useState(null); // { taskId, field }
   const [editValue, setEditValue] = useState('');
@@ -67,11 +72,11 @@ const TaskGrid = () => {
     startEditing(taskId, field, currentValue);
   };
 
-  const handleEditChange = (e) => {
+  const handleEditChange = e => {
     setEditValue(e.target.value);
   };
 
-  const handleEditKeyDown = (e) => {
+  const handleEditKeyDown = e => {
     if (e.key === 'Enter') {
       e.preventDefault();
       commitEdit();
@@ -93,7 +98,7 @@ const TaskGrid = () => {
 
     const { taskId, field } = editingField;
     let finalValue = editValue;
-    
+
     // Handle duration field - ensure it's a number
     if (field === 'duration') {
       const numericValue = parseInt(editValue.replace(' days', ''), 10);
@@ -104,7 +109,7 @@ const TaskGrid = () => {
       }
       finalValue = numericValue;
     }
-    
+
     // Handle date fields - validate format
     if (field === 'startDate' || field === 'endDate') {
       const date = new Date(finalValue);
@@ -114,13 +119,13 @@ const TaskGrid = () => {
         return;
       }
     }
-    
+
     const updates = { [field]: finalValue };
     updateTask(taskId, updates);
     stopEditing();
   };
 
-  const getStatusColor = (status) => {
+  const getStatusColor = status => {
     switch (status) {
       case 'Planned':
         return 'bg-blue-100 text-blue-800';
@@ -135,7 +140,7 @@ const TaskGrid = () => {
     }
   };
 
-  const getPriorityColor = (priority) => {
+  const getPriorityColor = priority => {
     switch (priority) {
       case 'High':
         return 'bg-red-100 text-red-800';
@@ -148,7 +153,7 @@ const TaskGrid = () => {
     }
   };
 
-  const getRowHighlightClass = (taskId) => {
+  const getRowHighlightClass = taskId => {
     const isSelected = selectedTaskId === taskId;
     const isMultiSelected = selectedTaskIds.includes(taskId);
     const isLinkStart = linkingMode && linkStartTaskId === taskId;
@@ -187,15 +192,16 @@ const TaskGrid = () => {
 
   // Render editable field
   const renderEditableField = (task, field, value, type = 'text') => {
-    const isEditing = editingField?.taskId === task.id && editingField?.field === field;
-    
+    const isEditing =
+      editingField?.taskId === task.id && editingField?.field === field;
+
     if (isEditing) {
       // Handle duration field specially - extract numeric value
       let inputValue = editValue;
       if (field === 'duration') {
         inputValue = editValue.replace(' days', '');
       }
-      
+
       return (
         <input
           type={type}
@@ -203,7 +209,7 @@ const TaskGrid = () => {
           onChange={handleEditChange}
           onKeyDown={handleEditKeyDown}
           onBlur={handleEditBlur}
-          className="w-full bg-white border border-blue-500 rounded px-1 py-0.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className='w-full bg-white border border-blue-500 rounded px-1 py-0.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500'
           autoFocus
         />
       );
@@ -211,25 +217,25 @@ const TaskGrid = () => {
 
     return (
       <div
-        className="w-full px-1 py-0.5 text-sm cursor-pointer hover:bg-blue-50 hover:border hover:border-blue-200 rounded flex items-center justify-between group"
-        onDoubleClick={(e) => handleEditDoubleClick(task.id, field, value, e)}
-        title="Double-click to edit"
+        className='w-full px-1 py-0.5 text-sm cursor-pointer hover:bg-blue-50 hover:border hover:border-blue-200 rounded flex items-center justify-between group'
+        onDoubleClick={e => handleEditDoubleClick(task.id, field, value, e)}
+        title='Double-click to edit'
       >
-        <span className="truncate">{value}</span>
-        <PencilIcon className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+        <span className='truncate'>{value}</span>
+        <PencilIcon className='w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity' />
       </div>
     );
   };
 
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div className='h-full flex flex-col bg-white'>
       {/* Header */}
-      <div className="bg-gray-50 border-b px-4 py-3">
-        <h3 className="text-sm font-semibold text-gray-700">Task Grid</h3>
-        <p className="text-xs text-gray-500 mt-1">Task list and management</p>
-        <p className="text-xs text-blue-600 mt-1">
+      <div className='bg-gray-50 border-b px-4 py-3'>
+        <h3 className='text-sm font-semibold text-gray-700'>Task Grid</h3>
+        <p className='text-xs text-gray-500 mt-1'>Task list and management</p>
+        <p className='text-xs text-blue-600 mt-1'>
           {linkingMode ? (
-            <span className="text-purple-600 font-medium">
+            <span className='text-purple-600 font-medium'>
               🔗 Linking Mode Active - Click tasks to create dependencies
             </span>
           ) : (
@@ -239,30 +245,33 @@ const TaskGrid = () => {
       </div>
 
       {/* Task Table */}
-      <div className="flex-1 overflow-auto">
+      <div className='flex-1 overflow-auto'>
         {visibleTasks.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-gray-500">
-            <div className="text-center">
-              <div className="text-2xl mb-2">📋</div>
-              <div className="text-sm">No tasks yet</div>
-              <div className="text-xs">Click "Add Task" in the ribbon to create your first task</div>
+          <div className='flex items-center justify-center h-full text-gray-500'>
+            <div className='text-center'>
+              <div className='text-2xl mb-2'>📋</div>
+              <div className='text-sm'>No tasks yet</div>
+              <div className='text-xs'>
+                Click "Add Task" in the ribbon to create your first task
+              </div>
             </div>
           </div>
         ) : (
-          <div className="min-w-full">
+          <div className='min-w-full'>
             {/* Table Header */}
-            <div className="bg-gray-50 border-b grid grid-cols-12 gap-2 px-3 py-2 text-xs font-medium text-gray-600">
-              <div className="col-span-4">Task Name</div>
-              <div className="col-span-2">Start Date</div>
-              <div className="col-span-2">End Date</div>
-              <div className="col-span-1">Duration</div>
-              <div className="col-span-2">Status</div>
-              <div className="col-span-1">Actions</div>
+            <div className='bg-gray-50 border-b grid grid-cols-12 gap-2 px-3 py-2 text-xs font-medium text-gray-600'>
+              <div className='col-span-3'>Task Name</div>
+              <div className='col-span-2'>Start Date</div>
+              <div className='col-span-2'>End Date</div>
+              <div className='col-span-1'>Duration</div>
+              <div className='col-span-1'>Type</div>
+              <div className='col-span-2'>Status</div>
+              <div className='col-span-1'>Actions</div>
             </div>
 
             {/* Task Rows */}
-            <div className="divide-y divide-gray-200">
-              {visibleTasks.map((task) => {
+            <div className='divide-y divide-gray-200'>
+              {visibleTasks.map(task => {
                 const isSelected = selectedTaskId === task.id;
                 const isMultiSelected = selectedTaskIds.includes(task.id);
                 const isLinkStart = linkingMode && linkStartTaskId === task.id;
@@ -272,69 +281,105 @@ const TaskGrid = () => {
                   <div
                     key={task.id}
                     className={`grid grid-cols-12 gap-2 px-3 py-2 text-sm cursor-pointer transition-colors duration-150 ${getRowHighlightClass(task.id)}`}
-                    onClick={(e) => handleRowClick(task.id, e)}
+                    onClick={e => handleRowClick(task.id, e)}
                   >
                     {/* Task Name with Indentation and Group Controls */}
-                    <div className="col-span-4 flex items-center">
+                    <div className='col-span-3 flex items-center'>
                       {/* Indentation */}
-                      <div 
-                        className="flex-shrink-0"
+                      <div
+                        className='flex-shrink-0'
                         style={{ width: `${indentLevel * 20}px` }}
                       />
-                      
+
                       {/* Group Toggle Button */}
                       {task.isGroup && (
                         <button
-                          onClick={(e) => handleGroupToggle(task.id, e)}
-                          className="flex-shrink-0 w-4 h-4 mr-1 text-gray-500 hover:text-gray-700 transition-colors"
+                          onClick={e => handleGroupToggle(task.id, e)}
+                          className='flex-shrink-0 w-4 h-4 mr-1 text-gray-500 hover:text-gray-700 transition-colors'
                         >
                           {task.isExpanded ? (
-                            <ChevronDownIcon className="w-4 h-4" />
+                            <ChevronDownIcon className='w-4 h-4' />
                           ) : (
-                            <ChevronRightIcon className="w-4 h-4" />
+                            <ChevronRightIcon className='w-4 h-4' />
                           )}
                         </button>
                       )}
-                      
+
                       {/* Group Icon */}
                       {task.isGroup && (
-                        <FolderIcon className="w-4 h-4 mr-1 text-blue-500 flex-shrink-0" />
+                        <FolderIcon className='w-4 h-4 mr-1 text-blue-500 flex-shrink-0' />
                       )}
-                      
+
                       {/* Task Name Input */}
-                      <div className="flex-1">
+                      <div className='flex-1'>
                         {renderEditableField(task, 'name', task.name)}
                       </div>
                     </div>
 
                     {/* Start Date */}
-                    <div className="col-span-2">
-                      {renderEditableField(task, 'startDate', task.startDate, 'date')}
+                    <div className='col-span-2'>
+                      {renderEditableField(
+                        task,
+                        'startDate',
+                        task.startDate,
+                        'date'
+                      )}
                     </div>
 
                     {/* End Date */}
-                    <div className="col-span-2">
-                      {renderEditableField(task, 'endDate', task.endDate, 'date')}
+                    <div className='col-span-2'>
+                      {renderEditableField(
+                        task,
+                        'endDate',
+                        task.endDate,
+                        'date'
+                      )}
                     </div>
 
                     {/* Duration */}
-                    <div className="col-span-1">
-                      {renderEditableField(task, 'duration', `${task.duration} days`, 'number')}
+                    <div className='col-span-1'>
+                      {renderEditableField(
+                        task,
+                        'duration',
+                        `${task.duration} days`,
+                        'number'
+                      )}
+                    </div>
+
+                    {/* Type */}
+                    <div className='col-span-1'>
+                      <span
+                        className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                          task.isMilestone
+                            ? 'bg-purple-100 text-purple-800'
+                            : task.isGroup
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-blue-100 text-blue-800'
+                        }`}
+                      >
+                        {task.isMilestone
+                          ? 'Milestone'
+                          : task.isGroup
+                            ? 'Group'
+                            : 'Task'}
+                      </span>
                     </div>
 
                     {/* Status */}
-                    <div className="col-span-2">
-                      <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(task.status)}`}>
+                    <div className='col-span-2'>
+                      <span
+                        className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(task.status)}`}
+                      >
                         {task.status}
                       </span>
                     </div>
 
                     {/* Actions */}
-                    <div className="col-span-1">
+                    <div className='col-span-1'>
                       <button
-                        onClick={(e) => handleDeleteTask(task.id, e)}
-                        className="text-red-600 hover:text-red-800 text-xs font-medium"
-                        title="Delete task"
+                        onClick={e => handleDeleteTask(task.id, e)}
+                        className='text-red-600 hover:text-red-800 text-xs font-medium'
+                        title='Delete task'
                       >
                         Delete
                       </button>
@@ -348,9 +393,10 @@ const TaskGrid = () => {
       </div>
 
       {/* Footer */}
-      <div className="bg-gray-50 border-t px-4 py-2">
-        <div className="text-xs text-gray-500">
-          {visibleTasks.length} task{visibleTasks.length !== 1 ? 's' : ''} • {getSelectionStatus()}
+      <div className='bg-gray-50 border-t px-4 py-2'>
+        <div className='text-xs text-gray-500'>
+          {visibleTasks.length} task{visibleTasks.length !== 1 ? 's' : ''} •{' '}
+          {getSelectionStatus()}
         </div>
       </div>
     </div>

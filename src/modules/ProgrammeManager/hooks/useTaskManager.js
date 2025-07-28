@@ -3,6 +3,7 @@ import { useTaskContext } from '../context/TaskContext';
 const useTaskManager = () => {
   const {
     addTask,
+    addMilestone,
     deleteTask,
     linkTasks,
     unlinkTasks,
@@ -12,7 +13,7 @@ const useTaskManager = () => {
     clearSelection,
     selectedTaskId,
     selectedTaskIds,
-    tasks
+    tasks,
   } = useTaskContext();
 
   const openTaskDetails = () => {
@@ -47,7 +48,7 @@ const useTaskManager = () => {
       console.log('Need at least 2 tasks selected to create a group');
       return;
     }
-    
+
     const groupName = prompt('Enter group name:');
     if (groupName) {
       groupTasks(selectedTaskIds, groupName);
@@ -79,6 +80,7 @@ const useTaskManager = () => {
 
   return {
     addTask,
+    addMilestone,
     deleteTask,
     linkTasks,
     unlinkTasks,
@@ -88,7 +90,7 @@ const useTaskManager = () => {
     createGroup,
     ungroup,
     selectAll,
-    deselectAll
+    deselectAll,
   };
 };
 

@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Prompt 062: Add Milestone Marker Tool**
+  - Added "Add Milestone" button to HomeTab ribbon with 📌 icon and tooltip
+  - Implemented addMilestone function in TaskContext with prompt for name and date
+  - Created milestone tasks with duration = 0 and isMilestone = true
+  - Updated GanttChart to render milestones with diamond icon (◆) at specific date position
+  - Added Type column to TaskGrid showing "Milestone" for milestone tasks
+  - Implemented milestone-specific styling with purple color scheme
+  - Added hover tooltip showing milestone name and date
+  - All milestone operations logged to console for debugging
+
 - **Prompt 060: Drag & Drop Reordering in SidebarTree**
   - Implemented drag and drop reordering using @dnd-kit library
   - Added SortableTaskNode component with drag handles
