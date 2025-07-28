@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Prompt 064: Add Colour Code Task Rows by Status**
+  - Added status highlighting toggle button in ViewTab with PaintBrush icon
+  - Implemented status-based row background coloring in TaskGrid component
+  - Added status highlighting state to ViewContext for persistent toggle state
+  - Updated sample tasks with different statuses: Planned, In Progress, Complete, Delayed
+  - Implemented color coding: Planned (white), In Progress (blue-50), Complete (green-50), Delayed (red-50)
+  - Added visual feedback for status highlighting toggle button state
+  - Updated getStatusColor function to handle new status values
+  - All status highlighting operations logged to console for debugging
+
 - **Prompt 063: Add Undo / Redo Toolbar Group**
   - Added "History" ribbon group to HomeTab with Undo (↺) and Redo (↻) buttons
   - Implemented undo/redo stack functionality in TaskContext with saveToUndoStack helper
