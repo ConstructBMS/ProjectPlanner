@@ -17,7 +17,6 @@ const TaskGrid = () => {
     linkStartTaskId,
     deleteTask,
     updateTask,
-    selectTask,
     selectMultipleTasks,
     handleTaskClickForLinking,
     getVisibleTasks,
@@ -35,11 +34,6 @@ const TaskGrid = () => {
   const handleDeleteTask = (taskId, e) => {
     e.stopPropagation(); // Prevent row selection when clicking delete
     deleteTask(taskId);
-  };
-
-  const handleNameChange = (taskId, newName, e) => {
-    e.stopPropagation(); // Prevent row selection when editing name
-    updateTask(taskId, { name: newName });
   };
 
   const handleRowClick = (taskId, e) => {
@@ -62,7 +56,19 @@ const TaskGrid = () => {
   // Inline editing functions
   const startEditing = (taskId, field, currentValue) => {
     setEditingField({ taskId, field });
-    setEditValue(currentValue);
+
+    // Format initial value for editing
+    let initialValue = currentValue;
+    if (field === 'startDate' || field === 'endDate') {
+      try {
+        const date = new Date(currentValue);
+        initialValue = date.toISOString().split('T')[0]; // YYYY-MM-DD format for date input
+      } catch (e) {
+        initialValue = currentValue;
+      }
+    }
+
+    setEditValue(initialValue);
   };
 
   const stopEditing = () => {
@@ -91,7 +97,7 @@ const TaskGrid = () => {
 
   const handleEditBlur = () => {
     // Small delay to allow for Enter key processing
-    setTimeout(() => {
+    window.setTimeout(() => {
       commitEdit();
     }, 100);
   };
@@ -101,6 +107,16 @@ const TaskGrid = () => {
 
     const { taskId, field } = editingField;
     let finalValue = editValue;
+
+    // Handle name field - ensure it's not empty
+    if (field === 'name') {
+      if (!finalValue.trim()) {
+        console.warn('Task name cannot be empty');
+        stopEditing();
+        return;
+      }
+      finalValue = finalValue.trim();
+    }
 
     // Handle duration field - ensure it's a number
     if (field === 'duration') {
@@ -113,13 +129,33 @@ const TaskGrid = () => {
       finalValue = numericValue;
     }
 
-    // Handle date fields - validate format
+    // Handle date fields - validate format and convert to ISO string
     if (field === 'startDate' || field === 'endDate') {
       const date = new Date(finalValue);
       if (isNaN(date.getTime())) {
         console.warn('Invalid date format');
         stopEditing();
         return;
+      }
+      finalValue = date.toISOString();
+    }
+
+    // Validate date relationships
+    if (field === 'startDate' || field === 'endDate') {
+      const task = tasks.find(t => t.id === taskId);
+      if (task) {
+        const startDate =
+          field === 'startDate'
+            ? new Date(finalValue)
+            : new Date(task.startDate);
+        const endDate =
+          field === 'endDate' ? new Date(finalValue) : new Date(task.endDate);
+
+        if (endDate < startDate) {
+          console.warn('End date cannot be before start date');
+          stopEditing();
+          return;
+        }
       }
     }
 
@@ -143,18 +179,7 @@ const TaskGrid = () => {
     }
   };
 
-  const getPriorityColor = priority => {
-    switch (priority) {
-      case 'High':
-        return 'bg-red-100 text-red-800';
-      case 'Medium':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'Low':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
+
 
   const getStatusBackgroundColor = status => {
     if (!viewState.statusHighlighting) return '';
@@ -237,13 +262,24 @@ const TaskGrid = () => {
       );
     }
 
+    // Format display value for different field types
+    let displayValue = value;
+    if (field === 'startDate' || field === 'endDate') {
+      try {
+        const date = new Date(value);
+        displayValue = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+      } catch (e) {
+        displayValue = value;
+      }
+    }
+
     return (
       <div
         className='w-full px-1 py-0.5 text-sm cursor-pointer hover:bg-blue-50 hover:border hover:border-blue-200 rounded flex items-center justify-between group'
         onDoubleClick={e => handleEditDoubleClick(task.id, field, value, e)}
         title='Double-click to edit'
       >
-        <span className='truncate'>{value}</span>
+        <span className='truncate'>{displayValue}</span>
         <PencilIcon className='w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity' />
       </div>
     );
@@ -274,7 +310,8 @@ const TaskGrid = () => {
               <div className='text-2xl mb-2'>📋</div>
               <div className='text-sm'>No tasks yet</div>
               <div className='text-xs'>
-                Click "Add Task" in the ribbon to create your first task
+                Click &quot;Add Task&quot; in the ribbon to create your first
+                task
               </div>
             </div>
           </div>
@@ -294,9 +331,6 @@ const TaskGrid = () => {
             {/* Task Rows */}
             <div className='divide-y divide-gray-200'>
               {visibleTasks.map(task => {
-                const isSelected = selectedTaskId === task.id;
-                const isMultiSelected = selectedTaskIds.includes(task.id);
-                const isLinkStart = linkingMode && linkStartTaskId === task.id;
                 const indentLevel = task.depth || 0;
 
                 return (
