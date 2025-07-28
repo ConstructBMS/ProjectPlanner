@@ -5,33 +5,33 @@ import {
   UserGroupIcon,
   UserIcon,
   WrenchScrewdriverIcon,
-  TruckIcon
+  TruckIcon,
 } from '@heroicons/react/24/outline';
 
 const AllocationTab = () => {
   return (
-    <div className="flex flex-row gap-1 p-1 bg-[#eaf1fb]">
+    <div className='flex flex-nowrap gap-0 p-2 bg-white w-full min-w-0'>
       {/* Resource Allocation Group */}
-      <RibbonGroup title="Resource Allocation">
+      <RibbonGroup title='Resource Allocation'>
         <RibbonButton
-          icon={<UserGroupIcon className="w-4 h-4 text-gray-700" />}
-          label="Assign Resources"
+          icon={<UserGroupIcon className='w-4 h-4 text-gray-700' />}
+          label='Assign Resources'
         />
         <RibbonButton
-          icon={<UserIcon className="w-4 h-4 text-gray-700" />}
-          label="Resource Details"
+          icon={<UserIcon className='w-4 h-4 text-gray-700' />}
+          label='Resource Details'
         />
         <RibbonButton
-          icon={<WrenchScrewdriverIcon className="w-4 h-4 text-gray-700" />}
-          label="Equipment"
+          icon={<WrenchScrewdriverIcon className='w-4 h-4 text-gray-700' />}
+          label='Equipment'
         />
       </RibbonGroup>
 
       {/* Resource Management Group */}
-      <RibbonGroup title="Resource Management">
+      <RibbonGroup title='Resource Management'>
         <RibbonButton
-          icon={<TruckIcon className="w-4 h-4 text-gray-700" />}
-          label="Resource Reports"
+          icon={<TruckIcon className='w-4 h-4 text-gray-700' />}
+          label='Resource Reports'
         />
       </RibbonGroup>
     </div>

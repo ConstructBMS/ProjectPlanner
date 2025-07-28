@@ -1,19 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
+import Tooltip from '../../common/Tooltip';
 
-const RibbonDropdown = ({ 
-  icon, 
-  label, 
-  items = [], 
-  onSelect, 
-  disabled = false, 
+const RibbonDropdown = ({
+  icon,
+  label,
+  options = [],
+  onSelect,
+  disabled = false,
+  tooltip = '',
   className = '',
-  title = ''
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedOption, setSelectedOption] = useState(options[0] || null);
   const dropdownRef = useRef(null);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -21,97 +22,68 @@ const RibbonDropdown = ({
       }
     };
 
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen]);
+  }, []);
 
-  // Close dropdown on escape key
-  useEffect(() => {
-    const handleEscape = (event) => {
-      if (event.key === 'Escape') {
-        setIsOpen(false);
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
-    }
-
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [isOpen]);
-
-  const handleToggle = () => {
-    if (!disabled) {
-      setIsOpen(!isOpen);
-    }
-  };
-
-  const handleItemClick = (item) => {
-    if (onSelect) {
-      onSelect(item);
-    }
+  const handleSelect = (option) => {
+    setSelectedOption(option);
     setIsOpen(false);
+    if (onSelect) {
+      onSelect(option);
+    }
   };
 
   return (
-    <div ref={dropdownRef} className={`relative ${className}`}>
-      {/* Main Button */}
-      <button
-        onClick={handleToggle}
-        disabled={disabled}
-        title={title || label}
-        className={`w-[48px] h-[48px] bg-gray-100 rounded flex flex-col items-center justify-center hover:bg-blue-100 transition-colors ${
-          disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-        } ${isOpen ? 'bg-blue-100 ring-2 ring-blue-300' : ''}`}
-      >
-        {/* Icon */}
-        <div className="w-5 h-5 flex items-center justify-center text-gray-700">
-          {icon}
-        </div>
-        
-        {/* Dropdown Arrow */}
-        <ChevronDownIcon className="w-3 h-3 text-gray-500 mt-0.5" />
-      </button>
-
-      {/* Dropdown Menu */}
-      {isOpen && (
-        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[160px]">
-          <div className="py-1">
-            {items.map((item, index) => (
-              <button
-                key={index}
-                onClick={() => handleItemClick(item)}
-                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-blue-50 flex items-center gap-2 transition-colors"
-                title={item.tooltip || item.label}
-              >
-                {item.icon && (
-                  <div className="w-4 h-4 flex items-center justify-center text-gray-500">
-                    {item.icon}
-                  </div>
-                )}
-                <span>{item.label}</span>
-                {item.shortcut && (
-                  <span className="ml-auto text-xs text-gray-400">
-                    {item.shortcut}
-                  </span>
-                )}
-              </button>
-            ))}
+    <div className="relative" ref={dropdownRef}>
+      <Tooltip content={tooltip || label}>
+        <button
+          onClick={() => !disabled && setIsOpen(!isOpen)}
+          disabled={disabled}
+          className={`
+            asta-button
+            group
+            flex flex-col items-center justify-center
+            w-[48px] h-[36px]
+            flex-shrink-0
+            transition-all duration-200
+            ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-50 hover:border-blue-200'}
+            ${isOpen ? 'bg-blue-50 border-blue-200' : ''}
+            ${className}
+          `}
+          aria-label={label}
+          title={tooltip || label}
+        >
+          <div className='text-[12px] text-gray-700 flex items-center justify-center w-full h-[14px] pt-0.5 group-hover:text-blue-600 transition-colors duration-200'>
+            {icon}
           </div>
+          <div className='text-[7px] uppercase tracking-wide text-gray-600 font-medium mt-1.5 leading-tight text-center flex items-center gap-0.5'>
+            {label}
+            <ChevronDownIcon className='w-2 h-2' />
+          </div>
+        </button>
+      </Tooltip>
+
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 min-w-[120px]">
+          {options.map((option, index) => (
+            <button
+              key={index}
+              onClick={() => handleSelect(option)}
+              className={`
+                w-full px-3 py-2 text-left text-sm hover:bg-gray-100 transition-colors duration-150
+                ${selectedOption?.value === option.value ? 'bg-blue-50 text-blue-600' : 'text-gray-700'}
+                ${index === 0 ? 'rounded-t-md' : ''}
+                ${index === options.length - 1 ? 'rounded-b-md' : ''}
+              `}
+            >
+              {option.label}
+            </button>
+          ))}
         </div>
       )}
-
-      {/* Label */}
-      <div className="text-[10px] font-medium text-gray-500 uppercase mt-1 text-center">
-        {label}
-      </div>
     </div>
   );
 };

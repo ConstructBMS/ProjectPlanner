@@ -29,7 +29,9 @@ body {
 
 /* Smooth transitions for resizable elements */
 .resizable-transition {
-  transition: width 0.2s ease, height 0.2s ease;
+  transition:
+    width 0.2s ease,
+    height 0.2s ease;
 }
 
 /* Prevent text selection during resize */
@@ -44,6 +46,9 @@ body {
 .asta-ribbon {
   background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
   border-bottom: 1px solid var(--asta-border);
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .asta-ribbon-tab {
@@ -54,6 +59,8 @@ body {
   font-weight: 500;
   padding: 8px 16px;
   transition: all 0.2s ease;
+  white-space: nowrap;
+  min-width: fit-content;
 }
 
 .asta-ribbon-tab:hover {
@@ -72,51 +79,81 @@ body {
   border: 1px solid var(--asta-border);
   border-top: none;
   padding: 8px;
+  min-height: 100px;
+  overflow-x: auto;
+  overflow-y: auto;
+  width: 100%;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 #f7fafc;
+}
+
+.asta-ribbon-content::-webkit-scrollbar {
+  height: 6px;
+}
+
+.asta-ribbon-content::-webkit-scrollbar-track {
+  background: #f7fafc;
+}
+
+.asta-ribbon-content::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 3px;
+}
+
+.asta-ribbon-content::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
 }
 
 /* Asta PowerProject Button Styling */
 .asta-button {
-  background: #ffffff;
-  border: 1px solid var(--asta-border);
-  border-radius: 3px;
+  background: transparent;
+  border: 1px solid transparent;
   color: var(--asta-text);
   font-size: 12px;
   font-weight: 500;
-  padding: 6px 12px;
+  padding: 0;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  border-radius: 3px;
 }
 
 .asta-button:hover {
-  background: #f8f9fa;
-  border-color: var(--asta-blue);
+  background: #e3f2fd;
+  border-color: #2196f3;
 }
 
 .asta-button:active {
-  background: #e3f2fd;
-  border-color: var(--asta-blue);
+  background: #bbdefb;
 }
 
 /* Asta PowerProject Group Styling */
 .asta-group {
-  background: #ffffff;
-  border: 1px solid var(--asta-border);
-  border-radius: 4px;
-  padding: 8px;
-  margin: 4px;
+  display: flex;
+  flex-direction: column;
+  padding: 6px 6px;
+  border-right: 1px solid var(--asta-border);
+  min-width: 120px;
+  flex-shrink: 1;
+  min-height: 80px;
+}
+
+.asta-group:last-child {
+  border-right: none;
 }
 
 .asta-group-title {
   color: var(--asta-text-secondary);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 6px;
-  padding-bottom: 4px;
+  padding-bottom: 3px;
   border-bottom: 1px solid var(--asta-border);
+  text-align: center;
+  width: 100%;
 }
 
 /* Asta PowerProject Tree Styling */
@@ -218,8 +255,8 @@ body {
 }
 
 .asta-timeline-grid {
-  background-image: 
-    linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px);
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
   background-size: 20px 20px;
 }

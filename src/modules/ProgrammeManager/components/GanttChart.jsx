@@ -1,6 +1,12 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { ChevronRightIcon, ChevronDownIcon, FolderIcon } from '@heroicons/react/24/outline';
+import React, { useRef, useEffect } from 'react';
+import {
+  ChevronRightIcon,
+  ChevronDownIcon,
+  FolderIcon,
+} from '@heroicons/react/24/outline';
 import { useTaskContext } from '../context/TaskContext';
+import { useViewContext } from '../context/ViewContext';
+import DateMarkersOverlay from './DateMarkersOverlay';
 
 const GanttChart = () => {
   const {
@@ -13,11 +19,13 @@ const GanttChart = () => {
     linkingMode,
     linkStartTaskId,
     handleTaskClickForLinking,
-    taskLinks
+    taskLinks,
   } = useTaskContext();
 
-  const [taskRefs, setTaskRefs] = useState({});
-  const [svgContainerRef, setSvgContainerRef] = useState(null);
+  const { viewState } = useViewContext();
+
+  const taskRefs = useRef({});
+  const svgContainerRef = useRef(null);
 
   const tasks = getVisibleTasks();
 
@@ -25,16 +33,20 @@ const GanttChart = () => {
   useEffect(() => {
     const newRefs = {};
     tasks.forEach(task => {
-      newRefs[task.id] = React.createRef();
+      if (!taskRefs.current[task.id]) {
+        newRefs[task.id] = React.createRef();
+      } else {
+        newRefs[task.id] = taskRefs.current[task.id];
+      }
     });
-    setTaskRefs(newRefs);
+    taskRefs.current = newRefs;
   }, [tasks]);
 
   // Draw dependency arrows
   useEffect(() => {
-    if (!svgContainerRef) return;
+    if (!svgContainerRef.current) return;
 
-    const svg = svgContainerRef;
+    const svg = svgContainerRef.current;
     const containerRect = svg.getBoundingClientRect();
 
     // Clear existing arrows
@@ -43,8 +55,8 @@ const GanttChart = () => {
 
     // Draw new arrows
     taskLinks.forEach(link => {
-      const fromRef = taskRefs[link.fromId];
-      const toRef = taskRefs[link.toId];
+      const fromRef = taskRefs.current[link.fromId];
+      const toRef = taskRefs.current[link.toId];
 
       if (fromRef?.current && toRef?.current) {
         const fromRect = fromRef.current.getBoundingClientRect();
@@ -56,7 +68,10 @@ const GanttChart = () => {
         const toY = toRect.top + toRect.height / 2 - containerRect.top;
 
         // Create arrow path
-        const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        const arrow = document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'path'
+        );
         arrow.setAttribute('d', `M ${fromX} ${fromY} L ${toX} ${toY}`);
         arrow.setAttribute('stroke', '#6B7280');
         arrow.setAttribute('stroke-width', '2');
@@ -67,9 +82,9 @@ const GanttChart = () => {
         svg.appendChild(arrow);
       }
     });
-  }, [taskLinks, taskRefs, svgContainerRef]);
+  }, [taskLinks, tasks]);
 
-  const handleTaskClick = (taskId) => {
+  const handleTaskClick = taskId => {
     if (linkingMode) {
       handleTaskClickForLinking(taskId);
     } else {
@@ -77,14 +92,14 @@ const GanttChart = () => {
     }
   };
 
-  const handleChartClick = (e) => {
+  const handleChartClick = e => {
     // Only clear selection if clicking on empty space and not in linking mode
     if (e.target === e.currentTarget && !linkingMode) {
       selectTask(null);
     }
   };
 
-  const handleTaskHover = (taskId) => {
+  const handleTaskHover = taskId => {
     setHoveredTask(taskId);
   };
 
@@ -92,42 +107,43 @@ const GanttChart = () => {
     clearHoveredTask();
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = dateString => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  const getTaskBarStyle = (task) => {
+  const getTaskBarStyle = task => {
     const isSelected = selectedTaskId === task.id;
     const isHovered = hoveredTaskId === task.id;
     const isLinkStart = linkingMode && linkStartTaskId === task.id;
 
-    let baseClasses = 'h-6 rounded transition-all duration-200 cursor-pointer';
-    
+    let baseClasses =
+      'rounded-sm transition-all duration-200 cursor-pointer border';
+
     if (task.isGroup) {
-      baseClasses += ' bg-green-500';
+      baseClasses += ' bg-green-100 border-green-400 text-green-800';
     } else {
-      baseClasses += ' bg-blue-500';
+      baseClasses += ' bg-blue-100 border-blue-400 text-blue-800';
     }
 
     if (isSelected) {
-      baseClasses += ' stroke-blue-500 fill-blue-200 ring-2 ring-blue-500';
+      baseClasses += ' ring-2 ring-blue-500 border-blue-600 shadow-md';
     } else if (isHovered) {
-      baseClasses += ' stroke-blue-300 fill-blue-50 ring-1 ring-blue-300';
+      baseClasses += ' ring-1 ring-blue-300 border-blue-500 shadow-sm';
     } else if (isLinkStart) {
-      baseClasses += ' bg-purple-500 ring-2 ring-purple-500';
+      baseClasses += ' bg-purple-100 border-purple-400 ring-2 ring-purple-500';
     }
 
     return baseClasses;
   };
 
-  const getTaskNameStyle = (task) => {
+  const getTaskNameStyle = task => {
     const isSelected = selectedTaskId === task.id;
     const isHovered = hoveredTaskId === task.id;
     const isLinkStart = linkingMode && linkStartTaskId === task.id;
 
     let baseClasses = 'text-sm font-medium truncate';
-    
+
     if (isSelected) {
       baseClasses += ' text-blue-700 font-semibold';
     } else if (isHovered) {
@@ -142,128 +158,180 @@ const GanttChart = () => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-white">
-      {/* Header */}
-      <div className="bg-gray-50 border-b px-4 py-3">
-        <h3 className="text-sm font-semibold text-gray-700">Gantt Chart</h3>
-        <p className="text-xs text-gray-500 mt-1">Task timeline and dependencies</p>
+    <div className='h-full flex flex-col bg-white'>
+      {/* Asta-style Timeline Header */}
+      <div className='asta-timeline-header border-b border-gray-300 bg-gray-50 px-4 py-2'>
+        <div className='flex items-center justify-between'>
+          <div className='flex items-center gap-4'>
+            <h3 className='text-sm font-semibold text-gray-700'>Timeline</h3>
+            <div className='text-xs text-gray-500'>
+              {tasks.length} task{tasks.length !== 1 ? 's' : ''} •{' '}
+              {taskLinks.length} link{taskLinks.length !== 1 ? 's' : ''}
+            </div>
+          </div>
+          <div className='text-xs text-gray-500'>
+            {linkingMode
+              ? '🔗 Linking mode active'
+              : selectedTaskId
+                ? `Selected: ${tasks.find(t => t.id === selectedTaskId)?.name || 'Unknown'}`
+                : 'No task selected'}
+          </div>
+        </div>
       </div>
 
-      {/* Chart Content */}
-      <div className="flex-1 overflow-auto relative" onClick={handleChartClick}>
+      {/* Asta-style Timeline Grid */}
+      <div className='flex-1 overflow-auto relative' onClick={handleChartClick}>
+        {/* Background Grid */}
+        <div className='asta-timeline-grid absolute inset-0 opacity-20'></div>
+
+        {/* Date Markers Overlay */}
+        <DateMarkersOverlay />
+
         {/* SVG Container for Dependency Arrows */}
         <svg
-          ref={setSvgContainerRef}
-          className="absolute inset-0 w-full h-full pointer-events-none z-10"
+          ref={svgContainerRef}
+          className='absolute inset-0 w-full h-full pointer-events-none z-10'
         >
           <defs>
             <marker
-              id="arrowhead"
-              markerWidth="6"
-              markerHeight="6"
-              refX="6"
-              refY="3"
-              orient="auto"
+              id='arrowhead'
+              markerWidth='8'
+              markerHeight='8'
+              refX='8'
+              refY='4'
+              orient='auto'
             >
-              <path d="M0,0 L6,3 L0,6 Z" fill="#6B7280" />
+              <path d='M0,0 L8,4 L0,8 Z' fill='#2e5aa0' />
             </marker>
           </defs>
         </svg>
 
-        {/* Task Bars */}
-        <div className="relative z-20 p-4 space-y-2">
+        {/* Timeline Content */}
+        <div className='relative z-20'>
           {tasks.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">
+            <div className='text-center text-gray-500 py-8'>
               No tasks available
             </div>
           ) : (
-            tasks.map((task, index) => {
-              const startDate = new Date(task.startDate);
-              const endDate = new Date(task.endDate);
-              const duration = task.duration || 1;
-              
-              // Calculate position (simplified for demo)
-              const left = `${(index * 20) + (task.depth || 0) * 20}%`;
-              const width = `${Math.max(duration * 5, 10)}%`;
+            <div className='space-y-1 p-2'>
+              {tasks.map((task) => {
+                const startDate = new Date(task.startDate);
+                const endDate = new Date(task.endDate);
+                const duration = task.duration || 1;
 
-              return (
-                <div
-                  key={task.id}
-                  ref={taskRefs[task.id]}
-                  className="flex items-center gap-4 py-1"
-                  style={{ paddingLeft: `${(task.depth || 0) * 20}px` }}
-                >
-                  {/* Task Name */}
-                  <div className="w-48 flex items-center gap-2">
-                    {task.isGroup && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // TODO: Implement group toggle
-                        }}
-                        className="w-4 h-4 flex items-center justify-center"
-                      >
-                        {task.isExpanded ? (
-                          <ChevronDownIcon className="w-4 h-4 text-gray-600" />
-                        ) : (
-                          <ChevronRightIcon className="w-4 h-4 text-gray-600" />
-                        )}
-                      </button>
-                    )}
-                    
-                    {task.isGroup && <FolderIcon className="w-4 h-4 text-green-500" />}
-                    
-                    <span className={getTaskNameStyle(task)}>
-                      {task.name}
-                    </span>
-                  </div>
+                // Asta-style positioning - more realistic timeline with zoom scaling
+                const daysFromStart = Math.floor(
+                  (startDate - new Date('2024-01-01')) / (1000 * 60 * 60 * 24)
+                );
+                const baseDayWidth = 2; // Base width per day
+                const baseDurationWidth = 20; // Base width per duration unit
+                const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
+                const scaledDurationWidth =
+                  baseDurationWidth * viewState.timelineZoom;
 
-                  {/* Task Bar */}
-                  <div className="flex-1 relative">
-                    <div
-                      className={getTaskBarStyle(task)}
-                      style={{
-                        left,
-                        width,
-                        position: 'absolute'
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleTaskClick(task.id);
-                      }}
-                      onMouseEnter={() => handleTaskHover(task.id)}
-                      onMouseLeave={handleTaskLeave}
-                      title={`${task.name} (${formatDate(startDate)} - ${formatDate(endDate)})`}
-                    >
-                      {/* Progress indicator */}
-                      {task.progress > 0 && (
-                        <div
-                          className="h-full bg-green-400 rounded-l transition-all duration-300"
-                          style={{ width: `${task.progress}%` }}
-                        />
+                const left = `${Math.max(daysFromStart * scaledDayWidth, 0)}px`;
+                const width = `${Math.max(duration * scaledDurationWidth, 40 * viewState.timelineZoom)}px`;
+
+                return (
+                  <div
+                    key={task.id}
+                    ref={taskRefs.current[task.id]}
+                    className='flex items-center h-8 border-b border-gray-100 hover:bg-gray-50'
+                    style={{ paddingLeft: `${(task.depth || 0) * 20}px` }}
+                  >
+                    {/* Task Name Column (fixed width) */}
+                    <div className='w-64 flex items-center gap-2 px-2'>
+                      {task.isGroup && (
+                        <button
+                          onClick={e => {
+                            e.stopPropagation();
+                            // TODO: Implement group toggle
+                          }}
+                          className='w-4 h-4 flex items-center justify-center hover:bg-gray-200 rounded'
+                        >
+                          {task.isExpanded ? (
+                            <ChevronDownIcon className='w-3 h-3 text-gray-600' />
+                          ) : (
+                            <ChevronRightIcon className='w-3 h-3 text-gray-600' />
+                          )}
+                        </button>
                       )}
+
+                      {task.isGroup && (
+                        <FolderIcon className='w-4 h-4 text-green-600' />
+                      )}
+
+                      <span className={getTaskNameStyle(task)}>
+                        {task.name}
+                      </span>
+                    </div>
+
+                    {/* Timeline Bar Area */}
+                    <div className='flex-1 relative h-full'>
+                      <div
+                        className={getTaskBarStyle(task)}
+                        style={{
+                          left,
+                          width,
+                          position: 'absolute',
+                          top: '2px',
+                          height: 'calc(100% - 4px)',
+                        }}
+                        onClick={e => {
+                          e.stopPropagation();
+                          handleTaskClick(task.id);
+                        }}
+                        onMouseEnter={() => handleTaskHover(task.id)}
+                        onMouseLeave={handleTaskLeave}
+                        title={`${task.name} (${formatDate(startDate)} - ${formatDate(endDate)})`}
+                      >
+                        {/* Progress indicator */}
+                        {task.progress > 0 && (
+                          <div
+                            className='h-full bg-green-400 rounded-l transition-all duration-300'
+                            style={{ width: `${task.progress}%` }}
+                          />
+                        )}
+                      </div>
+
+                      {/* Baseline Bar Overlay */}
+                      {viewState.showBaseline &&
+                        task.baselineStart &&
+                        task.baselineEnd && (
+                          <div
+                            className='h-[6px] bg-gray-300 rounded opacity-50 absolute bottom-0'
+                            style={{
+                              left: `${Math.max(
+                                Math.floor(
+                                  (new Date(task.baselineStart) -
+                                    new Date('2024-01-01')) /
+                                    (1000 * 60 * 60 * 24)
+                                ) * scaledDayWidth,
+                                0
+                              )}px`,
+                              width: `${Math.max(
+                                Math.floor(
+                                  (new Date(task.baselineEnd) -
+                                    new Date(task.baselineStart)) /
+                                    (1000 * 60 * 60 * 24)
+                                ) * scaledDurationWidth,
+                                40 * viewState.timelineZoom
+                              )}px`,
+                            }}
+                            title={`Baseline: ${formatDate(new Date(task.baselineStart))} - ${formatDate(new Date(task.baselineEnd))}`}
+                          />
+                        )}
+                    </div>
+
+                    {/* Task Info Column (fixed width) */}
+                    <div className='w-32 text-xs text-gray-500 px-2'>
+                      {formatDate(startDate)} - {formatDate(endDate)}
                     </div>
                   </div>
-
-                  {/* Task Info */}
-                  <div className="w-32 text-xs text-gray-500">
-                    {formatDate(startDate)} - {formatDate(endDate)}
-                  </div>
-                </div>
-              );
-            })
+                );
+              })}
+            </div>
           )}
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div className="bg-gray-50 border-t px-4 py-2">
-        <div className="text-xs text-gray-500">
-          {tasks.length} task{tasks.length !== 1 ? 's' : ''} • 
-          {taskLinks.length} link{taskLinks.length !== 1 ? 's' : ''} • 
-          {linkingMode ? '🔗 Linking mode active - click tasks to create links' : 
-           selectedTaskId ? ` Selected: ${tasks.find(t => t.id === selectedTaskId)?.name || 'Unknown'}` : ' No task selected'} •
-          💡 Click to select • Hover to highlight • Drag to resize (coming soon)
         </div>
       </div>
     </div>
