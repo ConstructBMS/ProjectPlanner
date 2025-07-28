@@ -12,6 +12,7 @@ import {
   MagnifyingGlassMinusIcon,
   ArrowsPointingOutIcon,
   FunnelIcon,
+  PaintBrushIcon,
 } from '@heroicons/react/24/outline';
 
 const TimelineZoomDropdown = () => {
@@ -270,7 +271,9 @@ const TaskFiltersDropdown = () => {
     { value: 'Grouped by Phase', label: 'Grouped by Phase', icon: '📊' },
   ];
 
-  const selectedFilter = filterOptions.find(option => option.value === viewState.taskFilter) || filterOptions[0];
+  const selectedFilter =
+    filterOptions.find(option => option.value === viewState.taskFilter) ||
+    filterOptions[0];
 
   return (
     <div className='relative' ref={dropdownRef}>
@@ -309,6 +312,25 @@ const TaskFiltersDropdown = () => {
   );
 };
 
+const StatusHighlightingToggle = () => {
+  const { viewState, updateViewState } = useViewContext();
+
+  const handleToggle = () => {
+    updateViewState({ statusHighlighting: !viewState.statusHighlighting });
+    console.log('Status highlighting:', !viewState.statusHighlighting);
+  };
+
+  return (
+    <RibbonButton
+      icon={<PaintBrushIcon className='w-4 h-4' />}
+      label='Status Highlighting'
+      onClick={handleToggle}
+      tooltip='Toggle status-based row highlighting'
+      className={viewState.statusHighlighting ? 'bg-blue-50 border-blue-500' : ''}
+    />
+  );
+};
+
 const ViewTab = () => {
   return (
     <div className='flex flex-nowrap gap-0 p-2 bg-white w-full min-w-0'>
@@ -343,6 +365,7 @@ const ViewTab = () => {
           icon={<EyeIcon className='w-4 h-4 text-gray-700' />}
           label='View Options'
         />
+        <StatusHighlightingToggle />
       </RibbonGroup>
 
       {/* Clipboard Group (Disabled) */}

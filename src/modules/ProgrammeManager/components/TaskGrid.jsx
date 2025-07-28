@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTaskContext } from '../context/TaskContext';
+import { useViewContext } from '../context/ViewContext';
 import {
   ChevronRightIcon,
   ChevronDownIcon,
@@ -22,6 +23,8 @@ const TaskGrid = () => {
     getVisibleTasks,
     toggleGroupCollapse,
   } = useTaskContext();
+
+  const { viewState } = useViewContext();
 
   const visibleTasks = getVisibleTasks();
 
@@ -131,9 +134,9 @@ const TaskGrid = () => {
         return 'bg-blue-100 text-blue-800';
       case 'In Progress':
         return 'bg-yellow-100 text-yellow-800';
-      case 'Completed':
+      case 'Complete':
         return 'bg-green-100 text-green-800';
-      case 'On Hold':
+      case 'Delayed':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -153,10 +156,29 @@ const TaskGrid = () => {
     }
   };
 
+  const getStatusBackgroundColor = status => {
+    if (!viewState.statusHighlighting) return '';
+
+    switch (status) {
+      case 'Planned':
+        return 'bg-white';
+      case 'In Progress':
+        return 'bg-blue-50';
+      case 'Complete':
+        return 'bg-green-50';
+      case 'Delayed':
+        return 'bg-red-50';
+      default:
+        return 'bg-white';
+    }
+  };
+
   const getRowHighlightClass = taskId => {
+    const task = tasks.find(t => t.id === taskId);
     const isSelected = selectedTaskId === taskId;
     const isMultiSelected = selectedTaskIds.includes(taskId);
     const isLinkStart = linkingMode && linkStartTaskId === taskId;
+    const statusBackground = getStatusBackgroundColor(task?.status);
 
     if (isLinkStart) {
       return 'bg-purple-100 border-l-4 border-purple-500';
@@ -165,7 +187,7 @@ const TaskGrid = () => {
     } else if (isSelected) {
       return 'bg-blue-100 border-l-4 border-blue-500';
     } else {
-      return 'hover:bg-gray-50';
+      return `${statusBackground} hover:bg-gray-50`;
     }
   };
 

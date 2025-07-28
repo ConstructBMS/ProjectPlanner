@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Prompt 063: Add Undo / Redo Toolbar Group**
+  - Added "History" ribbon group to HomeTab with Undo (↺) and Redo (↻) buttons
+  - Implemented undo/redo stack functionality in TaskContext with saveToUndoStack helper
+  - Added state tracking for all task operations (add, delete, update, link, group, reorder)
+  - Integrated undo/redo functions with all task modification operations
+  - Added visual feedback with disabled state when stacks are empty
+  - Implemented proper state restoration including tasks, taskLinks, and nextId
+  - Added console logging for all undo/redo operations
+  - Exposed undo/redo functionality through useTaskManager hook
+
 - **Prompt 062: Add Milestone Marker Tool**
   - Added "Add Milestone" button to HomeTab ribbon with 📌 icon and tooltip
   - Implemented addMilestone function in TaskContext with prompt for name and date
