@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Prompt 060: Drag & Drop Reordering in SidebarTree**
+  - Implemented drag and drop reordering using @dnd-kit library
+  - Added SortableTaskNode component with drag handles
+  - Integrated with TaskContext reorderTasksById function
+  - Added visual feedback during dragging with DragOverlay
+  - Maintained hierarchical structure and parent/child relationships
+  - Added drag handle icons and hover states for better UX
+  - All drag operations logged to console for debugging
+
+- **Prompt 059: Zoom In/Out & Fit to View Toolbar Group**
+  - Added zoom functionality to ViewTab with Zoom In/Out buttons and Fit to View
+  - Integrated timeline zoom scaling in GanttChart component
+  - Added zoom level indicator showing current percentage
+  - Implemented persistent zoom state management
+  - All zoom actions logged to console for debugging
+
 - Initial project setup with React 18.2.0 and Vite 5.2.0
 - Tailwind CSS 3.4.1 for styling
 - ESLint 9.32.0 with React and TypeScript support
@@ -132,6 +148,15 @@ projectplanner/
 
 ### 2025-01-27
 
+- **35d55c0** - Prompt 059: Implement Zoom In/Out & Fit to View Toolbar Group
+  - Added zoom functionality to ViewTab with Zoom In/Out buttons and Fit to View
+  - Integrated timeline zoom scaling in GanttChart component
+  - Added zoom level indicator showing current percentage
+  - Implemented persistent zoom state management
+  - All zoom actions logged to console for debugging
+  - Files changed: 18 files, 2375 insertions(+), 866 deletions(-)
+  - Created: src/modules/ProgrammeManager/components/DateMarkersOverlay.jsx, src/modules/ProgrammeManager/context/ViewContext.jsx
+
 - **0775bf9** - Initial commit: ProjectPlanner module setup with React, Vite, Tailwind CSS, and development tools
   - Added 42 files with 7,731 insertions
   - Created complete development environment
@@ -145,8 +170,8 @@ projectplanner/
 
 - **585c69e** - feat: Add Programme Tree Sidebar Panel with expand/collapse functionality
   - Files changed: 18
-  - Changed files: CHANGELOG.md, DEVELOPMENT_WORKFLOW.md, eslint.config.js, scripts/auto-commit.js, src/modules/ProgrammeManager/AppShell.jsx, src/modules/ProgrammeManager/components/RibbonTabs/RibbonTabs.jsx, src/modules/ProgrammeManager/components/RibbonTabs/tabs/HomeTab.jsx, src/modules/ProgrammeManager/components/RibbonTabs/tabs/ViewTab.jsx, src/modules/ProgrammeManager/components/SidebarTree.jsx, src/modules/ProgrammeManager/components/TaskGrid.jsx, src/modules/ProgrammeManager/components/TaskPropertiesPane.jsx, src/modules/ProgrammeManager/context/TaskContext.jsx, src/modules/ProgrammeManager/styles/gantt.css, src/modules/ProgrammeManager/utils/dateUtils.js
-  - Status: M CHANGELOG.md, M DEVELOPMENT_WORKFLOW.md, M eslint.config.js, M scripts/auto-commit.js, M src/modules/ProgrammeManager/AppShell.jsx, M src/modules/ProgrammeManager/components/RibbonTabs/RibbonTabs.jsx, M src/modules/ProgrammeManager/components/RibbonTabs/tabs/HomeTab.jsx, M src/modules/ProgrammeManager/components/RibbonTabs/tabs/ViewTab.jsx, A src/modules/ProgrammeManager/components/SidebarTree.jsx, M src/modules/ProgrammeManager/components/TaskGrid.jsx, M src/modules/ProgrammeManager/components/TaskPropertiesPane.jsx, M src/modules/ProgrammeManager/context/TaskContext.jsx, M src/modules/ProgrammeManager/styles/gantt.css, M src/modules/ProgrammeManager/utils/dateUtils.js
+  - Changed files: CHANGELOG.md, DEVELOPMENT_WORKFLOW.md, eslint.config.js, scripts/auto-commit.js, src/modules/ProgrammeManager/AppShell.jsx, src/modules/ProgrammeManager/components/RibbonTabs/RibbonTabs.jsx, src/modules/ProgrammeManager/components/RibbonTabs/tabs/HomeTab.jsx, src/modules/ProgrammeManager/components/RibbonTabs/tabs/ViewTab.jsx, src/modules/ProgrammeManager/components/SidebarTree.jsx, src/modules/ProgrammeManager/components/TaskGrid.jsx, src/modules/ProgrammeManager/components/TaskGrid.jsx, src/modules/ProgrammeManager/components/TaskPropertiesPane.jsx, src/modules/ProgrammeManager/context/TaskContext.jsx, src/modules/ProgrammeManager/styles/gantt.css, src/modules/ProgrammeManager/utils/dateUtils.js
+  - Status: M CHANGELOG.md, M DEVELOPMENT_WORKFLOW.md, M eslint.config.js, M scripts/auto-commit.js, M src/modules/ProgrammeManager/AppShell.jsx, M src/modules/ProgrammeManager/components/RibbonTabs/RibbonTabs.jsx, M src/modules/ProgrammeManager/components/RibbonTabs/tabs/HomeTab.jsx, M src/modules/ProgrammeManager/components/RibbonTabs/tabs/ViewTab.jsx, A src/modules/ProgrammeManager/components/SidebarTree.jsx, M src/modules/ProgrammeManager/components/TaskGrid.jsx, M src/modules/ProgrammeManager/components/TaskPropertiesPane.jsx, M src/modules/ProgrammeManager/context/TaskContext.jsx, src/modules/ProgrammeManager/styles/gantt.css, src/modules/ProgrammeManager/utils/dateUtils.js
 
 - **ac6c6d5** - feat: Build complete HomeTab ribbon with 7 functional groups matching PowerProject layout
   - Files changed: 1
