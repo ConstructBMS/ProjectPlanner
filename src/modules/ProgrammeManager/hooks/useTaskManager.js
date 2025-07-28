@@ -14,6 +14,10 @@ const useTaskManager = () => {
     selectedTaskId,
     selectedTaskIds,
     tasks,
+    undo,
+    redo,
+    undoStack,
+    redoStack,
   } = useTaskContext();
 
   const openTaskDetails = () => {
@@ -91,6 +95,10 @@ const useTaskManager = () => {
     ungroup,
     selectAll,
     deselectAll,
+    undo,
+    redo,
+    undoStack,
+    redoStack,
   };
 };
 

@@ -74,6 +74,10 @@ export const TaskProvider = ({ children }) => {
 
   const [nextId, setNextId] = useState(4);
 
+  // Undo/Redo history stacks
+  const [undoStack, setUndoStack] = useState([]);
+  const [redoStack, setRedoStack] = useState([]);
+
   // Selection and hover state for bidirectional sync
   const [selectedTaskId, setSelectedTaskId] = useState(null);
   const [hoveredTaskId, setHoveredTaskId] = useState(null);
@@ -91,8 +95,69 @@ export const TaskProvider = ({ children }) => {
   const [linkingMode, setLinkingMode] = useState(false);
   const [linkStartTaskId, setLinkStartTaskId] = useState(null);
 
+  // Helper function to save current state to undo stack
+  const saveToUndoStack = useCallback(() => {
+    const currentState = {
+      tasks: [...tasks],
+      taskLinks: [...taskLinks],
+      nextId,
+      timestamp: Date.now(),
+    };
+    setUndoStack(prev => [...prev, currentState]);
+    // Clear redo stack when new action is performed
+    setRedoStack([]);
+  }, [tasks, taskLinks, nextId]);
+
+  // Undo function
+  const undo = useCallback(() => {
+    if (undoStack.length === 0) return;
+
+    const currentState = {
+      tasks: [...tasks],
+      taskLinks: [...taskLinks],
+      nextId,
+      timestamp: Date.now(),
+    };
+
+    const previousState = undoStack[undoStack.length - 1];
+
+    setTasks(previousState.tasks);
+    setTaskLinks(previousState.taskLinks);
+    setNextId(previousState.nextId);
+
+    setUndoStack(prev => prev.slice(0, -1));
+    setRedoStack(prev => [...prev, currentState]);
+
+    console.log('Undo performed');
+  }, [undoStack, tasks, taskLinks, nextId]);
+
+  // Redo function
+  const redo = useCallback(() => {
+    if (redoStack.length === 0) return;
+
+    const currentState = {
+      tasks: [...tasks],
+      taskLinks: [...taskLinks],
+      nextId,
+      timestamp: Date.now(),
+    };
+
+    const nextState = redoStack[redoStack.length - 1];
+
+    setTasks(nextState.tasks);
+    setTaskLinks(nextState.taskLinks);
+    setNextId(nextState.nextId);
+
+    setRedoStack(prev => prev.slice(0, -1));
+    setUndoStack(prev => [...prev, currentState]);
+
+    console.log('Redo performed');
+  }, [redoStack, tasks, taskLinks, nextId]);
+
   // Task operations
   const addTask = useCallback(() => {
+    saveToUndoStack();
+
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
@@ -118,14 +183,19 @@ export const TaskProvider = ({ children }) => {
     setTasks(prev => [...prev, newTask]);
     setNextId(prev => prev + 1);
     console.log('Task added:', newTask);
-  }, [nextId]);
+  }, [nextId, saveToUndoStack]);
 
   const addMilestone = useCallback(() => {
     const milestoneName = prompt('Enter milestone name:');
     if (!milestoneName) return;
 
-    const milestoneDate = prompt('Enter milestone date (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
+    const milestoneDate = prompt(
+      'Enter milestone date (YYYY-MM-DD):',
+      new Date().toISOString().split('T')[0]
+    );
     if (!milestoneDate) return;
+
+    saveToUndoStack();
 
     const milestoneDateTime = new Date(milestoneDate + 'T00:00:00.000Z');
 
@@ -150,10 +220,12 @@ export const TaskProvider = ({ children }) => {
     setTasks(prev => [...prev, newMilestone]);
     setNextId(prev => prev + 1);
     console.log('Milestone added:', newMilestone);
-  }, [nextId]);
+  }, [nextId, saveToUndoStack]);
 
   const deleteTask = useCallback(
     taskId => {
+      saveToUndoStack();
+
       setTasks(prev => {
         const taskToDelete = prev.find(t => t.id === taskId);
         if (taskToDelete?.isGroup) {
@@ -194,45 +266,51 @@ export const TaskProvider = ({ children }) => {
 
       console.log('Task deleted:', taskId);
     },
-    [selectedTaskId, selectedTaskIds, hoveredTaskId]
+    [selectedTaskId, selectedTaskIds, hoveredTaskId, saveToUndoStack]
   );
 
-  const updateTask = useCallback((taskId, updatedFields) => {
-    setTasks(prev =>
-      prev.map(task => {
-        if (task.id === taskId) {
-          const updatedTask = { ...task, ...updatedFields };
+  const updateTask = useCallback(
+    (taskId, updatedFields) => {
+      saveToUndoStack();
 
-          // Intelligent date/duration calculations
-          if (updatedFields.startDate || updatedFields.endDate) {
-            const start = updatedFields.startDate
-              ? new Date(updatedFields.startDate)
-              : new Date(task.startDate);
-            const end = updatedFields.endDate
-              ? new Date(updatedFields.endDate)
-              : new Date(task.endDate);
+      setTasks(prev =>
+        prev.map(task => {
+          if (task.id === taskId) {
+            const updatedTask = { ...task, ...updatedFields };
 
-            if (start && end && start <= end) {
-              const diffTime = Math.abs(end - start);
-              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-              updatedTask.duration = diffDays;
+            // Intelligent date/duration calculations
+            if (updatedFields.startDate || updatedFields.endDate) {
+              const start = updatedFields.startDate
+                ? new Date(updatedFields.startDate)
+                : new Date(task.startDate);
+              const end = updatedFields.endDate
+                ? new Date(updatedFields.endDate)
+                : new Date(task.endDate);
+
+              if (start && end && start <= end) {
+                const diffTime = Math.abs(end - start);
+                const diffDays =
+                  Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                updatedTask.duration = diffDays;
+              }
+            } else if (updatedFields.duration && task.startDate) {
+              const start = new Date(task.startDate);
+              const duration = parseInt(updatedFields.duration) || 1;
+              const end = new Date(start);
+              end.setDate(start.getDate() + duration - 1);
+              updatedTask.endDate = end.toISOString();
             }
-          } else if (updatedFields.duration && task.startDate) {
-            const start = new Date(task.startDate);
-            const duration = parseInt(updatedFields.duration) || 1;
-            const end = new Date(start);
-            end.setDate(start.getDate() + duration - 1);
-            updatedTask.endDate = end.toISOString();
+
+            return updatedTask;
           }
+          return task;
+        })
+      );
 
-          return updatedTask;
-        }
-        return task;
-      })
-    );
-
-    console.log('Task updated:', taskId, updatedFields);
-  }, []);
+      console.log('Task updated:', taskId, updatedFields);
+    },
+    [saveToUndoStack]
+  );
 
   // Selection operations
   const selectTask = useCallback(taskId => {
@@ -317,18 +395,23 @@ export const TaskProvider = ({ children }) => {
         return;
       }
 
+      saveToUndoStack();
       setTaskLinks(prev => [...prev, { fromId, toId }]);
       console.log('Tasks linked:', fromId, '→', toId);
     },
-    [taskLinks]
+    [taskLinks, saveToUndoStack]
   );
 
-  const unlinkTasks = useCallback((fromId, toId) => {
-    setTaskLinks(prev =>
-      prev.filter(link => !(link.fromId === fromId && link.toId === toId))
-    );
-    console.log('Tasks unlinked:', fromId, '→', toId);
-  }, []);
+  const unlinkTasks = useCallback(
+    (fromId, toId) => {
+      saveToUndoStack();
+      setTaskLinks(prev =>
+        prev.filter(link => !(link.fromId === fromId && link.toId === toId))
+      );
+      console.log('Tasks unlinked:', fromId, '→', toId);
+    },
+    [saveToUndoStack]
+  );
 
   // Linking mode operations
   const startLinkingMode = useCallback(taskId => {
@@ -366,6 +449,8 @@ export const TaskProvider = ({ children }) => {
         return;
       }
 
+      saveToUndoStack();
+
       const groupId = `task-${nextId}`;
       const today = new Date();
       const tomorrow = new Date(today);
@@ -400,25 +485,30 @@ export const TaskProvider = ({ children }) => {
       setSelectedTaskIds([]);
       console.log('Tasks grouped:', selectedIds, 'under', groupName);
     },
-    [nextId]
+    [nextId, saveToUndoStack]
   );
 
-  const ungroupTask = useCallback(groupId => {
-    setTasks(prev => {
-      const groupTask = prev.find(t => t.id === groupId);
-      if (!groupTask?.isGroup) return prev;
+  const ungroupTask = useCallback(
+    groupId => {
+      saveToUndoStack();
 
-      // Move all children to root level
-      const updatedTasks = prev.map(task =>
-        task.parentId === groupId ? { ...task, parentId: null } : task
-      );
+      setTasks(prev => {
+        const groupTask = prev.find(t => t.id === groupId);
+        if (!groupTask?.isGroup) return prev;
 
-      // Remove the group task
-      return updatedTasks.filter(task => task.id !== groupId);
-    });
+        // Move all children to root level
+        const updatedTasks = prev.map(task =>
+          task.parentId === groupId ? { ...task, parentId: null } : task
+        );
 
-    console.log('Task ungrouped:', groupId);
-  }, []);
+        // Remove the group task
+        return updatedTasks.filter(task => task.id !== groupId);
+      });
+
+      console.log('Task ungrouped:', groupId);
+    },
+    [saveToUndoStack]
+  );
 
   const toggleGroupCollapse = useCallback(groupId => {
     setTasks(prev =>
@@ -430,16 +520,18 @@ export const TaskProvider = ({ children }) => {
 
   // Reordering operations
   const reorderTasks = useCallback((sourceIndex, destinationIndex) => {
+    saveToUndoStack();
     setTasks(prev => {
       const updated = [...prev];
       const [moved] = updated.splice(sourceIndex, 1);
       updated.splice(destinationIndex, 0, moved);
       return updated;
     });
-  }, []);
+  }, [saveToUndoStack]);
 
   const reorderTasksById = useCallback(
     (sourceId, destinationId, position = 'after') => {
+      saveToUndoStack();
       setTasks(prev => {
         const sourceIndex = prev.findIndex(t => t.id === sourceId);
         const destIndex = prev.findIndex(t => t.id === destinationId);
@@ -455,7 +547,7 @@ export const TaskProvider = ({ children }) => {
         return updated;
       });
     },
-    []
+    [saveToUndoStack]
   );
 
   // Helper functions
@@ -497,11 +589,12 @@ export const TaskProvider = ({ children }) => {
             case 'Milestones':
               shouldInclude = task.isMilestone;
               break;
-            case 'Delayed Tasks':
+            case 'Delayed Tasks': {
               const today = new Date();
               const endDate = new Date(task.endDate);
               shouldInclude = endDate < today && task.progress < 100;
               break;
+            }
             case 'Grouped by Phase':
               shouldInclude = task.isGroup || task.parentId !== null;
               break;
@@ -551,6 +644,12 @@ export const TaskProvider = ({ children }) => {
     tasks,
     nextId,
     taskLinks,
+
+    // Undo/Redo
+    undo,
+    redo,
+    undoStack,
+    redoStack,
 
     // Selection and hover state
     selectedTaskId,

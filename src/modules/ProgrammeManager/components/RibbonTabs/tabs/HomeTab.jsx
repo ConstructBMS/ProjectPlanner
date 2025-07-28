@@ -3,7 +3,7 @@ import useTaskManager from '../../../hooks/useTaskManager';
 import RibbonButton from '../shared/RibbonButton';
 import RibbonGroup from '../shared/RibbonGroup';
 import RibbonDropdown from '../shared/RibbonDropdown';
-import RibbonToggle from '../shared/RibbonToggle';
+
 import {
   ClipboardDocumentIcon,
   DocumentDuplicateIcon,
@@ -37,6 +37,8 @@ import {
   MagnifyingGlassMinusIcon,
   RectangleStackIcon,
   ClockIcon,
+  ArrowUturnLeftIcon,
+  ArrowUturnRightIcon,
 } from '@heroicons/react/24/outline';
 
 export default function HomeTab() {
@@ -51,6 +53,10 @@ export default function HomeTab() {
     openTaskDetails,
     openTaskNotes,
     addCode,
+    undo,
+    redo,
+    undoStack,
+    redoStack,
   } = useTaskManager();
 
   const [isTaskDetailModalOpen, setIsTaskDetailModalOpen] = useState(false);
@@ -82,6 +88,24 @@ export default function HomeTab() {
           label='Copy'
           onClick={() => console.log('Copy')}
           tooltip='Copy (Ctrl+C)'
+        />
+      </RibbonGroup>
+
+      {/* History Group */}
+      <RibbonGroup title='History'>
+        <RibbonButton
+          icon={<ArrowUturnLeftIcon className='w-4 h-4' />}
+          label='Undo'
+          onClick={undo}
+          tooltip='Undo (Ctrl+Z)'
+          disabled={undoStack.length === 0}
+        />
+        <RibbonButton
+          icon={<ArrowUturnRightIcon className='w-4 h-4' />}
+          label='Redo'
+          onClick={redo}
+          tooltip='Redo (Ctrl+Y)'
+          disabled={redoStack.length === 0}
         />
       </RibbonGroup>
 
