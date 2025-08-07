@@ -2,3 +2,7 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 npx lint-staged
+
+# Auto-run changelog update script
+echo "📘 Updating changelog..."
+node scripts/updateChangelog.js "auto: Pre-commit hook update"

@@ -14,3 +14,6 @@
 
 - Prompt 073 – Constraints visualisation
 - Prompt 080 – External Calendar Sync
+- [Completed] Prompt 065 Add Inline Task Editing in Grid
+- [In Progress] Prompt 066 Enhanced Task Management
+- [Planned] Prompt 001 Clipboard Tools

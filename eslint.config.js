@@ -90,12 +90,10 @@ export default [
     files: ['scripts/**/*.js'],
     languageOptions: {
       ecmaVersion: 2022,
-      sourceType: 'commonjs',
+      sourceType: 'module',
       globals: {
         console: 'readonly',
         process: 'readonly',
-        require: 'readonly',
-        module: 'readonly',
         __dirname: 'readonly',
         __filename: 'readonly',
       },
