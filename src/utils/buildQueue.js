@@ -66,6 +66,9 @@ export const buildQueue = {
     'Prompt 068 – Performance Monitoring',
   ],
   completed: [
+    'Prompt 001 – Home Ribbon Layout (Exact Asta Replica)',
+    'Prompt 002 – Task Properties Drawer',
+    'Prompt 003 – Task Linking',
     'Prompt 059 – Zoom In/Out & Fit to View Toolbar Group',
     'Prompt 060 – Drag & Drop Reordering in SidebarTree',
     'Prompt 061 – Task Grouping and Organization',
@@ -73,5 +76,12 @@ export const buildQueue = {
     'Prompt 063 – Add Undo / Redo Toolbar Group',
     'Prompt 064 – Add Colour Code Task Rows by Status',
     'Prompt 065 – Add Inline Task Editing in Grid',
+    'Prompt 069 – Expand All and Collapse All Buttons',
+    'Prompt 070 – Insert Task Below and Insert Summary Task',
+    'Prompt 071 – Delete Task functionality',
+    'Prompt 075 – Resource Calendar & Availability',
+    'Prompt 076 – Custom Fields & Metadata',
+    'Prompt 077 – Advanced Filtering & Search',
+    'Prompt 078 – Go to Today Button',
   ],
 };

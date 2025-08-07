@@ -9,6 +9,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Prompt 077: Advanced Filtering & Search**
+  - Added comprehensive AdvancedSearch component with expandable filter interface
+  - Implemented text search across task names, descriptions, and notes
+  - Added filters for status, priority, assignee, date ranges, and progress
+  - Support for dependency filtering (predecessors/successors) and milestone filtering
+  - Real-time filtering with immediate results and active filter count display
+  - Filter combination capabilities with clear all functionality
+  - Results summary showing filtered vs total tasks
+
+- **Prompt 076: Custom Fields & Metadata**
+  - Created CustomFieldsManager component for defining custom fields
+  - Support for multiple field types: text, number, date, select list, boolean
+  - Field creation, editing, deletion with required/optional configuration
+  - Select list options with dynamic add/remove capabilities
+  - Integration with task editing and custom field value management
+  - Table display of custom fields for all tasks with inline editing
+  - Field validation and requirements enforcement
+
+- **Prompt 075: Resource Calendar & Availability**
+  - Added ResourceCalendar component with monthly calendar grid view
+  - Resource workload visualization with color-coded availability levels
+  - Individual resource filtering and "all resources" view
+  - Task assignment display for each calendar day
+  - Month navigation with previous/next controls
+  - Workload legend (Available, Light, Moderate, Heavy) and statistics
+  - Integration with ViewTab ribbon for easy access
+
+- **Prompt 003: Task Linking**
+  - Enhanced TaskContext with support for different link types (FS, SS, FF, SF)
+  - Created comprehensive TaskLinkModal with task selection and link configuration
+  - Added lag/lead time support for all link types
+  - Enhanced GanttChart visualization with color-coded link types
+  - Advanced link validation preventing circular dependencies
+  - Link editing capabilities with update/delete functionality
+  - Visual feedback with tooltips showing link type and lag information
+
+- **Prompt 002: Task Properties Drawer**
+  - Implemented comprehensive TaskPropertiesPane with real-time editing
+  - All required fields: name, description, notes, dates, duration, progress
+  - Status, priority, type selection with dropdown interfaces
+  - Resource assignment and dependencies display
+  - Save/Cancel functionality with change tracking and validation
+  - Visual feedback for unsaved changes with warning indicators
+  - Full integration with TaskContext for state management
+
+- **Prompt 001: Home Ribbon Layout (Exact Asta Replica)**
+  - Converted Editing group to Asta-style 3x3 grid layout without labels
+  - Added compact mode to RibbonButton component
+  - Proper icon sizing at 16px (w-4 h-4) as specified
+  - Maintained labels for Clipboard group as per Asta design
+  - Enhanced visual layout matching Asta Powerproject structure
+
 - **Prompt 078: Implement "Go to Today" Button in Ribbon**
   - Added "Go to Today" button in View tab ribbon Zoom group with HomeIcon
   - GanttChart now scrolls and centers on current date with smooth animation
@@ -327,5 +379,9 @@ projectplanner/
 - auto: Pre-commit hook update
 
 ### 2025-08-07 23:03:49
+
+- auto: Pre-commit hook update
+
+### 2025-08-07 23:17:03
 
 - auto: Pre-commit hook update

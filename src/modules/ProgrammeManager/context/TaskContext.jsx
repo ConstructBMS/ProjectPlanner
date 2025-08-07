@@ -91,10 +91,25 @@ export const TaskProvider = ({ children }) => {
   // Multi-selection state
   const [selectedTaskIds, setSelectedTaskIds] = useState([]);
 
-  // Task links/dependencies
+  // Clipboard state
+  const [clipboardTasks, setClipboardTasks] = useState([]);
+
+  // Task links/dependencies with enhanced structure
   const [taskLinks, setTaskLinks] = useState([
-    { fromId: 'task-1', toId: 'task-2' },
-    { fromId: 'task-2', toId: 'task-3' },
+    {
+      id: 'link-1',
+      fromId: 'task-1',
+      toId: 'task-2',
+      type: 'FS', // Finish-to-Start
+      lag: 0, // Days of lag/lead time (+/-)
+    },
+    {
+      id: 'link-2',
+      fromId: 'task-2',
+      toId: 'task-3',
+      type: 'FS',
+      lag: 0,
+    },
   ]);
 
   // Linking mode state
@@ -550,6 +565,88 @@ export const TaskProvider = ({ children }) => {
     [saveToUndoStack]
   );
 
+  const moveTaskUp = useCallback(
+    taskId => {
+      saveToUndoStack();
+      setTasks(prev => {
+        const currentIndex = prev.findIndex(t => t.id === taskId);
+        if (currentIndex <= 0) return prev; // Already at top or not found
+
+        const currentTask = prev[currentIndex];
+
+        // Find the previous task at the same hierarchy level (same parentId)
+        let targetIndex = -1;
+        for (let i = currentIndex - 1; i >= 0; i--) {
+          if (prev[i].parentId === currentTask.parentId) {
+            targetIndex = i;
+            break;
+          }
+        }
+
+        if (targetIndex === -1) return prev; // No task above at same level
+
+        const updated = [...prev];
+        // Swap the tasks
+        [updated[currentIndex], updated[targetIndex]] = [
+          updated[targetIndex],
+          updated[currentIndex],
+        ];
+
+        console.log(
+          'Moved task up:',
+          taskId,
+          'from position',
+          currentIndex,
+          'to',
+          targetIndex
+        );
+        return updated;
+      });
+    },
+    [saveToUndoStack]
+  );
+
+  const moveTaskDown = useCallback(
+    taskId => {
+      saveToUndoStack();
+      setTasks(prev => {
+        const currentIndex = prev.findIndex(t => t.id === taskId);
+        if (currentIndex === -1 || currentIndex >= prev.length - 1) return prev; // Not found or already at bottom
+
+        const currentTask = prev[currentIndex];
+
+        // Find the next task at the same hierarchy level (same parentId)
+        let targetIndex = -1;
+        for (let i = currentIndex + 1; i < prev.length; i++) {
+          if (prev[i].parentId === currentTask.parentId) {
+            targetIndex = i;
+            break;
+          }
+        }
+
+        if (targetIndex === -1) return prev; // No task below at same level
+
+        const updated = [...prev];
+        // Swap the tasks
+        [updated[currentIndex], updated[targetIndex]] = [
+          updated[targetIndex],
+          updated[currentIndex],
+        ];
+
+        console.log(
+          'Moved task down:',
+          taskId,
+          'from position',
+          currentIndex,
+          'to',
+          targetIndex
+        );
+        return updated;
+      });
+    },
+    [saveToUndoStack]
+  );
+
   // Helper functions
   const getHierarchicalTasks = useCallback(() => {
     return hierarchicalTasks;
@@ -621,15 +718,16 @@ export const TaskProvider = ({ children }) => {
     [tasks]
   );
 
-  // Link operations
+  // Link operations with enhanced functionality
   const linkTasks = useCallback(
-    (fromId, toId) => {
+    (fromId, toId, linkType = 'FS', lag = 0) => {
       // Check if link already exists
       const linkExists = taskLinks.some(
         link => link.fromId === fromId && link.toId === toId
       );
 
       if (linkExists) {
+        console.warn('Link already exists between tasks');
         return;
       }
 
@@ -647,11 +745,21 @@ export const TaskProvider = ({ children }) => {
       };
 
       if (wouldCreateCycle(toId, fromId)) {
+        console.error('Cannot create link: would cause circular dependency');
         return;
       }
 
+      const newLink = {
+        id: `link-${Date.now()}`,
+        fromId,
+        toId,
+        type: linkType,
+        lag,
+      };
+
       saveToUndoStack();
-      setTaskLinks(prev => [...prev, { fromId, toId }]);
+      setTaskLinks(prev => [...prev, newLink]);
+      console.log('Created task link:', newLink);
     },
     [taskLinks, saveToUndoStack]
   );
@@ -662,6 +770,27 @@ export const TaskProvider = ({ children }) => {
       setTaskLinks(prev =>
         prev.filter(link => !(link.fromId === fromId && link.toId === toId))
       );
+      console.log('Removed task link:', { fromId, toId });
+    },
+    [saveToUndoStack]
+  );
+
+  const updateLink = useCallback(
+    (linkId, updates) => {
+      saveToUndoStack();
+      setTaskLinks(prev =>
+        prev.map(link => (link.id === linkId ? { ...link, ...updates } : link))
+      );
+      console.log('Updated task link:', { linkId, updates });
+    },
+    [saveToUndoStack]
+  );
+
+  const deleteLinkById = useCallback(
+    linkId => {
+      saveToUndoStack();
+      setTaskLinks(prev => prev.filter(link => link.id !== linkId));
+      console.log('Deleted task link:', linkId);
     },
     [saveToUndoStack]
   );
@@ -748,6 +877,8 @@ export const TaskProvider = ({ children }) => {
       // Link operations
       linkTasks,
       unlinkTasks,
+      updateLink,
+      deleteLinkById,
 
       // Linking mode operations
       startLinkingMode,
@@ -788,6 +919,8 @@ export const TaskProvider = ({ children }) => {
       getTaskDescendants,
       linkTasks,
       unlinkTasks,
+      updateLink,
+      deleteLinkById,
       startLinkingMode,
       stopLinkingMode,
       handleTaskClickForLinking,

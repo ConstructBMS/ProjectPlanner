@@ -37,6 +37,7 @@ import {
   ArrowUturnLeftIcon,
   ArrowUturnRightIcon,
   TrashIcon,
+  ChevronLeftIcon,
 } from '@heroicons/react/24/outline';
 
 export default function HomeTab({ onExpandAll, onCollapseAll }) {
@@ -366,26 +367,64 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
         />
       </RibbonGroup>
 
-      {/* Editing Group */}
+      {/* Editing Group - Asta-style 3x3 grid layout (no labels) */}
       <RibbonGroup title='Editing'>
-        <RibbonButton
-          icon={<WrenchScrewdriverIcon className='w-4 h-4' />}
-          label='Task Details'
-          onClick={handleTaskDetailsClick}
-          tooltip='Open task details'
-        />
-        <RibbonButton
-          icon={<DocumentTextIcon className='w-4 h-4' />}
-          label='Task Notes'
-          onClick={openTaskNotes}
-          tooltip='Open task notes'
-        />
-        <RibbonButton
-          icon={<CodeBracketIcon className='w-4 h-4' />}
-          label='Code Library'
-          onClick={addCode}
-          tooltip='Open code library'
-        />
+        <div className='grid grid-cols-3 gap-0.5'>
+          <RibbonButton
+            icon={<WrenchScrewdriverIcon className='w-4 h-4' />}
+            onClick={handleTaskDetailsClick}
+            tooltip='Task Details'
+            compact={true}
+          />
+          <RibbonButton
+            icon={<DocumentTextIcon className='w-4 h-4' />}
+            onClick={openTaskNotes}
+            tooltip='Task Notes'
+            compact={true}
+          />
+          <RibbonButton
+            icon={<CodeBracketIcon className='w-4 h-4' />}
+            onClick={addCode}
+            tooltip='Code Library'
+            compact={true}
+          />
+          <RibbonButton
+            icon={<PencilIcon className='w-4 h-4' />}
+            onClick={() => console.log('Edit clicked')}
+            tooltip='Edit'
+            compact={true}
+          />
+          <RibbonButton
+            icon={<ClipboardDocumentIcon className='w-4 h-4' />}
+            onClick={() => console.log('Properties clicked')}
+            tooltip='Properties'
+            compact={true}
+          />
+          <RibbonButton
+            icon={<MagnifyingGlassPlusIcon className='w-4 h-4' />}
+            onClick={() => console.log('Find clicked')}
+            tooltip='Find'
+            compact={true}
+          />
+          <RibbonButton
+            icon={<BoldIcon className='w-4 h-4' />}
+            onClick={() => console.log('Bold clicked')}
+            tooltip='Bold'
+            compact={true}
+          />
+          <RibbonButton
+            icon={<ItalicIcon className='w-4 h-4' />}
+            onClick={() => console.log('Italic clicked')}
+            tooltip='Italic'
+            compact={true}
+          />
+          <RibbonButton
+            icon={<UnderlineIcon className='w-4 h-4' />}
+            onClick={() => console.log('Underline clicked')}
+            tooltip='Underline'
+            compact={true}
+          />
+        </div>
       </RibbonGroup>
     </div>
   );

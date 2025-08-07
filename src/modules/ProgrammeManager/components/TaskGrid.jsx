@@ -1,11 +1,13 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useTaskContext } from '../context/TaskContext';
 import { useViewContext } from '../context/ViewContext';
+import TaskLinkModal from './modals/TaskLinkModal';
 import {
   ChevronRightIcon,
   ChevronDownIcon,
   FolderIcon,
   PencilIcon,
+  LinkIcon,
 } from '@heroicons/react/24/outline';
 
 const TaskGrid = React.memo(() => {
@@ -31,6 +33,11 @@ const TaskGrid = React.memo(() => {
   const [editingField, setEditingField] = useState(null); // { taskId, field }
   const [editValue, setEditValue] = useState('');
 
+  // Task linking modal state
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [linkFromTask, setLinkFromTask] = useState(null);
+  const [linkToTask, setLinkToTask] = useState(null);
+
   const handleDeleteTask = useCallback(
     (taskId, e) => {
       e.stopPropagation(); // Prevent row selection when clicking delete
@@ -38,6 +45,19 @@ const TaskGrid = React.memo(() => {
     },
     [deleteTask]
   );
+
+  const handleCreateLink = useCallback((taskId, e) => {
+    e.stopPropagation(); // Prevent row selection when clicking link
+    setLinkFromTask(taskId);
+    setLinkToTask(null);
+    setShowLinkModal(true);
+  }, []);
+
+  const closeLinkModal = useCallback(() => {
+    setShowLinkModal(false);
+    setLinkFromTask(null);
+    setLinkToTask(null);
+  }, []);
 
   const handleRowClick = useCallback(
     (taskId, e) => {
@@ -333,7 +353,14 @@ const TaskGrid = React.memo(() => {
           </div>
 
           {/* Actions */}
-          <div className='w-12 px-2 py-1 flex items-center justify-center'>
+          <div className='w-16 px-2 py-1 flex items-center justify-center gap-1'>
+            <button
+              onClick={e => handleCreateLink(task.id, e)}
+              className='p-1 hover:bg-blue-100 rounded transition-colors duration-150'
+              title='Create task link'
+            >
+              <LinkIcon className='w-3 h-3 text-gray-500 hover:text-blue-600' />
+            </button>
             <button
               onClick={e => handleDeleteTask(task.id, e)}
               className='p-1 hover:bg-red-100 rounded transition-colors duration-150'
@@ -358,27 +385,42 @@ const TaskGrid = React.memo(() => {
     handleEditKeyDown,
     handleEditBlur,
     handleDeleteTask,
+    handleCreateLink,
   ]);
 
   return (
-    <div className='asta-grid h-full overflow-auto'>
-      {/* Grid Header */}
-      <div className='asta-grid-header flex items-center border-b-2 border-gray-300 bg-gray-50 sticky top-0 z-10'>
-        <div className='w-8 h-8' />
-        <div className='w-8 h-8' />
-        <div className='flex-1 px-2 py-2 font-semibold'>Task Name</div>
-        <div className='w-24 px-2 py-2 font-semibold'>Start Date</div>
-        <div className='w-24 px-2 py-2 font-semibold'>End Date</div>
-        <div className='w-16 px-2 py-2 font-semibold text-center'>Duration</div>
-        <div className='w-20 px-2 py-2 font-semibold'>Status</div>
-        <div className='w-20 px-2 py-2 font-semibold'>Progress</div>
-        <div className='w-24 px-2 py-2 font-semibold'>Assignee</div>
-        <div className='w-12 px-2 py-2 font-semibold text-center'>Actions</div>
+    <>
+      <div className='asta-grid h-full overflow-auto'>
+        {/* Grid Header */}
+        <div className='asta-grid-header flex items-center border-b-2 border-gray-300 bg-gray-50 sticky top-0 z-10'>
+          <div className='w-8 h-8' />
+          <div className='w-8 h-8' />
+          <div className='flex-1 px-2 py-2 font-semibold'>Task Name</div>
+          <div className='w-24 px-2 py-2 font-semibold'>Start Date</div>
+          <div className='w-24 px-2 py-2 font-semibold'>End Date</div>
+          <div className='w-16 px-2 py-2 font-semibold text-center'>
+            Duration
+          </div>
+          <div className='w-20 px-2 py-2 font-semibold'>Status</div>
+          <div className='w-20 px-2 py-2 font-semibold'>Progress</div>
+          <div className='w-24 px-2 py-2 font-semibold'>Assignee</div>
+          <div className='w-16 px-2 py-2 font-semibold text-center'>
+            Actions
+          </div>
+        </div>
+
+        {/* Grid Rows */}
+        <div className='asta-grid-rows'>{gridRows}</div>
       </div>
 
-      {/* Grid Rows */}
-      <div className='asta-grid-rows'>{gridRows}</div>
-    </div>
+      {/* Task Link Modal */}
+      <TaskLinkModal
+        isOpen={showLinkModal}
+        onClose={closeLinkModal}
+        fromTaskId={linkFromTask}
+        toTaskId={linkToTask}
+      />
+    </>
   );
 });
 

@@ -87,7 +87,7 @@ const GanttChart = () => {
     const existingArrows = svg.querySelectorAll('.dependency-arrow');
     existingArrows.forEach(arrow => arrow.remove());
 
-    // Draw new arrows
+    // Draw new arrows with enhanced link type visualization
     taskLinks.forEach(link => {
       const fromRef = taskRefs.current[link.fromId];
       const toRef = taskRefs.current[link.toId];
@@ -96,22 +96,89 @@ const GanttChart = () => {
         const fromRect = fromRef.current.getBoundingClientRect();
         const toRect = toRef.current.getBoundingClientRect();
 
-        const fromX = fromRect.right - containerRect.left;
-        const fromY = fromRect.top + fromRect.height / 2 - containerRect.top;
-        const toX = toRect.left - containerRect.left;
-        const toY = toRect.top + toRect.height / 2 - containerRect.top;
+        // Calculate connection points based on link type
+        let fromX, fromY, toX, toY;
+        const linkType = link.type || 'FS';
+
+        switch (linkType) {
+          case 'FS': // Finish-to-Start
+            fromX = fromRect.right - containerRect.left;
+            fromY = fromRect.top + fromRect.height / 2 - containerRect.top;
+            toX = toRect.left - containerRect.left;
+            toY = toRect.top + toRect.height / 2 - containerRect.top;
+            break;
+          case 'SS': // Start-to-Start
+            fromX = fromRect.left - containerRect.left;
+            fromY = fromRect.top + fromRect.height / 2 - containerRect.top;
+            toX = toRect.left - containerRect.left;
+            toY = toRect.top + toRect.height / 2 - containerRect.top;
+            break;
+          case 'FF': // Finish-to-Finish
+            fromX = fromRect.right - containerRect.left;
+            fromY = fromRect.top + fromRect.height / 2 - containerRect.top;
+            toX = toRect.right - containerRect.left;
+            toY = toRect.top + toRect.height / 2 - containerRect.top;
+            break;
+          case 'SF': // Start-to-Finish
+            fromX = fromRect.left - containerRect.left;
+            fromY = fromRect.top + fromRect.height / 2 - containerRect.top;
+            toX = toRect.right - containerRect.left;
+            toY = toRect.top + toRect.height / 2 - containerRect.top;
+            break;
+          default:
+            fromX = fromRect.right - containerRect.left;
+            fromY = fromRect.top + fromRect.height / 2 - containerRect.top;
+            toX = toRect.left - containerRect.left;
+            toY = toRect.top + toRect.height / 2 - containerRect.top;
+        }
+
+        // Create arrow path with steps for better visualization
+        const midX = (fromX + toX) / 2;
+
+        let pathData;
+        if (Math.abs(fromY - toY) < 5) {
+          // Horizontal line for same level tasks
+          pathData = `M ${fromX} ${fromY} L ${toX} ${toY}`;
+        } else {
+          // Stepped path for different level tasks
+          pathData = `M ${fromX} ${fromY} L ${midX} ${fromY} L ${midX} ${toY} L ${toX} ${toY}`;
+        }
 
         // Create arrow path
         const arrow = document.createElementNS(
           'http://www.w3.org/2000/svg',
           'path'
         );
-        arrow.setAttribute('d', `M ${fromX} ${fromY} L ${toX} ${toY}`);
-        arrow.setAttribute('stroke', '#6B7280');
+        arrow.setAttribute('d', pathData);
+        arrow.setAttribute(
+          'stroke',
+          linkType === 'FS'
+            ? '#3B82F6'
+            : linkType === 'SS'
+              ? '#10B981'
+              : linkType === 'FF'
+                ? '#F59E0B'
+                : '#EF4444'
+        );
         arrow.setAttribute('stroke-width', '2');
         arrow.setAttribute('marker-end', 'url(#arrowhead)');
         arrow.setAttribute('class', 'dependency-arrow');
-        arrow.style.pointerEvents = 'none';
+        arrow.style.pointerEvents = 'auto';
+        arrow.style.cursor = 'pointer';
+
+        // Add title for tooltip
+        const title = document.createElementNS(
+          'http://www.w3.org/2000/svg',
+          'title'
+        );
+        title.textContent = `${linkType} link: ${link.lag > 0 ? `+${link.lag} days lag` : link.lag < 0 ? `${link.lag} days lead` : 'No lag'}`;
+        arrow.appendChild(title);
+
+        // Add click handler to edit link
+        arrow.addEventListener('click', () => {
+          console.log('Link clicked:', link);
+          // Could open edit modal here
+        });
 
         svg.appendChild(arrow);
       }

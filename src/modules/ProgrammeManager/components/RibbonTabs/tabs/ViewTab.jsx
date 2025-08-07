@@ -14,6 +14,7 @@ import {
   FunnelIcon,
   PaintBrushIcon,
   HomeIcon,
+  CalendarDaysIcon,
 } from '@heroicons/react/24/outline';
 
 const TimelineZoomDropdown = () => {
@@ -396,6 +397,16 @@ const ViewTab = () => {
           label='View Options'
         />
         <StatusHighlightingToggle />
+      </RibbonGroup>
+
+      {/* Resource Group */}
+      <RibbonGroup title='Resource'>
+        <RibbonButton
+          icon={<CalendarDaysIcon className='w-4 h-4 text-blue-600' />}
+          label='Resource Calendar'
+          onClick={() => console.log('Resource Calendar clicked')}
+          tooltip='View resource availability and workload calendar'
+        />
       </RibbonGroup>
 
       {/* Clipboard Group (Disabled) */}

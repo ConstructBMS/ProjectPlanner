@@ -1,4 +1,4 @@
-import React from 'react';
+// RibbonButton component
 import Tooltip from '../../common/Tooltip';
 
 const RibbonButton = ({
@@ -10,6 +10,7 @@ const RibbonButton = ({
   className = '',
   iconType = 'icon',
   active = false,
+  compact = false,
 }) => {
   return (
     <Tooltip content={tooltip || label}>
@@ -20,7 +21,7 @@ const RibbonButton = ({
           asta-button
           group
           flex flex-col items-center justify-center
-          w-[40px] h-[32px]
+          w-[40px] ${compact ? 'h-[20px]' : 'h-[32px]'}
           flex-shrink-0
           transition-all duration-150
           ${disabled ? 'opacity-50 cursor-not-allowed' : active ? 'bg-blue-100 border-blue-300' : 'hover:bg-blue-50 hover:border-blue-200'}
@@ -38,9 +39,11 @@ const RibbonButton = ({
             icon
           )}
         </div>
-        <div className='text-[6px] uppercase tracking-wide text-gray-600 font-medium mt-0.5 leading-tight text-center'>
-          {label}
-        </div>
+        {!compact && (
+          <div className='text-[6px] uppercase tracking-wide text-gray-600 font-medium mt-0.5 leading-tight text-center'>
+            {label}
+          </div>
+        )}
       </button>
     </Tooltip>
   );

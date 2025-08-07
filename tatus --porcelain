@@ -1,0 +1,10 @@
+[33m89e7e44[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Prompt 078  Implemented Go to Today button for Gantt timeline
+[33mb393306[m Prompt 071  Implemented Delete Task functionality in Home tab
+[33mc85cdd1[m Prompt 070  Wired Insert Task Below and Insert Summary Task in Ribbon
+[33md857af1[m Prompt 069  Wired Expand All and Collapse All buttons to SidebarTree
+[33mcdbc58e[m docs: Add comprehensive structural audit report - Complete analysis of ProjectPlanner repository structure and readiness for Asta PowerProject reconstruction
+[33m7777710[m chore: added structured prompt file system for Cursor.ai - Created prompts directory with template structure and initial prompt files for organized development workflow
+[33mcb76a4b[m fix: Update pre-commit hook to auto-update changelog only - Modified hook to automatically run updateChangelog.js with default message
+[33m32a2136[m Fix ESLint errors and update CHANGELOG.md - Fixed setTimeout/clearTimeout undefined errors in performance.js and duplicate import in SidebarTree.jsx, updated changelog for server rebuild
+[33m21e7223[m[33m ([m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m Prompt 065: Add Inline Task Editing in Grid - Enhanced existing inline editing functionality with proper date formatting, validation for task names, dates, and durations, improved error handling, and integration with undo/redo system
+[33mf4fa36f[m Update CHANGELOG.md for Prompt 064
