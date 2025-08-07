@@ -26,6 +26,7 @@ const GanttChart = () => {
 
   const taskRefs = useRef({});
   const svgContainerRef = useRef(null);
+  const timelineContainerRef = useRef(null);
 
   const tasks = getVisibleTasks(viewState.taskFilter);
 
@@ -41,6 +42,39 @@ const GanttChart = () => {
     });
     taskRefs.current = newRefs;
   }, [tasks]);
+
+  // Handle "Go to Today" functionality
+  useEffect(() => {
+    if (viewState.showTodayHighlight && timelineContainerRef.current) {
+      const today = new Date();
+      const startOfYear = new Date('2024-01-01');
+
+      // Calculate today's position in the timeline
+      const daysFromStart = Math.floor(
+        (today - startOfYear) / (1000 * 60 * 60 * 24)
+      );
+
+      const baseDayWidth = 2;
+      const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
+      const todayPosition = daysFromStart * scaledDayWidth;
+
+      // Get container width and calculate offset to center today
+      const containerWidth = timelineContainerRef.current.clientWidth;
+      const scrollPosition = Math.max(0, todayPosition - containerWidth / 2);
+
+      // Smooth scroll to today's position
+      timelineContainerRef.current.scrollTo({
+        left: scrollPosition,
+        behavior: 'smooth',
+      });
+
+      console.log('Scrolled to today:', {
+        daysFromStart,
+        todayPosition,
+        scrollPosition,
+      });
+    }
+  }, [viewState.showTodayHighlight, viewState.timelineZoom]);
 
   // Draw dependency arrows
   useEffect(() => {
@@ -180,12 +214,37 @@ const GanttChart = () => {
       </div>
 
       {/* Asta-style Timeline Grid */}
-      <div className='flex-1 overflow-auto relative' onClick={handleChartClick}>
+      <div
+        ref={timelineContainerRef}
+        className='flex-1 overflow-auto relative'
+        onClick={handleChartClick}
+      >
         {/* Background Grid */}
-        <div className='asta-timeline-grid absolute inset-0 opacity-20'></div>
+        <div className='asta-timeline-grid absolute inset-0 opacity-20' />
 
         {/* Date Markers Overlay */}
         <DateMarkersOverlay />
+
+        {/* Today Highlight Overlay */}
+        {viewState.showTodayHighlight && (
+          <div
+            className='absolute inset-y-0 bg-yellow-200 border-l-2 border-yellow-400 opacity-75 z-20 pointer-events-none animate-pulse'
+            style={{
+              left: (() => {
+                const today = new Date();
+                const startOfYear = new Date('2024-01-01');
+                const daysFromStart = Math.floor(
+                  (today - startOfYear) / (1000 * 60 * 60 * 24)
+                );
+                const baseDayWidth = 2;
+                const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
+                return `${daysFromStart * scaledDayWidth}px`;
+              })(),
+              width: `${2 * viewState.timelineZoom}px`,
+            }}
+            title={`Today: ${new Date().toLocaleDateString()}`}
+          />
+        )}
 
         {/* SVG Container for Dependency Arrows */}
         <svg

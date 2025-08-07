@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useViewContext } from '../../../context/ViewContext';
 import RibbonButton from '../shared/RibbonButton';
 import RibbonGroup from '../shared/RibbonGroup';
@@ -13,6 +13,7 @@ import {
   ArrowsPointingOutIcon,
   FunnelIcon,
   PaintBrushIcon,
+  HomeIcon,
 } from '@heroicons/react/24/outline';
 
 const TimelineZoomDropdown = () => {
@@ -49,8 +50,8 @@ const TimelineZoomDropdown = () => {
     <div className='relative' ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className='w-[48px] h-[48px] bg-gray-100 rounded flex items-center justify-between px-2 hover:bg-blue-100 transition-colors duration-150'
-        title='Timeline zoom (Day/Week/Month/Year)'
+        className='w-[60px] h-[48px] bg-gray-100 rounded flex items-center justify-between px-2 hover:bg-blue-100 transition-colors duration-150'
+        title='Timeline zoom (Hour/Half-Day/Day/Week/Month)'
       >
         <span className='text-xs font-medium text-gray-700'>
           {selectedScale}
@@ -59,8 +60,8 @@ const TimelineZoomDropdown = () => {
       </button>
 
       {isOpen && (
-        <div className='absolute top-full left-0 mt-1 z-10 w-[48px] bg-white shadow-md rounded border border-gray-200'>
-          {['Day', 'Week', 'Month', 'Year'].map(scale => (
+        <div className='absolute top-full left-0 mt-1 z-10 w-[60px] bg-white shadow-md rounded border border-gray-200'>
+          {['Hour', 'Half-Day', 'Day', 'Week', 'Month'].map(scale => (
             <div
               key={scale}
               className='px-2 py-1 text-xs hover:bg-blue-50 cursor-pointer transition-colors duration-150'
@@ -124,16 +125,23 @@ const CalendarViewGroup = () => {
 };
 
 const ZoomGroup = () => {
-  const { viewState, updateViewState } = useViewContext();
+  const { viewState, updateViewState, goToToday } = useViewContext();
+
+  const maxZoom = 3.0;
+  const minZoom = 0.3;
+  const isMaxZoom = viewState.timelineZoom >= maxZoom;
+  const isMinZoom = viewState.timelineZoom <= minZoom;
 
   const handleZoomIn = () => {
-    const newZoom = Math.min(viewState.timelineZoom * 1.2, 3.0); // Max 3x zoom
+    if (isMaxZoom) return;
+    const newZoom = Math.min(viewState.timelineZoom * 1.2, maxZoom);
     updateViewState({ timelineZoom: newZoom });
     console.log('Zoom In:', newZoom.toFixed(2));
   };
 
   const handleZoomOut = () => {
-    const newZoom = Math.max(viewState.timelineZoom / 1.2, 0.3); // Min 0.3x zoom
+    if (isMinZoom) return;
+    const newZoom = Math.max(viewState.timelineZoom / 1.2, minZoom);
     updateViewState({ timelineZoom: newZoom });
     console.log('Zoom Out:', newZoom.toFixed(2));
   };
@@ -148,17 +156,31 @@ const ZoomGroup = () => {
     <div className='flex gap-1'>
       <button
         onClick={handleZoomIn}
-        className='w-[48px] h-[48px] bg-gray-100 rounded flex items-center justify-center hover:bg-blue-100 transition-colors duration-150'
-        title='Zoom into the timeline'
+        disabled={isMaxZoom}
+        className={`w-[48px] h-[48px] rounded flex items-center justify-center transition-colors duration-150 ${
+          isMaxZoom
+            ? 'bg-gray-200 cursor-not-allowed opacity-50'
+            : 'bg-gray-100 hover:bg-blue-100'
+        }`}
+        title={isMaxZoom ? 'Maximum zoom reached' : 'Zoom into the timeline'}
       >
-        <MagnifyingGlassPlusIcon className='w-4 h-4 text-gray-700' />
+        <MagnifyingGlassPlusIcon
+          className={`w-4 h-4 ${isMaxZoom ? 'text-gray-400' : 'text-gray-700'}`}
+        />
       </button>
       <button
         onClick={handleZoomOut}
-        className='w-[48px] h-[48px] bg-gray-100 rounded flex items-center justify-center hover:bg-blue-100 transition-colors duration-150'
-        title='Zoom out of the timeline'
+        disabled={isMinZoom}
+        className={`w-[48px] h-[48px] rounded flex items-center justify-center transition-colors duration-150 ${
+          isMinZoom
+            ? 'bg-gray-200 cursor-not-allowed opacity-50'
+            : 'bg-gray-100 hover:bg-blue-100'
+        }`}
+        title={isMinZoom ? 'Minimum zoom reached' : 'Zoom out of the timeline'}
       >
-        <MagnifyingGlassMinusIcon className='w-4 h-4 text-gray-700' />
+        <MagnifyingGlassMinusIcon
+          className={`w-4 h-4 ${isMinZoom ? 'text-gray-400' : 'text-gray-700'}`}
+        />
       </button>
       <button
         onClick={handleFitToView}
@@ -166,6 +188,14 @@ const ZoomGroup = () => {
         title='Fit all tasks to visible area'
       >
         <ArrowsPointingOutIcon className='w-4 h-4 text-gray-700' />
+      </button>
+      <button
+        onClick={goToToday}
+        className='w-[48px] h-[48px] bg-gray-100 rounded flex items-center justify-center hover:bg-blue-100 transition-colors duration-150'
+        title='Go to Today'
+        aria-label='Go to Today'
+      >
+        <HomeIcon className='w-4 h-4 text-gray-700' />
       </button>
       {/* Zoom Level Indicator */}
       <div className='flex items-center px-2 text-xs text-gray-600 font-medium'>
@@ -225,7 +255,7 @@ const CriticalPathStyleDropdown = () => {
               className='px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors duration-150 flex items-center gap-2'
               onClick={() => handleSelect(option.name)}
             >
-              <div className={`w-3 h-3 rounded ${option.color}`}></div>
+              <div className={`w-3 h-3 rounded ${option.color}`} />
               <span className='text-xs text-gray-700'>{option.name}</span>
             </div>
           ))}
@@ -271,9 +301,7 @@ const TaskFiltersDropdown = () => {
     { value: 'Grouped by Phase', label: 'Grouped by Phase', icon: '📊' },
   ];
 
-  const selectedFilter =
-    filterOptions.find(option => option.value === viewState.taskFilter) ||
-    filterOptions[0];
+  // Filter options are available for future use
 
   return (
     <div className='relative' ref={dropdownRef}>
@@ -302,7 +330,7 @@ const TaskFiltersDropdown = () => {
               <span className='text-sm'>{option.icon}</span>
               <span className='text-xs text-gray-700'>{option.label}</span>
               {viewState.taskFilter === option.value && (
-                <div className='ml-auto w-2 h-2 bg-blue-500 rounded-full'></div>
+                <div className='ml-auto w-2 h-2 bg-blue-500 rounded-full' />
               )}
             </div>
           ))}
@@ -326,7 +354,9 @@ const StatusHighlightingToggle = () => {
       label='Status Highlighting'
       onClick={handleToggle}
       tooltip='Toggle status-based row highlighting'
-      className={viewState.statusHighlighting ? 'bg-blue-50 border-blue-500' : ''}
+      className={
+        viewState.statusHighlighting ? 'bg-blue-50 border-blue-500' : ''
+      }
     />
   );
 };

@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Prompt 078: Implement "Go to Today" Button in Ribbon**
+  - Added "Go to Today" button in View tab ribbon Zoom group with HomeIcon
+  - GanttChart now scrolls and centers on current date with smooth animation
+  - Today marker appears as yellow highlight column with pulsing animation
+  - Automatically calculates today's position based on timeline zoom level
+  - Works across all zoom levels (0.3x to 3x) with proper scaling
+  - Includes accessibility features with aria-label and descriptive tooltip
+  - Today highlight automatically disappears after 1 second animation
+  - All operations logged to console for debugging and verification
+
 - **Prompt 071: Implement "Delete Task" Functionality in the Ribbon**
   - Added "Delete Task" button in Home tab ribbon Task group with TrashIcon
   - Supports deletion of selected task and its children using existing deleteTask function
@@ -313,5 +323,9 @@ projectplanner/
 - auto: Pre-commit hook update
 
 ### 2025-08-07 22:55:50
+
+- auto: Pre-commit hook update
+
+### 2025-08-07 23:03:49
 
 - auto: Pre-commit hook update

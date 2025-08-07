@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
 const ViewContext = createContext();
 
@@ -41,7 +41,7 @@ export const ViewProvider = ({ children }) => {
 
   // Load saved view state on mount
   useEffect(() => {
-    const savedView = localStorage.getItem('plannerView');
+    const savedView = window.localStorage.getItem('plannerView');
     if (savedView) {
       try {
         const parsed = JSON.parse(savedView);
@@ -52,7 +52,7 @@ export const ViewProvider = ({ children }) => {
     }
 
     // Load saved date markers
-    const savedMarkers = localStorage.getItem('dateMarkers');
+    const savedMarkers = window.localStorage.getItem('dateMarkers');
     if (savedMarkers) {
       try {
         const parsedMarkers = JSON.parse(savedMarkers);
@@ -73,14 +73,31 @@ export const ViewProvider = ({ children }) => {
       savedAt: new Date().toISOString(),
     };
 
-    localStorage.setItem('plannerView', JSON.stringify(currentState));
+    window.localStorage.setItem('plannerView', JSON.stringify(currentState));
     console.log('View layout saved');
+  };
+
+  const goToToday = () => {
+    // This will trigger the Gantt chart to scroll to today
+    // The actual scrolling will be handled by the GanttChart component
+    const todayHighlight = {
+      showTodayHighlight: true,
+      todayHighlightTimestamp: Date.now(),
+    };
+    updateViewState(todayHighlight);
+    console.log('Go to Today triggered');
+
+    // Reset the highlight after animation
+    window.setTimeout(() => {
+      updateViewState({ showTodayHighlight: false });
+    }, 1000);
   };
 
   const value = {
     viewState,
     updateViewState,
     saveViewLayout,
+    goToToday,
   };
 
   return <ViewContext.Provider value={value}>{children}</ViewContext.Provider>;
