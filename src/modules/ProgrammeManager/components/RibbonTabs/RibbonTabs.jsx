@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useViewContext } from '../../context/ViewContext';
 import HomeTab from './tabs/HomeTab';
 import ViewTab from './tabs/ViewTab';
@@ -9,7 +9,7 @@ import FormatTab from './tabs/FormatTab';
 
 const tabs = ['Home', 'View', 'Project', 'Allocation', '4D', 'Format'];
 
-export default function RibbonTabs() {
+export default function RibbonTabs({ onExpandAll, onCollapseAll }) {
   const [activeTab, setActiveTab] = useState('Home');
   const { viewState, updateViewState } = useViewContext();
 
@@ -28,7 +28,9 @@ export default function RibbonTabs() {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'Home':
-        return <HomeTab />;
+        return (
+          <HomeTab onExpandAll={onExpandAll} onCollapseAll={onCollapseAll} />
+        );
       case 'View':
         return <ViewTab />;
       case 'Project':

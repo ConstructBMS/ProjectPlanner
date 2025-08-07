@@ -4,6 +4,7 @@
 
 - Prompt 041 – Drag-and-drop Ribbon
 - Prompt 042 – HomeTab base layout
+- Prompt 069: Expand/Collapse All wired to SidebarTree via Ribbon buttons (2025-08-07)
 
 ## 🟡 In Progress
 

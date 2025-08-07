@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import useTaskManager from '../../../hooks/useTaskManager';
 import RibbonButton from '../shared/RibbonButton';
 import RibbonGroup from '../shared/RibbonGroup';
@@ -11,22 +11,18 @@ import {
   BoldIcon,
   ItalicIcon,
   UnderlineIcon,
-  ChevronDownIcon,
   FlagIcon,
   LinkIcon,
   ArrowPathIcon,
   FolderIcon,
   ChevronDoubleDownIcon,
+  ChevronRightIcon,
   WrenchScrewdriverIcon,
   UserIcon,
   PlusIcon,
   ChartBarIcon,
   DocumentTextIcon,
-  EyeIcon,
-  EyeSlashIcon,
   CodeBracketIcon,
-  ArrowRightIcon,
-  ArrowLeftIcon,
   ExclamationTriangleIcon,
   ChartBarSquareIcon,
   CheckIcon,
@@ -41,16 +37,10 @@ import {
   ArrowUturnRightIcon,
 } from '@heroicons/react/24/outline';
 
-export default function HomeTab() {
+export default function HomeTab({ onExpandAll, onCollapseAll }) {
   const {
-    addTask,
     addMilestone,
-    deleteTask,
     linkTasks,
-    ungroup,
-    createGroup,
-    selectAll,
-    openTaskDetails,
     openTaskNotes,
     addCode,
     undo,
@@ -60,8 +50,6 @@ export default function HomeTab() {
   } = useTaskManager();
 
   const [isTaskDetailModalOpen, setIsTaskDetailModalOpen] = useState(false);
-  const [isCriticalPathActive, setIsCriticalPathActive] = useState(false);
-  const [isShowBaselinesActive, setIsShowBaselinesActive] = useState(false);
 
   const handleTaskDetailsClick = () => {
     setIsTaskDetailModalOpen(true);
@@ -166,6 +154,18 @@ export default function HomeTab() {
           label='Summarise'
           onClick={() => console.log('Summarise clicked')}
           tooltip='Create summary tasks from selected items'
+        />
+        <RibbonButton
+          icon={<ChevronDoubleDownIcon className='w-4 h-4' />}
+          label='Expand All'
+          onClick={onExpandAll}
+          tooltip='Expand all groups and tasks in the tree'
+        />
+        <RibbonButton
+          icon={<ChevronRightIcon className='w-4 h-4' />}
+          label='Collapse All'
+          onClick={onCollapseAll}
+          tooltip='Collapse all groups and tasks in the tree'
         />
         <RibbonDropdown
           icon={<ChevronDoubleDownIcon className='w-4 h-4' />}

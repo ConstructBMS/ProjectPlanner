@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Prompt 069: Implement "Expand All" and "Collapse All" Buttons in Ribbon**
+  - Added "Expand All" and "Collapse All" buttons to Home tab ribbon in Hierarchy group
+  - Buttons now correctly trigger SidebarTree methods using useRef and useImperativeHandle
+  - SidebarTree exposes expandAll() and collapseAll() functions for external control
+  - Implemented proper prop passing through AppShell → RibbonTabs → HomeTab
+  - Added ChevronDoubleDownIcon for Expand All and ChevronRightIcon for Collapse All
+  - Buttons provide instant tree navigation for complex hierarchical structures
+  - Improves workflow for navigating nested task groups and project hierarchies
+  - All expand/collapse operations work with existing DnD and selection functionality
+
 - **Server Rebuild and Restart**
   - Rebuilt production build with optimized chunks and improved performance
   - Restarted development server with Hot Module Replacement (HMR) enabled
@@ -264,3 +274,15 @@ projectplanner/
 ### 2025-08-07 19:43:21
 
 - test: Testing updated pre-commit hook with auto-update scripts
+
+### 2025-08-07 19:44:45
+
+- auto: Pre-commit hook update
+
+### 2025-08-07 19:46:34
+
+- auto: Pre-commit hook update
+
+### 2025-08-07 19:55:27
+
+- auto: Pre-commit hook update
