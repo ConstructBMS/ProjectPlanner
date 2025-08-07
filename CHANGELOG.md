@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Prompt 079: Show Weekends Toggle**
+  - Added "Show Weekends" toggle checkbox in View tab ribbon View group
+  - GanttChart now filters weekend columns (Saturday & Sunday) based on user preference
+  - Timeline positioning recalculates to skip weekend dates when toggle is off
+  - Preference persisted to localStorage for session continuity
+  - All timeline elements (tasks, baselines, today highlight) respect weekend filtering
+  - Toggle state managed through ViewContext with proper initialization from saved preferences
+  - Immediate visual feedback when toggling between weekend visibility modes
+  - Works seamlessly with existing zoom levels and timeline navigation
+
 - **Prompt 077: Advanced Filtering & Search**
   - Added comprehensive AdvancedSearch component with expandable filter interface
   - Implemented text search across task names, descriptions, and notes
@@ -383,5 +393,9 @@ projectplanner/
 - auto: Pre-commit hook update
 
 ### 2025-08-07 23:17:03
+
+- auto: Pre-commit hook update
+
+### 2025-08-07 23:43:07
 
 - auto: Pre-commit hook update

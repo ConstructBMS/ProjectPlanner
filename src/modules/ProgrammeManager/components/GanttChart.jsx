@@ -24,13 +24,33 @@ const GanttChart = () => {
 
   const { viewState } = useViewContext();
 
+  // Generate timeline dates based on showWeekends setting (for future use)
+  const generateTimelineDates = () => {
+    const startDate = new Date('2024-01-01');
+    const endDate = new Date('2024-12-31');
+    const dates = [];
+
+    for (
+      let d = new Date(startDate);
+      d <= endDate;
+      d.setDate(d.getDate() + 1)
+    ) {
+      const dayOfWeek = d.getDay(); // 0 = Sunday, 6 = Saturday
+      if (viewState.showWeekends || (dayOfWeek !== 0 && dayOfWeek !== 6)) {
+        dates.push(new Date(d));
+      }
+    }
+
+    return dates;
+  };
+
   const taskRefs = useRef({});
   const svgContainerRef = useRef(null);
   const timelineContainerRef = useRef(null);
 
   const tasks = getVisibleTasks(viewState.taskFilter);
 
-  // Update task refs when tasks change
+  // Update task refs when tasks change or showWeekends setting changes
   useEffect(() => {
     const newRefs = {};
     tasks.forEach(task => {
@@ -41,7 +61,7 @@ const GanttChart = () => {
       }
     });
     taskRefs.current = newRefs;
-  }, [tasks]);
+  }, [tasks, viewState.showWeekends]);
 
   // Handle "Go to Today" functionality
   useEffect(() => {
@@ -49,11 +69,33 @@ const GanttChart = () => {
       const today = new Date();
       const startOfYear = new Date('2024-01-01');
 
-      // Calculate today's position in the timeline
-      const daysFromStart = Math.floor(
-        (today - startOfYear) / (1000 * 60 * 60 * 24)
-      );
+      // Calculate today's position in the timeline based on showWeekends setting
+      const getDateIndex = date => {
+        const daysFromStart = Math.floor(
+          (date - startOfYear) / (1000 * 60 * 60 * 24)
+        );
 
+        if (viewState.showWeekends) {
+          return daysFromStart;
+        } else {
+          // Count only weekdays
+          let weekdayCount = 0;
+          for (
+            let d = new Date(startOfYear);
+            d <= date;
+            d.setDate(d.getDate() + 1)
+          ) {
+            const dayOfWeek = d.getDay();
+            if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+              weekdayCount++;
+            }
+            if (d >= date) break;
+          }
+          return weekdayCount;
+        }
+      };
+
+      const daysFromStart = getDateIndex(today);
       const baseDayWidth = 2;
       const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
       const todayPosition = daysFromStart * scaledDayWidth;
@@ -72,9 +114,14 @@ const GanttChart = () => {
         daysFromStart,
         todayPosition,
         scrollPosition,
+        showWeekends: viewState.showWeekends,
       });
     }
-  }, [viewState.showTodayHighlight, viewState.timelineZoom]);
+  }, [
+    viewState.showTodayHighlight,
+    viewState.timelineZoom,
+    viewState.showWeekends,
+  ]);
 
   // Draw dependency arrows
   useEffect(() => {
@@ -300,9 +347,34 @@ const GanttChart = () => {
               left: (() => {
                 const today = new Date();
                 const startOfYear = new Date('2024-01-01');
-                const daysFromStart = Math.floor(
-                  (today - startOfYear) / (1000 * 60 * 60 * 24)
-                );
+
+                // Calculate today's position based on showWeekends setting
+                const getDateIndex = date => {
+                  const daysFromStart = Math.floor(
+                    (date - startOfYear) / (1000 * 60 * 60 * 24)
+                  );
+
+                  if (viewState.showWeekends) {
+                    return daysFromStart;
+                  } else {
+                    // Count only weekdays
+                    let weekdayCount = 0;
+                    for (
+                      let d = new Date(startOfYear);
+                      d <= date;
+                      d.setDate(d.getDate() + 1)
+                    ) {
+                      const dayOfWeek = d.getDay();
+                      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                        weekdayCount++;
+                      }
+                      if (d >= date) break;
+                    }
+                    return weekdayCount;
+                  }
+                };
+
+                const daysFromStart = getDateIndex(today);
                 const baseDayWidth = 2;
                 const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
                 return `${daysFromStart * scaledDayWidth}px`;
@@ -345,10 +417,34 @@ const GanttChart = () => {
                 const endDate = new Date(task.endDate);
                 const duration = task.duration || 1;
 
-                // Asta-style positioning - more realistic timeline with zoom scaling
-                const daysFromStart = Math.floor(
-                  (startDate - new Date('2024-01-01')) / (1000 * 60 * 60 * 24)
-                );
+                // Calculate position based on filtered timeline dates
+                const getDateIndex = date => {
+                  const startOfYear = new Date('2024-01-01');
+                  const daysFromStart = Math.floor(
+                    (date - startOfYear) / (1000 * 60 * 60 * 24)
+                  );
+
+                  if (viewState.showWeekends) {
+                    return daysFromStart;
+                  } else {
+                    // Count only weekdays
+                    let weekdayCount = 0;
+                    for (
+                      let d = new Date(startOfYear);
+                      d <= date;
+                      d.setDate(d.getDate() + 1)
+                    ) {
+                      const dayOfWeek = d.getDay();
+                      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                        weekdayCount++;
+                      }
+                      if (d >= date) break;
+                    }
+                    return weekdayCount;
+                  }
+                };
+
+                const daysFromStart = getDateIndex(startDate);
                 const baseDayWidth = 2; // Base width per day
                 const baseDurationWidth = 20; // Base width per duration unit
                 const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
@@ -454,11 +550,8 @@ const GanttChart = () => {
                             className='h-[6px] bg-gray-300 rounded opacity-50 absolute bottom-0'
                             style={{
                               left: `${Math.max(
-                                Math.floor(
-                                  (new Date(task.baselineStart) -
-                                    new Date('2024-01-01')) /
-                                    (1000 * 60 * 60 * 24)
-                                ) * scaledDayWidth,
+                                getDateIndex(new Date(task.baselineStart)) *
+                                  scaledDayWidth,
                                 0
                               )}px`,
                               width: `${Math.max(

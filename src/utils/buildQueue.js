@@ -83,5 +83,6 @@ export const buildQueue = {
     'Prompt 076 – Custom Fields & Metadata',
     'Prompt 077 – Advanced Filtering & Search',
     'Prompt 078 – Go to Today Button',
+    'Prompt 079 – Show Weekends Toggle',
   ],
 };

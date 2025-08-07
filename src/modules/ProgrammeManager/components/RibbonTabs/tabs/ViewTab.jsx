@@ -362,6 +362,28 @@ const StatusHighlightingToggle = () => {
   );
 };
 
+const ShowWeekendsToggle = () => {
+  const { viewState, toggleWeekends } = useViewContext();
+
+  const handleToggle = () => {
+    toggleWeekends();
+  };
+
+  return (
+    <div className='flex items-center space-x-2 px-2 py-1'>
+      <label className='flex items-center space-x-2 cursor-pointer'>
+        <input
+          type='checkbox'
+          checked={viewState.showWeekends}
+          onChange={handleToggle}
+          className='w-3 h-3 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2'
+        />
+        <span className='text-xs text-gray-700 font-medium'>Show Weekends</span>
+      </label>
+    </div>
+  );
+};
+
 const ViewTab = () => {
   return (
     <div className='flex flex-nowrap gap-0 p-2 bg-white w-full min-w-0'>
@@ -397,6 +419,7 @@ const ViewTab = () => {
           label='View Options'
         />
         <StatusHighlightingToggle />
+        <ShowWeekendsToggle />
       </RibbonGroup>
 
       {/* Resource Group */}
