@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Prompt 071: Implement "Delete Task" Functionality in the Ribbon**
+  - Added "Delete Task" button in Home tab ribbon Task group with TrashIcon
+  - Supports deletion of selected task and its children using existing deleteTask function
+  - Button is automatically disabled when no task is selected for better UX
+  - Integrates with existing undo/redo system from TaskContext
+  - Properly removes tasks from both TaskGrid and SidebarTree with immediate UI updates
+  - Includes safety checks and console logging for debugging
+  - Maintains proper tree structure after deletion operations
+  - All deletion operations logged to console for verification
+
 - **Prompt 070: Implement "Insert Task Below" and "Insert Summary Task" Buttons in Ribbon**
   - Added "Insert Task Below" button in Home tab ribbon Insert group
   - Added "Insert Summary Task" functionality to existing Summary Bar button
@@ -299,5 +309,9 @@ projectplanner/
 - auto: Pre-commit hook update
 
 ### 2025-08-07 22:49:33
+
+- auto: Pre-commit hook update
+
+### 2025-08-07 22:55:50
 
 - auto: Pre-commit hook update

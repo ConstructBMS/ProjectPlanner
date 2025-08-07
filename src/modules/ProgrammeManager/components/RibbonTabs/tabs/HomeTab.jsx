@@ -36,6 +36,7 @@ import {
   ClockIcon,
   ArrowUturnLeftIcon,
   ArrowUturnRightIcon,
+  TrashIcon,
 } from '@heroicons/react/24/outline';
 
 export default function HomeTab({ onExpandAll, onCollapseAll }) {
@@ -43,6 +44,7 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     addMilestone,
     insertTaskBelow,
     insertSummaryTask,
+    deleteTask,
     linkTasks,
     openTaskNotes,
     addCode,
@@ -65,6 +67,20 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
 
   const handleInsertSummaryTask = () => {
     insertSummaryTask(selectedTaskIds);
+  };
+
+  const handleDeleteTask = () => {
+    if (!selectedTaskId) {
+      console.warn('No task selected for deletion');
+      return;
+    }
+
+    // Optional: Add confirmation in the future
+    // const confirmed = window.confirm(`Are you sure you want to delete the selected task? This action cannot be undone.`);
+    // if (!confirmed) return;
+
+    deleteTask(selectedTaskId);
+    console.log('Deleted task:', selectedTaskId);
   };
 
   return (
@@ -206,6 +222,13 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
           label='Assign'
           onClick={() => console.log('Assign clicked')}
           tooltip='Assign a resource, person, or role to this task'
+        />
+        <RibbonButton
+          icon={<TrashIcon className='w-4 h-4' />}
+          label='Delete Task'
+          onClick={handleDeleteTask}
+          tooltip='Delete the selected task and its children'
+          disabled={!selectedTaskId}
         />
         <RibbonButton
           icon={<ScissorsIcon className='w-4 h-4' />}
