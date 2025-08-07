@@ -1,5 +1,6 @@
-import { useState } from 'react';
+// No React imports needed for this component
 import useTaskManager from '../../../hooks/useTaskManager';
+import { useTaskContext } from '../../../context/TaskContext';
 import RibbonButton from '../shared/RibbonButton';
 import RibbonGroup from '../shared/RibbonGroup';
 import RibbonDropdown from '../shared/RibbonDropdown';
@@ -40,6 +41,8 @@ import {
 export default function HomeTab({ onExpandAll, onCollapseAll }) {
   const {
     addMilestone,
+    insertTaskBelow,
+    insertSummaryTask,
     linkTasks,
     openTaskNotes,
     addCode,
@@ -49,10 +52,19 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     redoStack,
   } = useTaskManager();
 
-  const [isTaskDetailModalOpen, setIsTaskDetailModalOpen] = useState(false);
+  // Get the current task context for selection state
+  const { selectedTaskId, selectedTaskIds } = useTaskContext();
 
   const handleTaskDetailsClick = () => {
-    setIsTaskDetailModalOpen(true);
+    console.log('Task details clicked');
+  };
+
+  const handleInsertTaskBelow = () => {
+    insertTaskBelow(selectedTaskId);
+  };
+
+  const handleInsertSummaryTask = () => {
+    insertSummaryTask(selectedTaskIds);
   };
 
   return (
@@ -206,6 +218,12 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
       {/* Insert Group */}
       <RibbonGroup title='Insert'>
         <RibbonButton
+          icon={<PlusIcon className='w-4 h-4' />}
+          label='Insert Task Below'
+          onClick={handleInsertTaskBelow}
+          tooltip='Insert a new task below the selected task'
+        />
+        <RibbonButton
           icon={<FlagIcon className='w-4 h-4' />}
           label='Add Milestone'
           onClick={addMilestone}
@@ -213,9 +231,9 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
         />
         <RibbonButton
           icon={<ChartBarIcon className='w-4 h-4' />}
-          label='Summary Bar'
-          onClick={() => console.log('Insert Summary Task clicked')}
-          tooltip='Insert a summary task'
+          label='Insert Summary Task'
+          onClick={handleInsertSummaryTask}
+          tooltip='Insert a summary task and group selected tasks under it'
         />
         <RibbonButton
           icon={<ChartBarSquareIcon className='w-4 h-4' />}

@@ -1,4 +1,4 @@
-import React, {
+import {
   createContext,
   useContext,
   useState,
@@ -236,6 +236,136 @@ export const TaskProvider = ({ children }) => {
     setNextId(prev => prev + 1);
   }, [nextId, saveToUndoStack]);
 
+  const insertTaskBelow = useCallback(
+    (selectedId = null) => {
+      saveToUndoStack();
+
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(today.getDate() + 1);
+
+      const newTask = {
+        id: `task-${nextId}`,
+        name: 'New Task',
+        startDate: today.toISOString(),
+        endDate: tomorrow.toISOString(),
+        duration: 1,
+        status: 'Planned',
+        priority: 'Medium',
+        assignee: '',
+        progress: 0,
+        color: '#3B82F6',
+        isMilestone: false,
+        notes: '',
+        parentId: null,
+        isGroup: false,
+        isExpanded: true,
+      };
+
+      if (selectedId) {
+        // Find the selected task's position
+        const selectedIndex = tasks.findIndex(task => task.id === selectedId);
+        if (selectedIndex !== -1) {
+          // Insert the new task after the selected one
+          setTasks(prev => {
+            const updated = [...prev];
+            updated.splice(selectedIndex + 1, 0, newTask);
+            return updated;
+          });
+        } else {
+          // If selected task not found, append at the end
+          setTasks(prev => [...prev, newTask]);
+        }
+      } else {
+        // No selection, append at the end
+        setTasks(prev => [...prev, newTask]);
+      }
+
+      setNextId(prev => prev + 1);
+      // Select the newly created task
+      setSelectedTaskId(newTask.id);
+      setSelectedTaskIds([newTask.id]);
+
+      console.log(
+        'Inserted new task below:',
+        selectedId,
+        'New task ID:',
+        newTask.id
+      );
+    },
+    [nextId, saveToUndoStack, tasks]
+  );
+
+  const insertSummaryTask = useCallback(
+    (selectedIds = []) => {
+      saveToUndoStack();
+
+      const today = new Date();
+      const summaryTaskId = `task-${nextId}`;
+
+      const summaryTask = {
+        id: summaryTaskId,
+        name: 'New Summary Task',
+        startDate: today.toISOString(),
+        endDate: today.toISOString(),
+        duration: 0,
+        status: 'Planned',
+        priority: 'Medium',
+        assignee: '',
+        progress: 0,
+        color: '#8B5CF6',
+        isMilestone: false,
+        notes: '',
+        parentId: null,
+        isGroup: true,
+        isExpanded: true,
+      };
+
+      if (selectedIds.length > 0) {
+        // Find the position of the first selected task
+        const firstSelectedIndex = tasks.findIndex(task =>
+          selectedIds.includes(task.id)
+        );
+
+        // Create the summary task and update children
+        setTasks(prev => {
+          const updated = [...prev];
+
+          // Insert summary task at the position of the first selected task
+          if (firstSelectedIndex !== -1) {
+            updated.splice(firstSelectedIndex, 0, summaryTask);
+          } else {
+            updated.unshift(summaryTask);
+          }
+
+          // Update selected tasks to be children of the summary task
+          return updated.map(task =>
+            selectedIds.includes(task.id)
+              ? { ...task, parentId: summaryTaskId }
+              : task
+          );
+        });
+
+        console.log(
+          'Created summary task wrapping tasks:',
+          selectedIds,
+          'Summary ID:',
+          summaryTaskId
+        );
+      } else {
+        // No tasks selected, just create an empty summary task
+        setTasks(prev => [...prev, summaryTask]);
+        console.log('Created empty summary task:', summaryTaskId);
+      }
+
+      setNextId(prev => prev + 1);
+      // Select the newly created summary task
+      setSelectedTaskId(summaryTaskId);
+      setSelectedTaskIds([summaryTaskId]);
+    },
+    [nextId, saveToUndoStack, tasks]
+  );
+
   const deleteTask = useCallback(
     taskId => {
       saveToUndoStack();
@@ -263,7 +393,7 @@ export const TaskProvider = ({ children }) => {
         prev.filter(id => !tasksToRemove.includes(id))
       );
     },
-    [saveToUndoStack, selectedTaskId]
+    [saveToUndoStack, selectedTaskId, getTaskDescendants]
   );
 
   const updateTask = useCallback(
@@ -587,6 +717,8 @@ export const TaskProvider = ({ children }) => {
       // Task operations
       addTask,
       addMilestone,
+      insertTaskBelow,
+      insertSummaryTask,
       deleteTask,
       updateTask,
 
@@ -637,6 +769,8 @@ export const TaskProvider = ({ children }) => {
       linkStartTaskId,
       addTask,
       addMilestone,
+      insertTaskBelow,
+      insertSummaryTask,
       deleteTask,
       updateTask,
       selectTask,

@@ -4,12 +4,13 @@ const useTaskManager = () => {
   const {
     addTask,
     addMilestone,
+    insertTaskBelow,
+    insertSummaryTask,
     deleteTask,
     linkTasks,
     unlinkTasks,
     groupTasks,
     ungroupTask,
-    selectTask,
     clearSelection,
     selectedTaskId,
     selectedTaskIds,
@@ -53,7 +54,7 @@ const useTaskManager = () => {
       return;
     }
 
-    const groupName = prompt('Enter group name:');
+    const groupName = window.prompt('Enter group name:');
     if (groupName) {
       groupTasks(selectedTaskIds, groupName);
     }
@@ -85,6 +86,8 @@ const useTaskManager = () => {
   return {
     addTask,
     addMilestone,
+    insertTaskBelow,
+    insertSummaryTask,
     deleteTask,
     linkTasks,
     unlinkTasks,

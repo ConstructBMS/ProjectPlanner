@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Prompt 070: Implement "Insert Task Below" and "Insert Summary Task" Buttons in Ribbon**
+  - Added "Insert Task Below" button in Home tab ribbon Insert group
+  - Added "Insert Summary Task" functionality to existing Summary Bar button
+  - New tasks inserted directly below selected row with default values (today's date, 1 day duration)
+  - Summary task wraps selected tasks and groups them under a new parent task
+  - Logic integrated into TaskContext state and re-renders TaskGrid correctly
+  - Both functions support proper undo/redo functionality and state management
+  - Insert Task Below automatically selects the newly created task for immediate editing
+  - Summary Task creates hierarchical relationships and maintains proper task structure
+  - All operations logged to console for debugging and verification
+
 - **Prompt 069: Implement "Expand All" and "Collapse All" Buttons in Ribbon**
   - Added "Expand All" and "Collapse All" buttons to Home tab ribbon in Hierarchy group
   - Buttons now correctly trigger SidebarTree methods using useRef and useImperativeHandle
@@ -284,5 +295,9 @@ projectplanner/
 - auto: Pre-commit hook update
 
 ### 2025-08-07 19:55:27
+
+- auto: Pre-commit hook update
+
+### 2025-08-07 22:49:33
 
 - auto: Pre-commit hook update
