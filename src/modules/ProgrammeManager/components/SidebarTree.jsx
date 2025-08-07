@@ -1,14 +1,10 @@
-import React, { useState, forwardRef, useImperativeHandle } from 'react';
-import {
-  ChevronRightIcon,
-  ChevronDownIcon,
-  FolderIcon,
-  Bars3Icon,
-} from '@heroicons/react/24/outline';
-import { useTaskContext } from '../context/TaskContext';
-import { useViewContext } from '../context/ViewContext';
-import ContextMenu from './ContextMenu';
-import TaskModal from './TaskModal';
+import React, {
+  useState,
+  useCallback,
+  useMemo,
+  forwardRef,
+  useImperativeHandle,
+} from 'react';
 import {
   DndContext,
   closestCenter,
@@ -16,17 +12,24 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  DragOverlay,
-  defaultDropAnimationSideEffects,
 } from '@dnd-kit/core';
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
+  useSortable,
 } from '@dnd-kit/sortable';
-import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useTaskContext } from '../context/TaskContext';
+import { useViewContext } from '../context/ViewContext';
+import {
+  ChevronRightIcon,
+  ChevronDownIcon,
+  FolderIcon,
+  DocumentIcon,
+  FlagIcon,
+} from '@heroicons/react/24/outline';
 
 // Mock tree data for programme structure
 const treeData = [
@@ -61,286 +64,195 @@ const treeData = [
   },
 ];
 
-// TreeNode component for programme structure
-const TreeNode = ({
-  node,
-  depth = 0,
-  expandedIds,
-  onToggle,
-  onSelect,
-  selectedId,
-}) => {
-  const hasChildren = node.children && node.children.length > 0;
-  const isExpanded = expandedIds.has(node.id);
-  const isSelected = selectedId === node.id;
+// Memoized tree node component
+const TreeNode = React.memo(
+  ({
+    task,
+    level = 0,
+    isExpanded,
+    isSelected,
+    isMultiSelected,
+    isHovered,
+    onToggle,
+    onSelect,
+    onDoubleClick,
+    onHover,
+    onHoverLeave,
+    onContextMenu,
+    onMultiSelect,
+  }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ id: task.id });
 
-  return (
-    <div>
-      <div
-        className={`py-1 pl-[${1 + depth}rem] flex items-center gap-1 hover:bg-blue-100 cursor-pointer ${
-          isSelected ? 'bg-blue-100' : ''
-        }`}
-        onClick={() => onSelect(node.id)}
-      >
-        {hasChildren && (
-          <button
-            onClick={e => {
-              e.stopPropagation();
-              onToggle(node.id);
-            }}
-            className='w-4 h-4 flex items-center justify-center'
-          >
-            {isExpanded ? (
-              <ChevronDownIcon className='w-4 h-4 text-gray-600' />
-            ) : (
-              <ChevronRightIcon className='w-4 h-4 text-gray-600' />
-            )}
-          </button>
-        )}
-        <span className='text-sm text-gray-800'>{node.label}</span>
-      </div>
-      {hasChildren && isExpanded && (
-        <div className='ml-2'>
-          {node.children.map(child => (
-            <TreeNode
-              key={child.id}
-              node={child}
-              depth={depth + 1}
-              expandedIds={expandedIds}
-              onToggle={onToggle}
-              onSelect={onSelect}
-              selectedId={selectedId}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
+    const hasChildren = task.children && task.children.length > 0;
 
-// Sortable TaskNode component for hierarchical tasks
-const SortableTaskNode = ({
-  task,
-  depth = 0,
-  onToggle,
-  onSelect,
-  selectedTaskId,
-  selectedTaskIds,
-  hoveredTaskId,
-  onMultiSelect,
-  onContextMenu,
-  onDoubleClick,
-  onHover,
-  onHoverLeave,
-}) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: task.id });
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+    };
 
-  const hasChildren = task.children && task.children.length > 0;
-  const isSelected = selectedTaskId === task.id;
-  const isMultiSelected = selectedTaskIds.includes(task.id);
-  const isHovered = hoveredTaskId === task.id;
+    const handleContextMenu = useCallback(
+      e => {
+        e.preventDefault();
+        e.stopPropagation();
+        onContextMenu(e, task);
+      },
+      [onContextMenu, task]
+    );
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
+    const handleClick = useCallback(
+      e => {
+        e.stopPropagation();
 
-  const handleContextMenu = e => {
-    e.preventDefault();
-    e.stopPropagation();
-    onContextMenu(e, task);
-  };
+        if (e.ctrlKey || e.metaKey) {
+          // Ctrl+Click: Toggle selection
+          onMultiSelect(task.id, 'toggle');
+        } else if (e.shiftKey) {
+          // Shift+Click: Select range
+          onMultiSelect(task.id, 'range');
+        } else {
+          // Normal click: Select single
+          onMultiSelect(task.id, 'single');
+        }
+      },
+      [task.id, onMultiSelect]
+    );
 
-  const handleClick = e => {
-    e.stopPropagation();
+    const handleDoubleClick = useCallback(
+      e => {
+        e.stopPropagation();
+        onDoubleClick(task);
+      },
+      [onDoubleClick, task]
+    );
 
-    if (e.ctrlKey || e.metaKey) {
-      // Ctrl+Click: Toggle selection
-      onMultiSelect(task.id, 'toggle');
-    } else if (e.shiftKey) {
-      // Shift+Click: Select range
-      onMultiSelect(task.id, 'range');
-    } else {
-      // Normal click: Select single
-      onMultiSelect(task.id, 'single');
-    }
-  };
+    const handleMouseEnter = useCallback(() => {
+      onHover(task.id);
+    }, [onHover, task.id]);
 
-  const handleDoubleClick = e => {
-    e.stopPropagation();
-    onDoubleClick(task);
-  };
+    const handleMouseLeave = useCallback(() => {
+      onHoverLeave();
+    }, [onHoverLeave]);
 
-  const handleMouseEnter = () => {
-    onHover(task.id);
-  };
+    const handleToggle = useCallback(
+      e => {
+        e.stopPropagation();
+        onToggle(task.id);
+      },
+      [onToggle, task.id]
+    );
 
-  const handleMouseLeave = () => {
-    onHoverLeave();
-  };
-
-  return (
-    <div ref={setNodeRef} style={style}>
-      <div
-        className={`py-1 pl-[${1 + depth}rem] flex items-center gap-1 cursor-pointer transition-all duration-200 ${
-          isSelected ? 'bg-blue-100 border-l-4 border-blue-500' : ''
-        } ${isMultiSelected ? 'bg-blue-50 border-l-4 border-blue-400' : ''} ${
-          isHovered ? 'bg-blue-50' : 'hover:bg-blue-100'
-        } ${isDragging ? 'shadow-lg bg-white border border-blue-300 rounded scale-105' : ''}`}
-        onClick={handleClick}
-        onDoubleClick={handleDoubleClick}
-        onContextMenu={handleContextMenu}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-      >
-        {/* Drag Handle */}
+    // Memoize the node content
+    const nodeContent = useMemo(
+      () => (
         <div
+          ref={setNodeRef}
           {...attributes}
           {...listeners}
-          className='w-4 h-4 flex items-center justify-center cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 transition-colors'
-          title='Drag to reorder task'
+          className={`asta-tree-node flex items-center px-2 py-1 cursor-pointer select-none transition-colors duration-150 ${
+            isSelected ? 'bg-blue-100 text-blue-900' : ''
+          } ${isMultiSelected ? 'bg-yellow-100' : ''} ${
+            isHovered ? 'bg-gray-50' : ''
+          }`}
+          style={{
+            transform: CSS.Transform.toString(transform),
+            transition,
+            opacity: isDragging ? 0.5 : 1,
+            paddingLeft: `${level * 20 + 8}px`,
+          }}
+          onClick={handleClick}
+          onDoubleClick={handleDoubleClick}
+          onContextMenu={handleContextMenu}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
         >
-          <Bars3Icon className='w-3 h-3' />
-        </div>
-
-        {/* Group Toggle Button */}
-        {task.isGroup && (
-          <button
-            onClick={e => {
-              e.stopPropagation();
-              onToggle(task.id);
-            }}
-            className='w-4 h-4 flex items-center justify-center'
-          >
-            {task.isExpanded ? (
-              <ChevronDownIcon className='w-4 h-4 text-gray-600' />
-            ) : (
-              <ChevronRightIcon className='w-4 h-4 text-gray-600' />
+          {/* Expand/Collapse Button */}
+          <div className='flex-shrink-0 w-4 h-4 mr-1'>
+            {hasChildren && (
+              <button
+                onClick={handleToggle}
+                className='w-4 h-4 flex items-center justify-center hover:bg-gray-200 rounded transition-colors duration-150'
+              >
+                {isExpanded ? (
+                  <ChevronDownIcon className='w-3 h-3 text-gray-600' />
+                ) : (
+                  <ChevronRightIcon className='w-3 h-3 text-gray-600' />
+                )}
+              </button>
             )}
-          </button>
-        )}
+          </div>
 
-        {/* Group Icon */}
-        {task.isGroup && <FolderIcon className='w-4 h-4 text-blue-500' />}
+          {/* Task Icon */}
+          <div className='flex-shrink-0 w-4 h-4 mr-2'>
+            {task.isMilestone ? (
+              <FlagIcon className='w-4 h-4 text-yellow-600' />
+            ) : task.isGroup ? (
+              <FolderIcon className='w-4 h-4 text-blue-600' />
+            ) : (
+              <DocumentIcon className='w-4 h-4 text-gray-600' />
+            )}
+          </div>
 
-        {/* Task Name */}
-        <span
-          className={`text-sm ${task.isGroup ? 'font-semibold' : ''} text-gray-800`}
-        >
-          {task.name}
-        </span>
+          {/* Task Name */}
+          <div className='flex-1 min-w-0'>
+            <div className='truncate text-sm font-medium'>{task.name}</div>
+            {task.assignee && (
+              <div className='text-xs text-gray-500 truncate'>
+                {task.assignee}
+              </div>
+            )}
+          </div>
 
-        {/* Selection indicator */}
-        {isMultiSelected && (
-          <div className='ml-auto w-2 h-2 bg-blue-500 rounded-full'></div>
-        )}
-      </div>
-      {hasChildren && task.isExpanded && (
-        <div className='ml-2'>
-          {task.children.map(child => (
-            <SortableTaskNode
-              key={child.id}
-              task={child}
-              depth={depth + 1}
-              onToggle={onToggle}
-              onSelect={onSelect}
-              selectedTaskId={selectedTaskId}
-              selectedTaskIds={selectedTaskIds}
-              hoveredTaskId={hoveredTaskId}
-              onMultiSelect={onMultiSelect}
-              onContextMenu={onContextMenu}
-              onDoubleClick={onDoubleClick}
-              onHover={onHover}
-              onHoverLeave={onHoverLeave}
+          {/* Status Indicator */}
+          <div className='flex-shrink-0 ml-2'>
+            <div
+              className={`w-2 h-2 rounded-full ${
+                task.status === 'Complete'
+                  ? 'bg-green-500'
+                  : task.status === 'In Progress'
+                    ? 'bg-blue-500'
+                    : task.status === 'Delayed'
+                      ? 'bg-red-500'
+                      : 'bg-gray-400'
+              }`}
             />
-          ))}
+          </div>
         </div>
-      )}
-    </div>
-  );
-};
+      ),
+      [
+        setNodeRef,
+        attributes,
+        listeners,
+        level,
+        isSelected,
+        isMultiSelected,
+        isHovered,
+        handleClick,
+        handleDoubleClick,
+        handleContextMenu,
+        handleMouseEnter,
+        handleMouseLeave,
+        handleToggle,
+        hasChildren,
+        isExpanded,
+        task,
+      ]
+    );
 
-// Drag Overlay component for visual feedback
-const DragOverlayComponent = ({ task, depth = 0 }) => {
-  const hasChildren = task.children && task.children.length > 0;
+    return nodeContent;
+  }
+);
 
-  return (
-    <div className='py-1 pl-[${1 + depth}rem] flex items-center gap-1 bg-blue-50 border border-blue-300 rounded shadow-lg'>
-      {/* Drag Handle */}
-      <div className='w-4 h-4 flex items-center justify-center text-gray-600'>
-        <Bars3Icon className='w-3 h-3' />
-      </div>
+TreeNode.displayName = 'TreeNode';
 
-      {/* Group Toggle Button */}
-      {task.isGroup && (
-        <div className='w-4 h-4 flex items-center justify-center'>
-          <ChevronDownIcon className='w-4 h-4 text-gray-600' />
-        </div>
-      )}
-
-      {/* Group Icon */}
-      {task.isGroup && <FolderIcon className='w-4 h-4 text-blue-500' />}
-
-      {/* Task Name */}
-      <span
-        className={`text-sm ${task.isGroup ? 'font-semibold' : ''} text-gray-800`}
-      >
-        {task.name}
-      </span>
-    </div>
-  );
-};
-
-// Bulk Actions Toolbar component
-const BulkActionsToolbar = ({ selectedCount, onBulkAction }) => {
-  if (selectedCount < 2) return null;
-
-  return (
-    <div className='fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white border border-gray-200 rounded-lg shadow-lg px-4 py-2 z-40'>
-      <div className='flex items-center gap-3'>
-        <span className='text-sm font-medium text-gray-700'>
-          {selectedCount} task{selectedCount !== 1 ? 's' : ''} selected
-        </span>
-
-        <div className='flex gap-2'>
-          <button
-            onClick={() => onBulkAction('delete')}
-            className='px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors'
-            title='Delete selected tasks'
-          >
-            🗑️ Delete
-          </button>
-
-          <button
-            onClick={() => onBulkAction('link')}
-            className='px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors'
-            title='Link selected tasks'
-          >
-            🔗 Link
-          </button>
-
-          <button
-            onClick={() => onBulkAction('milestone')}
-            className='px-3 py-1 text-xs bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition-colors'
-            title='Mark as milestones'
-          >
-            ✨ Milestones
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Main SidebarTree component with forwardRef for external control
+// Memoized tree component
 const SidebarTree = forwardRef((props, ref) => {
   const {
     getHierarchicalTasks,
@@ -392,7 +304,7 @@ const SidebarTree = forwardRef((props, ref) => {
     })
   );
 
-  const toggleNode = id => {
+  const toggleNode = useCallback(id => {
     setExpandedIds(prev => {
       const newSet = new Set(prev);
       if (newSet.has(id)) {
@@ -402,215 +314,203 @@ const SidebarTree = forwardRef((props, ref) => {
       }
       return newSet;
     });
-  };
-
-  const handleNodeSelect = id => {
-    setSelectedId(id);
-    selectTask(id);
-  };
-
-  const handleTaskToggle = taskId => {
-    toggleGroupCollapse(taskId);
-  };
-
-  const handleTaskSelect = taskId => {
-    selectTask(taskId);
-  };
-
-  // Multi-selection logic
-  const handleMultiSelect = (taskId, mode) => {
-    const filteredTasks = getVisibleTasks(viewState.taskFilter);
-    const taskIndex = filteredTasks.findIndex(t => t.id === taskId);
-
-    if (taskIndex === -1) return;
-
-    switch (mode) {
-      case 'single':
-        // Single selection - clear multi-selection
-        setSelectedTaskIds([taskId]);
-        setLastSelectedIndex(taskIndex);
-        selectTask(taskId);
-        break;
-
-      case 'toggle':
-        // Ctrl+Click - toggle selection
-        setSelectedTaskIds(prev => {
-          const isSelected = prev.includes(taskId);
-          if (isSelected) {
-            return prev.filter(id => id !== taskId);
-          } else {
-            return [...prev, taskId];
-          }
-        });
-        setLastSelectedIndex(taskIndex);
-        break;
-
-      case 'range':
-        // Shift+Click - select range
-        if (lastSelectedIndex === -1) {
-          // No previous selection, just select this one
-          setSelectedTaskIds([taskId]);
-          setLastSelectedIndex(taskIndex);
-        } else {
-          // Select range from last selected to current
-          const start = Math.min(lastSelectedIndex, taskIndex);
-          const end = Math.max(lastSelectedIndex, taskIndex);
-          const rangeIds = filteredTasks.slice(start, end + 1).map(t => t.id);
-          setSelectedTaskIds(rangeIds);
-        }
-        break;
-    }
-  };
-
-  // Clear selection when clicking empty space
-  const handleEmptySpaceClick = () => {
-    setSelectedTaskIds([]);
-    setLastSelectedIndex(-1);
-  };
-
-  // Handle escape key to clear selection
-  React.useEffect(() => {
-    const handleEscape = e => {
-      if (e.key === 'Escape') {
-        setSelectedTaskIds([]);
-        setLastSelectedIndex(-1);
-      }
-    };
-
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
   }, []);
 
-  // Handle context menu
-  const handleContextMenu = (e, task) => {
+  const handleNodeSelect = useCallback(
+    id => {
+      setSelectedId(id);
+      selectTask(id);
+    },
+    [selectTask]
+  );
+
+  const handleTaskToggle = useCallback(
+    taskId => {
+      toggleGroupCollapse(taskId);
+    },
+    [toggleGroupCollapse]
+  );
+
+  const handleTaskSelect = useCallback(
+    taskId => {
+      selectTask(taskId);
+    },
+    [selectTask]
+  );
+
+  // Multi-selection logic
+  const handleMultiSelect = useCallback(
+    (taskId, mode) => {
+      const allTasks = getVisibleTasks(viewState.taskFilter);
+      const currentIndex = allTasks.findIndex(task => task.id === taskId);
+
+      switch (mode) {
+        case 'single':
+          setSelectedTaskIds([taskId]);
+          setLastSelectedIndex(currentIndex);
+          break;
+
+        case 'toggle':
+          setSelectedTaskIds(prev => {
+            if (prev.includes(taskId)) {
+              return prev.filter(id => id !== taskId);
+            } else {
+              return [...prev, taskId];
+            }
+          });
+          setLastSelectedIndex(currentIndex);
+          break;
+
+        case 'range':
+          if (lastSelectedIndex === -1) {
+            setSelectedTaskIds([taskId]);
+            setLastSelectedIndex(currentIndex);
+          } else {
+            const start = Math.min(lastSelectedIndex, currentIndex);
+            const end = Math.max(lastSelectedIndex, currentIndex);
+            const rangeTasks = allTasks
+              .slice(start, end + 1)
+              .map(task => task.id);
+            setSelectedTaskIds(rangeTasks);
+          }
+          break;
+
+        default:
+          break;
+      }
+    },
+    [getVisibleTasks, viewState.taskFilter, lastSelectedIndex]
+  );
+
+  const handleContextMenu = useCallback((e, task) => {
     e.preventDefault();
     setContextMenu({
       isOpen: true,
       position: { x: e.clientX, y: e.clientY },
-      task: task,
+      task,
     });
-  };
+  }, []);
 
-  const closeContextMenu = () => {
+  const closeContextMenu = useCallback(() => {
     setContextMenu({
       isOpen: false,
       position: { x: 0, y: 0 },
       task: null,
     });
-  };
+  }, []);
 
-  const handleContextMenuAction = (action, task) => {
-    switch (action) {
-      case 'edit':
-        console.log('Edit task:', task?.name);
-        // Open task modal for editing
-        setTaskModal({
-          isOpen: true,
-          task: task,
-        });
-        break;
-      case 'delete':
-        if (task) {
-          console.log('Delete task:', task.name);
-          deleteTask(task.id);
-        }
-        break;
-      case 'link':
-        console.log('Link task:', task?.name);
-        // TODO: Activate linking mode
-        break;
-      case 'milestone':
-        if (task) {
-          console.log('Mark as milestone:', task.name);
-          updateTask(task.id, { isMilestone: true });
-        }
-        break;
-      case 'expandAll':
-        console.log('Expand all tasks');
-        // TODO: Implement expand all functionality
-        break;
-      case 'collapseAll':
-        console.log('Collapse all tasks');
-        // TODO: Implement collapse all functionality
-        break;
-      default:
-        console.log('Unknown action:', action);
-    }
-  };
+  const handleContextMenuAction = useCallback(
+    (action, task) => {
+      switch (action) {
+        case 'edit':
+          setTaskModal({
+            isOpen: true,
+            task,
+          });
+          break;
+        case 'delete':
+          if (task) {
+            deleteTask(task.id);
+          }
+          break;
+        case 'link':
+          // TODO: Activate linking mode
+          break;
+        case 'milestone':
+          if (task) {
+            updateTask(task.id, { isMilestone: true });
+          }
+          break;
+        case 'expandAll':
+          // TODO: Implement expand all functionality
+          break;
+        case 'collapseAll':
+          // TODO: Implement collapse all functionality
+          break;
+        default:
+          break;
+      }
+    },
+    [deleteTask, updateTask]
+  );
 
   // Handle double-click to open task modal
-  const handleTaskDoubleClick = task => {
-    console.log('Double-clicked task:', task.name);
+  const handleTaskDoubleClick = useCallback(task => {
     setTaskModal({
       isOpen: true,
-      task: task,
+      task,
     });
-  };
+  }, []);
 
   // Handle task modal close
-  const closeTaskModal = () => {
+  const closeTaskModal = useCallback(() => {
     setTaskModal({
       isOpen: false,
       task: null,
     });
-  };
+  }, []);
 
   // Handle task modal save
-  const handleTaskSave = updatedTask => {
-    console.log('Saving task from modal:', updatedTask);
-    updateTask(updatedTask.id, updatedTask);
-  };
+  const handleTaskSave = useCallback(
+    updatedTask => {
+      updateTask(updatedTask.id, updatedTask);
+    },
+    [updateTask]
+  );
 
   // Bulk actions
-  const handleBulkAction = action => {
-    console.log(
-      `Bulk action: ${action} on ${selectedTaskIds.length} tasks:`,
-      selectedTaskIds
-    );
+  const handleBulkAction = useCallback(
+    action => {
+      switch (action) {
+        case 'delete':
+          selectedTaskIds.forEach(taskId => {
+            deleteTask(taskId);
+          });
+          setSelectedTaskIds([]);
+          setLastSelectedIndex(-1);
+          break;
 
-    switch (action) {
-      case 'delete':
-        selectedTaskIds.forEach(taskId => {
-          deleteTask(taskId);
-        });
-        setSelectedTaskIds([]);
-        setLastSelectedIndex(-1);
-        break;
+        case 'link':
+          // TODO: Implement bulk linking
+          break;
 
-      case 'link':
-        // TODO: Implement bulk linking
-        console.log('Bulk linking not yet implemented');
-        break;
-
-      case 'milestone':
-        selectedTaskIds.forEach(taskId => {
-          updateTask(taskId, { isMilestone: true });
-        });
-        break;
-    }
-  };
+        case 'milestone':
+          selectedTaskIds.forEach(taskId => {
+            updateTask(taskId, { isMilestone: true });
+          });
+          break;
+      }
+    },
+    [selectedTaskIds, deleteTask, updateTask]
+  );
 
   // Handle drag start
-  const handleDragStart = event => {
-    const { active } = event;
-    const task = getHierarchicalTasks().find(t => t.id === active.id);
-    setActiveTask(task);
-  };
+  const handleDragStart = useCallback(
+    event => {
+      const { active } = event;
+      const task = getHierarchicalTasks().find(t => t.id === active.id);
+      setActiveTask(task);
+    },
+    [getHierarchicalTasks]
+  );
 
   // Handle drag end
-  const handleDragEnd = event => {
-    const { active, over } = event;
+  const handleDragEnd = useCallback(
+    event => {
+      const { active, over } = event;
 
-    setActiveTask(null);
+      setActiveTask(null);
 
-    if (active.id !== over.id) {
-      const sourceId = active.id;
-      const destinationId = over.id;
+      if (active.id !== over.id) {
+        const sourceId = active.id;
+        const destinationId = over.id;
 
-      // Reorder the task
-      reorderTasksById(sourceId, destinationId, 'after');
-    }
-  };
+        // Reorder the task
+        reorderTasksById(sourceId, destinationId, 'after');
+      }
+    },
+    [reorderTasksById]
+  );
 
   // Expose methods via forwardRef
   useImperativeHandle(ref, () => ({
@@ -632,132 +532,159 @@ const SidebarTree = forwardRef((props, ref) => {
     },
   }));
 
-  const hierarchicalTasks = getHierarchicalTasks();
-  const filteredTasks = getVisibleTasks(viewState.taskFilter);
-  const taskIds = filteredTasks.map(task => task.id);
+  // Memoize expensive computations
+  const hierarchicalTasks = useMemo(
+    () => getHierarchicalTasks(),
+    [getHierarchicalTasks]
+  );
+  const filteredTasks = useMemo(
+    () => getVisibleTasks(viewState.taskFilter),
+    [getVisibleTasks, viewState.taskFilter]
+  );
+  const taskIds = useMemo(
+    () => filteredTasks.map(task => task.id),
+    [filteredTasks]
+  );
 
-  return (
-    <div className='h-full flex flex-col bg-white'>
-      {/* Header */}
-      <div className='bg-gray-50 border-b px-4 py-3'>
-        <h3 className='text-sm font-semibold text-gray-700'>Programme Tree</h3>
-        <p className='text-xs text-gray-500 mt-1'>
-          Project structure and tasks
-        </p>
-      </div>
+  // Memoize the tree data
+  const treeData = useMemo(() => {
+    const buildTreeData = (tasks, level = 0) => {
+      return tasks.map(task => ({
+        ...task,
+        level,
+        children: task.children ? buildTreeData(task.children, level + 1) : [],
+      }));
+    };
 
-      {/* Content */}
-      <div className='flex-1 overflow-auto' onClick={handleEmptySpaceClick}>
-        {/* Programme Structure */}
-        <div className='p-2'>
-          <h4 className='text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide'>
-            Programme Structure
-          </h4>
-          {treeData.map(node => (
+    return buildTreeData(hierarchicalTasks);
+  }, [hierarchicalTasks]);
+
+  // Memoize the rendered tree nodes
+  const renderedNodes = useMemo(() => {
+    const renderNodes = (nodes, level = 0) => {
+      return nodes.map(node => {
+        const isExpanded = expandedIds.has(node.id);
+        const isSelected = selectedTaskId === node.id;
+        const isMultiSelected = selectedTaskIds.includes(node.id);
+        const isHovered = hoveredTaskId === node.id;
+
+        return (
+          <React.Fragment key={node.id}>
             <TreeNode
-              key={node.id}
-              node={node}
-              expandedIds={expandedIds}
+              task={node}
+              level={level}
+              isExpanded={isExpanded}
+              isSelected={isSelected}
+              isMultiSelected={isMultiSelected}
+              isHovered={isHovered}
               onToggle={toggleNode}
               onSelect={handleNodeSelect}
-              selectedId={selectedId}
+              onDoubleClick={handleTaskDoubleClick}
+              onHover={setHoveredTask}
+              onHoverLeave={clearHoveredTask}
+              onContextMenu={handleContextMenu}
+              onMultiSelect={handleMultiSelect}
             />
-          ))}
-        </div>
+            {isExpanded && node.children && node.children.length > 0 && (
+              <div className='ml-4'>
+                {renderNodes(node.children, level + 1)}
+              </div>
+            )}
+          </React.Fragment>
+        );
+      });
+    };
 
-        {/* Divider */}
-        <div className='border-t border-gray-200 mx-2 my-2'></div>
+    return renderNodes(treeData);
+  }, [
+    treeData,
+    expandedIds,
+    selectedTaskId,
+    selectedTaskIds,
+    hoveredTaskId,
+    toggleNode,
+    handleNodeSelect,
+    handleTaskDoubleClick,
+    setHoveredTask,
+    clearHoveredTask,
+    handleContextMenu,
+    handleMultiSelect,
+  ]);
 
-        {/* Tasks with Drag and Drop */}
-        <div className='p-2'>
-          <h4 className='text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide'>
-            Tasks
-          </h4>
-          {filteredTasks.length === 0 ? (
-            <div className='text-xs text-gray-500 py-2'>No tasks available</div>
-          ) : (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext
-                items={taskIds}
-                strategy={verticalListSortingStrategy}
-              >
-                {filteredTasks.map(task => (
-                  <SortableTaskNode
-                    key={task.id}
-                    task={task}
-                    onToggle={handleTaskToggle}
-                    onSelect={handleTaskSelect}
-                    selectedTaskId={selectedTaskId}
-                    selectedTaskIds={selectedTaskIds}
-                    hoveredTaskId={hoveredTaskId}
-                    onMultiSelect={handleMultiSelect}
-                    onContextMenu={handleContextMenu}
-                    onDoubleClick={handleTaskDoubleClick}
-                    onHover={setHoveredTask}
-                    onHoverLeave={clearHoveredTask}
-                  />
-                ))}
-              </SortableContext>
-
-              <DragOverlay
-                dropAnimation={{
-                  sideEffects: defaultDropAnimationSideEffects({
-                    styles: {
-                      active: {
-                        opacity: '0.5',
-                      },
-                    },
-                  }),
-                }}
-              >
-                {activeTask ? <DragOverlayComponent task={activeTask} /> : null}
-              </DragOverlay>
-            </DndContext>
-          )}
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div className='bg-gray-50 border-t px-4 py-2'>
-        <div className='text-xs text-gray-500'>
-          {filteredTasks.length} task{filteredTasks.length !== 1 ? 's' : ''} •
-          {selectedTaskIds.length > 0
-            ? ` ${selectedTaskIds.length} selected`
-            : selectedTaskId
-              ? ` Selected: ${filteredTasks.find(t => t.id === selectedTaskId)?.name || 'Unknown'}`
-              : ' No task selected'}{' '}
-          • 💡 Right-click for context menu • Double-click to edit • Ctrl+Click
-          for multi-select • Drag ☰ to reorder
-        </div>
-      </div>
+  return (
+    <div className='asta-tree h-full overflow-auto'>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
+          {renderedNodes}
+        </SortableContext>
+      </DndContext>
 
       {/* Context Menu */}
-      <ContextMenu
-        isOpen={contextMenu.isOpen}
-        position={contextMenu.position}
-        onClose={closeContextMenu}
-        onAction={handleContextMenuAction}
-        task={contextMenu.task}
-      />
+      {contextMenu.isOpen && (
+        <div
+          className='fixed z-50 bg-white border border-gray-300 rounded shadow-lg py-1'
+          style={{
+            left: contextMenu.position.x,
+            top: contextMenu.position.y,
+          }}
+        >
+          <button
+            className='block w-full px-4 py-2 text-left text-sm hover:bg-gray-100'
+            onClick={() => handleContextMenuAction('edit', contextMenu.task)}
+          >
+            Edit Task
+          </button>
+          <button
+            className='block w-full px-4 py-2 text-left text-sm hover:bg-gray-100'
+            onClick={() => handleContextMenuAction('delete', contextMenu.task)}
+          >
+            Delete Task
+          </button>
+          <button
+            className='block w-full px-4 py-2 text-left text-sm hover:bg-gray-100'
+            onClick={() => handleContextMenuAction('link', contextMenu.task)}
+          >
+            Link Task
+          </button>
+          <button
+            className='block w-full px-4 py-2 text-left text-sm hover:bg-gray-100'
+            onClick={() =>
+              handleContextMenuAction('milestone', contextMenu.task)
+            }
+          >
+            Mark as Milestone
+          </button>
+        </div>
+      )}
 
       {/* Task Modal */}
-      <TaskModal
-        task={taskModal.task}
-        isOpen={taskModal.isOpen}
-        onClose={closeTaskModal}
-        onSave={handleTaskSave}
-      />
-
-      {/* Bulk Actions Toolbar */}
-      <BulkActionsToolbar
-        selectedCount={selectedTaskIds.length}
-        onBulkAction={handleBulkAction}
-      />
+      {taskModal.isOpen && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+          <div className='bg-white rounded-lg p-6 max-w-md w-full mx-4'>
+            <h3 className='text-lg font-semibold mb-4'>Edit Task</h3>
+            {/* Task form would go here */}
+            <div className='flex justify-end gap-2'>
+              <button
+                className='px-4 py-2 text-gray-600 hover:bg-gray-100 rounded'
+                onClick={closeTaskModal}
+              >
+                Cancel
+              </button>
+              <button
+                className='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700'
+                onClick={() => handleTaskSave(taskModal.task)}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 });

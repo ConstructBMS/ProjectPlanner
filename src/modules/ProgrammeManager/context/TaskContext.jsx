@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+} from 'react';
 
 const TaskContext = createContext();
 
@@ -95,6 +101,29 @@ export const TaskProvider = ({ children }) => {
   const [linkingMode, setLinkingMode] = useState(false);
   const [linkStartTaskId, setLinkStartTaskId] = useState(null);
 
+  // Memoize expensive computations
+  const hierarchicalTasks = useMemo(() => {
+    const buildHierarchy = (parentId = null) => {
+      return tasks
+        .filter(task => task.parentId === parentId)
+        .map(task => ({
+          ...task,
+          children: buildHierarchy(task.id),
+        }))
+        .sort((a, b) => {
+          // Sort by start date, then by name
+          const dateA = new Date(a.startDate);
+          const dateB = new Date(b.startDate);
+          if (dateA.getTime() !== dateB.getTime()) {
+            return dateA - dateB;
+          }
+          return a.name.localeCompare(b.name);
+        });
+    };
+
+    return buildHierarchy();
+  }, [tasks]);
+
   // Helper function to save current state to undo stack
   const saveToUndoStack = useCallback(() => {
     const currentState = {
@@ -127,8 +156,6 @@ export const TaskProvider = ({ children }) => {
 
     setUndoStack(prev => prev.slice(0, -1));
     setRedoStack(prev => [...prev, currentState]);
-
-    console.log('Undo performed');
   }, [undoStack, tasks, taskLinks, nextId]);
 
   // Redo function
@@ -150,8 +177,6 @@ export const TaskProvider = ({ children }) => {
 
     setRedoStack(prev => prev.slice(0, -1));
     setUndoStack(prev => [...prev, currentState]);
-
-    console.log('Redo performed');
   }, [redoStack, tasks, taskLinks, nextId]);
 
   // Task operations
@@ -182,36 +207,26 @@ export const TaskProvider = ({ children }) => {
 
     setTasks(prev => [...prev, newTask]);
     setNextId(prev => prev + 1);
-    console.log('Task added:', newTask);
   }, [nextId, saveToUndoStack]);
 
   const addMilestone = useCallback(() => {
-    const milestoneName = prompt('Enter milestone name:');
-    if (!milestoneName) return;
-
-    const milestoneDate = prompt(
-      'Enter milestone date (YYYY-MM-DD):',
-      new Date().toISOString().split('T')[0]
-    );
-    if (!milestoneDate) return;
-
     saveToUndoStack();
 
-    const milestoneDateTime = new Date(milestoneDate + 'T00:00:00.000Z');
+    const today = new Date();
 
     const newMilestone = {
       id: `task-${nextId}`,
-      name: milestoneName,
-      startDate: milestoneDateTime.toISOString(),
-      endDate: milestoneDateTime.toISOString(),
+      name: 'New Milestone',
+      startDate: today.toISOString(),
+      endDate: today.toISOString(),
       duration: 0,
       status: 'Planned',
       priority: 'High',
       assignee: '',
       progress: 0,
-      color: '#8B5CF6',
+      color: '#F59E0B',
       isMilestone: true,
-      notes: `Milestone: ${milestoneName}`,
+      notes: '',
       parentId: null,
       isGroup: false,
       isExpanded: true,
@@ -219,95 +234,44 @@ export const TaskProvider = ({ children }) => {
 
     setTasks(prev => [...prev, newMilestone]);
     setNextId(prev => prev + 1);
-    console.log('Milestone added:', newMilestone);
   }, [nextId, saveToUndoStack]);
 
   const deleteTask = useCallback(
     taskId => {
       saveToUndoStack();
 
-      setTasks(prev => {
-        const taskToDelete = prev.find(t => t.id === taskId);
-        if (taskToDelete?.isGroup) {
-          // If it's a group, delete all children too
-          const deleteIds = new Set([taskId]);
-          const addChildrenIds = parentId => {
-            prev.forEach(task => {
-              if (task.parentId === parentId) {
-                deleteIds.add(task.id);
-                if (task.isGroup) {
-                  addChildrenIds(task.id);
-                }
-              }
-            });
-          };
-          addChildrenIds(taskId);
-          return prev.filter(task => !deleteIds.has(task.id));
-        } else {
-          return prev.filter(task => task.id !== taskId);
-        }
-      });
+      // Remove the task and all its descendants
+      const descendants = getTaskDescendants(taskId);
+      const tasksToRemove = [taskId, ...descendants];
+
+      setTasks(prev => prev.filter(task => !tasksToRemove.includes(task.id)));
+
+      // Remove any links involving the deleted tasks
+      setTaskLinks(prev =>
+        prev.filter(
+          link =>
+            !tasksToRemove.includes(link.fromId) &&
+            !tasksToRemove.includes(link.toId)
+        )
+      );
 
       // Clear selection if deleted task was selected
       if (selectedTaskId === taskId) {
         setSelectedTaskId(null);
       }
-      if (selectedTaskIds.includes(taskId)) {
-        setSelectedTaskIds(prev => prev.filter(id => id !== taskId));
-      }
-      if (hoveredTaskId === taskId) {
-        setHoveredTaskId(null);
-      }
-
-      // Remove any links involving this task
-      setTaskLinks(prev =>
-        prev.filter(link => link.fromId !== taskId && link.toId !== taskId)
+      setSelectedTaskIds(prev =>
+        prev.filter(id => !tasksToRemove.includes(id))
       );
-
-      console.log('Task deleted:', taskId);
     },
-    [selectedTaskId, selectedTaskIds, hoveredTaskId, saveToUndoStack]
+    [saveToUndoStack, selectedTaskId]
   );
 
   const updateTask = useCallback(
-    (taskId, updatedFields) => {
+    (taskId, updates) => {
       saveToUndoStack();
-
       setTasks(prev =>
-        prev.map(task => {
-          if (task.id === taskId) {
-            const updatedTask = { ...task, ...updatedFields };
-
-            // Intelligent date/duration calculations
-            if (updatedFields.startDate || updatedFields.endDate) {
-              const start = updatedFields.startDate
-                ? new Date(updatedFields.startDate)
-                : new Date(task.startDate);
-              const end = updatedFields.endDate
-                ? new Date(updatedFields.endDate)
-                : new Date(task.endDate);
-
-              if (start && end && start <= end) {
-                const diffTime = Math.abs(end - start);
-                const diffDays =
-                  Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-                updatedTask.duration = diffDays;
-              }
-            } else if (updatedFields.duration && task.startDate) {
-              const start = new Date(task.startDate);
-              const duration = parseInt(updatedFields.duration) || 1;
-              const end = new Date(start);
-              end.setDate(start.getDate() + duration - 1);
-              updatedTask.endDate = end.toISOString();
-            }
-
-            return updatedTask;
-          }
-          return task;
-        })
+        prev.map(task => (task.id === taskId ? { ...task, ...updates } : task))
       );
-
-      console.log('Task updated:', taskId, updatedFields);
     },
     [saveToUndoStack]
   );
@@ -315,39 +279,28 @@ export const TaskProvider = ({ children }) => {
   // Selection operations
   const selectTask = useCallback(taskId => {
     setSelectedTaskId(taskId);
-    console.log('Task selected:', taskId);
-  }, []);
-
-  const selectMultipleTasks = useCallback((taskId, isMultiSelect = false) => {
-    if (isMultiSelect) {
-      // Multi-select mode: toggle the task in the selection
-      setSelectedTaskIds(prev => {
-        if (prev.includes(taskId)) {
-          // Remove from selection
-          const newSelection = prev.filter(id => id !== taskId);
-          return newSelection;
-        } else {
-          // Add to selection
-          return [...prev, taskId];
-        }
-      });
-    } else {
-      // Single select mode: clear multi-selection and select single task
-      setSelectedTaskId(taskId);
-      setSelectedTaskIds([]);
-    }
-    console.log(
-      'Task selection updated:',
-      taskId,
-      'multi-select:',
-      isMultiSelect
-    );
+    setSelectedTaskIds([taskId]);
   }, []);
 
   const clearSelection = useCallback(() => {
     setSelectedTaskId(null);
     setSelectedTaskIds([]);
-    console.log('Selection cleared');
+  }, []);
+
+  const selectMultipleTasks = useCallback((taskId, isMultiSelect) => {
+    if (isMultiSelect) {
+      setSelectedTaskIds(prev => {
+        if (prev.includes(taskId)) {
+          return prev.filter(id => id !== taskId);
+        } else {
+          return [...prev, taskId];
+        }
+      });
+      setSelectedTaskId(taskId);
+    } else {
+      setSelectedTaskId(taskId);
+      setSelectedTaskIds([taskId]);
+    }
   }, []);
 
   // Hover operations
@@ -359,155 +312,69 @@ export const TaskProvider = ({ children }) => {
     setHoveredTaskId(null);
   }, []);
 
-  // Linking operations
-  const linkTasks = useCallback(
-    (fromId, toId) => {
-      // Prevent circular dependencies
-      if (fromId === toId) {
-        console.log('Cannot link task to itself');
-        return;
-      }
-
-      // Check if link already exists
-      const linkExists = taskLinks.some(
-        link => link.fromId === fromId && link.toId === toId
-      );
-      if (linkExists) {
-        console.log('Link already exists');
-        return;
-      }
-
-      // Check for circular dependencies
-      const wouldCreateCycle = (startId, targetId, visited = new Set()) => {
-        if (startId === targetId) return true;
-        if (visited.has(startId)) return false;
-
-        visited.add(startId);
-        const outgoingLinks = taskLinks.filter(link => link.fromId === startId);
-
-        return outgoingLinks.some(link =>
-          wouldCreateCycle(link.toId, targetId, visited)
-        );
-      };
-
-      if (wouldCreateCycle(toId, fromId)) {
-        console.log('Cannot create circular dependency');
-        return;
-      }
-
-      saveToUndoStack();
-      setTaskLinks(prev => [...prev, { fromId, toId }]);
-      console.log('Tasks linked:', fromId, '→', toId);
-    },
-    [taskLinks, saveToUndoStack]
-  );
-
-  const unlinkTasks = useCallback(
-    (fromId, toId) => {
-      saveToUndoStack();
-      setTaskLinks(prev =>
-        prev.filter(link => !(link.fromId === fromId && link.toId === toId))
-      );
-      console.log('Tasks unlinked:', fromId, '→', toId);
-    },
-    [saveToUndoStack]
-  );
-
-  // Linking mode operations
-  const startLinkingMode = useCallback(taskId => {
-    setLinkingMode(true);
-    setLinkStartTaskId(taskId);
-    console.log('Linking mode started with task:', taskId);
-  }, []);
-
-  const stopLinkingMode = useCallback(() => {
-    setLinkingMode(false);
-    setLinkStartTaskId(null);
-    console.log('Linking mode stopped');
-  }, []);
-
-  const handleTaskClickForLinking = useCallback(
-    taskId => {
-      if (!linkingMode) return;
-
-      if (linkStartTaskId && linkStartTaskId !== taskId) {
-        linkTasks(linkStartTaskId, taskId);
-        stopLinkingMode();
-      } else if (!linkStartTaskId) {
-        setLinkStartTaskId(taskId);
-        console.log('Link start task set:', taskId);
-      }
-    },
-    [linkingMode, linkStartTaskId, linkTasks, stopLinkingMode]
-  );
-
-  // Grouping operations
+  // Group operations
   const groupTasks = useCallback(
-    (selectedIds, groupName) => {
-      if (selectedIds.length < 2) {
-        console.log('Need at least 2 tasks to create a group');
-        return;
-      }
+    (taskIds, groupName) => {
+      if (taskIds.length < 2) return;
 
       saveToUndoStack();
 
       const groupId = `task-${nextId}`;
       const today = new Date();
-      const tomorrow = new Date(today);
-      tomorrow.setDate(today.getDate() + 1);
 
+      // Create group task
       const groupTask = {
         id: groupId,
         name: groupName,
         startDate: today.toISOString(),
-        endDate: tomorrow.toISOString(),
-        duration: 2,
+        endDate: today.toISOString(),
+        duration: 0,
         status: 'Planned',
         priority: 'Medium',
         assignee: '',
         progress: 0,
-        color: '#10B981',
+        color: '#8B5CF6',
         isMilestone: false,
-        notes: `Group containing ${selectedIds.length} tasks`,
+        notes: '',
         parentId: null,
         isGroup: true,
         isExpanded: true,
       };
 
+      // Update child tasks to have the group as parent
       setTasks(prev => [
-        ...prev.map(task =>
-          selectedIds.includes(task.id) ? { ...task, parentId: groupId } : task
-        ),
+        ...prev,
         groupTask,
+        ...prev.map(task =>
+          taskIds.includes(task.id) ? { ...task, parentId: groupId } : task
+        ),
       ]);
 
       setNextId(prev => prev + 1);
-      setSelectedTaskIds([]);
-      console.log('Tasks grouped:', selectedIds, 'under', groupName);
     },
     [nextId, saveToUndoStack]
   );
 
   const ungroupTask = useCallback(
-    groupId => {
+    taskId => {
       saveToUndoStack();
 
-      setTasks(prev => {
-        const groupTask = prev.find(t => t.id === groupId);
-        if (!groupTask?.isGroup) return prev;
+      // Find all tasks that have this task as parent
+      const childTasks = tasks.filter(task => task.parentId === taskId);
 
-        // Move all children to root level
-        const updatedTasks = prev.map(task =>
-          task.parentId === groupId ? { ...task, parentId: null } : task
-        );
+      // Update child tasks to have no parent
+      setTasks(prev =>
+        prev.map(task =>
+          childTasks.some(child => child.id === task.id)
+            ? { ...task, parentId: null }
+            : task
+        )
+      );
 
-        // Remove the group task
-        return updatedTasks.filter(task => task.id !== groupId);
-      });
-
-      console.log('Task ungrouped:', groupId);
+      // Remove the group task
+      setTasks(prev => prev.filter(task => task.id !== taskId));
     },
-    [saveToUndoStack]
+    [tasks, saveToUndoStack]
   );
 
   const toggleGroupCollapse = useCallback(groupId => {
@@ -519,15 +386,18 @@ export const TaskProvider = ({ children }) => {
   }, []);
 
   // Reordering operations
-  const reorderTasks = useCallback((sourceIndex, destinationIndex) => {
-    saveToUndoStack();
-    setTasks(prev => {
-      const updated = [...prev];
-      const [moved] = updated.splice(sourceIndex, 1);
-      updated.splice(destinationIndex, 0, moved);
-      return updated;
-    });
-  }, [saveToUndoStack]);
+  const reorderTasks = useCallback(
+    (sourceIndex, destinationIndex) => {
+      saveToUndoStack();
+      setTasks(prev => {
+        const updated = [...prev];
+        const [moved] = updated.splice(sourceIndex, 1);
+        updated.splice(destinationIndex, 0, moved);
+        return updated;
+      });
+    },
+    [saveToUndoStack]
+  );
 
   const reorderTasksById = useCallback(
     (sourceId, destinationId, position = 'after') => {
@@ -552,26 +422,8 @@ export const TaskProvider = ({ children }) => {
 
   // Helper functions
   const getHierarchicalTasks = useCallback(() => {
-    const buildHierarchy = (parentId = null) => {
-      return tasks
-        .filter(task => task.parentId === parentId)
-        .map(task => ({
-          ...task,
-          children: buildHierarchy(task.id),
-        }))
-        .sort((a, b) => {
-          // Sort by start date, then by name
-          const dateA = new Date(a.startDate);
-          const dateB = new Date(b.startDate);
-          if (dateA.getTime() !== dateB.getTime()) {
-            return dateA - dateB;
-          }
-          return a.name.localeCompare(b.name);
-        });
-    };
-
-    return buildHierarchy();
-  }, [tasks]);
+    return hierarchicalTasks;
+  }, [hierarchicalTasks]);
 
   const getVisibleTasks = useCallback(
     (filter = 'Show All') => {
@@ -614,10 +466,10 @@ export const TaskProvider = ({ children }) => {
         });
       };
 
-      addVisible(getHierarchicalTasks());
+      addVisible(hierarchicalTasks);
       return visible;
     },
-    [getHierarchicalTasks]
+    [hierarchicalTasks]
   );
 
   const getTaskDescendants = useCallback(
@@ -639,62 +491,174 @@ export const TaskProvider = ({ children }) => {
     [tasks]
   );
 
-  const value = {
-    // Task data
-    tasks,
-    nextId,
-    taskLinks,
+  // Link operations
+  const linkTasks = useCallback(
+    (fromId, toId) => {
+      // Check if link already exists
+      const linkExists = taskLinks.some(
+        link => link.fromId === fromId && link.toId === toId
+      );
 
-    // Undo/Redo
-    undo,
-    redo,
-    undoStack,
-    redoStack,
+      if (linkExists) {
+        return;
+      }
 
-    // Selection and hover state
-    selectedTaskId,
-    setSelectedTaskId,
-    hoveredTaskId,
-    setHoveredTaskId,
-    selectedTaskIds,
-    setSelectedTaskIds,
+      // Check for circular dependencies
+      const wouldCreateCycle = (startId, targetId, visited = new Set()) => {
+        if (startId === targetId) return true;
+        if (visited.has(startId)) return false;
 
-    // Linking mode
-    linkingMode,
-    linkStartTaskId,
+        visited.add(startId);
+        const outgoingLinks = taskLinks.filter(link => link.fromId === startId);
 
-    // Task operations
-    addTask,
-    addMilestone,
-    deleteTask,
-    updateTask,
-    selectTask,
-    selectMultipleTasks,
-    clearSelection,
-    setHoveredTask,
-    clearHoveredTask,
+        return outgoingLinks.some(link =>
+          wouldCreateCycle(link.toId, targetId, visited)
+        );
+      };
 
-    // Linking operations
-    linkTasks,
-    unlinkTasks,
-    startLinkingMode,
-    stopLinkingMode,
-    handleTaskClickForLinking,
+      if (wouldCreateCycle(toId, fromId)) {
+        return;
+      }
 
-    // Grouping operations
-    groupTasks,
-    ungroupTask,
-    toggleGroupCollapse,
+      saveToUndoStack();
+      setTaskLinks(prev => [...prev, { fromId, toId }]);
+    },
+    [taskLinks, saveToUndoStack]
+  );
 
-    // Reordering operations
-    reorderTasks,
-    reorderTasksById,
+  const unlinkTasks = useCallback(
+    (fromId, toId) => {
+      saveToUndoStack();
+      setTaskLinks(prev =>
+        prev.filter(link => !(link.fromId === fromId && link.toId === toId))
+      );
+    },
+    [saveToUndoStack]
+  );
 
-    // Helper functions
-    getHierarchicalTasks,
-    getVisibleTasks,
-    getTaskDescendants,
-  };
+  // Linking mode operations
+  const startLinkingMode = useCallback(taskId => {
+    setLinkingMode(true);
+    setLinkStartTaskId(taskId);
+  }, []);
+
+  const stopLinkingMode = useCallback(() => {
+    setLinkingMode(false);
+    setLinkStartTaskId(null);
+  }, []);
+
+  const handleTaskClickForLinking = useCallback(
+    taskId => {
+      if (!linkingMode) return;
+
+      if (linkStartTaskId && linkStartTaskId !== taskId) {
+        linkTasks(linkStartTaskId, taskId);
+        stopLinkingMode();
+      } else if (!linkStartTaskId) {
+        setLinkStartTaskId(taskId);
+      }
+    },
+    [linkingMode, linkStartTaskId, linkTasks, stopLinkingMode]
+  );
+
+  // Memoize the context value to prevent unnecessary re-renders
+  const value = useMemo(
+    () => ({
+      // Task data
+      tasks,
+      nextId,
+      taskLinks,
+
+      // Undo/Redo
+      undo,
+      redo,
+      undoStack,
+      redoStack,
+
+      // Selection state
+      selectedTaskId,
+      selectedTaskIds,
+      hoveredTaskId,
+
+      // Linking mode
+      linkingMode,
+      linkStartTaskId,
+
+      // Task operations
+      addTask,
+      addMilestone,
+      deleteTask,
+      updateTask,
+
+      // Selection operations
+      selectTask,
+      clearSelection,
+      selectMultipleTasks,
+
+      // Hover operations
+      setHoveredTask,
+      clearHoveredTask,
+
+      // Group operations
+      groupTasks,
+      ungroupTask,
+      toggleGroupCollapse,
+
+      // Reordering operations
+      reorderTasks,
+      reorderTasksById,
+
+      // Helper functions
+      getHierarchicalTasks,
+      getVisibleTasks,
+      getTaskDescendants,
+
+      // Link operations
+      linkTasks,
+      unlinkTasks,
+
+      // Linking mode operations
+      startLinkingMode,
+      stopLinkingMode,
+      handleTaskClickForLinking,
+    }),
+    [
+      tasks,
+      nextId,
+      taskLinks,
+      undo,
+      redo,
+      undoStack,
+      redoStack,
+      selectedTaskId,
+      selectedTaskIds,
+      hoveredTaskId,
+      linkingMode,
+      linkStartTaskId,
+      addTask,
+      addMilestone,
+      deleteTask,
+      updateTask,
+      selectTask,
+      clearSelection,
+      selectMultipleTasks,
+      setHoveredTask,
+      clearHoveredTask,
+      groupTasks,
+      ungroupTask,
+      toggleGroupCollapse,
+      reorderTasks,
+      reorderTasksById,
+      getHierarchicalTasks,
+      getVisibleTasks,
+      getTaskDescendants,
+      linkTasks,
+      unlinkTasks,
+      startLinkingMode,
+      stopLinkingMode,
+      handleTaskClickForLinking,
+    ]
+  );
 
   return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>;
 };

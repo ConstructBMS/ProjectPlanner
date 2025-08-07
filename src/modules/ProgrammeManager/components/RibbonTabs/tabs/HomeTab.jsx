@@ -68,7 +68,7 @@ export default function HomeTab() {
   };
 
   return (
-    <div className='flex flex-nowrap gap-0 p-2 bg-white w-full min-w-0'>
+    <div className='flex flex-nowrap gap-0 p-0.5 w-full min-w-0'>
       {/* Clipboard Group */}
       <RibbonGroup title='Clipboard'>
         <RibbonButton

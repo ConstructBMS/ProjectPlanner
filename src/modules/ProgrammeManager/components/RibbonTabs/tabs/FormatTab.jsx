@@ -1,832 +1,257 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import RibbonButton from '../shared/RibbonButton';
 import RibbonGroup from '../shared/RibbonGroup';
-import { useViewContext } from '../../../context/ViewContext';
+import RibbonDropdown from '../shared/RibbonDropdown';
 import {
   PaintBrushIcon,
-  SwatchIcon,
+  CalendarIcon,
   ViewColumnsIcon,
   AdjustmentsHorizontalIcon,
+  TableCellsIcon,
+  Square3Stack3DIcon,
+  DocumentTextIcon,
+  PhotoIcon,
+  SwatchIcon,
+  EyeIcon,
+  EyeSlashIcon,
+  FlagIcon,
+  UserIcon,
+  UserPlusIcon,
+  CalendarDaysIcon,
+  ChartBarIcon,
+  ChartBarSquareIcon,
+  TableCellsIcon as TableIcon,
+  QuestionMarkCircleIcon,
+  DocumentIcon,
+  ChevronDownIcon,
 } from '@heroicons/react/24/outline';
 
-const ToggleButton = ({ label, active, onClick, title }) => (
-  <button
-    onClick={onClick}
-    title={title}
-    className={`w-[32px] h-[32px] border rounded text-xs flex items-center justify-center transition-colors duration-150 ${
-      active
-        ? 'bg-blue-500 text-white border-blue-500'
-        : 'bg-gray-100 hover:bg-blue-100 border-gray-300'
-    }`}
-  >
-    {label}
-  </button>
-);
-
-const Dropdown = ({ options, value, onChange, title }) => (
-  <select
-    value={value}
-    onChange={e => onChange(e.target.value)}
-    title={title}
-    className='h-[32px] text-xs px-2 border border-gray-300 rounded bg-white hover:border-blue-300 focus:border-blue-500 focus:outline-none transition-colors duration-150'
-  >
-    {options.map(opt => (
-      <option key={opt} value={opt}>
-        {opt}
-      </option>
-    ))}
-  </select>
-);
-
-const FontControlsGroup = () => {
-  const [bold, setBold] = useState(false);
-  const [italic, setItalic] = useState(false);
-  const [underline, setUnderline] = useState(false);
-  const [fontSize, setFontSize] = useState('12');
-  const [fontFamily, setFontFamily] = useState('Arial');
+export default function FormatTab() {
+  const [selectedBaseline, setSelectedBaseline] = useState('(None)');
+  const [selectedCodeLibrary, setSelectedCodeLibrary] =
+    useState('Code library');
 
   return (
-    <div className='flex flex-col gap-1'>
-      <div className='flex gap-1'>
-        <ToggleButton
-          label='B'
-          active={bold}
-          onClick={() => {
-            setBold(!bold);
-            console.log(`Bold: ${!bold}`);
-          }}
-          title='Toggle Bold'
+    <div className='flex flex-nowrap gap-0 p-0.5 w-full min-w-0'>
+      {/* Format Group */}
+      <RibbonGroup title='Format'>
+        <RibbonButton
+          icon={<PaintBrushIcon className='w-4 h-4' />}
+          label='Format Bar Chart'
+          onClick={() => console.log('Format Bar Chart')}
+          tooltip='Format the bar chart appearance'
         />
-        <ToggleButton
-          label='I'
-          active={italic}
-          onClick={() => {
-            setItalic(!italic);
-            console.log(`Italic: ${!italic}`);
-          }}
-          title='Toggle Italic'
+        <RibbonButton
+          icon={<CalendarIcon className='w-4 h-4' />}
+          label='Date Zone'
+          onClick={() => console.log('Date Zone')}
+          tooltip='Configure date zones'
         />
-        <ToggleButton
-          label='U'
-          active={underline}
-          onClick={() => {
-            setUnderline(!underline);
-            console.log(`Underline: ${!underline}`);
-          }}
-          title='Toggle Underline'
+        <RibbonButton
+          icon={<ViewColumnsIcon className='w-4 h-4' />}
+          label='Grids'
+          onClick={() => console.log('Grids')}
+          tooltip='Configure grid settings'
         />
-      </div>
-
-      <div className='flex gap-1'>
-        <Dropdown
-          options={['8', '10', '12', '14', '16', '18', '20']}
-          value={fontSize}
-          onChange={val => {
-            setFontSize(val);
-            console.log(`Font Size: ${val}`);
-          }}
-          title='Font Size'
+        <RibbonButton
+          icon={<AdjustmentsHorizontalIcon className='w-4 h-4' />}
+          label='Ruling Lines'
+          onClick={() => console.log('Ruling Lines')}
+          tooltip='Configure ruling lines'
         />
-        <Dropdown
-          options={['Arial', 'Roboto', 'Times New Roman', 'Verdana', 'Courier']}
-          value={fontFamily}
-          onChange={val => {
-            setFontFamily(val);
-            console.log(`Font Family: ${val}`);
-          }}
-          title='Font Family'
+        <RibbonButton
+          icon={<TableCellsIcon className='w-4 h-4' />}
+          label='Shading'
+          onClick={() => console.log('Shading')}
+          tooltip='Configure shading options'
         />
-      </div>
-    </div>
-  );
-};
+        <RibbonButton
+          icon={<Square3Stack3DIcon className='w-4 h-4' />}
+          label='Hierarchy Appearance'
+          onClick={() => console.log('Hierarchy Appearance')}
+          tooltip='Configure hierarchy appearance'
+        />
+      </RibbonGroup>
 
-const LabelOrientationGroup = () => {
-  const handleClick = label => {
-    console.log(`Label Orientation Action: ${label}`);
-  };
-
-  return (
-    <div className='flex flex-col gap-1'>
-      {/* Justification Row */}
-      <div className='flex gap-1'>
-        <button
-          title='Align Left'
-          className='w-[32px] h-[32px] bg-gray-100 hover:bg-blue-100 border border-gray-300 rounded flex items-center justify-center transition-colors duration-150'
-          onClick={() => handleClick('Align Left')}
-        >
-          <span className='text-md'>⬅️</span>
-        </button>
-        <button
-          title='Center Align'
-          className='w-[32px] h-[32px] bg-gray-100 hover:bg-blue-100 border border-gray-300 rounded flex items-center justify-center transition-colors duration-150'
-          onClick={() => handleClick('Center')}
-        >
-          <span className='text-md'>↔️</span>
-        </button>
-        <button
-          title='Align Right'
-          className='w-[32px] h-[32px] bg-gray-100 hover:bg-blue-100 border border-gray-300 rounded flex items-center justify-center transition-colors duration-150'
-          onClick={() => handleClick('Align Right')}
-        >
-          <span className='text-md'>➡️</span>
-        </button>
-      </div>
-      {/* Rotation Row */}
-      <div className='flex gap-1'>
-        <button
-          title='Rotate Up'
-          className='w-[32px] h-[32px] bg-gray-100 hover:bg-blue-100 border border-gray-300 rounded flex items-center justify-center transition-colors duration-150'
-          onClick={() => handleClick('Rotate Up')}
-        >
-          <span className='text-md'>🔼</span>
-        </button>
-        <button
-          title='Rotate Down'
-          className='w-[32px] h-[32px] bg-gray-100 hover:bg-blue-100 border border-gray-300 rounded flex items-center justify-center transition-colors duration-150'
-          onClick={() => handleClick('Rotate Down')}
-        >
-          <span className='text-md'>🔽</span>
-        </button>
-      </div>
-    </div>
-  );
-};
-
-const BarFillGroup = () => {
-  const handleClick = label => {
-    console.log(`Bar Fill Action: ${label}`);
-  };
-
-  return (
-    <div className='flex gap-1'>
-      <button
-        title='Solid Fill'
-        className='w-[32px] h-[32px] bg-gray-100 hover:bg-blue-100 border border-gray-300 rounded flex items-center justify-center transition-colors duration-150'
-        onClick={() => handleClick('Solid Fill')}
-      >
-        <span className='text-md'>█</span>
-      </button>
-      <button
-        title='Diagonal Hatch'
-        className='w-[32px] h-[32px] bg-gray-100 hover:bg-blue-100 border border-gray-300 rounded flex items-center justify-center transition-colors duration-150'
-        onClick={() => handleClick('Diagonal Hatch')}
-      >
-        <span className='text-md'>▒</span>
-      </button>
-      <button
-        title='Vertical Hatch'
-        className='w-[32px] h-[32px] bg-gray-100 hover:bg-blue-100 border border-gray-300 rounded flex items-center justify-center transition-colors duration-150'
-        onClick={() => handleClick('Vertical Hatch')}
-      >
-        <span className='text-md'>░</span>
-      </button>
-      <button
-        title='Pattern Preview'
-        className='w-[32px] h-[32px] bg-gray-100 hover:bg-blue-100 border border-gray-300 rounded flex items-center justify-center transition-colors duration-150'
-        onClick={() => handleClick('Pattern Preview')}
-      >
-        <span className='text-md'>▓</span>
-      </button>
-    </div>
-  );
-};
-
-const BarCornerStyleGroup = () => {
-  const handleClick = style => {
-    console.log(`Corner Style Selected: ${style}`);
-  };
-
-  return (
-    <div className='flex gap-1'>
-      <button
-        title='Square Corners'
-        className='w-[32px] h-[32px] bg-gray-100 hover:bg-blue-100 border border-gray-300 rounded flex items-center justify-center transition-colors duration-150'
-        onClick={() => handleClick('Square')}
-      >
-        <span className='text-md'>◼️</span>
-      </button>
-      <button
-        title='Rounded Corners'
-        className='w-[32px] h-[32px] bg-gray-100 hover:bg-blue-100 border border-gray-300 rounded flex items-center justify-center transition-colors duration-150'
-        onClick={() => handleClick('Rounded')}
-      >
-        <span className='text-md'>◒</span>
-      </button>
-      <button
-        title='Fully Rounded Corners'
-        className='w-[32px] h-[32px] bg-gray-100 hover:bg-blue-100 border border-gray-300 rounded flex items-center justify-center transition-colors duration-150'
-        onClick={() => handleClick('Full Round')}
-      >
-        <span className='text-md'>◯</span>
-      </button>
-    </div>
-  );
-};
-
-const BarHeightGroup = () => {
-  const setBarHeight = size => {
-    console.log(`Set Gantt Bar Height: ${size}`);
-  };
-
-  const Button = ({ label, size }) => (
-    <button
-      title={`${label} Bar Height`}
-      className='px-2 py-1 bg-gray-100 hover:bg-blue-100 border border-gray-300 rounded text-xs transition-colors duration-150'
-      onClick={() => setBarHeight(size)}
-    >
-      {label}
-    </button>
-  );
-
-  return (
-    <div className='flex gap-1'>
-      <Button label='S' size='small' />
-      <Button label='M' size='medium' />
-      <Button label='L' size='large' />
-    </div>
-  );
-};
-
-const RowHeightGroup = () => {
-  const setRowHeight = value => {
-    console.log(`Set Row Height: ${value}`);
-  };
-
-  const Button = ({ icon, label, height }) => (
-    <button
-      title={label}
-      className='w-[32px] h-[32px] bg-gray-100 hover:bg-blue-100 border border-gray-300 rounded flex items-center justify-center text-md transition-colors duration-150'
-      onClick={() => setRowHeight(height)}
-    >
-      {icon}
-    </button>
-  );
-
-  return (
-    <div className='flex gap-1'>
-      <Button icon='🔽' label='Decrease Row Height' height='smaller' />
-      <Button icon='🔼' label='Increase Row Height' height='larger' />
-    </div>
-  );
-};
-
-const FontSizeGroup = () => {
-  const setFontSize = size => {
-    console.log(`Set Font Size: ${size}`);
-  };
-
-  const Button = ({ size }) => (
-    <button
-      title={`${size} Font`}
-      className='px-2 py-1 bg-gray-100 hover:bg-blue-100 border border-gray-300 rounded text-xs transition-colors duration-150'
-      onClick={() => setFontSize(size)}
-    >
-      {size.charAt(0).toUpperCase()}
-    </button>
-  );
-
-  return (
-    <div className='flex gap-1'>
-      <Button size='small' />
-      <Button size='medium' />
-      <Button size='large' />
-    </div>
-  );
-};
-
-const BarLabelDisplayGroup = () => {
-  const setLabel = label => {
-    console.log(`Set Gantt Bar Label: ${label}`);
-  };
-
-  return (
-    <div className='flex gap-1'>
-      <button
-        title='Task Name'
-        className='text-xs px-2 py-1 bg-gray-100 hover:bg-blue-100 border border-gray-300 rounded transition-colors duration-150'
-        onClick={() => setLabel('Task Name')}
-      >
-        📝
-      </button>
-      <button
-        title='Duration'
-        className='text-xs px-2 py-1 bg-gray-100 hover:bg-blue-100 border border-gray-300 rounded transition-colors duration-150'
-        onClick={() => setLabel('Duration')}
-      >
-        ⏱️
-      </button>
-      <button
-        title='None'
-        className='text-xs px-2 py-1 bg-gray-100 hover:bg-blue-100 border border-gray-300 rounded transition-colors duration-150'
-        onClick={() => setLabel('None')}
-      >
-        🚫
-      </button>
-    </div>
-  );
-};
-
-const MilestoneStyleGroup = () => {
-  const setStyle = style => {
-    console.log(`Set Milestone Style: ${style}`);
-  };
-
-  const Button = ({ icon, style }) => (
-    <button
-      title={style}
-      className='w-[32px] h-[32px] bg-gray-100 hover:bg-blue-100 border border-gray-300 rounded flex items-center justify-center text-md transition-colors duration-150'
-      onClick={() => setStyle(style)}
-    >
-      {icon}
-    </button>
-  );
-
-  return (
-    <div className='flex gap-1'>
-      <Button icon='♦️' style='Diamond' />
-      <Button icon='•' style='Dot' />
-      <Button icon='⭐' style='Star' />
-    </div>
-  );
-};
-
-const BarStyleDropdown = () => {
-  const [open, setOpen] = useState(false);
-  const dropdownRef = useRef();
-
-  // Close dropdown if clicked outside
-  useEffect(() => {
-    const handleClickOutside = event => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  return (
-    <div className='relative' ref={dropdownRef}>
-      <button
-        onClick={() => setOpen(!open)}
-        className='w-[48px] h-[36px] bg-transparent border border-transparent rounded flex flex-col items-center justify-center hover:bg-blue-50 hover:border-blue-200 transition-all duration-200'
-        title='Bar Style Options'
-      >
-        <div className='text-[12px] text-gray-700 flex items-center justify-center w-full h-[14px] pt-0.5'>
-          🎨
-        </div>
-        <div className='text-[7px] uppercase tracking-wide text-gray-600 font-medium mt-1.5 leading-tight text-center'>
-          Bar Style
-        </div>
-      </button>
-
-      {open && (
-        <div className='absolute top-full left-0 mt-1 z-10 w-[160px] bg-white shadow-lg rounded-md border border-gray-300 text-sm'>
-          <div
-            className='px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors duration-150'
-            onClick={() => {
-              console.log('Change Bar Height');
-              setOpen(false);
+      {/* Dropdowns Group */}
+      <RibbonGroup title=''>
+        <div className='flex flex-col gap-1'>
+          <RibbonDropdown
+            icon={<ChevronDownIcon className='w-4 h-4' />}
+            label={selectedBaseline}
+            options={[
+              { value: '(None)', label: '(None)' },
+              { value: 'baseline1', label: 'Baseline 1' },
+              { value: 'baseline2', label: 'Baseline 2' },
+            ]}
+            onSelect={option => {
+              setSelectedBaseline(option.label);
+              console.log('Baseline:', option.value);
             }}
-          >
-            Bar Height
-          </div>
-          <div
-            className='px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors duration-150'
-            onClick={() => {
-              console.log('Change Bar Color');
-              setOpen(false);
+            tooltip='Select baseline'
+          />
+          <RibbonDropdown
+            icon={<DocumentIcon className='w-4 h-4' />}
+            label={selectedCodeLibrary}
+            options={[
+              { value: 'codelib1', label: 'Code Library 1' },
+              { value: 'codelib2', label: 'Code Library 2' },
+            ]}
+            onSelect={option => {
+              setSelectedCodeLibrary(option.label);
+              console.log('Code Library:', option.value);
             }}
-          >
-            Bar Color
-          </div>
-          <div
-            className='px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors duration-150'
-            onClick={() => {
-              console.log('Change Bar Pattern');
-              setOpen(false);
-            }}
-          >
-            Bar Pattern
-          </div>
+            tooltip='Select code library'
+          />
+          <RibbonDropdown
+            icon={<ChartBarIcon className='w-4 h-4' />}
+            label='Baselines'
+            options={[
+              { value: 'baseline1', label: 'Baseline 1' },
+              { value: 'baseline2', label: 'Baseline 2' },
+            ]}
+            onSelect={option => console.log('Baselines:', option.value)}
+            tooltip='Select baselines'
+          />
         </div>
-      )}
-    </div>
-  );
-};
+      </RibbonGroup>
 
-const BarColorSetDropdown = () => {
-  const [open, setOpen] = useState(false);
-  const dropdownRef = useRef();
+      {/* Show/Hide Group */}
+      <RibbonGroup title='Show/Hide'>
+        <RibbonButton
+          icon={<EyeIcon className='w-4 h-4' />}
+          label=''
+          onClick={() => console.log('Show/Hide 1')}
+          tooltip='Show/Hide option 1'
+        />
+        <RibbonButton
+          icon={<EyeSlashIcon className='w-4 h-4' />}
+          label=''
+          onClick={() => console.log('Show/Hide 2')}
+          tooltip='Show/Hide option 2'
+        />
+        <RibbonButton
+          icon={<FlagIcon className='w-4 h-4' />}
+          label=''
+          onClick={() => console.log('Show/Hide 3')}
+          tooltip='Show/Hide option 3'
+        />
+        <RibbonButton
+          icon={<DocumentTextIcon className='w-4 h-4' />}
+          label=''
+          onClick={() => console.log('Show/Hide 4')}
+          tooltip='Show/Hide option 4'
+        />
+        <RibbonButton
+          icon={<ChartBarIcon className='w-4 h-4' />}
+          label=''
+          onClick={() => console.log('Show/Hide 5')}
+          tooltip='Show/Hide option 5'
+        />
+        <RibbonButton
+          icon={<ChartBarSquareIcon className='w-4 h-4' />}
+          label=''
+          onClick={() => console.log('Show/Hide 6')}
+          tooltip='Show/Hide option 6'
+        />
+        <RibbonButton
+          icon={<TableIcon className='w-4 h-4' />}
+          label=''
+          onClick={() => console.log('Show/Hide 7')}
+          tooltip='Show/Hide option 7'
+        />
+        <RibbonButton
+          icon={<CalendarDaysIcon className='w-4 h-4' />}
+          label=''
+          onClick={() => console.log('Show/Hide 8')}
+          tooltip='Show/Hide option 8'
+        />
+        <RibbonButton
+          icon={<UserIcon className='w-4 h-4' />}
+          label=''
+          onClick={() => console.log('Show/Hide 9')}
+          tooltip='Show/Hide option 9'
+        />
+        <RibbonButton
+          icon={<UserPlusIcon className='w-4 h-4' />}
+          label=''
+          onClick={() => console.log('Show/Hide 10')}
+          tooltip='Show/Hide option 10'
+        />
+        <RibbonButton
+          icon={<QuestionMarkCircleIcon className='w-4 h-4' />}
+          label=''
+          onClick={() => console.log('Show/Hide 11')}
+          tooltip='Show/Hide option 11'
+        />
+        <RibbonButton
+          icon={<DocumentIcon className='w-4 h-4' />}
+          label=''
+          onClick={() => console.log('Show/Hide 12')}
+          tooltip='Show/Hide option 12'
+        />
+      </RibbonGroup>
 
-  useEffect(() => {
-    const handleClickOutside = event => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleSelect = theme => {
-    console.log(`Bar Color Set: ${theme}`);
-    setOpen(false);
-  };
-
-  return (
-    <div className='relative' ref={dropdownRef}>
-      <button
-        onClick={() => setOpen(!open)}
-        className='w-[48px] h-[36px] bg-transparent border border-transparent rounded flex flex-col items-center justify-center hover:bg-blue-50 hover:border-blue-200 transition-all duration-200'
-        title='Apply bar color theme'
-      >
-        <div className='text-[12px] text-gray-700 flex items-center justify-center w-full h-[14px] pt-0.5'>
-          🎨
-        </div>
-        <div className='text-[7px] uppercase tracking-wide text-gray-600 font-medium mt-1.5 leading-tight text-center'>
-          Color Set
-        </div>
-      </button>
-
-      {open && (
-        <div className='absolute top-full left-0 mt-1 z-10 w-[180px] bg-white shadow-lg rounded-md border border-gray-300 text-sm'>
-          <div
-            className='px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors duration-150'
-            onClick={() => handleSelect('Default Theme')}
+      {/* Spreadsheet Group */}
+      <RibbonGroup title='Spreadsheet'>
+        <RibbonButton
+          icon={<DocumentTextIcon className='w-4 h-4' />}
+          label='Default Table Fonts'
+          onClick={() => console.log('Default Table Fonts')}
+          tooltip='Set default table fonts'
+        />
+        <RibbonButton
+          icon={<SwatchIcon className='w-4 h-4' />}
+          label='Remove All Cell Formatting'
+          onClick={() => console.log('Remove All Cell Formatting')}
+          tooltip='Remove all cell formatting'
+        />
+        <div className='flex flex-col gap-1 mt-1'>
+          <button
+            className='px-2 py-1 text-xs bg-gray-100 hover:bg-blue-100 border border-gray-300 rounded transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed'
+            disabled
+            title='Left Justify'
           >
-            <div className='flex items-center gap-2'>
-              <div className='w-4 h-4 bg-gray-500 rounded' />
-              Default Theme
-            </div>
-          </div>
-          <div
-            className='px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors duration-150'
-            onClick={() => handleSelect('Critical Path Red')}
+            Left Justify
+          </button>
+          <button
+            className='px-2 py-1 text-xs bg-gray-100 hover:bg-blue-100 border border-gray-300 rounded transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed'
+            disabled
+            title='Centre Justify'
           >
-            <div className='flex items-center gap-2'>
-              <div className='w-4 h-4 bg-red-600 rounded' />
-              Critical Path Red
-            </div>
-          </div>
-          <div
-            className='px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors duration-150'
-            onClick={() => handleSelect('Progress Gradient')}
+            Centre Justify
+          </button>
+          <button
+            className='px-2 py-1 text-xs bg-gray-100 hover:bg-blue-100 border border-gray-300 rounded transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed'
+            disabled
+            title='Right Justify'
           >
-            <div className='flex items-center gap-2'>
-              <div className='w-4 h-4 bg-gradient-to-r from-blue-500 to-green-500 rounded' />
-              Progress Gradient
-            </div>
-          </div>
-          <div
-            className='px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors duration-150'
-            onClick={() => handleSelect('Custom Palette')}
-          >
-            <div className='flex items-center gap-2'>
-              <div className='w-4 h-4 bg-yellow-400 rounded' />
-              Custom Palette
-            </div>
-          </div>
+            Right Justify
+          </button>
         </div>
-      )}
-    </div>
-  );
-};
-
-const BaselineToggle = () => {
-  const { viewState, updateViewState } = useViewContext();
-
-  const handleToggleBaseline = () => {
-    const newShowBaseline = !viewState.showBaseline;
-    updateViewState({ showBaseline: newShowBaseline });
-    console.log('Baseline overlay:', newShowBaseline ? 'ON' : 'OFF');
-  };
-
-  return (
-    <RibbonButton
-      icon={<span className='text-lg'>📏</span>}
-      label='Show Baseline'
-      onClick={handleToggleBaseline}
-      tooltip='Toggle display of baseline bars'
-      active={viewState.showBaseline}
-    />
-  );
-};
-
-const DateMarkersGroup = () => {
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [selectedDate, setSelectedDate] = useState('');
-  const { viewState, updateViewState } = useViewContext();
-  const datePickerRef = useRef();
-
-  useEffect(() => {
-    const handleClickOutside = event => {
-      if (
-        datePickerRef.current &&
-        !datePickerRef.current.contains(event.target)
-      ) {
-        setShowDatePicker(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleAddMarker = () => {
-    setShowDatePicker(true);
-  };
-
-  const handleDateConfirm = () => {
-    if (selectedDate) {
-      const newMarker = {
-        id: Date.now(),
-        date: selectedDate,
-        label: `Marker: ${selectedDate}`,
-      };
-
-      const currentMarkers = viewState.dateMarkers || [];
-      const updatedMarkers = [...currentMarkers, newMarker];
-
-      updateViewState({ dateMarkers: updatedMarkers });
-
-      // Save to localStorage
-      localStorage.setItem('dateMarkers', JSON.stringify(updatedMarkers));
-
-      console.log('Marker added:', selectedDate);
-      setSelectedDate('');
-      setShowDatePicker(false);
-    }
-  };
-
-  const handleDateChange = e => {
-    setSelectedDate(e.target.value);
-  };
-
-  return (
-    <div className='relative' ref={datePickerRef}>
-      <RibbonButton
-        icon={<span className='text-lg'>📍</span>}
-        label='Add Marker'
-        onClick={handleAddMarker}
-        tooltip='Place a vertical marker on the timeline'
-      />
-
-      {showDatePicker && (
-        <div className='absolute top-full left-0 mt-1 z-10 bg-white shadow-md rounded border border-gray-200 p-3'>
-          <div className='flex flex-col gap-2'>
-            <label className='text-xs font-medium text-gray-700'>
-              Select Date:
-            </label>
-            <input
-              type='date'
-              value={selectedDate}
-              onChange={handleDateChange}
-              className='text-xs px-2 py-1 border border-gray-300 rounded focus:border-blue-500 focus:outline-none'
-            />
-            <div className='flex gap-1 mt-2'>
-              <button
-                onClick={handleDateConfirm}
-                disabled={!selectedDate}
-                className='px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed'
-              >
-                Add
-              </button>
-              <button
-                onClick={() => setShowDatePicker(false)}
-                className='px-2 py-1 text-xs bg-gray-300 text-gray-700 rounded hover:bg-gray-400'
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const FormatTab = () => {
-  return (
-    <div className='flex flex-nowrap gap-0 p-2 bg-white w-full min-w-0'>
-      {/* Bar Style Group */}
-      <RibbonGroup title='Bar Style'>
-        <RibbonButton
-          icon={<span className='text-lg'>🎨</span>}
-          label='Bar Style Manager'
-          onClick={() =>
-            console.log('FormatTab Action: Open Bar Style Manager')
-          }
-          tooltip='Open Bar Style Manager'
-        />
-        <RibbonButton
-          icon={<span className='text-lg'>🟦</span>}
-          label='Bar Color'
-          onClick={() => console.log('FormatTab Action: Change Bar Color')}
-          tooltip='Change Bar Color'
-        />
-        <RibbonButton
-          icon={<span className='text-lg'>📈</span>}
-          label='Bar Pattern'
-          onClick={() => console.log('FormatTab Action: Edit Bar Pattern')}
-          tooltip='Edit Bar Pattern'
-        />
       </RibbonGroup>
 
-      {/* Date Markers Group */}
-      <RibbonGroup title='Date Markers'>
-        <DateMarkersGroup />
-      </RibbonGroup>
-
-      {/* Baseline Overlay Group */}
-      <RibbonGroup title='Baseline'>
-        <BaselineToggle />
-      </RibbonGroup>
-
-      {/* Font Style Group */}
-      <RibbonGroup title='Font Style'>
+      {/* Annotations Group */}
+      <RibbonGroup title='Annotations'>
         <RibbonButton
-          icon={<span className='text-lg font-bold'>B</span>}
-          label='Bold'
-          onClick={() => console.log('FormatTab Action: Make font bold')}
-          tooltip='Make font bold'
+          icon={<DocumentTextIcon className='w-4 h-4' />}
+          label='Text Annotation'
+          onClick={() => console.log('Text Annotation')}
+          tooltip='Add text annotation'
         />
         <RibbonButton
-          icon={<span className='text-lg italic'>I</span>}
-          label='Italic'
-          onClick={() => console.log('FormatTab Action: Make font italic')}
-          tooltip='Make font italic'
+          icon={<Square3Stack3DIcon className='w-4 h-4' />}
+          label='Object'
+          onClick={() => console.log('Object')}
+          tooltip='Add object annotation'
         />
         <RibbonButton
-          icon={<span className='text-lg underline'>U</span>}
-          label='Underline'
-          onClick={() => console.log('FormatTab Action: Make font underline')}
-          tooltip='Make font underline'
-        />
-        <RibbonButton
-          icon={<span className='text-lg'>🖍️</span>}
-          label='Font Color'
-          onClick={() => console.log('FormatTab Action: Change font color')}
-          tooltip='Change font color'
-        />
-        <RibbonButton
-          icon={<span className='text-lg'>🔡</span>}
-          label='Font Size'
-          onClick={() => console.log('FormatTab Action: Change font size')}
-          tooltip='Change font size'
-        />
-      </RibbonGroup>
-
-      {/* Text Align Group */}
-      <RibbonGroup title='Text Align'>
-        <RibbonButton
-          icon={<span className='text-lg'>L</span>}
-          label='Left Align'
-          onClick={() => console.log('FormatTab Action: Align Left')}
-          tooltip='Align Left'
-        />
-        <RibbonButton
-          icon={<span className='text-lg'>C</span>}
-          label='Center Align'
-          onClick={() => console.log('FormatTab Action: Align Center')}
-          tooltip='Align Center'
-        />
-        <RibbonButton
-          icon={<span className='text-lg'>R</span>}
-          label='Right Align'
-          onClick={() => console.log('FormatTab Action: Align Right')}
-          tooltip='Align Right'
-        />
-      </RibbonGroup>
-
-      {/* Task Shape Group */}
-      <RibbonGroup title='Task Shape'>
-        <RibbonButton
-          icon={<span className='text-lg'>◻️</span>}
-          label='Rectangle'
-          onClick={() =>
-            console.log('FormatTab Action: Set shape to rectangle')
-          }
-          tooltip='Set task shape to rectangle'
-        />
-        <RibbonButton
-          icon={<span className='text-lg'>🔷</span>}
-          label='Diamond'
-          onClick={() => console.log('FormatTab Action: Set shape to diamond')}
-          tooltip='Set task shape to diamond'
-        />
-        <RibbonButton
-          icon={<span className='text-lg'>🚩</span>}
-          label='Milestone'
-          onClick={() =>
-            console.log('FormatTab Action: Set shape to milestone')
-          }
-          tooltip='Set task shape to milestone'
-        />
-      </RibbonGroup>
-
-      {/* Row Height Group */}
-      <RibbonGroup title='Row Height'>
-        <RibbonButton
-          icon={<span className='text-lg'>⬆️</span>}
-          label='Increase Height'
-          onClick={() => console.log('FormatTab Action: Increase Row Height')}
-          tooltip='Increase Row Height'
-        />
-        <RibbonButton
-          icon={<span className='text-lg'>⬇️</span>}
-          label='Decrease Height'
-          onClick={() => console.log('FormatTab Action: Decrease Row Height')}
-          tooltip='Decrease Row Height'
-        />
-        <RibbonButton
-          icon={<span className='text-lg'>🔄</span>}
-          label='Reset Height'
-          onClick={() => console.log('FormatTab Action: Reset Row Height')}
-          tooltip='Reset Row Height'
-        />
-      </RibbonGroup>
-
-      {/* Formatting Group */}
-      <RibbonGroup title='Formatting'>
-        <RibbonButton
-          icon={<PaintBrushIcon className='w-4 h-4 text-gray-700' />}
-          label='Format Painter'
-        />
-        <RibbonButton
-          icon={<SwatchIcon className='w-4 h-4 text-gray-700' />}
-          label='Color Schemes'
-        />
-        <RibbonButton
-          icon={<ViewColumnsIcon className='w-4 h-4 text-gray-700' />}
-          label='Column Format'
-        />
-      </RibbonGroup>
-
-      {/* Bar Style Group */}
-      <RibbonGroup title='Bar Style'>
-        <BarStyleDropdown />
-      </RibbonGroup>
-
-      {/* Bar Color Set Group */}
-      <RibbonGroup title='Bar Color Set'>
-        <BarColorSetDropdown />
-      </RibbonGroup>
-
-      {/* Fonts & Labels Group */}
-      <RibbonGroup title='Fonts & Labels'>
-        <FontControlsGroup />
-      </RibbonGroup>
-
-      {/* Label Orientation Group */}
-      <RibbonGroup title='Label Orientation'>
-        <LabelOrientationGroup />
-      </RibbonGroup>
-
-      {/* Bar Fill Group */}
-      <RibbonGroup title='Bar Fill'>
-        <BarFillGroup />
-      </RibbonGroup>
-
-      {/* Bar Corner Style Group */}
-      <RibbonGroup title='Corners'>
-        <BarCornerStyleGroup />
-      </RibbonGroup>
-
-      {/* Bar Height Group */}
-      <RibbonGroup title='Bar Height'>
-        <BarHeightGroup />
-      </RibbonGroup>
-
-      {/* Row Height Group */}
-      <RibbonGroup title='Row Height'>
-        <RowHeightGroup />
-      </RibbonGroup>
-
-      {/* Font Size Group */}
-      <RibbonGroup title='Font Size'>
-        <FontSizeGroup />
-      </RibbonGroup>
-
-      {/* Bar Label Display Group */}
-      <RibbonGroup title='Bar Labels'>
-        <BarLabelDisplayGroup />
-      </RibbonGroup>
-
-      {/* Milestone Style Group */}
-      <RibbonGroup title='Milestones'>
-        <MilestoneStyleGroup />
-      </RibbonGroup>
-
-      {/* Display Options Group */}
-      <RibbonGroup title='Display Options'>
-        <RibbonButton
-          icon={<AdjustmentsHorizontalIcon className='w-4 h-4 text-gray-700' />}
-          label='Display Settings'
+          icon={<PhotoIcon className='w-4 h-4' />}
+          label='Picture'
+          onClick={() => console.log('Picture')}
+          tooltip='Add picture annotation'
         />
       </RibbonGroup>
     </div>
   );
-};
-
-export default FormatTab;
+}

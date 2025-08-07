@@ -44,7 +44,7 @@ body {
 
 /* Asta PowerProject Ribbon Styling */
 .asta-ribbon {
-  background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+  background: #ffffff !important;
   border-bottom: 1px solid var(--asta-border);
   width: 100%;
   min-width: 0;
@@ -52,12 +52,12 @@ body {
 }
 
 .asta-ribbon-tab {
-  background: #ffffff;
+  background: #ffffff !important;
   border: 1px solid var(--asta-border);
   border-bottom: none;
   color: var(--asta-text);
   font-weight: 500;
-  padding: 8px 16px;
+  padding: 6px 12px;
   transition: all 0.2s ease;
   white-space: nowrap;
   min-width: fit-content;
@@ -68,18 +68,18 @@ body {
 }
 
 .asta-ribbon-tab.active {
-  background: #ffffff;
+  background: #f8f9fa !important;
   border-bottom: 2px solid var(--asta-blue);
   color: var(--asta-blue);
   font-weight: 600;
 }
 
 .asta-ribbon-content {
-  background: #ffffff;
+  background: #ffffff !important;
   border: 1px solid var(--asta-border);
   border-top: none;
-  padding: 8px;
-  min-height: 100px;
+  padding: 2px;
+  min-height: 70px;
   overflow-x: auto;
   overflow-y: auto;
   width: 100%;
@@ -112,11 +112,12 @@ body {
   font-size: 12px;
   font-weight: 500;
   padding: 0;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 3px;
+  border-radius: 1px;
+  margin: 0.5px;
 }
 
 .asta-button:hover {
@@ -128,15 +129,20 @@ body {
   background: #bbdefb;
 }
 
+.asta-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Asta PowerProject Group Styling */
 .asta-group {
   display: flex;
   flex-direction: column;
-  padding: 6px 6px;
+  padding: 1px 2px;
   border-right: 1px solid var(--asta-border);
-  min-width: 120px;
+  min-width: 80px;
   flex-shrink: 1;
-  min-height: 80px;
+  min-height: 50px;
 }
 
 .asta-group:last-child {
@@ -145,12 +151,12 @@ body {
 
 .asta-group-title {
   color: var(--asta-text-secondary);
-  font-size: 9px;
+  font-size: 6px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 6px;
-  padding-bottom: 3px;
+  margin-bottom: 1px;
+  padding-bottom: 1px;
   border-bottom: 1px solid var(--asta-border);
   text-align: center;
   width: 100%;
