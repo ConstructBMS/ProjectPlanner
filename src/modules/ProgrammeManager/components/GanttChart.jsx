@@ -8,6 +8,7 @@ import { useTaskContext } from '../context/TaskContext';
 import { useViewContext } from '../context/ViewContext';
 import DateMarkersOverlay from './DateMarkersOverlay';
 import { calculateCriticalPath } from '../utils/criticalPath';
+import '../styles/gantt.css';
 
 const GanttChart = () => {
   const {

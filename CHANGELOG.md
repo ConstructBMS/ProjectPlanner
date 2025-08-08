@@ -44,6 +44,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Performance optimized with useMemo for efficient re-rendering
   - Layered behind task bars with proper z-index positioning
 
+## [2025-08-08] – Prompt 086
+
+### Added
+
+- **Vertical Grid Lines**
+  - Rendered vertical grid lines for days, weeks, and months in Gantt timeline
+  - Styled using .grid-day, .grid-week, .grid-month classes with different opacity levels
+  - Dynamically generated based on date range and zoom level
+  - Grid lines scroll horizontally with the chart and respect weekend visibility settings
+  - Performance optimized with useMemo for smooth rendering
+  - Integrated with existing showGridlines toggle in View tab
+
 ## [2025-08-08] – Prompt 085
 
 ### Added
@@ -507,5 +519,13 @@ projectplanner/
 - auto: Pre-commit hook update
 
 ### 2025-08-08 03:06:10
+
+- auto: Pre-commit hook update
+
+### 2025-08-08 03:07:17
+
+- auto: Pre-commit hook update
+
+### 2025-08-08 03:08:50
 
 - auto: Pre-commit hook update
