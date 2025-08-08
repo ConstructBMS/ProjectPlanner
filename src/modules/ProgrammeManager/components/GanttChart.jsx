@@ -4,6 +4,18 @@ import {
   ChevronDownIcon,
   FolderIcon,
 } from '@heroicons/react/24/outline';
+
+// Diamond icon component for milestones
+const DiamondIcon = ({ className = "w-4 h-4", color = "text-purple-600" }) => (
+  <svg
+    className={`${className} ${color}`}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M12 2L2 12L12 22L22 12L12 2Z" />
+  </svg>
+);
 import { useTaskContext } from '../context/TaskContext';
 import { useViewContext } from '../context/ViewContext';
 import DateMarkersOverlay from './DateMarkersOverlay';
@@ -1011,19 +1023,17 @@ const GanttChart = () => {
                             });
                           }}
                         >
-                          <div
-                            className={`w-4 h-4 rotate-45 border-2 ${
+                          <DiamondIcon 
+                            className="w-4 h-4" 
+                            color={
                               task.isCritical
-                                ? 'bg-red-600 border-red-700'
+                                ? 'text-red-600'
                                 : selectedTaskId === task.id
-                                  ? 'bg-blue-600 border-blue-700'
+                                  ? 'text-blue-600'
                                   : hoveredTaskId === task.id
-                                    ? 'bg-blue-500 border-blue-600'
-                                    : 'bg-green-600 border-green-700'
-                            }`}
-                            style={{
-                              transform: 'rotate(45deg)',
-                            }}
+                                    ? 'text-blue-500'
+                                    : 'text-purple-600'
+                            }
                           />
                         </div>
                       ) : (

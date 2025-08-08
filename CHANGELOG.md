@@ -5,6 +5,19 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-08-08] – Prompt 108
+
+### Added
+
+- **Milestone Diamond Icons**
+  - Added diamond-shaped SVG icons for milestone tasks in both Gantt chart and sidebar tree
+  - Replaced FlagIcon with custom DiamondIcon component in SidebarTree
+  - Updated Gantt chart milestone rendering to use proper diamond shape instead of rotated square
+  - Diamond icons use purple color (`text-purple-600`) by default
+  - Critical milestones show red diamond, selected/hovered milestones show blue diamond
+  - Icons sized at `w-3 h-3` in sidebar and `w-4 h-4` in Gantt chart
+  - Consistent visual representation across both components
+
 ## [2025-08-08] – Prompt 107
 
 ### Added

@@ -31,6 +31,7 @@
 - Prompt 105: Enhanced Gantt task bar tooltip with dark theme and compact layout (2025-08-08)
 - Prompt 106: Added critical path toggle button and red Gantt bar highlight (2025-08-08)
 - Prompt 107: Added Expand Milestones button in Home ribbon (2025-08-08)
+- Prompt 108: Added milestone diamond icons to Gantt and sidebar (2025-08-08)
 
 ## 🟡 In Progress
 

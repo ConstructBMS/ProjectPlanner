@@ -31,6 +31,18 @@ import {
   FlagIcon,
 } from '@heroicons/react/24/outline';
 
+// Diamond icon component for milestones
+const DiamondIcon = ({ className = "w-4 h-4", color = "text-purple-600" }) => (
+  <svg
+    className={`${className} ${color}`}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M12 2L2 12L12 22L22 12L12 2Z" />
+  </svg>
+);
+
 // Mock tree data for programme structure
 const treeData = [
   {
@@ -192,7 +204,7 @@ const TreeNode = React.memo(
           {/* Task Icon */}
           <div className='flex-shrink-0 w-4 h-4 mr-2'>
             {task.isMilestone ? (
-              <FlagIcon className='w-4 h-4 text-yellow-600' />
+              <DiamondIcon className='w-3 h-3' color='text-purple-600' />
             ) : task.isGroup ? (
               <FolderIcon className='w-4 h-4 text-blue-600' />
             ) : (
