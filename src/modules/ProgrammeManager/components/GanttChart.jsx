@@ -899,7 +899,7 @@ const GanttChart = () => {
 
         {/* Today Line Indicator */}
         <div
-          className='gantt-today-line absolute top-0 bottom-0 w-[1px] bg-red-500 z-50 pointer-events-none'
+          className='absolute top-0 bottom-0 w-[2px] bg-red-600 z-50 pointer-events-none'
           style={{
             left: (() => {
               const today = new Date();

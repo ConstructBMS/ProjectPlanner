@@ -5,6 +5,19 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-08-08] – Prompt 111
+
+### Added
+
+- **Today Line Marker**
+  - Added vertical red line marker to represent today's date in Gantt chart
+  - Line positioned based on pixel offset calculation from timeline start date
+  - Styling: `absolute w-[2px] bg-red-600 top-0 bottom-0 z-50`
+  - Automatically calculates today's position considering weekend visibility settings
+  - High z-index ensures line appears above all other timeline elements
+  - Includes tooltip showing today's date on hover
+  - Provides clear visual reference for current date in project timeline
+
 ## [2025-08-08] – Prompt 110
 
 ### Added
