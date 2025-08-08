@@ -5,6 +5,19 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-08-08] – Prompt 113
+
+### Added
+
+- **Go to Today Ribbon Button**
+  - Added "Go to Today" button in Home tab ribbon for Gantt navigation
+  - Button scrolls Gantt chart horizontally to today's date using pixel offset calculation
+  - Uses `ref.scrollLeft` technique with smooth scrolling behavior
+  - Automatically centers today's date in the viewport for optimal visibility
+  - Integrates with existing weekend visibility and zoom level settings
+  - Provides immediate visual feedback with smooth scroll animation
+  - Enhanced existing scroll functionality with proper button labeling
+
 ## [2025-08-08] – Prompt 112
 
 ### Added

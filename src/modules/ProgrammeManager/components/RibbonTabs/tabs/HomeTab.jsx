@@ -60,7 +60,14 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
   const { selectedTaskId, selectedTaskIds } = useTaskContext();
 
   // Get zoom functions and critical path toggle from view context
-  const { zoomIn, zoomOut, zoomToFit, goToToday, viewState, toggleCriticalPath } = useViewContext();
+  const {
+    zoomIn,
+    zoomOut,
+    zoomToFit,
+    goToToday,
+    viewState,
+    toggleCriticalPath,
+  } = useViewContext();
 
   // Get expand milestones function and tasks from task context
   const { expandMilestones, getVisibleTasks } = useTaskContext();
@@ -107,12 +114,12 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     return { startDate: projectStart, endDate: projectEnd };
   };
 
-  const formatProjectDate = (date) => {
+  const formatProjectDate = date => {
     if (!date) return 'N/A';
-    return date.toLocaleDateString('en-GB', { 
-      day: 'numeric', 
-      month: 'short', 
-      year: 'numeric' 
+    return date.toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
     });
   };
 
@@ -362,7 +369,9 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
           label='Show Critical Path'
           onClick={toggleCriticalPath}
           tooltip="Toggle visibility of the project's critical path"
-          className={viewState.showCriticalPath ? 'bg-blue-50 border-blue-500' : ''}
+          className={
+            viewState.showCriticalPath ? 'bg-blue-50 border-blue-500' : ''
+          }
         />
         <RibbonButton
           icon={<ChartBarIcon className='w-4 h-4' />}
@@ -400,9 +409,9 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
         />
         <RibbonButton
           icon={<ClockIcon className='w-4 h-4' />}
-          label='Scroll to Time'
+          label='Go to Today'
           onClick={goToToday}
-          tooltip='Scroll to current time'
+          tooltip='Scroll Gantt to today\'s date'
         />
       </RibbonGroup>
 
@@ -470,7 +479,8 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
       <RibbonGroup title='Project Status'>
         <div className='flex items-center px-3 py-2 bg-gray-50 rounded border border-gray-200'>
           <span className='text-xs text-gray-600 font-medium'>
-            📅 Start: {formatProjectDate(getProjectDates().startDate)} | End: {formatProjectDate(getProjectDates().endDate)}
+            📅 Start: {formatProjectDate(getProjectDates().startDate)} | End:{' '}
+            {formatProjectDate(getProjectDates().endDate)}
           </span>
         </div>
       </RibbonGroup>

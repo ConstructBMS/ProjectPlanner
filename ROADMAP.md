@@ -36,6 +36,7 @@
 - Prompt 110: Added grey background shading for non-working weekend days in Gantt (2025-08-08)
 - Prompt 111: Added vertical "Today" marker line in Gantt chart (2025-08-08)
 - Prompt 112: Added start/end project date to ribbon (2025-08-08)
+- Prompt 113: Added Go to Today scroll button in ribbon (2025-08-08)
 
 ## 🟡 In Progress
 
