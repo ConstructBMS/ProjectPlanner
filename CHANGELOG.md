@@ -57,6 +57,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Works for both regular tasks and milestones
   - Integrated with existing task hover functionality
 
+## [2025-08-08] – Prompt 092
+
+### Added
+
+- **Task Bar Drag-to-Move**
+  - Enabled drag-to-move functionality for Gantt task bars
+  - Users can click and drag task bars horizontally to adjust start and end dates
+  - Movement snaps to nearest day based on zoom scale for precise positioning
+  - Visual feedback with orange highlighting during drag operations
+  - Cursor changes to move indicator to show draggable state
+  - Real-time visual updates during drag with proper date calculations
+  - Integration with TaskContext for persistent storage of date changes
+  - Error handling with automatic reversion on failed updates
+
 ## [2025-08-08] – Prompt 091
 
 ### Added
@@ -581,5 +595,9 @@ projectplanner/
 - auto: Pre-commit hook update
 
 ### 2025-08-08 03:34:45
+
+- auto: Pre-commit hook update
+
+### 2025-08-08 11:07:47
 
 - auto: Pre-commit hook update

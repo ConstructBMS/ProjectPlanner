@@ -8,7 +8,7 @@ import { useTaskContext } from '../context/TaskContext';
 import { useViewContext } from '../context/ViewContext';
 import DateMarkersOverlay from './DateMarkersOverlay';
 import { calculateCriticalPath } from '../utils/criticalPath';
-import { calculateDuration } from '../utils/dateUtils';
+import { calculateDuration, addDays } from '../utils/dateUtils';
 import '../styles/gantt.css';
 
 const GanttChart = () => {
@@ -23,6 +23,7 @@ const GanttChart = () => {
     linkStartTaskId,
     handleTaskClickForLinking,
     taskLinks,
+    updateTask,
   } = useTaskContext();
 
   const { viewState, updateViewState } = useViewContext();
@@ -37,6 +38,14 @@ const GanttChart = () => {
     x: 0,
     y: 0,
     task: null,
+  });
+
+  // Drag state
+  const [dragging, setDragging] = useState({
+    taskId: null,
+    startX: 0,
+    originalStartDate: null,
+    originalEndDate: null,
   });
 
   const tasks = getVisibleTasks(viewState.taskFilter);
@@ -488,6 +497,82 @@ const GanttChart = () => {
     clearHoveredTask();
   };
 
+  // Drag event handlers
+  const handleTaskDragStart = (e, task) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    setDragging({
+      taskId: task.id,
+      startX: e.clientX,
+      originalStartDate: new Date(task.startDate),
+      originalEndDate: new Date(task.endDate),
+    });
+
+    // Add global mouse event listeners
+    document.addEventListener('mousemove', handleTaskDragMove);
+    document.addEventListener('mouseup', handleTaskDragEnd);
+  };
+
+  const handleTaskDragMove = e => {
+    if (!dragging.taskId) return;
+
+    const deltaX = e.clientX - dragging.startX;
+    const baseDayWidth = 2;
+    const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
+    const dayOffset = Math.round(deltaX / scaledDayWidth);
+
+    // Find the task being dragged
+    const task = tasks.find(t => t.id === dragging.taskId);
+    if (!task) return;
+
+    // Calculate new dates
+    const newStartDate = addDays(dragging.originalStartDate, dayOffset);
+    const newEndDate = addDays(dragging.originalEndDate, dayOffset);
+
+    // Update task dates temporarily (for visual feedback)
+    task.startDate = newStartDate.toISOString();
+    task.endDate = newEndDate.toISOString();
+  };
+
+  const handleTaskDragEnd = async () => {
+    if (!dragging.taskId) return;
+
+    const task = tasks.find(t => t.id === dragging.taskId);
+    if (task) {
+      try {
+        // Update task dates via TaskContext
+        updateTask(dragging.taskId, {
+          startDate: task.startDate,
+          endDate: task.endDate,
+        });
+
+        console.log('Task dragged successfully:', {
+          taskId: dragging.taskId,
+          newStartDate: task.startDate,
+          newEndDate: task.endDate,
+        });
+      } catch (error) {
+        console.error('Error updating task dates:', error);
+        // Revert to original dates on error
+        task.startDate = dragging.originalStartDate.toISOString();
+        task.endDate = dragging.originalEndDate.toISOString();
+      }
+    }
+
+    // Clean up
+    setDragging({
+      taskId: null,
+      startX: 0,
+      originalStartDate: null,
+      originalEndDate: null,
+    });
+
+    // Remove global event listeners
+    document.removeEventListener('mousemove', handleTaskDragMove);
+    document.removeEventListener('mouseup', handleTaskDragEnd);
+  };
+
   const formatDate = dateString => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -499,9 +584,10 @@ const GanttChart = () => {
     const isLinkStart = linkingMode && linkStartTaskId === task.id;
     const isCritical =
       viewState.showCriticalPath && criticalPathTasks.includes(task.id);
+    const isDragging = dragging.taskId === task.id;
 
     let baseClasses =
-      'rounded-sm transition-all duration-200 cursor-pointer border';
+      'rounded-sm transition-all duration-200 cursor-move border';
 
     if (task.isGroup) {
       baseClasses += ' bg-green-100 border-green-400 text-green-800';
@@ -511,7 +597,10 @@ const GanttChart = () => {
       baseClasses += ' bg-blue-100 border-blue-400 text-blue-800';
     }
 
-    if (isSelected) {
+    if (isDragging) {
+      baseClasses +=
+        ' ring-2 ring-orange-500 border-orange-600 shadow-lg opacity-80';
+    } else if (isSelected) {
       baseClasses += ' ring-2 ring-blue-500 border-blue-600 shadow-md';
     } else if (isHovered) {
       baseClasses += ' ring-1 ring-blue-300 border-blue-500 shadow-sm';
@@ -811,6 +900,7 @@ const GanttChart = () => {
                             top: '2px',
                             height: 'calc(100% - 4px)',
                           }}
+                          onMouseDown={e => handleTaskDragStart(e, task)}
                           onClick={e => {
                             e.stopPropagation();
                             handleTaskClick(task.id);
@@ -848,6 +938,7 @@ const GanttChart = () => {
                             top: '2px',
                             height: 'calc(100% - 4px)',
                           }}
+                          onMouseDown={e => handleTaskDragStart(e, task)}
                           onClick={e => {
                             e.stopPropagation();
                             handleTaskClick(task.id);

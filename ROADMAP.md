@@ -19,6 +19,7 @@
 - Prompt 088: Gantt now displays row grid lines beneath tasks (2025-08-08)
 - Prompt 090: Hovering task bar shows full task info in tooltip (2025-08-08)
 - Prompt 091: Red vertical "Today" line indicator added to Gantt timeline (2025-08-08)
+- Prompt 092: Task bars now support drag-to-move for date adjustment (2025-08-08)
 - Prompt 089: Weekends now highlighted in Gantt chart background (2025-08-08)
 
 ## 🟡 In Progress
