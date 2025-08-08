@@ -5,6 +5,19 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-08-08] – Prompt 116
+
+### Added
+
+- **Expand/Collapse All Toggle Button**
+  - Added ribbon toggle button to expand/collapse all task groups in Sidebar Tree
+  - Single button replaces separate "Expand All" and "Collapse All" buttons
+  - Uses double arrow icon (ChevronDoubleDownIcon) for expand, single arrow (ChevronRightIcon) for collapse
+  - Button shows active state (blue background) when all items are expanded
+  - Toggle functionality switches between expand and collapse states
+  - Dynamic tooltip changes based on current state
+  - Integrated with existing SidebarTree expand/collapse functionality
+
 ## [2025-08-08] – Prompt 115
 
 ### Added

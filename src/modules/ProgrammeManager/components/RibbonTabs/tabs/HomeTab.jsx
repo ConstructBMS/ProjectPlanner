@@ -1,4 +1,4 @@
-// No React imports needed for this component
+import { useState } from 'react';
 import useTaskManager from '../../../hooks/useTaskManager';
 import { useTaskContext } from '../../../context/TaskContext';
 import { useViewContext } from '../../../context/ViewContext';
@@ -42,6 +42,8 @@ import {
 } from '@heroicons/react/24/outline';
 
 export default function HomeTab({ onExpandAll, onCollapseAll }) {
+  const [isAllExpanded, setIsAllExpanded] = useState(false);
+
   const {
     addMilestone,
     insertTaskBelow,
@@ -121,6 +123,16 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
       month: 'short',
       year: 'numeric',
     });
+  };
+
+  const handleExpandCollapseToggle = () => {
+    if (isAllExpanded) {
+      onCollapseAll();
+      setIsAllExpanded(false);
+    } else {
+      onExpandAll();
+      setIsAllExpanded(true);
+    }
   };
 
   return (
@@ -224,16 +236,11 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
           tooltip='Create summary tasks from selected items'
         />
         <RibbonButton
-          icon={<ChevronDoubleDownIcon className='w-4 h-4' />}
-          label='Expand All'
-          onClick={onExpandAll}
-          tooltip='Expand all groups and tasks in the tree'
-        />
-        <RibbonButton
-          icon={<ChevronRightIcon className='w-4 h-4' />}
-          label='Collapse All'
-          onClick={onCollapseAll}
-          tooltip='Collapse all groups and tasks in the tree'
+          icon={isAllExpanded ? <ChevronRightIcon className='w-4 h-4' /> : <ChevronDoubleDownIcon className='w-4 h-4' />}
+          label='Expand/Collapse All'
+          onClick={handleExpandCollapseToggle}
+          tooltip={isAllExpanded ? 'Collapse all groups and tasks in the tree' : 'Expand all groups and tasks in the tree'}
+          className={isAllExpanded ? 'bg-blue-50 border-blue-500' : ''}
         />
         <RibbonButton
           icon={<FlagIcon className='w-4 h-4' />}
