@@ -21,7 +21,7 @@
 /* Weekend Highlighting for Gantt Chart */
 
 .gantt-weekend {
-  background-color: rgba(33, 150, 243, 0.08);
+  background-color: rgb(243, 244, 246); /* bg-gray-100 equivalent */
   z-index: 1;
 }
 

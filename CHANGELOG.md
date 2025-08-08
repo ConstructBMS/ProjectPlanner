@@ -626,3 +626,14 @@ projectplanner/
   - Critical path tasks remain red even when hovered or selected
   - Critical path milestones display as red diamonds
   - Maintains existing critical path calculation logic as fallback
+
+### 2025-08-08 11:52:45
+
+- auto: Pre-commit hook update
+
+### 2025-08-08 11:55:30
+
+- **Prompt 097**: Added light grey background shading for weekends on Gantt chart
+  - Saturday and Sunday columns now display with light grey background (`bg-gray-100`)
+  - Weekend shading stretches full height behind tasks for clear visual distinction
+  - Maintains existing weekend visibility toggle functionality
