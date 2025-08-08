@@ -5,6 +5,19 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-08-08] – Prompt 124
+
+### Added
+
+- **Vertical Daily Grid Lines in Gantt Chart**
+  - Enhanced existing grid lines system for improved timeline readability
+  - Daily grid lines with alternating light grey styling for better visibility
+  - Improved CSS styling with proper opacity and border-right properties
+  - Grid lines respect weekend visibility toggle (show/hide weekends)
+  - Enhanced horizontal row grid lines for better task separation
+  - Proper z-index layering to ensure grid lines appear behind task bars
+  - Professional visual hierarchy with day, week, and month grid line variations
+
 ## [2025-08-08] – Prompt 123
 
 ### Added

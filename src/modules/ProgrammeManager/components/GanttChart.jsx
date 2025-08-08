@@ -20,7 +20,12 @@ import { useTaskContext } from '../context/TaskContext';
 import { useViewContext } from '../context/ViewContext';
 import DateMarkersOverlay from './DateMarkersOverlay';
 import { calculateCriticalPath } from '../utils/criticalPath';
-import { calculateDuration, addDays, snapToWeekday, addWorkingDays } from '../utils/dateUtils';
+import {
+  calculateDuration,
+  addDays,
+  snapToWeekday,
+  addWorkingDays,
+} from '../utils/dateUtils';
 import '../styles/gantt.css';
 
 const GanttChart = () => {
@@ -164,7 +169,12 @@ const GanttChart = () => {
         <div
           key={d.toISOString()}
           className={`absolute top-0 bottom-0 ${className}`}
-          style={{ left: `${left}px`, width: '1px' }}
+          style={{ 
+            left: `${left}px`, 
+            width: '1px',
+            height: '100%',
+            pointerEvents: 'none'
+          }}
         />
       );
     }
@@ -192,6 +202,8 @@ const GanttChart = () => {
           style={{
             top: `${(index + 1) * rowHeight}px`,
             height: '1px',
+            pointerEvents: 'none',
+            zIndex: 1
           }}
         />
       );

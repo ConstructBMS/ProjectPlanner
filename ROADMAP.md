@@ -47,6 +47,7 @@
 - Prompt 121: Added right-click context menu to Task Grid rows (2025-08-08)
 - Prompt 122: Enabled double-click inline editing for task names in grid (2025-08-08)
 - Prompt 123: Gantt bars now snap to working weekdays and skip weekends (2025-08-08)
+- Prompt 124: Added vertical daily grid lines to Gantt chart (2025-08-08)
 
 ## 🟡 In Progress
 
