@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { useTaskContext } from '../context/TaskContext';
 import { useViewContext } from '../context/ViewContext';
 import TaskLinkModal from './modals/TaskLinkModal';
+import ContextMenu from './ContextMenu';
 import { calculateWorkingDays } from '../utils/dateUtils';
 
 // Diamond icon component for milestones
@@ -51,6 +52,13 @@ const TaskGrid = React.memo(() => {
   const [linkFromTask, setLinkFromTask] = useState(null);
   const [linkToTask, setLinkToTask] = useState(null);
 
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState({
+    isOpen: false,
+    position: { x: 0, y: 0 },
+    task: null,
+  });
+
   const handleDeleteTask = useCallback(
     (taskId, e) => {
       e.stopPropagation(); // Prevent row selection when clicking delete
@@ -71,6 +79,42 @@ const TaskGrid = React.memo(() => {
     setLinkFromTask(null);
     setLinkToTask(null);
   }, []);
+
+  // Context menu handlers
+  const handleContextMenu = useCallback((e, task) => {
+    e.preventDefault();
+    setContextMenu({
+      isOpen: true,
+      position: { x: e.clientX, y: e.clientY },
+      task,
+    });
+  }, []);
+
+  const closeContextMenu = useCallback(() => {
+    setContextMenu({
+      isOpen: false,
+      position: { x: 0, y: 0 },
+      task: null,
+    });
+  }, []);
+
+  const handleContextMenuAction = useCallback((action, task) => {
+    switch (action) {
+      case 'edit':
+        // Start editing the task name
+        startEditing(task.id, 'name', task.name);
+        break;
+      case 'delete':
+        deleteTask(task.id);
+        break;
+      case 'addSubtask':
+        // Add subtask functionality - you can implement this based on your needs
+        console.log('Add subtask for:', task.name);
+        break;
+      default:
+        console.log('Unknown context menu action:', action);
+    }
+  }, [deleteTask, startEditing]);
 
   const handleRowClick = useCallback(
     (taskId, e) => {
@@ -204,6 +248,7 @@ const TaskGrid = React.memo(() => {
             isSelected ? 'bg-blue-50 border-blue-200' : ''
           } ${isMultiSelected ? 'bg-blue-100' : ''}`}
           onClick={e => handleRowClick(task.id, e)}
+          onContextMenu={e => handleContextMenu(e, task)}
         >
           {/* Expand/Collapse */}
           <div className='w-8 h-8 flex items-center justify-center'>
@@ -432,6 +477,15 @@ const TaskGrid = React.memo(() => {
         onClose={closeLinkModal}
         fromTaskId={linkFromTask}
         toTaskId={linkToTask}
+      />
+
+      {/* Context Menu */}
+      <ContextMenu
+        isOpen={contextMenu.isOpen}
+        position={contextMenu.position}
+        onClose={closeContextMenu}
+        onAction={handleContextMenuAction}
+        task={contextMenu.task}
       />
     </>
   );

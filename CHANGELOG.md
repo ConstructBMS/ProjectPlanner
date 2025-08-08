@@ -5,6 +5,19 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-08-08] – Prompt 121
+
+### Added
+
+- **Right-Click Context Menu on Task Grid Rows**
+  - Added comprehensive right-click context menu to Task Grid rows
+  - Context menu includes: Edit Task, Delete Task, Add Subtask options
+  - Menu positioned near cursor with proper z-index (z-50) and absolute positioning
+  - Automatic menu closure on outside click or Escape key press
+  - Enhanced ContextMenu component with new "Add Subtask" option using PlusIcon
+  - Professional styling with hover effects and proper visual hierarchy
+  - Integrated with existing task management functions (edit, delete)
+
 ## [2025-08-08] – Prompt 120
 
 ### Added
