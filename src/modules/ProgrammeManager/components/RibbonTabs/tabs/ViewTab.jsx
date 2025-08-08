@@ -77,6 +77,65 @@ const TimelineZoomDropdown = () => {
   );
 };
 
+const ViewScaleDropdown = () => {
+  const [selectedScale, setSelectedScale] = useState('Day');
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef();
+  const { viewState, updateViewScale } = useViewContext();
+
+  // Load saved view scale on mount
+  useEffect(() => {
+    if (viewState.viewScale) {
+      setSelectedScale(viewState.viewScale);
+    }
+  }, [viewState.viewScale]);
+
+  useEffect(() => {
+    const handleClickOutside = event => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSelect = scale => {
+    setSelectedScale(scale);
+    updateViewScale(scale);
+    setIsOpen(false);
+  };
+
+  return (
+    <div className='relative' ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className='w-[60px] h-[48px] bg-gray-100 rounded flex items-center justify-between px-2 hover:bg-blue-100 transition-colors duration-150'
+        title='View scale (Day/Week/Month)'
+      >
+        <span className='text-xs font-medium text-gray-700'>
+          {selectedScale}
+        </span>
+        <ChevronDownIcon className='w-3 h-3 text-gray-500' />
+      </button>
+
+      {isOpen && (
+        <div className='absolute top-full left-0 mt-1 z-10 w-[60px] bg-white shadow-md rounded border border-gray-200'>
+          {['Day', 'Week', 'Month'].map(scale => (
+            <div
+              key={scale}
+              className='px-2 py-1 text-xs hover:bg-blue-50 cursor-pointer transition-colors duration-150'
+              onClick={() => handleSelect(scale)}
+            >
+              {scale}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const CalendarViewGroup = () => {
   const [selectedView, setSelectedView] = useState('Workweek');
   const { viewState, updateViewState } = useViewContext();
@@ -493,6 +552,7 @@ const ViewTab = () => {
       {/* Timeline Zoom Group */}
       <RibbonGroup title='Timeline Zoom'>
         <TimelineZoomDropdown />
+        <ViewScaleDropdown />
       </RibbonGroup>
 
       {/* Zoom Group */}

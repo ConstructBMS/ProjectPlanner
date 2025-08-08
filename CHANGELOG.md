@@ -5,6 +5,20 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-08-08] – Prompt 125
+
+### Added
+
+- **View Scale Dropdown for Gantt Timeline**
+  - Added ribbon dropdown to change Gantt view scale between Day, Week, and Month
+  - Dynamic timeline headers that adapt to selected view scale
+  - Day view: Shows individual day columns with date labels
+  - Week view: Shows week columns with week numbers (W1, W2, etc.)
+  - Month view: Shows month columns with month names and years
+  - Grid lines automatically adjust to match selected view scale
+  - Integrated with existing zoom and weekend visibility controls
+  - Professional dropdown UI with proper state management and persistence
+
 ## [2025-08-08] – Prompt 124
 
 ### Added

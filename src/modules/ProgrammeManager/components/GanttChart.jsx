@@ -150,33 +150,105 @@ const GanttChart = () => {
       }
     };
 
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      // Skip weekends if showWeekends is false
-      if (!viewState.showWeekends) {
-        const dayOfWeek = d.getDay();
-        if (dayOfWeek === 0 || dayOfWeek === 6) continue;
-      }
+    switch (viewState.viewScale) {
+      case 'Day':
+        // Daily grid lines
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+          if (!viewState.showWeekends) {
+            const dayOfWeek = d.getDay();
+            if (dayOfWeek === 0 || dayOfWeek === 6) continue;
+          }
 
-      const left = getDateIndex(d) * scaledDayWidth;
-      const isMonthStart = d.getDate() === 1;
-      const isWeekStart = d.getDay() === 1;
+          const left = getDateIndex(d) * scaledDayWidth;
+          const isMonthStart = d.getDate() === 1;
+          const isWeekStart = d.getDay() === 1;
 
-      let className = 'grid-day';
-      if (isMonthStart) className = 'grid-month';
-      else if (isWeekStart) className = 'grid-week';
+          let className = 'grid-day';
+          if (isMonthStart) className = 'grid-month';
+          else if (isWeekStart) className = 'grid-week';
 
-      lines.push(
-        <div
-          key={d.toISOString()}
-          className={`absolute top-0 bottom-0 ${className}`}
-          style={{ 
-            left: `${left}px`, 
-            width: '1px',
-            height: '100%',
-            pointerEvents: 'none'
-          }}
-        />
-      );
+          lines.push(
+            <div
+              key={d.toISOString()}
+              className={`absolute top-0 bottom-0 ${className}`}
+              style={{
+                left: `${left}px`,
+                width: '1px',
+                height: '100%',
+                pointerEvents: 'none',
+              }}
+            />
+          );
+        }
+        break;
+
+      case 'Week':
+        // Weekly grid lines
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 7)) {
+          const left = getDateIndex(d) * scaledDayWidth;
+          lines.push(
+            <div
+              key={`week-${d.toISOString()}`}
+              className='absolute top-0 bottom-0 grid-week'
+              style={{
+                left: `${left}px`,
+                width: '1px',
+                height: '100%',
+                pointerEvents: 'none',
+              }}
+            />
+          );
+        }
+        break;
+
+      case 'Month':
+        // Monthly grid lines
+        for (let d = new Date(start); d <= end; d.setMonth(d.getMonth() + 1)) {
+          const left = getDateIndex(d) * scaledDayWidth;
+          lines.push(
+            <div
+              key={`month-${d.toISOString()}`}
+              className='absolute top-0 bottom-0 grid-month'
+              style={{
+                left: `${left}px`,
+                width: '1px',
+                height: '100%',
+                pointerEvents: 'none',
+              }}
+            />
+          );
+        }
+        break;
+
+      default:
+        // Default to daily grid lines
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+          if (!viewState.showWeekends) {
+            const dayOfWeek = d.getDay();
+            if (dayOfWeek === 0 || dayOfWeek === 6) continue;
+          }
+
+          const left = getDateIndex(d) * scaledDayWidth;
+          const isMonthStart = d.getDate() === 1;
+          const isWeekStart = d.getDay() === 1;
+
+          let className = 'grid-day';
+          if (isMonthStart) className = 'grid-month';
+          else if (isWeekStart) className = 'grid-week';
+
+          lines.push(
+            <div
+              key={d.toISOString()}
+              className={`absolute top-0 bottom-0 ${className}`}
+              style={{
+                left: `${left}px`,
+                width: '1px',
+                height: '100%',
+                pointerEvents: 'none',
+              }}
+            />
+          );
+        }
     }
 
     return lines;
@@ -185,6 +257,7 @@ const GanttChart = () => {
     viewState.showGridlines,
     viewState.showWeekends,
     viewState.timelineZoom,
+    viewState.viewScale,
   ]);
 
   // Generate horizontal row grid lines
@@ -203,7 +276,7 @@ const GanttChart = () => {
             top: `${(index + 1) * rowHeight}px`,
             height: '1px',
             pointerEvents: 'none',
-            zIndex: 1
+            zIndex: 1,
           }}
         />
       );
@@ -717,6 +790,88 @@ const GanttChart = () => {
     return weekNo;
   };
 
+  const generateTimelineHeaders = () => {
+    const headers = [];
+    const startDate = new Date(dateRange.start);
+    const endDate = new Date(dateRange.end);
+    const baseDayWidth = 2;
+    const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
+
+    switch (viewState.viewScale) {
+      case 'Day':
+        // Daily headers - show each day
+        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+          const dayOfWeek = d.getDay();
+          if (!viewState.showWeekends && (dayOfWeek === 0 || dayOfWeek === 6)) {
+            continue;
+          }
+          headers.push(
+            <div
+              key={d.toISOString()}
+              className='text-xs text-gray-600 py-1 border-r border-gray-200 flex items-center justify-center font-medium'
+              style={{ width: `${scaledDayWidth}px` }}
+            >
+              {formatDate(d)}
+            </div>
+          );
+        }
+        break;
+
+      case 'Week':
+        // Weekly headers - show week numbers
+        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 7)) {
+          const weekNumber = getWeek(d);
+          headers.push(
+            <div
+              key={`week-${d.toISOString()}`}
+              className='text-xs text-gray-600 bg-gray-100 py-1 border-r border-gray-200 flex items-center justify-center font-medium'
+              style={{ width: `${7 * scaledDayWidth}px` }}
+            >
+              W{weekNumber}
+            </div>
+          );
+        }
+        break;
+
+      case 'Month':
+        // Monthly headers - show month names
+        for (let d = new Date(startDate); d <= endDate; d.setMonth(d.getMonth() + 1)) {
+          const monthName = d.toLocaleDateString('en-US', { month: 'short' });
+          const year = d.getFullYear();
+          headers.push(
+            <div
+              key={`month-${d.toISOString()}`}
+              className='text-xs text-gray-600 bg-gray-100 py-1 border-r border-gray-200 flex items-center justify-center font-medium'
+              style={{ width: `${30 * scaledDayWidth}px` }}
+            >
+              {monthName} {year}
+            </div>
+          );
+        }
+        break;
+
+      default:
+        // Default to daily view
+        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+          const dayOfWeek = d.getDay();
+          if (!viewState.showWeekends && (dayOfWeek === 0 || dayOfWeek === 6)) {
+            continue;
+          }
+          headers.push(
+            <div
+              key={d.toISOString()}
+              className='text-xs text-gray-600 py-1 border-r border-gray-200 flex items-center justify-center font-medium'
+              style={{ width: `${scaledDayWidth}px` }}
+            >
+              {formatDate(d)}
+            </div>
+          );
+        }
+    }
+
+    return headers;
+  };
+
   const getTaskBarStyle = task => {
     const isSelected = selectedTaskId === task.id;
     const isHovered = hoveredTaskId === task.id;
@@ -800,88 +955,9 @@ const GanttChart = () => {
 
       {/* Timeline Headers */}
       <div className='border-b border-gray-300 bg-gray-50'>
-        {/* Week Headers */}
+        {/* Dynamic Headers based on View Scale */}
         <div className='flex border-b border-gray-200'>
-          {(() => {
-            const headers = [];
-            const startDate = new Date(dateRange.start);
-            const endDate = new Date(dateRange.end);
-            const baseDayWidth = 2;
-            const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
-
-            for (
-              let d = new Date(startDate);
-              d <= endDate;
-              d.setDate(d.getDate() + 1)
-            ) {
-              const dayOfWeek = d.getDay();
-
-              // Skip weekends if showWeekends is false
-              if (
-                !viewState.showWeekends &&
-                (dayOfWeek === 0 || dayOfWeek === 6)
-              ) {
-                continue;
-              }
-
-              // Check if this is the start of a new week (Monday or first day if weekends are shown)
-              const isWeekStart = viewState.showWeekends
-                ? dayOfWeek === 1
-                : dayOfWeek === 1;
-
-              if (isWeekStart) {
-                const weekNumber = getWeek(d);
-                headers.push(
-                  <div
-                    key={`week-${d.toISOString()}`}
-                    className='text-xs text-gray-600 bg-gray-100 py-1 border-b border-r border-gray-200 flex items-center justify-center font-medium'
-                    style={{ width: `${7 * scaledDayWidth}px` }}
-                  >
-                    W{weekNumber}
-                  </div>
-                );
-              }
-            }
-            return headers;
-          })()}
-        </div>
-
-        {/* Day Headers */}
-        <div className='flex border-b border-gray-200'>
-          {(() => {
-            const headers = [];
-            const startDate = new Date(dateRange.start);
-            const endDate = new Date(dateRange.end);
-            const baseDayWidth = 2;
-            const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
-
-            for (
-              let d = new Date(startDate);
-              d <= endDate;
-              d.setDate(d.getDate() + 1)
-            ) {
-              const dayOfWeek = d.getDay();
-
-              // Skip weekends if showWeekends is false
-              if (
-                !viewState.showWeekends &&
-                (dayOfWeek === 0 || dayOfWeek === 6)
-              ) {
-                continue;
-              }
-
-              headers.push(
-                <div
-                  key={d.toISOString()}
-                  className='text-xs text-gray-600 py-1 border-r border-gray-200 flex items-center justify-center font-medium'
-                  style={{ width: `${scaledDayWidth}px` }}
-                >
-                  {formatDate(d)}
-                </div>
-              );
-            }
-            return headers;
-          })()}
+          {generateTimelineHeaders()}
         </div>
       </div>
 

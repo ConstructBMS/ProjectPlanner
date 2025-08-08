@@ -25,6 +25,7 @@ export const ViewProvider = ({ children }) => {
     // View settings
     zoomLevel: 'Week',
     calendarView: 'Workweek',
+    viewScale: 'Day', // View scale: Day, Week, Month
     timelineZoom: 1.0, // Scaling factor for timeline zoom
     taskFilter: 'Show All', // Task filter setting
     statusHighlighting: false, // Toggle for status-based row highlighting
@@ -213,6 +214,11 @@ export const ViewProvider = ({ children }) => {
     console.log('Zoom Out triggered');
   };
 
+  const updateViewScale = (scale) => {
+    setViewState(prev => ({ ...prev, viewScale: scale }));
+    console.log('View scale updated to:', scale);
+  };
+
   const value = {
     viewState,
     updateViewState,
@@ -225,6 +231,7 @@ export const ViewProvider = ({ children }) => {
     zoomToFit,
     zoomIn,
     zoomOut,
+    updateViewScale,
   };
 
   return <ViewContext.Provider value={value}>{children}</ViewContext.Provider>;
