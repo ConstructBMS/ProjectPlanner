@@ -29,6 +29,7 @@ export const ViewProvider = ({ children }) => {
     taskFilter: 'Show All', // Task filter setting
     statusHighlighting: false, // Toggle for status-based row highlighting
     showWeekends: true, // Toggle for showing weekend columns in timeline
+    showGridlines: true, // Toggle for showing gridlines in timeline
 
     // Date markers
     dateMarkers: [],
@@ -73,6 +74,19 @@ export const ViewProvider = ({ children }) => {
         console.error('Error loading saved showWeekends preference:', error);
       }
     }
+
+    // Load saved showGridlines preference
+    const savedShowGridlines = window.localStorage.getItem(
+      'gantt.showGridlines'
+    );
+    if (savedShowGridlines !== null) {
+      try {
+        const showGridlines = JSON.parse(savedShowGridlines);
+        setViewState(prev => ({ ...prev, showGridlines }));
+      } catch (error) {
+        console.error('Error loading saved showGridlines preference:', error);
+      }
+    }
   }, []);
 
   const updateViewState = updates => {
@@ -114,12 +128,22 @@ export const ViewProvider = ({ children }) => {
     console.log('Show Weekends toggled');
   };
 
+  const toggleGridlines = () => {
+    setViewState(prev => {
+      const next = !prev.showGridlines;
+      window.localStorage.setItem('gantt.showGridlines', JSON.stringify(next));
+      return { ...prev, showGridlines: next };
+    });
+    console.log('Show Gridlines toggled');
+  };
+
   const value = {
     viewState,
     updateViewState,
     saveViewLayout,
     goToToday,
     toggleWeekends,
+    toggleGridlines,
   };
 
   return <ViewContext.Provider value={value}>{children}</ViewContext.Provider>;

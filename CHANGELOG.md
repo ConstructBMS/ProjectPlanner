@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Prompt 080: Show Gridlines Toggle**
+  - Added "Show Gridlines" toggle checkbox in View tab ribbon View group
+  - GanttChart now shows or hides gridlines based on user setting
+  - Timeline container applies conditional Tailwind classes for grid visibility
+  - Background grid pattern and task row borders controlled by toggle
+  - Preference persisted to localStorage for consistency across sessions
+  - Immediate visual feedback when toggling gridline visibility
+  - Works seamlessly with existing timeline features and zoom levels
+
 - **Prompt 079: Show Weekends Toggle**
   - Added "Show Weekends" toggle checkbox in View tab ribbon View group
   - GanttChart now filters weekend columns (Saturday & Sunday) based on user preference
@@ -397,5 +406,9 @@ projectplanner/
 - auto: Pre-commit hook update
 
 ### 2025-08-07 23:43:07
+
+- auto: Pre-commit hook update
+
+### 2025-08-07 23:49:41
 
 - auto: Pre-commit hook update

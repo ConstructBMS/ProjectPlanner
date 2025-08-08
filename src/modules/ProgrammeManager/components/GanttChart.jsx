@@ -24,33 +24,13 @@ const GanttChart = () => {
 
   const { viewState } = useViewContext();
 
-  // Generate timeline dates based on showWeekends setting (for future use)
-  const generateTimelineDates = () => {
-    const startDate = new Date('2024-01-01');
-    const endDate = new Date('2024-12-31');
-    const dates = [];
-
-    for (
-      let d = new Date(startDate);
-      d <= endDate;
-      d.setDate(d.getDate() + 1)
-    ) {
-      const dayOfWeek = d.getDay(); // 0 = Sunday, 6 = Saturday
-      if (viewState.showWeekends || (dayOfWeek !== 0 && dayOfWeek !== 6)) {
-        dates.push(new Date(d));
-      }
-    }
-
-    return dates;
-  };
-
   const taskRefs = useRef({});
   const svgContainerRef = useRef(null);
   const timelineContainerRef = useRef(null);
 
   const tasks = getVisibleTasks(viewState.taskFilter);
 
-  // Update task refs when tasks change or showWeekends setting changes
+  // Update task refs when tasks change or view settings change
   useEffect(() => {
     const newRefs = {};
     tasks.forEach(task => {
@@ -61,7 +41,7 @@ const GanttChart = () => {
       }
     });
     taskRefs.current = newRefs;
-  }, [tasks, viewState.showWeekends]);
+  }, [tasks, viewState.showWeekends, viewState.showGridlines]);
 
   // Handle "Go to Today" functionality
   useEffect(() => {
@@ -330,11 +310,15 @@ const GanttChart = () => {
       {/* Asta-style Timeline Grid */}
       <div
         ref={timelineContainerRef}
-        className='flex-1 overflow-auto relative'
+        className={`flex-1 overflow-auto relative ${
+          viewState.showGridlines ? 'divide-y divide-gray-300' : ''
+        }`}
         onClick={handleChartClick}
       >
         {/* Background Grid */}
-        <div className='asta-timeline-grid absolute inset-0 opacity-20' />
+        {viewState.showGridlines && (
+          <div className='asta-timeline-grid absolute inset-0 opacity-20' />
+        )}
 
         {/* Date Markers Overlay */}
         <DateMarkersOverlay />
@@ -460,7 +444,11 @@ const GanttChart = () => {
                   <div
                     key={task.id}
                     ref={taskRefs.current[task.id]}
-                    className='flex items-center h-8 border-b border-gray-100 hover:bg-gray-50'
+                    className={`flex items-center h-8 hover:bg-gray-50 ${
+                      viewState.showGridlines
+                        ? 'border-b border-gray-300'
+                        : 'border-b border-gray-100'
+                    }`}
                     style={{ paddingLeft: `${(task.depth || 0) * 20}px` }}
                   >
                     {/* Task Name Column (fixed width) */}

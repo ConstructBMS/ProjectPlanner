@@ -10,6 +10,7 @@
 - Prompt 077: Zoom In/Out wired to Gantt timeline scaling (2025-08-08)
 - Prompt 078: "Go to Today" button wired to center timeline on current date (2025-08-08)
 - Prompt 079: "Show Weekends" toggle wired to GanttChart with persistence (2025-08-08)
+- Prompt 080: "Show Gridlines" toggle wired to GanttChart rendering (2025-08-08)
 
 ## 🟡 In Progress
 
