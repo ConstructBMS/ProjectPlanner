@@ -24,3 +24,21 @@
   background-color: rgba(33, 150, 243, 0.08);
   z-index: 1;
 }
+
+/* Task Tooltip Styles */
+
+.task-tooltip {
+  animation: tooltipFadeIn 0.2s ease-out;
+  backdrop-filter: blur(4px);
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

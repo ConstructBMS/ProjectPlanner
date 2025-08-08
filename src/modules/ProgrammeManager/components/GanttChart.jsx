@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useMemo } from 'react';
+import React, { useRef, useEffect, useMemo, useState } from 'react';
 import {
   ChevronRightIcon,
   ChevronDownIcon,
@@ -8,6 +8,7 @@ import { useTaskContext } from '../context/TaskContext';
 import { useViewContext } from '../context/ViewContext';
 import DateMarkersOverlay from './DateMarkersOverlay';
 import { calculateCriticalPath } from '../utils/criticalPath';
+import { formatDate, calculateDuration } from '../utils/dateUtils';
 import '../styles/gantt.css';
 
 const GanttChart = () => {
@@ -29,6 +30,14 @@ const GanttChart = () => {
   const taskRefs = useRef({});
   const svgContainerRef = useRef(null);
   const timelineContainerRef = useRef(null);
+
+  // Tooltip state
+  const [tooltip, setTooltip] = useState({
+    visible: false,
+    x: 0,
+    y: 0,
+    task: null,
+  });
 
   const tasks = getVisibleTasks(viewState.taskFilter);
 
@@ -763,9 +772,24 @@ const GanttChart = () => {
                             e.stopPropagation();
                             handleTaskClick(task.id);
                           }}
-                          onMouseEnter={() => handleTaskHover(task.id)}
-                          onMouseLeave={handleTaskLeave}
-                          title={`Milestone: ${task.name} (${formatDate(startDate)})`}
+                          onMouseEnter={e => {
+                            handleTaskHover(task.id);
+                            setTooltip({
+                              visible: true,
+                              x: e.clientX,
+                              y: e.clientY,
+                              task,
+                            });
+                          }}
+                          onMouseLeave={() => {
+                            handleTaskLeave();
+                            setTooltip({
+                              visible: false,
+                              x: 0,
+                              y: 0,
+                              task: null,
+                            });
+                          }}
                         >
                           <div className='text-lg font-bold text-purple-700'>
                             ◆
@@ -785,9 +809,24 @@ const GanttChart = () => {
                             e.stopPropagation();
                             handleTaskClick(task.id);
                           }}
-                          onMouseEnter={() => handleTaskHover(task.id)}
-                          onMouseLeave={handleTaskLeave}
-                          title={`${task.name} (${formatDate(startDate)} - ${formatDate(endDate)})`}
+                          onMouseEnter={e => {
+                            handleTaskHover(task.id);
+                            setTooltip({
+                              visible: true,
+                              x: e.clientX,
+                              y: e.clientY,
+                              task,
+                            });
+                          }}
+                          onMouseLeave={() => {
+                            handleTaskLeave();
+                            setTooltip({
+                              visible: false,
+                              x: 0,
+                              y: 0,
+                              task: null,
+                            });
+                          }}
                         >
                           {/* Progress indicator */}
                           {task.progress > 0 && (
@@ -848,6 +887,31 @@ const GanttChart = () => {
           )}
         </div>
       </div>
+
+      {/* Task Tooltip */}
+      {tooltip.visible && tooltip.task && (
+        <div
+          className='task-tooltip fixed bg-white border border-gray-300 shadow-lg p-3 text-sm rounded-lg z-[9999] pointer-events-none'
+          style={{
+            top: tooltip.y - 60,
+            left: tooltip.x + 10,
+            maxWidth: '300px',
+          }}
+        >
+          <div className='font-semibold text-gray-900 mb-1'>
+            {tooltip.task.name}
+          </div>
+          <div className='text-gray-600 space-y-1'>
+            <div>Start: {formatDate(tooltip.task.startDate)}</div>
+            <div>End: {formatDate(tooltip.task.endDate)}</div>
+            <div>
+              Duration:{' '}
+              {calculateDuration(tooltip.task.startDate, tooltip.task.endDate)}{' '}
+              days
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
