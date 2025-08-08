@@ -5,6 +5,18 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-08-08] – Prompt 107
+
+### Added
+
+- **Expand Milestones Button**
+  - Added "Expand Milestones" ribbon button in Home tab Hierarchy group
+  - Button expands all milestone tasks in the programme tree with single click
+  - Uses FlagIcon to represent milestone functionality
+  - Loops through all tasks and sets `isExpanded: true` for tasks with `isMilestone: true`
+  - Integrated with existing task expansion system in TaskContext
+  - Provides tooltip explaining the functionality
+
 ## [2025-08-08] – Prompt 106
 
 ### Added

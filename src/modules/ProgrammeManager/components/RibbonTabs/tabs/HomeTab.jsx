@@ -62,6 +62,9 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
   // Get zoom functions and critical path toggle from view context
   const { zoomIn, zoomOut, zoomToFit, goToToday, viewState, toggleCriticalPath } = useViewContext();
 
+  // Get expand milestones function from task context
+  const { expandMilestones } = useTaskContext();
+
   const handleTaskDetailsClick = () => {
     console.log('Task details clicked');
   };
@@ -199,6 +202,12 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
           label='Collapse All'
           onClick={onCollapseAll}
           tooltip='Collapse all groups and tasks in the tree'
+        />
+        <RibbonButton
+          icon={<FlagIcon className='w-4 h-4' />}
+          label='Expand Milestones'
+          onClick={expandMilestones}
+          tooltip='Expand all milestone tasks in the programme tree'
         />
         <RibbonDropdown
           icon={<ChevronDoubleDownIcon className='w-4 h-4' />}

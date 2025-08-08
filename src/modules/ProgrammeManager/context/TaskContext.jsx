@@ -552,6 +552,14 @@ export const TaskProvider = ({ children }) => {
     );
   }, []);
 
+  const expandMilestones = useCallback(() => {
+    setTasks(prev =>
+      prev.map(task =>
+        task.isMilestone ? { ...task, isExpanded: true } : task
+      )
+    );
+  }, []);
+
   // Reordering operations
   const reorderTasks = useCallback(
     (sourceIndex, destinationIndex) => {
@@ -867,6 +875,7 @@ export const TaskProvider = ({ children }) => {
       groupTasks,
       ungroupTask,
       toggleGroupCollapse,
+      expandMilestones,
 
       // Reordering operations
       reorderTasks,
@@ -915,6 +924,7 @@ export const TaskProvider = ({ children }) => {
       groupTasks,
       ungroupTask,
       toggleGroupCollapse,
+      expandMilestones,
       reorderTasks,
       reorderTasksById,
       getHierarchicalTasks,
