@@ -5,6 +5,19 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-08-08] – Prompt 123
+
+### Added
+
+- **Auto-Snap Gantt Bars to Workdays**
+  - Enhanced Gantt drag logic to snap bars only to Monday-Friday working days
+  - Added utility functions for weekday snapping: `snapToWeekday`, `addWorkingDays`, `getWorkingDaysBetween`
+  - Gantt bars automatically skip weekends during drag operations
+  - Visual weekend highlighting with grey background blocks already implemented
+  - Ensures end dates are never before start dates after snapping
+  - Professional project management workflow respecting business days
+  - Maintains existing weekend visibility toggle functionality
+
 ## [2025-08-08] – Prompt 122
 
 ### Added

@@ -20,7 +20,7 @@ import { useTaskContext } from '../context/TaskContext';
 import { useViewContext } from '../context/ViewContext';
 import DateMarkersOverlay from './DateMarkersOverlay';
 import { calculateCriticalPath } from '../utils/criticalPath';
-import { calculateDuration, addDays } from '../utils/dateUtils';
+import { calculateDuration, addDays, snapToWeekday, addWorkingDays } from '../utils/dateUtils';
 import '../styles/gantt.css';
 
 const GanttChart = () => {
@@ -636,8 +636,17 @@ const GanttChart = () => {
     if (!task) return;
 
     // Calculate new dates using snapped values
-    const newStartDate = addDays(dragging.originalStartDate, dayOffset);
-    const newEndDate = addDays(dragging.originalEndDate, dayOffset);
+    let newStartDate = addDays(dragging.originalStartDate, dayOffset);
+    let newEndDate = addDays(dragging.originalEndDate, dayOffset);
+
+    // Snap both dates to weekdays (skip weekends)
+    newStartDate = snapToWeekday(newStartDate);
+    newEndDate = snapToWeekday(newEndDate);
+
+    // Ensure end date is not before start date
+    if (newEndDate < newStartDate) {
+      newEndDate = new Date(newStartDate);
+    }
 
     // Update task dates temporarily (for visual feedback)
     task.startDate = newStartDate.toISOString();
