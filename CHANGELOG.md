@@ -5,6 +5,18 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-08-08] – Prompt 109
+
+### Added
+
+- **Calendar Week Headers**
+  - Added calendar week headers (e.g. W32, W33) above Gantt timeline day columns
+  - Week headers display in top section of Gantt header with proper styling
+  - Uses `getWeek()` function to calculate ISO week numbers for each 7-day block
+  - Header row styling: `text-xs text-gray-600 bg-gray-100 py-1 border-b`
+  - Week headers span full width of 7-day periods and respect weekend visibility settings
+  - Day headers show formatted dates below week headers for complete timeline reference
+
 ## [2025-08-08] – Prompt 108
 
 ### Added

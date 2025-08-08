@@ -32,6 +32,7 @@
 - Prompt 106: Added critical path toggle button and red Gantt bar highlight (2025-08-08)
 - Prompt 107: Added Expand Milestones button in Home ribbon (2025-08-08)
 - Prompt 108: Added milestone diamond icons to Gantt and sidebar (2025-08-08)
+- Prompt 109: Added calendar week headers to Gantt chart (2025-08-08)
 
 ## 🟡 In Progress
 

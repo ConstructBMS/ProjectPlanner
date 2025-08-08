@@ -6,14 +6,14 @@ import {
 } from '@heroicons/react/24/outline';
 
 // Diamond icon component for milestones
-const DiamondIcon = ({ className = "w-4 h-4", color = "text-purple-600" }) => (
+const DiamondIcon = ({ className = 'w-4 h-4', color = 'text-purple-600' }) => (
   <svg
     className={`${className} ${color}`}
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    xmlns="http://www.w3.org/2000/svg"
+    viewBox='0 0 24 24'
+    fill='currentColor'
+    xmlns='http://www.w3.org/2000/svg'
   >
-    <path d="M12 2L2 12L12 22L22 12L12 2Z" />
+    <path d='M12 2L2 12L12 22L22 12L12 2Z' />
   </svg>
 );
 import { useTaskContext } from '../context/TaskContext';
@@ -670,6 +670,15 @@ const GanttChart = () => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
+  const getWeek = date => {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+    const yearStart = new Date(d.getFullYear(), 0, 1);
+    const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    return weekNo;
+  };
+
   const getTaskBarStyle = task => {
     const isSelected = selectedTaskId === task.id;
     const isHovered = hoveredTaskId === task.id;
@@ -748,6 +757,77 @@ const GanttChart = () => {
                 ? `Selected: ${tasks.find(t => t.id === selectedTaskId)?.name || 'Unknown'}`
                 : 'No task selected'}
           </div>
+        </div>
+      </div>
+
+      {/* Timeline Headers */}
+      <div className='border-b border-gray-300 bg-gray-50'>
+        {/* Week Headers */}
+        <div className='flex border-b border-gray-200'>
+          {(() => {
+            const headers = [];
+            const startDate = new Date(dateRange.start);
+            const endDate = new Date(dateRange.end);
+            const baseDayWidth = 2;
+            const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
+            
+            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+              const dayOfWeek = d.getDay();
+              
+              // Skip weekends if showWeekends is false
+              if (!viewState.showWeekends && (dayOfWeek === 0 || dayOfWeek === 6)) {
+                continue;
+              }
+              
+              // Check if this is the start of a new week (Monday or first day if weekends are shown)
+              const isWeekStart = viewState.showWeekends ? dayOfWeek === 1 : dayOfWeek === 1;
+              
+              if (isWeekStart) {
+                const weekNumber = getWeek(d);
+                headers.push(
+                  <div
+                    key={`week-${d.toISOString()}`}
+                    className='text-xs text-gray-600 bg-gray-100 py-1 border-b border-r border-gray-200 flex items-center justify-center font-medium'
+                    style={{ width: `${7 * scaledDayWidth}px` }}
+                  >
+                    W{weekNumber}
+                  </div>
+                );
+              }
+            }
+            return headers;
+          })()}
+        </div>
+        
+        {/* Day Headers */}
+        <div className='flex border-b border-gray-200'>
+          {(() => {
+            const headers = [];
+            const startDate = new Date(dateRange.start);
+            const endDate = new Date(dateRange.end);
+            const baseDayWidth = 2;
+            const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
+            
+            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+              const dayOfWeek = d.getDay();
+              
+              // Skip weekends if showWeekends is false
+              if (!viewState.showWeekends && (dayOfWeek === 0 || dayOfWeek === 6)) {
+                continue;
+              }
+              
+              headers.push(
+                <div
+                  key={d.toISOString()}
+                  className='text-xs text-gray-600 py-1 border-r border-gray-200 flex items-center justify-center font-medium'
+                  style={{ width: `${scaledDayWidth}px` }}
+                >
+                  {formatDate(d)}
+                </div>
+              );
+            }
+            return headers;
+          })()}
         </div>
       </div>
 
@@ -1023,8 +1103,8 @@ const GanttChart = () => {
                             });
                           }}
                         >
-                          <DiamondIcon 
-                            className="w-4 h-4" 
+                          <DiamondIcon
+                            className='w-4 h-4'
                             color={
                               task.isCritical
                                 ? 'text-red-600'
@@ -1173,7 +1253,9 @@ const GanttChart = () => {
               {calculateDuration(tooltip.task.startDate, tooltip.task.endDate)}{' '}
               days
             </div>
-            {(tooltip.task.isCritical || (viewState.showCriticalPath && criticalPathTasks.includes(tooltip.task.id))) && (
+            {(tooltip.task.isCritical ||
+              (viewState.showCriticalPath &&
+                criticalPathTasks.includes(tooltip.task.id))) && (
               <div className='text-red-300 font-medium'>Critical Task</div>
             )}
           </div>
