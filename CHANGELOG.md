@@ -661,3 +661,15 @@ projectplanner/
   - Line position is calculated based on offset from timeline start using `new Date()`
   - Line renders full height of the Gantt chart for clear visibility
   - Includes tooltip showing today's date when hovered
+
+### 2025-08-08 14:13:14
+
+- auto: Pre-commit hook update
+
+### 2025-08-08 14:20:45
+
+- **Prompt 102**: Task bars now include labels with task names, styled like Asta
+  - Task names are displayed inside Gantt bars with white text (`text-white text-xs font-medium`)
+  - Text is truncated if too long to fit within the bar width
+  - Labels only appear when bars are wide enough (>60px) for readability
+  - Labels are centered within each task bar for clear identification

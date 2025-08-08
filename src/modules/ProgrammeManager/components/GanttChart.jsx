@@ -1038,6 +1038,15 @@ const GanttChart = () => {
                               style={{ width: `${task.progress}%` }}
                             />
                           )}
+
+                          {/* Task Name Label */}
+                          {width !== '0px' && parseFloat(width) > 60 && (
+                            <div className='absolute inset-0 flex items-center justify-center px-1 pointer-events-none'>
+                              <span className='text-white text-xs font-medium truncate'>
+                                {task.name}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       )}
 
