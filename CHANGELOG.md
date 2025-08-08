@@ -685,3 +685,15 @@ projectplanner/
   - Task dragging now uses snapped values instead of raw pixel positions
   - Added helper functions `getDateFromX()` and `getXFromDate()` for future resize functionality
   - Each grid column represents exactly 1 day for precise date alignment
+
+### 2025-08-08 14:20:50
+
+- auto: Pre-commit hook update
+
+### 2025-08-08 14:30:15
+
+- **Prompt 105**: Enhanced Gantt task bar tooltip styling and content
+  - Updated tooltip to use dark theme (`bg-gray-800 text-white`) for better visibility
+  - Simplified tooltip content to show task name, date range, and duration in compact format
+  - Improved tooltip positioning and styling with `text-xs px-2 py-1 rounded shadow-lg`
+  - Tooltip now displays dates in "start – end" format for cleaner presentation

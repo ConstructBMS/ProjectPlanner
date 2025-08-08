@@ -1147,21 +1147,19 @@ const GanttChart = () => {
       {/* Task Tooltip */}
       {tooltip.visible && tooltip.task && (
         <div
-          className='task-tooltip fixed bg-white border border-gray-300 shadow-lg p-3 text-sm rounded-lg z-[9999] pointer-events-none'
+          className='fixed bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg z-[9999] pointer-events-none'
           style={{
             top: tooltip.y - 60,
             left: tooltip.x + 10,
-            maxWidth: '300px',
           }}
         >
-          <div className='font-semibold text-gray-900 mb-1'>
-            {tooltip.task.name}
-          </div>
-          <div className='text-gray-600 space-y-1'>
-            <div>Start: {formatDate(tooltip.task.startDate)}</div>
-            <div>End: {formatDate(tooltip.task.endDate)}</div>
+          <div className='font-semibold mb-1'>{tooltip.task.name}</div>
+          <div className='space-y-1'>
             <div>
-              Duration:{' '}
+              {formatDate(tooltip.task.startDate)} –{' '}
+              {formatDate(tooltip.task.endDate)}
+            </div>
+            <div>
               {calculateDuration(tooltip.task.startDate, tooltip.task.endDate)}{' '}
               days
             </div>
