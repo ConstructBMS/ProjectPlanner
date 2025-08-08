@@ -41,6 +41,7 @@
 - Prompt 115: Added 1-based row numbering in the Programme Tree (2025-08-08)
 - Prompt 116: Added ribbon toggle to expand/collapse all task groups in Sidebar Tree (2025-08-08)
 - Prompt 117: Added calculated Duration column to Task Grid (2025-08-08)
+- Prompt 118: Added tooltip on Gantt bars to show task name and date range (2025-08-08)
 
 ## 🟡 In Progress
 

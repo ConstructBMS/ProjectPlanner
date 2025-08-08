@@ -1271,26 +1271,27 @@ const GanttChart = () => {
       {/* Task Tooltip */}
       {tooltip.visible && tooltip.task && (
         <div
-          className='fixed bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg z-[9999] pointer-events-none'
+          className='fixed bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-xl z-[9999] pointer-events-none border border-gray-700 transition-opacity duration-200'
           style={{
-            top: tooltip.y - 60,
+            top: tooltip.y - 80,
             left: tooltip.x + 10,
+            maxWidth: '250px',
           }}
         >
-          <div className='font-semibold mb-1'>{tooltip.task.name}</div>
-          <div className='space-y-1'>
-            <div>
-              {formatDate(tooltip.task.startDate)} –{' '}
-              {formatDate(tooltip.task.endDate)}
+          <div className='font-semibold mb-2 text-blue-300'>Task: {tooltip.task.name}</div>
+          <div className='space-y-1 text-gray-200'>
+            <div className='flex justify-between'>
+              <span className='text-gray-400'>Start:</span>
+              <span>{formatDate(tooltip.task.startDate)}</span>
             </div>
-            <div>
-              {calculateDuration(tooltip.task.startDate, tooltip.task.endDate)}{' '}
-              days
+            <div className='flex justify-between'>
+              <span className='text-gray-400'>End:</span>
+              <span>{formatDate(tooltip.task.endDate)}</span>
             </div>
             {(tooltip.task.isCritical ||
               (viewState.showCriticalPath &&
                 criticalPathTasks.includes(tooltip.task.id))) && (
-              <div className='text-red-300 font-medium'>Critical Task</div>
+              <div className='text-red-300 font-medium mt-2 pt-1 border-t border-gray-700'>Critical Task</div>
             )}
           </div>
         </div>
