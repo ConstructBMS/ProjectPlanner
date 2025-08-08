@@ -5,6 +5,19 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-08-08] – Prompt 112
+
+### Added
+
+- **Project Start/End Date Ribbon Display**
+  - Added dynamic project start and end date display in Home tab ribbon
+  - Shows project dates in format: "📅 Start: 12 Aug 2025 | End: 17 Oct 2025"
+  - Pulls data from first task's startDate and last task's endDate
+  - Displays in dedicated "Project Status" group with calendar emoji
+  - Automatically updates when tasks are added, modified, or removed
+  - Uses British date format (DD MMM YYYY) for consistency
+  - Handles empty project state gracefully with "N/A" fallback
+
 ## [2025-08-08] – Prompt 111
 
 ### Added

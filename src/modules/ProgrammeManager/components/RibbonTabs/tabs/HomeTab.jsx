@@ -62,8 +62,8 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
   // Get zoom functions and critical path toggle from view context
   const { zoomIn, zoomOut, zoomToFit, goToToday, viewState, toggleCriticalPath } = useViewContext();
 
-  // Get expand milestones function from task context
-  const { expandMilestones } = useTaskContext();
+  // Get expand milestones function and tasks from task context
+  const { expandMilestones, getVisibleTasks } = useTaskContext();
 
   const handleTaskDetailsClick = () => {
     console.log('Task details clicked');
@@ -89,6 +89,31 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
 
     deleteTask(selectedTaskId);
     console.log('Deleted task:', selectedTaskId);
+  };
+
+  // Calculate project start and end dates
+  const getProjectDates = () => {
+    const tasks = getVisibleTasks(viewState.taskFilter);
+    if (tasks.length === 0) {
+      return { startDate: null, endDate: null };
+    }
+
+    const startDates = tasks.map(task => new Date(task.startDate));
+    const endDates = tasks.map(task => new Date(task.endDate));
+
+    const projectStart = new Date(Math.min(...startDates));
+    const projectEnd = new Date(Math.max(...endDates));
+
+    return { startDate: projectStart, endDate: projectEnd };
+  };
+
+  const formatProjectDate = (date) => {
+    if (!date) return 'N/A';
+    return date.toLocaleDateString('en-GB', { 
+      day: 'numeric', 
+      month: 'short', 
+      year: 'numeric' 
+    });
   };
 
   return (
@@ -438,6 +463,15 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
             tooltip='Underline'
             compact={true}
           />
+        </div>
+      </RibbonGroup>
+
+      {/* Project Status Group */}
+      <RibbonGroup title='Project Status'>
+        <div className='flex items-center px-3 py-2 bg-gray-50 rounded border border-gray-200'>
+          <span className='text-xs text-gray-600 font-medium'>
+            📅 Start: {formatProjectDate(getProjectDates().startDate)} | End: {formatProjectDate(getProjectDates().endDate)}
+          </span>
         </div>
       </RibbonGroup>
     </div>
