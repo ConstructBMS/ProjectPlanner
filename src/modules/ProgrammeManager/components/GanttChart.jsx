@@ -8,7 +8,7 @@ import { useTaskContext } from '../context/TaskContext';
 import { useViewContext } from '../context/ViewContext';
 import DateMarkersOverlay from './DateMarkersOverlay';
 import { calculateCriticalPath } from '../utils/criticalPath';
-import { formatDate, calculateDuration } from '../utils/dateUtils';
+import { calculateDuration } from '../utils/dateUtils';
 import '../styles/gantt.css';
 
 const GanttChart = () => {
@@ -597,6 +597,49 @@ const GanttChart = () => {
             {rowLines}
           </div>
         )}
+
+        {/* Today Line Indicator */}
+        <div
+          className='gantt-today-line absolute top-0 bottom-0 w-[1px] bg-red-500 z-20 pointer-events-none'
+          style={{
+            left: (() => {
+              const today = new Date();
+              const startOfYear = new Date('2024-01-01');
+
+              // Calculate today's position based on showWeekends setting
+              const getDateIndex = date => {
+                const daysFromStart = Math.floor(
+                  (date - startOfYear) / (1000 * 60 * 60 * 24)
+                );
+
+                if (viewState.showWeekends) {
+                  return daysFromStart;
+                } else {
+                  // Count only weekdays
+                  let weekdayCount = 0;
+                  for (
+                    let d = new Date(startOfYear);
+                    d <= date;
+                    d.setDate(d.getDate() + 1)
+                  ) {
+                    const dayOfWeek = d.getDay();
+                    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                      weekdayCount++;
+                    }
+                    if (d >= date) break;
+                  }
+                  return weekdayCount;
+                }
+              };
+
+              const daysFromStart = getDateIndex(today);
+              const baseDayWidth = 2;
+              const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
+              return `${daysFromStart * scaledDayWidth}px`;
+            })(),
+          }}
+          title={`Today: ${new Date().toLocaleDateString()}`}
+        />
 
         {/* Date Markers Overlay */}
         <DateMarkersOverlay />

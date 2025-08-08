@@ -57,6 +57,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Works for both regular tasks and milestones
   - Integrated with existing task hover functionality
 
+## [2025-08-08] – Prompt 091
+
+### Added
+
+- **Today Line Indicator**
+  - Added red vertical "Today" line in Gantt chart
+  - Line renders vertically from top to bottom of timeline
+  - Positioned correctly based on today's date in the timeline
+  - Respects weekend visibility settings when calculating position
+  - Enhanced with subtle red shadow for better visibility
+  - Proper z-index layering to appear above weekend backgrounds
+  - Includes tooltip showing today's date on hover
+
 ## [2025-08-08] – Prompt 090
 
 ### Added
@@ -564,5 +577,9 @@ projectplanner/
 - auto: Pre-commit hook update
 
 ### 2025-08-08 03:32:26
+
+- auto: Pre-commit hook update
+
+### 2025-08-08 03:34:45
 
 - auto: Pre-commit hook update

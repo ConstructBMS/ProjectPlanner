@@ -18,6 +18,7 @@
 - Prompt 086: Timeline now shows vertical grid lines for time intervals (2025-08-08)
 - Prompt 088: Gantt now displays row grid lines beneath tasks (2025-08-08)
 - Prompt 090: Hovering task bar shows full task info in tooltip (2025-08-08)
+- Prompt 091: Red vertical "Today" line indicator added to Gantt timeline (2025-08-08)
 - Prompt 089: Weekends now highlighted in Gantt chart background (2025-08-08)
 
 ## 🟡 In Progress
