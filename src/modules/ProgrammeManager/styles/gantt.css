@@ -17,3 +17,10 @@
 .gantt-row-line {
   background-color: rgba(0, 0, 0, 0.05);
 }
+
+/* Weekend Highlighting for Gantt Chart */
+
+.gantt-weekend {
+  background-color: rgba(33, 150, 243, 0.08);
+  z-index: 1;
+}

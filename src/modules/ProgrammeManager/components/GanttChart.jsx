@@ -169,6 +169,47 @@ const GanttChart = () => {
     return lines;
   }, [tasks, viewState.showGridlines]);
 
+  // Generate weekend highlighting blocks
+  const weekendBlocks = useMemo(() => {
+    if (!viewState.showWeekends) return [];
+
+    const blocks = [];
+    const start = new Date(dateRange.start);
+    const end = new Date(dateRange.end);
+    const baseDayWidth = 2;
+    const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
+
+    // Calculate start position offset
+    const startOfYear = new Date('2024-01-01');
+    const getDateIndex = date => {
+      const daysFromStart = Math.floor(
+        (date - startOfYear) / (1000 * 60 * 60 * 24)
+      );
+      return daysFromStart;
+    };
+
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const dayOfWeek = d.getDay();
+      if (dayOfWeek === 6 || dayOfWeek === 0) {
+        // Saturday or Sunday
+        const left = getDateIndex(d) * scaledDayWidth;
+
+        blocks.push(
+          <div
+            key={`weekend-${d.toISOString()}`}
+            className='gantt-weekend absolute top-0 bottom-0'
+            style={{
+              left: `${left}px`,
+              width: `${scaledDayWidth}px`,
+            }}
+          />
+        );
+      }
+    }
+
+    return blocks;
+  }, [dateRange, viewState.showWeekends, viewState.timelineZoom]);
+
   // Update task refs when tasks change or view settings change
   useEffect(() => {
     const newRefs = {};
@@ -527,6 +568,11 @@ const GanttChart = () => {
         {viewState.showGridlines && (
           <div className='asta-timeline-grid absolute inset-0 opacity-20' />
         )}
+
+        {/* Weekend Highlighting Blocks */}
+        <div className='absolute inset-0 pointer-events-none z-0'>
+          {weekendBlocks}
+        </div>
 
         {/* Vertical Grid Lines */}
         {viewState.showGridlines && (

@@ -5,6 +5,19 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-08-08] – Prompt 089
+
+### Added
+
+- **Weekend Highlighting**
+  - Highlighted Saturdays and Sundays with shaded background in Gantt timeline
+  - Weekend blocks calculated dynamically based on project date range and zoomScale
+  - Light blue translucent background (rgba(33, 150, 243, 0.08)) for subtle visual distinction
+  - Blocks positioned behind task bars and grid lines with proper z-index layering
+  - Only renders when "Show Weekends" toggle is enabled for consistency
+  - Performance optimized with useMemo for efficient re-rendering
+  - Spans full timeline height and matches day width for accurate visual representation
+
 ## [2025-08-08] – Prompt 088
 
 ### Added
@@ -490,5 +503,9 @@ projectplanner/
 - auto: Pre-commit hook update
 
 ### 2025-08-08 03:03:54
+
+- auto: Pre-commit hook update
+
+### 2025-08-08 03:06:10
 
 - auto: Pre-commit hook update
