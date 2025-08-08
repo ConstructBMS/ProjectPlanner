@@ -5,6 +5,19 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-08-08] – Prompt 114
+
+### Enhanced
+
+- **Gantt Zoom In/Out Controls**
+  - Enhanced existing zoom functionality with improved scale control
+  - Zoom buttons adjust timeline scale from 30% to 300% (0.3x to 3.0x)
+  - Base day width: 2px, scaled width: `baseDayWidth * timelineZoom`
+  - Zoom increments: ±0.2 per click for smooth scaling
+  - Affects bar width, grid lines, weekend blocks, and all timeline elements
+  - Zoom state stored in ViewContext for persistence across sessions
+  - Integrated with existing "Fit to View" and "Go to Today" functionality
+
 ## [2025-08-08] – Prompt 113
 
 ### Added
