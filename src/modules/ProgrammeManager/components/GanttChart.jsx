@@ -472,6 +472,57 @@ const GanttChart = () => {
         svg.appendChild(arrow);
       }
     });
+
+    // Draw predecessor-based dependency arrows (Prompt 098)
+    tasks.forEach(task => {
+      if (task.predecessors && Array.isArray(task.predecessors)) {
+        task.predecessors.forEach(predecessorId => {
+          const predecessorTask = tasks.find(t => t.id === predecessorId);
+          if (!predecessorTask) return;
+
+          const fromRef = taskRefs.current[predecessorId];
+          const toRef = taskRefs.current[task.id];
+
+          if (fromRef?.current && toRef?.current) {
+            const fromRect = fromRef.current.getBoundingClientRect();
+            const toRect = toRef.current.getBoundingClientRect();
+
+            // Calculate positions for Finish-to-Start logic
+            const fromX = fromRect.right - containerRect.left;
+            const fromY =
+              fromRect.top + fromRect.height / 2 - containerRect.top;
+            const toX = toRect.left - containerRect.left;
+            const toY = toRect.top + toRect.height / 2 - containerRect.top;
+
+            // Create arrow line
+            const arrow = document.createElementNS(
+              'http://www.w3.org/2000/svg',
+              'line'
+            );
+            arrow.setAttribute('x1', fromX);
+            arrow.setAttribute('y1', fromY);
+            arrow.setAttribute('x2', toX);
+            arrow.setAttribute('y2', toY);
+            arrow.setAttribute('stroke', 'black');
+            arrow.setAttribute('stroke-width', '1');
+            arrow.setAttribute('marker-end', 'url(#arrowhead)');
+            arrow.setAttribute('class', 'predecessor-arrow');
+            arrow.style.pointerEvents = 'auto';
+            arrow.style.cursor = 'pointer';
+
+            // Add title for tooltip
+            const title = document.createElementNS(
+              'http://www.w3.org/2000/svg',
+              'title'
+            );
+            title.textContent = `Predecessor: ${predecessorTask.name} → ${task.name}`;
+            arrow.appendChild(title);
+
+            svg.appendChild(arrow);
+          }
+        });
+      }
+    });
   }, [taskLinks, tasks]);
 
   const handleTaskClick = taskId => {
@@ -605,7 +656,7 @@ const GanttChart = () => {
       baseClasses +=
         ' ring-2 ring-orange-500 border-orange-600 shadow-lg opacity-80';
     } else if (isSelected && !isCritical) {
-      baseClasses += ' ring-2 ring-blue-500 border-blue-600 shadow-md';
+      baseClasses += ' border-2 border-yellow-400 shadow-md shadow-yellow-300';
     } else if (isHovered && !isCritical) {
       baseClasses += ' ring-1 ring-blue-300 border-blue-500 shadow-sm';
     } else if (isLinkStart) {
@@ -625,7 +676,7 @@ const GanttChart = () => {
     let baseClasses = 'text-sm font-medium truncate';
 
     if (isSelected) {
-      baseClasses += ' text-blue-700 font-semibold';
+      baseClasses += ' text-yellow-700 font-semibold';
     } else if (isHovered) {
       baseClasses += ' text-blue-600';
     } else if (isLinkStart) {
@@ -693,7 +744,7 @@ const GanttChart = () => {
 
         {/* Today Line Indicator */}
         <div
-          className='gantt-today-line absolute top-0 bottom-0 w-[1px] bg-red-500 z-20 pointer-events-none'
+          className='gantt-today-line absolute top-0 bottom-0 w-[1px] bg-red-500 z-50 pointer-events-none'
           style={{
             left: (() => {
               const today = new Date();

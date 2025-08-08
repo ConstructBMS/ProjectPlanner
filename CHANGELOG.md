@@ -649,3 +649,15 @@ projectplanner/
 ### 2025-08-08 12:00:19
 
 - auto: Pre-commit hook update
+
+### 2025-08-08 14:10:35
+
+- auto: Pre-commit hook update
+
+### 2025-08-08 14:15:30
+
+- **Prompt 101**: Added vertical "Today" marker line to Gantt chart
+  - Today's date is marked with a permanent red vertical line (`w-1 bg-red-500 z-50`)
+  - Line position is calculated based on offset from timeline start using `new Date()`
+  - Line renders full height of the Gantt chart for clear visibility
+  - Includes tooltip showing today's date when hovered
