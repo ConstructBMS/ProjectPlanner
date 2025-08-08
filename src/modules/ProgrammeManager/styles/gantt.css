@@ -1,0 +1,51 @@
+/* Vertical Grid Lines for Gantt Timeline */
+
+.grid-day {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.grid-week {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.grid-month {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+/* Horizontal Row Grid Lines for Gantt Chart */
+
+.gantt-row-line {
+  border-bottom: 1px solid rgb(229, 231, 235); /* border-gray-200 equivalent */
+}
+
+/* Weekend Highlighting for Gantt Chart */
+
+.gantt-weekend {
+  background-color: rgb(243, 244, 246); /* bg-gray-100 equivalent */
+  z-index: 1;
+}
+
+/* Today Line Indicator for Gantt Chart */
+
+.gantt-today-line {
+  pointer-events: none;
+  box-shadow: 0 0 4px rgba(239, 68, 68, 0.3);
+}
+
+/* Task Tooltip Styles */
+
+.task-tooltip {
+  animation: tooltipFadeIn 0.2s ease-out;
+  backdrop-filter: blur(4px);
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

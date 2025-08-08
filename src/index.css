@@ -1,0 +1,268 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Asta PowerProject-inspired styling */
+:root {
+  --asta-blue: #2e5aa0;
+  --asta-light-blue: #e3f2fd;
+  --asta-grey: #f5f5f5;
+  --asta-border: #d0d7de;
+  --asta-text: #24292f;
+  --asta-text-secondary: #656d76;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--asta-text);
+  background-color: white;
+}
+
+/* Custom resize cursors */
+.cursor-col-resize {
+  cursor: col-resize;
+}
+
+.cursor-row-resize {
+  cursor: row-resize;
+}
+
+/* Smooth transitions for resizable elements */
+.resizable-transition {
+  transition:
+    width 0.2s ease,
+    height 0.2s ease;
+}
+
+/* Prevent text selection during resize */
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Asta PowerProject Ribbon Styling */
+.asta-ribbon {
+  background: #ffffff !important;
+  border-bottom: 1px solid var(--asta-border);
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.asta-ribbon-tab {
+  background: #ffffff !important;
+  border: 1px solid var(--asta-border);
+  border-bottom: none;
+  color: var(--asta-text);
+  font-weight: 500;
+  padding: 6px 12px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  min-width: fit-content;
+}
+
+.asta-ribbon-tab:hover {
+  background: #f8f9fa;
+}
+
+.asta-ribbon-tab.active {
+  background: #f8f9fa !important;
+  border-bottom: 2px solid var(--asta-blue);
+  color: var(--asta-blue);
+  font-weight: 600;
+}
+
+.asta-ribbon-content {
+  background: #ffffff !important;
+  border: 1px solid var(--asta-border);
+  border-top: none;
+  padding: 2px;
+  min-height: 70px;
+  overflow-x: auto;
+  overflow-y: auto;
+  width: 100%;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 #f7fafc;
+}
+
+.asta-ribbon-content::-webkit-scrollbar {
+  height: 6px;
+}
+
+.asta-ribbon-content::-webkit-scrollbar-track {
+  background: #f7fafc;
+}
+
+.asta-ribbon-content::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 3px;
+}
+
+.asta-ribbon-content::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+/* Asta PowerProject Button Styling */
+.asta-button {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--asta-text);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 0;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1px;
+  margin: 0.5px;
+}
+
+.asta-button:hover {
+  background: #e3f2fd;
+  border-color: #2196f3;
+}
+
+.asta-button:active {
+  background: #bbdefb;
+}
+
+.asta-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Asta PowerProject Group Styling */
+.asta-group {
+  display: flex;
+  flex-direction: column;
+  padding: 1px 2px;
+  border-right: 1px solid var(--asta-border);
+  min-width: 80px;
+  flex-shrink: 1;
+  min-height: 50px;
+}
+
+.asta-group:last-child {
+  border-right: none;
+}
+
+.asta-group-title {
+  color: var(--asta-text-secondary);
+  font-size: 6px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 1px;
+  padding-bottom: 1px;
+  border-bottom: 1px solid var(--asta-border);
+  text-align: center;
+  width: 100%;
+}
+
+/* Asta PowerProject Tree Styling */
+.asta-tree {
+  background: #ffffff;
+  border: 1px solid var(--asta-border);
+  font-size: 13px;
+}
+
+.asta-tree-node {
+  padding: 4px 8px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.asta-tree-node:hover {
+  background: #f8f9fa;
+}
+
+.asta-tree-node.selected {
+  background: #e3f2fd;
+  color: var(--asta-blue);
+}
+
+/* Asta PowerProject Grid Styling */
+.asta-grid {
+  background: #ffffff;
+  border: 1px solid var(--asta-border);
+}
+
+.asta-grid-header {
+  background: #f8f9fa;
+  border-bottom: 2px solid var(--asta-border);
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--asta-text);
+}
+
+.asta-grid-row {
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 13px;
+}
+
+.asta-grid-row:hover {
+  background: #f8f9fa;
+}
+
+.asta-grid-row.selected {
+  background: #e3f2fd;
+}
+
+/* Asta PowerProject Properties Pane */
+.asta-properties {
+  background: #ffffff;
+  border-top: 2px solid var(--asta-border);
+}
+
+.asta-properties-tab {
+  background: #f8f9fa;
+  border: 1px solid var(--asta-border);
+  border-bottom: none;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.asta-properties-tab.active {
+  background: #ffffff;
+  border-bottom: 2px solid var(--asta-blue);
+  color: var(--asta-blue);
+}
+
+/* Asta PowerProject Resize Handles */
+.asta-resize-handle {
+  background: #e9ecef;
+  border: 1px solid var(--asta-border);
+  transition: background-color 0.2s ease;
+}
+
+.asta-resize-handle:hover {
+  background: var(--asta-blue);
+  border-color: var(--asta-blue);
+}
+
+/* Asta PowerProject Timeline Styling */
+.asta-timeline {
+  background: #ffffff;
+  border: 1px solid var(--asta-border);
+}
+
+.asta-timeline-header {
+  background: #f8f9fa;
+  border-bottom: 1px solid var(--asta-border);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--asta-text);
+}
+
+.asta-timeline-grid {
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+}

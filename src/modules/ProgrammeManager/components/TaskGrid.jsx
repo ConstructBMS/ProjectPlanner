@@ -1,0 +1,429 @@
+import React, { useState, useMemo, useCallback } from 'react';
+import { useTaskContext } from '../context/TaskContext';
+import { useViewContext } from '../context/ViewContext';
+import TaskLinkModal from './modals/TaskLinkModal';
+import {
+  ChevronRightIcon,
+  ChevronDownIcon,
+  FolderIcon,
+  PencilIcon,
+  LinkIcon,
+} from '@heroicons/react/24/outline';
+
+const TaskGrid = React.memo(() => {
+  const {
+    tasks,
+    selectedTaskId,
+    selectedTaskIds,
+    linkingMode,
+    linkStartTaskId,
+    deleteTask,
+    updateTask,
+    selectMultipleTasks,
+    handleTaskClickForLinking,
+    getVisibleTasks,
+    toggleGroupCollapse,
+  } = useTaskContext();
+
+  const { viewState } = useViewContext();
+
+  const visibleTasks = useMemo(() => getVisibleTasks(), [getVisibleTasks]);
+
+  // Inline editing state
+  const [editingField, setEditingField] = useState(null); // { taskId, field }
+  const [editValue, setEditValue] = useState('');
+
+  // Task linking modal state
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [linkFromTask, setLinkFromTask] = useState(null);
+  const [linkToTask, setLinkToTask] = useState(null);
+
+  const handleDeleteTask = useCallback(
+    (taskId, e) => {
+      e.stopPropagation(); // Prevent row selection when clicking delete
+      deleteTask(taskId);
+    },
+    [deleteTask]
+  );
+
+  const handleCreateLink = useCallback((taskId, e) => {
+    e.stopPropagation(); // Prevent row selection when clicking link
+    setLinkFromTask(taskId);
+    setLinkToTask(null);
+    setShowLinkModal(true);
+  }, []);
+
+  const closeLinkModal = useCallback(() => {
+    setShowLinkModal(false);
+    setLinkFromTask(null);
+    setLinkToTask(null);
+  }, []);
+
+  const handleRowClick = useCallback(
+    (taskId, e) => {
+      // If in linking mode, handle linking logic
+      if (linkingMode) {
+        handleTaskClickForLinking(taskId);
+        return;
+      }
+
+      // Normal selection logic
+      const isMultiSelect = e.shiftKey || e.ctrlKey || e.metaKey;
+      selectMultipleTasks(taskId, isMultiSelect);
+    },
+    [linkingMode, handleTaskClickForLinking, selectMultipleTasks]
+  );
+
+  const handleGroupToggle = useCallback(
+    (taskId, e) => {
+      e.stopPropagation(); // Prevent row selection when clicking expand/collapse
+      toggleGroupCollapse(taskId);
+    },
+    [toggleGroupCollapse]
+  );
+
+  // Inline editing functions
+  const startEditing = useCallback((taskId, field, currentValue) => {
+    setEditingField({ taskId, field });
+
+    // Format initial value for editing
+    let initialValue = currentValue;
+    if (field === 'startDate' || field === 'endDate') {
+      try {
+        const date = new Date(currentValue);
+        initialValue = date.toISOString().split('T')[0]; // YYYY-MM-DD format for date input
+      } catch (e) {
+        initialValue = currentValue;
+      }
+    }
+
+    setEditValue(initialValue);
+  }, []);
+
+  const stopEditing = useCallback(() => {
+    setEditingField(null);
+    setEditValue('');
+  }, []);
+
+  const handleEditDoubleClick = useCallback(
+    (taskId, field, currentValue, e) => {
+      e.stopPropagation();
+      startEditing(taskId, field, currentValue);
+    },
+    [startEditing]
+  );
+
+  const handleEditChange = useCallback(e => {
+    setEditValue(e.target.value);
+  }, []);
+
+  const handleEditKeyDown = useCallback(e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      commitEdit();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      stopEditing();
+    }
+  }, []);
+
+  const handleEditBlur = useCallback(() => {
+    // Small delay to allow for Enter key processing
+    window.setTimeout(() => {
+      commitEdit();
+    }, 100);
+  }, []);
+
+  const commitEdit = useCallback(() => {
+    if (!editingField) return;
+
+    const { taskId, field } = editingField;
+    let finalValue = editValue;
+
+    // Handle name field - ensure it's not empty
+    if (field === 'name') {
+      if (!finalValue.trim()) {
+        console.warn('Task name cannot be empty');
+        stopEditing();
+        return;
+      }
+      finalValue = finalValue.trim();
+    }
+
+    // Handle duration field - ensure it's a number
+    if (field === 'duration') {
+      const numericValue = parseInt(editValue.replace(' days', ''), 10);
+      if (isNaN(numericValue) || numericValue < 1) {
+        console.warn('Duration must be a positive number');
+        stopEditing();
+        return;
+      }
+      finalValue = numericValue;
+    }
+
+    // Handle date fields - validate format and convert to ISO string
+    if (field === 'startDate' || field === 'endDate') {
+      const date = new Date(finalValue);
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date format');
+        stopEditing();
+        return;
+      }
+      finalValue = date.toISOString();
+    }
+
+    // Update the task
+    updateTask(taskId, { [field]: finalValue });
+    stopEditing();
+  }, [editingField, editValue, updateTask, stopEditing]);
+
+  // Memoize the grid rows to prevent unnecessary re-renders
+  const gridRows = useMemo(() => {
+    return visibleTasks.map(task => {
+      const isSelected = selectedTaskId === task.id;
+      const isMultiSelected = selectedTaskIds.includes(task.id);
+      const isEditing = editingField?.taskId === task.id && editingField?.field;
+
+      return (
+        <div
+          key={task.id}
+          className={`asta-grid-row flex items-center border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150 ${
+            isSelected ? 'bg-blue-50 border-blue-200' : ''
+          } ${isMultiSelected ? 'bg-blue-100' : ''}`}
+          onClick={e => handleRowClick(task.id, e)}
+        >
+          {/* Expand/Collapse */}
+          <div className='w-8 h-8 flex items-center justify-center'>
+            {task.isGroup && (
+              <button
+                onClick={e => handleGroupToggle(task.id, e)}
+                className='p-1 hover:bg-gray-200 rounded transition-colors duration-150'
+              >
+                {task.isExpanded ? (
+                  <ChevronDownIcon className='w-4 h-4 text-gray-600' />
+                ) : (
+                  <ChevronRightIcon className='w-4 h-4 text-gray-600' />
+                )}
+              </button>
+            )}
+          </div>
+
+          {/* Task Icon */}
+          <div className='w-8 h-8 flex items-center justify-center'>
+            {task.isMilestone ? (
+              <div className='w-3 h-3 bg-yellow-500 rounded-full' />
+            ) : task.isGroup ? (
+              <FolderIcon className='w-4 h-4 text-blue-600' />
+            ) : (
+              <div className='w-2 h-2 bg-gray-400 rounded' />
+            )}
+          </div>
+
+          {/* Task Name */}
+          <div className='flex-1 px-2 py-1 min-w-0'>
+            {isEditing && editingField.field === 'name' ? (
+              <input
+                type='text'
+                value={editValue}
+                onChange={handleEditChange}
+                onKeyDown={handleEditKeyDown}
+                onBlur={handleEditBlur}
+                className='w-full px-1 py-0.5 border border-blue-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500'
+                autoFocus
+              />
+            ) : (
+              <div
+                className='truncate cursor-pointer'
+                onDoubleClick={e =>
+                  handleEditDoubleClick(task.id, 'name', task.name, e)
+                }
+              >
+                {task.name}
+              </div>
+            )}
+          </div>
+
+          {/* Start Date */}
+          <div className='w-24 px-2 py-1 text-sm'>
+            {isEditing && editingField.field === 'startDate' ? (
+              <input
+                type='date'
+                value={editValue}
+                onChange={handleEditChange}
+                onKeyDown={handleEditKeyDown}
+                onBlur={handleEditBlur}
+                className='w-full px-1 py-0.5 border border-blue-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500'
+                autoFocus
+              />
+            ) : (
+              <div
+                className='cursor-pointer'
+                onDoubleClick={e =>
+                  handleEditDoubleClick(task.id, 'startDate', task.startDate, e)
+                }
+              >
+                {new Date(task.startDate).toLocaleDateString()}
+              </div>
+            )}
+          </div>
+
+          {/* End Date */}
+          <div className='w-24 px-2 py-1 text-sm'>
+            {isEditing && editingField.field === 'endDate' ? (
+              <input
+                type='date'
+                value={editValue}
+                onChange={handleEditChange}
+                onKeyDown={handleEditKeyDown}
+                onBlur={handleEditBlur}
+                className='w-full px-1 py-0.5 border border-blue-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500'
+                autoFocus
+              />
+            ) : (
+              <div
+                className='cursor-pointer'
+                onDoubleClick={e =>
+                  handleEditDoubleClick(task.id, 'endDate', task.endDate, e)
+                }
+              >
+                {new Date(task.endDate).toLocaleDateString()}
+              </div>
+            )}
+          </div>
+
+          {/* Duration */}
+          <div className='w-16 px-2 py-1 text-sm text-center'>
+            {isEditing && editingField.field === 'duration' ? (
+              <input
+                type='text'
+                value={editValue}
+                onChange={handleEditChange}
+                onKeyDown={handleEditKeyDown}
+                onBlur={handleEditBlur}
+                className='w-full px-1 py-0.5 border border-blue-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500'
+                autoFocus
+              />
+            ) : (
+              <div
+                className='cursor-pointer'
+                onDoubleClick={e =>
+                  handleEditDoubleClick(task.id, 'duration', task.duration, e)
+                }
+              >
+                {task.duration} days
+              </div>
+            )}
+          </div>
+
+          {/* Status */}
+          <div className='w-20 px-2 py-1 text-sm'>
+            <span
+              className={`px-2 py-1 rounded-full text-xs font-medium ${
+                task.status === 'Complete'
+                  ? 'bg-green-100 text-green-800'
+                  : task.status === 'In Progress'
+                    ? 'bg-blue-100 text-blue-800'
+                    : task.status === 'Delayed'
+                      ? 'bg-red-100 text-red-800'
+                      : 'bg-gray-100 text-gray-800'
+              }`}
+            >
+              {task.status}
+            </span>
+          </div>
+
+          {/* Progress */}
+          <div className='w-20 px-2 py-1 text-sm'>
+            <div className='flex items-center gap-1'>
+              <div className='flex-1 bg-gray-200 rounded-full h-2'>
+                <div
+                  className='bg-blue-600 h-2 rounded-full transition-all duration-300'
+                  style={{ width: `${task.progress}%` }}
+                />
+              </div>
+              <span className='text-xs text-gray-600 w-8'>
+                {task.progress}%
+              </span>
+            </div>
+          </div>
+
+          {/* Assignee */}
+          <div className='w-24 px-2 py-1 text-sm truncate'>
+            {task.assignee || '-'}
+          </div>
+
+          {/* Actions */}
+          <div className='w-16 px-2 py-1 flex items-center justify-center gap-1'>
+            <button
+              onClick={e => handleCreateLink(task.id, e)}
+              className='p-1 hover:bg-blue-100 rounded transition-colors duration-150'
+              title='Create task link'
+            >
+              <LinkIcon className='w-3 h-3 text-gray-500 hover:text-blue-600' />
+            </button>
+            <button
+              onClick={e => handleDeleteTask(task.id, e)}
+              className='p-1 hover:bg-red-100 rounded transition-colors duration-150'
+              title='Delete task'
+            >
+              <PencilIcon className='w-3 h-3 text-gray-500 hover:text-red-600' />
+            </button>
+          </div>
+        </div>
+      );
+    });
+  }, [
+    visibleTasks,
+    selectedTaskId,
+    selectedTaskIds,
+    editingField,
+    editValue,
+    handleRowClick,
+    handleGroupToggle,
+    handleEditDoubleClick,
+    handleEditChange,
+    handleEditKeyDown,
+    handleEditBlur,
+    handleDeleteTask,
+    handleCreateLink,
+  ]);
+
+  return (
+    <>
+      <div className='asta-grid h-full overflow-auto'>
+        {/* Grid Header */}
+        <div className='asta-grid-header flex items-center border-b-2 border-gray-300 bg-gray-50 sticky top-0 z-10'>
+          <div className='w-8 h-8' />
+          <div className='w-8 h-8' />
+          <div className='flex-1 px-2 py-2 font-semibold'>Task Name</div>
+          <div className='w-24 px-2 py-2 font-semibold'>Start Date</div>
+          <div className='w-24 px-2 py-2 font-semibold'>End Date</div>
+          <div className='w-16 px-2 py-2 font-semibold text-center'>
+            Duration
+          </div>
+          <div className='w-20 px-2 py-2 font-semibold'>Status</div>
+          <div className='w-20 px-2 py-2 font-semibold'>Progress</div>
+          <div className='w-24 px-2 py-2 font-semibold'>Assignee</div>
+          <div className='w-16 px-2 py-2 font-semibold text-center'>
+            Actions
+          </div>
+        </div>
+
+        {/* Grid Rows */}
+        <div className='asta-grid-rows'>{gridRows}</div>
+      </div>
+
+      {/* Task Link Modal */}
+      <TaskLinkModal
+        isOpen={showLinkModal}
+        onClose={closeLinkModal}
+        fromTaskId={linkFromTask}
+        toTaskId={linkToTask}
+      />
+    </>
+  );
+});
+
+TaskGrid.displayName = 'TaskGrid';
+
+export default TaskGrid;
