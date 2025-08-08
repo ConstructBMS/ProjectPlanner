@@ -585,11 +585,14 @@ const GanttChart = () => {
     const isCritical =
       viewState.showCriticalPath && criticalPathTasks.includes(task.id);
     const isDragging = dragging.taskId === task.id;
+    const isMilestone = task.isMilestone || (task.duration || 1) === 0;
 
     let baseClasses =
       'rounded-sm transition-all duration-200 cursor-move border';
 
-    if (task.isGroup) {
+    if (isMilestone) {
+      baseClasses = 'transition-all duration-200 cursor-move'; // Remove border and rounded for diamond
+    } else if (task.isGroup) {
       baseClasses += ' bg-green-100 border-green-400 text-green-800';
     } else if (isCritical) {
       baseClasses += ' bg-red-100 border-red-500 text-red-800';
@@ -850,6 +853,9 @@ const GanttChart = () => {
                   ? `${20 * viewState.timelineZoom}px`
                   : `${Math.max(duration * scaledDurationWidth, 40 * viewState.timelineZoom)}px`;
 
+                // Check if task is a milestone (zero duration or isMilestone flag)
+                const isMilestone = task.isMilestone || duration === 0;
+
                 return (
                   <div
                     key={task.id}
@@ -890,15 +896,15 @@ const GanttChart = () => {
 
                     {/* Timeline Bar Area */}
                     <div className='flex-1 relative h-full'>
-                      {task.isMilestone ? (
+                      {isMilestone ? (
                         <div
                           className={`${getTaskBarStyle(task)} flex items-center justify-center`}
                           style={{
-                            left,
-                            width,
+                            left: `${Math.max(daysFromStart * scaledDayWidth - 8, 0)}px`, // center diamond
+                            width: '16px',
                             position: 'absolute',
-                            top: '2px',
-                            height: 'calc(100% - 4px)',
+                            top: '4px',
+                            height: '16px',
                           }}
                           onMouseDown={e => handleTaskDragStart(e, task)}
                           onClick={e => {
@@ -924,9 +930,18 @@ const GanttChart = () => {
                             });
                           }}
                         >
-                          <div className='text-lg font-bold text-purple-700'>
-                            ◆
-                          </div>
+                          <div
+                            className={`w-4 h-4 rotate-45 border-2 ${
+                              selectedTaskId === task.id
+                                ? 'bg-blue-600 border-blue-700'
+                                : hoveredTaskId === task.id
+                                  ? 'bg-blue-500 border-blue-600'
+                                  : 'bg-green-600 border-green-700'
+                            }`}
+                            style={{
+                              transform: 'rotate(45deg)',
+                            }}
+                          />
                         </div>
                       ) : (
                         <div

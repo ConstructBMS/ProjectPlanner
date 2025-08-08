@@ -601,3 +601,16 @@ projectplanner/
 ### 2025-08-08 11:07:47
 
 - auto: Pre-commit hook update
+
+### 2025-08-08 11:12:17
+
+- auto: Pre-commit hook update
+
+### 2025-08-08 11:15:30
+
+- **Prompt 095**: Added diamond milestone rendering to Gantt chart for zero-day tasks
+  - Milestones are now displayed as green diamond shapes instead of rectangular bars
+  - Supports both `isMilestone: true` flag and zero duration tasks
+  - Diamond markers are properly centered at the milestone date position
+  - Includes hover and selection state styling (blue for selected/hovered)
+  - Maintains all existing functionality (drag, tooltip, click events)
