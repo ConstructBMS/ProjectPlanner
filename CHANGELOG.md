@@ -5,6 +5,19 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-08-08] – Prompt 088
+
+### Added
+
+- **Horizontal Row Grid Lines**
+  - Added horizontal grid lines to separate rows in Gantt chart
+  - Row lines render dynamically based on task count and row height (32px)
+  - Light grey lines spanning full width of the timeline for visual clarity
+  - Lines positioned behind task bars with proper z-index layering
+  - Re-renders automatically when tasks are added, removed, or reordered
+  - Scrolls horizontally with Gantt content for consistent visual experience
+  - Performance optimized with useMemo for efficient updates
+
 ## [2025-08-08] – Prompt 086
 
 ### Added
@@ -473,5 +486,9 @@ projectplanner/
 - auto: Pre-commit hook update
 
 ### 2025-08-08 03:00:28
+
+- auto: Pre-commit hook update
+
+### 2025-08-08 03:03:54
 
 - auto: Pre-commit hook update

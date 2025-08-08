@@ -146,6 +146,29 @@ const GanttChart = () => {
     viewState.timelineZoom,
   ]);
 
+  // Generate horizontal row grid lines
+  const rowLines = useMemo(() => {
+    if (!viewState.showGridlines) return [];
+
+    const rowHeight = 32; // h-8 = 32px
+    const lines = [];
+
+    tasks.forEach((task, index) => {
+      lines.push(
+        <div
+          key={`row-line-${task.id}`}
+          className='gantt-row-line absolute left-0 right-0'
+          style={{
+            top: `${(index + 1) * rowHeight}px`,
+            height: '1px',
+          }}
+        />
+      );
+    });
+
+    return lines;
+  }, [tasks, viewState.showGridlines]);
+
   // Update task refs when tasks change or view settings change
   useEffect(() => {
     const newRefs = {};
@@ -509,6 +532,13 @@ const GanttChart = () => {
         {viewState.showGridlines && (
           <div className='absolute inset-0 pointer-events-none z-0'>
             {gridLines}
+          </div>
+        )}
+
+        {/* Horizontal Row Grid Lines */}
+        {viewState.showGridlines && (
+          <div className='absolute inset-0 pointer-events-none z-0'>
+            {rowLines}
           </div>
         )}
 

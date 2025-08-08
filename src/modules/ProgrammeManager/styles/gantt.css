@@ -11,3 +11,9 @@
 .grid-month {
   background-color: rgba(0, 0, 0, 0.2);
 }
+
+/* Horizontal Row Grid Lines for Gantt Chart */
+
+.gantt-row-line {
+  background-color: rgba(0, 0, 0, 0.05);
+}
