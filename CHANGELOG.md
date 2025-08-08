@@ -673,3 +673,15 @@ projectplanner/
   - Text is truncated if too long to fit within the bar width
   - Labels only appear when bars are wide enough (>60px) for readability
   - Labels are centered within each task bar for clear identification
+
+### 2025-08-08 14:17:49
+
+- auto: Pre-commit hook update
+
+### 2025-08-08 14:25:30
+
+- **Prompt 104**: Gantt task bar resize now snaps to day-based grid columns
+  - Added `snapToGrid()` function to ensure task bars snap to exact day boundaries
+  - Task dragging now uses snapped values instead of raw pixel positions
+  - Added helper functions `getDateFromX()` and `getXFromDate()` for future resize functionality
+  - Each grid column represents exactly 1 day for precise date alignment

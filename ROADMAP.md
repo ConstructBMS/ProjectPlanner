@@ -27,6 +27,7 @@
 - Prompt 100: Added horizontal row lines to Gantt for each task (2025-08-08)
 - Prompt 101: Added vertical "Today" marker line to Gantt chart (2025-08-08)
 - Prompt 102: Task bars now include labels with task names, styled like Asta (2025-08-08)
+- Prompt 104: Gantt task bar resize now snaps to day-based grid columns (2025-08-08)
 
 ## 🟡 In Progress
 

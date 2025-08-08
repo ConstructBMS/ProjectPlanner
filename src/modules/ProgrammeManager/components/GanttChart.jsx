@@ -548,6 +548,32 @@ const GanttChart = () => {
     clearHoveredTask();
   };
 
+  // Grid snapping helper functions
+  const snapToGrid = x => {
+    const baseDayWidth = 2;
+    const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
+    const index = Math.round(x / scaledDayWidth);
+    return index * scaledDayWidth;
+  };
+
+  const getDateFromX = x => {
+    const baseDayWidth = 2;
+    const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
+    const dayIndex = Math.round(x / scaledDayWidth);
+    const startOfYear = new Date('2024-01-01');
+    const date = new Date(startOfYear);
+    date.setDate(date.getDate() + dayIndex);
+    return date;
+  };
+
+  const getXFromDate = date => {
+    const startOfYear = new Date('2024-01-01');
+    const dayIndex = Math.floor((date - startOfYear) / (1000 * 60 * 60 * 24));
+    const baseDayWidth = 2;
+    const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
+    return dayIndex * scaledDayWidth;
+  };
+
   // Drag event handlers
   const handleTaskDragStart = (e, task) => {
     e.preventDefault();
@@ -569,15 +595,18 @@ const GanttChart = () => {
     if (!dragging.taskId) return;
 
     const deltaX = e.clientX - dragging.startX;
+
+    // Snap the delta to the grid
+    const snappedDeltaX = snapToGrid(deltaX);
     const baseDayWidth = 2;
     const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
-    const dayOffset = Math.round(deltaX / scaledDayWidth);
+    const dayOffset = Math.round(snappedDeltaX / scaledDayWidth);
 
     // Find the task being dragged
     const task = tasks.find(t => t.id === dragging.taskId);
     if (!task) return;
 
-    // Calculate new dates
+    // Calculate new dates using snapped values
     const newStartDate = addDays(dragging.originalStartDate, dayOffset);
     const newEndDate = addDays(dragging.originalEndDate, dayOffset);
 
@@ -1046,6 +1075,21 @@ const GanttChart = () => {
                                 {task.name}
                               </span>
                             </div>
+                          )}
+
+                          {/* Resize Handles */}
+                          {(selectedTaskId === task.id ||
+                            hoveredTaskId === task.id) && (
+                            <>
+                              <div
+                                className='absolute left-0 top-0 bottom-0 w-2 bg-white cursor-ew-resize border border-gray-300 rounded-l'
+                                title='Drag to resize start date'
+                              />
+                              <div
+                                className='absolute right-0 top-0 bottom-0 w-2 bg-white cursor-ew-resize border border-gray-300 rounded-r'
+                                title='Drag to resize end date'
+                              />
+                            </>
                           )}
                         </div>
                       )}
