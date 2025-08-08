@@ -637,3 +637,15 @@ projectplanner/
   - Saturday and Sunday columns now display with light grey background (`bg-gray-100`)
   - Weekend shading stretches full height behind tasks for clear visual distinction
   - Maintains existing weekend visibility toggle functionality
+
+### 2025-08-08 12:05:45
+
+- **Prompt 100**: Added horizontal row lines to Gantt for each task
+  - Each task row now displays a light grey horizontal line beneath it
+  - Lines use `border-gray-200` styling for subtle visual separation
+  - Horizontal lines stretch full width of the Gantt area
+  - Maintains existing grid line visibility toggle functionality
+
+### 2025-08-08 12:00:19
+
+- auto: Pre-commit hook update
