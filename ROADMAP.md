@@ -43,6 +43,7 @@
 - Prompt 117: Added calculated Duration column to Task Grid (2025-08-08)
 - Prompt 118: Added tooltip on Gantt bars to show task name and date range (2025-08-08)
 - Prompt 119: Added ribbon toggle for critical path highlighting in Gantt (2025-08-08)
+- Prompt 120: Added milestone diamond icon to task rows in tree/grid (2025-08-08)
 
 ## 🟡 In Progress
 

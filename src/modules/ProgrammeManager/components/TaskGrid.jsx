@@ -3,6 +3,18 @@ import { useTaskContext } from '../context/TaskContext';
 import { useViewContext } from '../context/ViewContext';
 import TaskLinkModal from './modals/TaskLinkModal';
 import { calculateWorkingDays } from '../utils/dateUtils';
+
+// Diamond icon component for milestones
+const DiamondIcon = ({ className = 'w-4 h-4', color = 'text-purple-600' }) => (
+  <svg
+    className={`${className} ${color}`}
+    viewBox='0 0 24 24'
+    fill='currentColor'
+    xmlns='http://www.w3.org/2000/svg'
+  >
+    <path d='M12 2L2 12L12 22L22 12L12 2Z' />
+  </svg>
+);
 import {
   ChevronRightIcon,
   ChevronDownIcon,
@@ -212,7 +224,7 @@ const TaskGrid = React.memo(() => {
           {/* Task Icon */}
           <div className='w-8 h-8 flex items-center justify-center'>
             {task.isMilestone ? (
-              <div className='w-3 h-3 bg-yellow-500 rounded-full' />
+              <DiamondIcon className='w-4 h-4' color='text-purple-500' />
             ) : task.isGroup ? (
               <FolderIcon className='w-4 h-4 text-blue-600' />
             ) : (

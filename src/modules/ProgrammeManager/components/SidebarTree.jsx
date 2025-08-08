@@ -32,14 +32,14 @@ import {
 } from '@heroicons/react/24/outline';
 
 // Diamond icon component for milestones
-const DiamondIcon = ({ className = "w-4 h-4", color = "text-purple-600" }) => (
+const DiamondIcon = ({ className = 'w-4 h-4', color = 'text-purple-600' }) => (
   <svg
     className={`${className} ${color}`}
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    xmlns="http://www.w3.org/2000/svg"
+    viewBox='0 0 24 24'
+    fill='currentColor'
+    xmlns='http://www.w3.org/2000/svg'
   >
-    <path d="M12 2L2 12L12 22L22 12L12 2Z" />
+    <path d='M12 2L2 12L12 22L22 12L12 2Z' />
   </svg>
 );
 
@@ -210,7 +210,7 @@ const TreeNode = React.memo(
           {/* Task Icon */}
           <div className='flex-shrink-0 w-4 h-4 mr-2'>
             {task.isMilestone ? (
-              <DiamondIcon className='w-3 h-3' color='text-purple-600' />
+              <DiamondIcon className='w-3 h-3' color='text-purple-500' />
             ) : task.isGroup ? (
               <FolderIcon className='w-4 h-4 text-blue-600' />
             ) : (
@@ -580,7 +580,7 @@ const SidebarTree = forwardRef((props, ref) => {
   // Memoize the rendered tree nodes
   const renderedNodes = useMemo(() => {
     let rowCounter = 1;
-    
+
     const renderNodes = (nodes, level = 0) => {
       return nodes.map(node => {
         const isExpanded = expandedIds.has(node.id);

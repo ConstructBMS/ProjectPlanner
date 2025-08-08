@@ -5,6 +5,18 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-08-08] – Prompt 120
+
+### Added
+
+- **Milestone Diamond Icon in Task Grid and Tree**
+  - Added milestone diamond icon to task rows in both Task Grid and Sidebar Tree
+  - Replaced yellow circle with purple diamond icon for milestone tasks in TaskGrid
+  - Consistent diamond icon styling across both components using `text-purple-500`
+  - Diamond icon positioned before task name for clear visual identification
+  - Enhanced visual consistency between grid and tree views
+  - Professional milestone indicator matching industry standards
+
 ## [2025-08-08] – Prompt 119
 
 ### Added
