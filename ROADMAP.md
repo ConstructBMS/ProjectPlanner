@@ -38,6 +38,7 @@
 - Prompt 112: Added start/end project date to ribbon (2025-08-08)
 - Prompt 113: Added Go to Today scroll button in ribbon (2025-08-08)
 - Prompt 114: Added Gantt zoom in/out buttons with adjustable scale (2025-08-08)
+- Prompt 115: Added 1-based row numbering in the Programme Tree (2025-08-08)
 
 ## 🟡 In Progress
 

@@ -81,6 +81,7 @@ const TreeNode = React.memo(
   ({
     task,
     level = 0,
+    rowNumber,
     isExpanded,
     isSelected,
     isMultiSelected,
@@ -185,6 +186,11 @@ const TreeNode = React.memo(
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
+          {/* Row Number */}
+          <div className='flex-shrink-0 text-sm text-gray-400 pr-2'>
+            {rowNumber}
+          </div>
+
           {/* Expand/Collapse Button */}
           <div className='flex-shrink-0 w-4 h-4 mr-1'>
             {hasChildren && (
@@ -573,18 +579,22 @@ const SidebarTree = forwardRef((props, ref) => {
 
   // Memoize the rendered tree nodes
   const renderedNodes = useMemo(() => {
+    let rowCounter = 1;
+    
     const renderNodes = (nodes, level = 0) => {
       return nodes.map(node => {
         const isExpanded = expandedIds.has(node.id);
         const isSelected = selectedTaskId === node.id;
         const isMultiSelected = selectedTaskIds.includes(node.id);
         const isHovered = hoveredTaskId === node.id;
+        const currentRowNumber = rowCounter++;
 
         return (
           <React.Fragment key={node.id}>
             <TreeNode
               task={node}
               level={level}
+              rowNumber={currentRowNumber}
               isExpanded={isExpanded}
               isSelected={isSelected}
               isMultiSelected={isMultiSelected}

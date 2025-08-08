@@ -5,6 +5,19 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-08-08] – Prompt 115
+
+### Added
+
+- **Task Row Numbering in Sidebar Tree**
+  - Added 1-based row numbering in the Programme Tree sidebar
+  - Row numbers display as 1, 2, 3... matching Asta PowerProject style
+  - Numbers positioned before expand/collapse buttons for clear hierarchy
+  - Styled with `text-sm text-gray-400 pr-2` for subtle visual integration
+  - Row counter increments sequentially across all visible tasks
+  - Numbers align vertically with task names for consistent layout
+  - Maintains existing tree structure and functionality
+
 ## [2025-08-08] – Prompt 114
 
 ### Enhanced
