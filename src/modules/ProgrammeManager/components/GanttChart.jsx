@@ -583,7 +583,8 @@ const GanttChart = () => {
     const isHovered = hoveredTaskId === task.id;
     const isLinkStart = linkingMode && linkStartTaskId === task.id;
     const isCritical =
-      viewState.showCriticalPath && criticalPathTasks.includes(task.id);
+      task.isCritical ||
+      (viewState.showCriticalPath && criticalPathTasks.includes(task.id));
     const isDragging = dragging.taskId === task.id;
     const isMilestone = task.isMilestone || (task.duration || 1) === 0;
 
@@ -595,7 +596,7 @@ const GanttChart = () => {
     } else if (task.isGroup) {
       baseClasses += ' bg-green-100 border-green-400 text-green-800';
     } else if (isCritical) {
-      baseClasses += ' bg-red-100 border-red-500 text-red-800';
+      baseClasses += ' bg-red-600 border-red-700 text-white';
     } else {
       baseClasses += ' bg-blue-100 border-blue-400 text-blue-800';
     }
@@ -603,9 +604,9 @@ const GanttChart = () => {
     if (isDragging) {
       baseClasses +=
         ' ring-2 ring-orange-500 border-orange-600 shadow-lg opacity-80';
-    } else if (isSelected) {
+    } else if (isSelected && !isCritical) {
       baseClasses += ' ring-2 ring-blue-500 border-blue-600 shadow-md';
-    } else if (isHovered) {
+    } else if (isHovered && !isCritical) {
       baseClasses += ' ring-1 ring-blue-300 border-blue-500 shadow-sm';
     } else if (isLinkStart) {
       baseClasses += ' bg-purple-100 border-purple-400 ring-2 ring-purple-500';
@@ -932,11 +933,13 @@ const GanttChart = () => {
                         >
                           <div
                             className={`w-4 h-4 rotate-45 border-2 ${
-                              selectedTaskId === task.id
-                                ? 'bg-blue-600 border-blue-700'
-                                : hoveredTaskId === task.id
-                                  ? 'bg-blue-500 border-blue-600'
-                                  : 'bg-green-600 border-green-700'
+                              task.isCritical
+                                ? 'bg-red-600 border-red-700'
+                                : selectedTaskId === task.id
+                                  ? 'bg-blue-600 border-blue-700'
+                                  : hoveredTaskId === task.id
+                                    ? 'bg-blue-500 border-blue-600'
+                                    : 'bg-green-600 border-green-700'
                             }`}
                             style={{
                               transform: 'rotate(45deg)',

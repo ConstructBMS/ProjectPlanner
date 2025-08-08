@@ -614,3 +614,15 @@ projectplanner/
   - Diamond markers are properly centered at the milestone date position
   - Includes hover and selection state styling (blue for selected/hovered)
   - Maintains all existing functionality (drag, tooltip, click events)
+
+### 2025-08-08 11:46:29
+
+- auto: Pre-commit hook update
+
+### 2025-08-08 11:50:15
+
+- **Prompt 096**: Critical path tasks now display as red bars on the Gantt timeline
+  - Tasks with `isCritical: true` property are highlighted in red (`bg-red-600`)
+  - Critical path tasks remain red even when hovered or selected
+  - Critical path milestones display as red diamonds
+  - Maintains existing critical path calculation logic as fallback
