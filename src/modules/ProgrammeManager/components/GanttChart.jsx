@@ -26,6 +26,12 @@ const GanttChart = () => {
 
   const { viewState, updateViewState } = useViewContext();
 
+  const taskRefs = useRef({});
+  const svgContainerRef = useRef(null);
+  const timelineContainerRef = useRef(null);
+
+  const tasks = getVisibleTasks(viewState.taskFilter);
+
   // Calculate critical path when tasks or links change
   const criticalPathTasks = useMemo(() => {
     return calculateCriticalPath(tasks, taskLinks);
@@ -49,12 +55,6 @@ const GanttChart = () => {
 
     return floats;
   }, [tasks, viewState.showSlack]);
-
-  const taskRefs = useRef({});
-  const svgContainerRef = useRef(null);
-  const timelineContainerRef = useRef(null);
-
-  const tasks = getVisibleTasks(viewState.taskFilter);
 
   // Calculate date range for grid lines
   const dateRange = useMemo(() => {
