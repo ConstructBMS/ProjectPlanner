@@ -381,6 +381,25 @@ export const TaskProvider = ({ children }) => {
     [nextId, saveToUndoStack, tasks]
   );
 
+  const getTaskDescendants = useCallback(
+    taskId => {
+      const descendants = [];
+
+      const addDescendants = parentId => {
+        tasks.forEach(task => {
+          if (task.parentId === parentId) {
+            descendants.push(task.id);
+            addDescendants(task.id);
+          }
+        });
+      };
+
+      addDescendants(taskId);
+      return descendants;
+    },
+    [tasks]
+  );
+
   const deleteTask = useCallback(
     taskId => {
       saveToUndoStack();
@@ -697,25 +716,6 @@ export const TaskProvider = ({ children }) => {
       return visible;
     },
     [hierarchicalTasks]
-  );
-
-  const getTaskDescendants = useCallback(
-    taskId => {
-      const descendants = [];
-
-      const addDescendants = parentId => {
-        tasks.forEach(task => {
-          if (task.parentId === parentId) {
-            descendants.push(task.id);
-            addDescendants(task.id);
-          }
-        });
-      };
-
-      addDescendants(taskId);
-      return descendants;
-    },
-    [tasks]
   );
 
   // Link operations with enhanced functionality
