@@ -202,7 +202,6 @@ const GanttChart = () => {
 
   // Generate weekend highlighting blocks
   const weekendBlocks = useMemo(() => {
-
     const blocks = [];
     const start = new Date(dateRange.start);
     const end = new Date(dateRange.end);
@@ -715,7 +714,7 @@ const GanttChart = () => {
     } else if (task.isGroup) {
       baseClasses += ' bg-green-100 border-green-400 text-green-800';
     } else if (isCritical) {
-      baseClasses += ' bg-red-600 border-red-700 text-white';
+      baseClasses += ' bg-red-500 opacity-70 border-red-600 text-white';
     } else {
       baseClasses += ' bg-blue-100 border-blue-400 text-blue-800';
     }
@@ -730,7 +729,7 @@ const GanttChart = () => {
     } else if (isLinkStart) {
       baseClasses += ' bg-purple-100 border-purple-400 ring-2 ring-purple-500';
     } else if (isCritical) {
-      baseClasses += ' ring-2 ring-red-500 border-red-600 shadow-md';
+      baseClasses += ' ring-2 ring-red-500 border-red-600 shadow-md opacity-70';
     }
 
     return baseClasses;
@@ -1278,7 +1277,9 @@ const GanttChart = () => {
             maxWidth: '250px',
           }}
         >
-          <div className='font-semibold mb-2 text-blue-300'>Task: {tooltip.task.name}</div>
+          <div className='font-semibold mb-2 text-blue-300'>
+            Task: {tooltip.task.name}
+          </div>
           <div className='space-y-1 text-gray-200'>
             <div className='flex justify-between'>
               <span className='text-gray-400'>Start:</span>
@@ -1291,7 +1292,9 @@ const GanttChart = () => {
             {(tooltip.task.isCritical ||
               (viewState.showCriticalPath &&
                 criticalPathTasks.includes(tooltip.task.id))) && (
-              <div className='text-red-300 font-medium mt-2 pt-1 border-t border-gray-700'>Critical Task</div>
+              <div className='text-red-300 font-medium mt-2 pt-1 border-t border-gray-700'>
+                Critical Task
+              </div>
             )}
           </div>
         </div>

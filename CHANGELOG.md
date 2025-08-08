@@ -5,6 +5,19 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-08-08] – Prompt 119
+
+### Added
+
+- **Critical Path Highlighting Toggle**
+  - Enhanced existing ribbon toggle for critical path highlighting in Gantt chart
+  - Updated critical path task styling to use `bg-red-500 opacity-70` for better visibility
+  - Critical path calculation uses dependency data to identify tasks with zero total float
+  - Tasks on critical path are highlighted with red background and border
+  - Toggle state persists across sessions using localStorage
+  - Critical tasks show in tooltip when critical path highlighting is enabled
+  - Professional styling with opacity effect for clear visual distinction
+
 ## [2025-08-08] – Prompt 118
 
 ### Added
