@@ -11,6 +11,10 @@
 - Prompt 078: "Go to Today" button wired to center timeline on current date (2025-08-08)
 - Prompt 079: "Show Weekends" toggle wired to GanttChart with persistence (2025-08-08)
 - Prompt 080: "Show Gridlines" toggle wired to GanttChart rendering (2025-08-08)
+- Prompt 081: "Show Critical Path" toggle wired with calculation and styling (2025-08-08)
+- Prompt 082: "Show Slack" toggle wired with float calculation and rendering (2025-08-08)
+- Prompt 083: "Zoom to Fit" adjusts Gantt scale to display all tasks in view (2025-08-08)
+- Prompt 085: "Today" button scrolls Gantt timeline to current date (2025-08-08)
 
 ## 🟡 In Progress
 

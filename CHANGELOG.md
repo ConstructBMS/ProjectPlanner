@@ -9,6 +9,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Prompt 085: Today Button**
+  - Added "Today" button in View tab ribbon Zoom group
+  - Clicking it scrolls Gantt chart to center current date in viewport
+  - Timeline uses zoomScale to calculate pixel offset accurately
+  - Smooth scrolling animation with proper centering calculation
+  - Respects weekend visibility settings when calculating position
+  - Auto-resets highlight state after scrolling for clean UX
+  - Works seamlessly with existing zoom controls and timeline features
+
+- **Prompt 083: Zoom to Fit Button**
+  - Added "Zoom to Fit" button in View tab ribbon Zoom group
+  - Automatically calculates optimal zoom level to fit all tasks in viewport
+  - Calculates date range from earliest task start to latest task finish
+  - Adds 10% padding on each side for better visual presentation
+  - Button disabled when no tasks exist for better UX
+  - Smooth zoom adjustment with proper bounds checking (0.3x to 3.0x)
+  - Works seamlessly with existing zoom controls and timeline features
+
+- **Prompt 082: Show Slack Toggle**
+  - Added "Show Slack" toggle checkbox in View tab ribbon View group
+  - Toggle state managed through ViewContext with localStorage persistence
+  - Ready for integration with critical path calculation for float visualization
+  - Immediate visual feedback when toggling slack visibility
+  - Works seamlessly with existing timeline features and view toggles
+
+- **Prompt 081: Show Critical Path Toggle**
+  - Added "Show Critical Path" toggle checkbox in View tab ribbon View group
+  - Implemented comprehensive critical path calculation utility with forward/backward pass
+  - GanttChart highlights critical tasks with red styling when toggle is enabled
+  - Critical path calculation considers task dependencies, durations, and lag times
+  - Toggle state persisted to localStorage for session continuity
+  - Immediate visual feedback when toggling critical path highlighting
+  - Works seamlessly with existing timeline features and task management
+
 - **Prompt 080: Show Gridlines Toggle**
   - Added "Show Gridlines" toggle checkbox in View tab ribbon View group
   - GanttChart now shows or hides gridlines based on user setting
@@ -410,5 +444,9 @@ projectplanner/
 - auto: Pre-commit hook update
 
 ### 2025-08-07 23:49:41
+
+- auto: Pre-commit hook update
+
+### 2025-08-08 00:04:28
 
 - auto: Pre-commit hook update

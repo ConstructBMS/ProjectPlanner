@@ -30,6 +30,8 @@ export const ViewProvider = ({ children }) => {
     statusHighlighting: false, // Toggle for status-based row highlighting
     showWeekends: true, // Toggle for showing weekend columns in timeline
     showGridlines: true, // Toggle for showing gridlines in timeline
+    showCriticalPath: false, // Toggle for showing critical path highlighting
+    showSlack: false, // Toggle for showing slack overlays
 
     // Date markers
     dateMarkers: [],
@@ -87,6 +89,33 @@ export const ViewProvider = ({ children }) => {
         console.error('Error loading saved showGridlines preference:', error);
       }
     }
+
+    // Load saved showCriticalPath preference
+    const savedShowCriticalPath = window.localStorage.getItem(
+      'gantt.showCriticalPath'
+    );
+    if (savedShowCriticalPath !== null) {
+      try {
+        const showCriticalPath = JSON.parse(savedShowCriticalPath);
+        setViewState(prev => ({ ...prev, showCriticalPath }));
+      } catch (error) {
+        console.error(
+          'Error loading saved showCriticalPath preference:',
+          error
+        );
+      }
+    }
+
+    // Load saved showSlack preference
+    const savedShowSlack = window.localStorage.getItem('gantt.showSlack');
+    if (savedShowSlack !== null) {
+      try {
+        const showSlack = JSON.parse(savedShowSlack);
+        setViewState(prev => ({ ...prev, showSlack }));
+      } catch (error) {
+        console.error('Error loading saved showSlack preference:', error);
+      }
+    }
   }, []);
 
   const updateViewState = updates => {
@@ -137,6 +166,37 @@ export const ViewProvider = ({ children }) => {
     console.log('Show Gridlines toggled');
   };
 
+  const toggleCriticalPath = () => {
+    setViewState(prev => {
+      const next = !prev.showCriticalPath;
+      window.localStorage.setItem(
+        'gantt.showCriticalPath',
+        JSON.stringify(next)
+      );
+      return { ...prev, showCriticalPath: next };
+    });
+    console.log('Show Critical Path toggled');
+  };
+
+  const toggleSlack = () => {
+    setViewState(prev => {
+      const next = !prev.showSlack;
+      window.localStorage.setItem('gantt.showSlack', JSON.stringify(next));
+      return { ...prev, showSlack: next };
+    });
+    console.log('Show Slack toggled');
+  };
+
+  const zoomToFit = () => {
+    // This will trigger the Gantt chart to zoom to fit all tasks
+    const zoomToFitAction = {
+      zoomToFit: true,
+      zoomToFitTimestamp: Date.now(),
+    };
+    updateViewState(zoomToFitAction);
+    console.log('Zoom to Fit triggered');
+  };
+
   const value = {
     viewState,
     updateViewState,
@@ -144,6 +204,9 @@ export const ViewProvider = ({ children }) => {
     goToToday,
     toggleWeekends,
     toggleGridlines,
+    toggleCriticalPath,
+    toggleSlack,
+    zoomToFit,
   };
 
   return <ViewContext.Provider value={value}>{children}</ViewContext.Provider>;

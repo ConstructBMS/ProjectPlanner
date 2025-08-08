@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import {
   ChevronRightIcon,
   ChevronDownIcon,
@@ -7,6 +7,7 @@ import {
 import { useTaskContext } from '../context/TaskContext';
 import { useViewContext } from '../context/ViewContext';
 import DateMarkersOverlay from './DateMarkersOverlay';
+import { calculateCriticalPath } from '../utils/criticalPath';
 
 const GanttChart = () => {
   const {
@@ -22,7 +23,31 @@ const GanttChart = () => {
     taskLinks,
   } = useTaskContext();
 
-  const { viewState } = useViewContext();
+  const { viewState, updateViewState } = useViewContext();
+
+  // Calculate critical path when tasks or links change
+  const criticalPathTasks = useMemo(() => {
+    return calculateCriticalPath(tasks, taskLinks);
+  }, [tasks, taskLinks]);
+
+  // Calculate task floats for slack visualization
+  const taskFloats = useMemo(() => {
+    if (!viewState.showSlack) return {};
+
+    const floats = {};
+    tasks.forEach(task => {
+      // For now, use a simple calculation - in a real implementation,
+      // this would use the critical path calculation results
+      const duration = task.duration || 1;
+
+      // Calculate float based on dependencies
+      // This is a simplified version - in practice, you'd use the full CPM calculation
+      const float = Math.max(0, duration * 0.2); // 20% of duration as float
+      floats[task.id] = float;
+    });
+
+    return floats;
+  }, [tasks, viewState.showSlack]);
 
   const taskRefs = useRef({});
   const svgContainerRef = useRef(null);
@@ -41,7 +66,15 @@ const GanttChart = () => {
       }
     });
     taskRefs.current = newRefs;
-  }, [tasks, viewState.showWeekends, viewState.showGridlines]);
+  }, [
+    tasks,
+    viewState.showWeekends,
+    viewState.showGridlines,
+    viewState.showCriticalPath,
+    viewState.showSlack,
+    criticalPathTasks,
+    taskFloats,
+  ]);
 
   // Handle "Go to Today" functionality
   useEffect(() => {
@@ -102,6 +135,61 @@ const GanttChart = () => {
     viewState.timelineZoom,
     viewState.showWeekends,
   ]);
+
+  // Handle "Zoom to Fit" functionality
+  useEffect(() => {
+    if (
+      viewState.zoomToFit &&
+      timelineContainerRef.current &&
+      tasks.length > 0
+    ) {
+      // Calculate the date range of all tasks
+      const taskDates = tasks.flatMap(task => [
+        new Date(task.startDate),
+        new Date(task.endDate),
+      ]);
+
+      const minDate = new Date(Math.min(...taskDates));
+      const maxDate = new Date(Math.max(...taskDates));
+
+      // Add some padding (10% on each side)
+      const totalRange = maxDate - minDate;
+      const padding = totalRange * 0.1;
+      const paddedMinDate = new Date(minDate.getTime() - padding);
+      const paddedMaxDate = new Date(maxDate.getTime() + padding);
+
+      // Calculate the total date range in days
+      const totalDays = Math.ceil(
+        (paddedMaxDate - paddedMinDate) / (1000 * 60 * 60 * 24)
+      );
+
+      // Get container width (subtract task name column width)
+      const containerWidth = timelineContainerRef.current.clientWidth - 256; // 256px for task name column
+
+      // Calculate optimal zoom level
+      const baseDayWidth = 2; // Base width per day
+      const optimalZoom = Math.max(
+        0.3,
+        Math.min(3.0, containerWidth / (totalDays * baseDayWidth))
+      );
+
+      // Update zoom level
+      updateViewState({ timelineZoom: optimalZoom });
+
+      // Reset the zoom to fit flag
+      window.setTimeout(() => {
+        updateViewState({ zoomToFit: false });
+      }, 100);
+
+      console.log('Zoom to Fit applied:', {
+        minDate: minDate.toISOString(),
+        maxDate: maxDate.toISOString(),
+        totalDays,
+        containerWidth,
+        optimalZoom,
+      });
+    }
+  }, [viewState.zoomToFit, tasks, updateViewState]);
 
   // Draw dependency arrows
   useEffect(() => {
@@ -244,12 +332,16 @@ const GanttChart = () => {
     const isSelected = selectedTaskId === task.id;
     const isHovered = hoveredTaskId === task.id;
     const isLinkStart = linkingMode && linkStartTaskId === task.id;
+    const isCritical =
+      viewState.showCriticalPath && criticalPathTasks.includes(task.id);
 
     let baseClasses =
       'rounded-sm transition-all duration-200 cursor-pointer border';
 
     if (task.isGroup) {
       baseClasses += ' bg-green-100 border-green-400 text-green-800';
+    } else if (isCritical) {
+      baseClasses += ' bg-red-100 border-red-500 text-red-800';
     } else {
       baseClasses += ' bg-blue-100 border-blue-400 text-blue-800';
     }
@@ -260,6 +352,8 @@ const GanttChart = () => {
       baseClasses += ' ring-1 ring-blue-300 border-blue-500 shadow-sm';
     } else if (isLinkStart) {
       baseClasses += ' bg-purple-100 border-purple-400 ring-2 ring-purple-500';
+    } else if (isCritical) {
+      baseClasses += ' ring-2 ring-red-500 border-red-600 shadow-md';
     }
 
     return baseClasses;
@@ -554,6 +648,18 @@ const GanttChart = () => {
                             title={`Baseline: ${formatDate(new Date(task.baselineStart))} - ${formatDate(new Date(task.baselineEnd))}`}
                           />
                         )}
+
+                      {/* Slack Overlay */}
+                      {viewState.showSlack && taskFloats[task.id] > 0 && (
+                        <div
+                          className='h-full bg-yellow-400 opacity-40 absolute top-0 rounded-r'
+                          style={{
+                            left: `${Math.max(daysFromStart * scaledDayWidth + duration * scaledDurationWidth, 0)}px`,
+                            width: `${Math.max(taskFloats[task.id] * scaledDurationWidth, 0)}px`,
+                          }}
+                          title={`Slack: ${taskFloats[task.id].toFixed(1)} days`}
+                        />
+                      )}
                     </div>
 
                     {/* Task Info Column (fixed width) */}

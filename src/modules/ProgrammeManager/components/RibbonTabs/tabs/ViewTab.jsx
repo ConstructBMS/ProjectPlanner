@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useViewContext } from '../../../context/ViewContext';
+import { useTaskContext } from '../../../context/TaskContext';
 import RibbonButton from '../shared/RibbonButton';
 import RibbonGroup from '../shared/RibbonGroup';
 import {
@@ -408,6 +409,93 @@ const ShowGridlinesToggle = () => {
   );
 };
 
+const ShowCriticalPathToggle = () => {
+  const { viewState, toggleCriticalPath } = useViewContext();
+
+  const handleToggle = () => {
+    toggleCriticalPath();
+  };
+
+  return (
+    <div className='flex items-center space-x-2 px-2 py-1'>
+      <label className='flex items-center space-x-2 cursor-pointer'>
+        <input
+          type='checkbox'
+          checked={viewState.showCriticalPath}
+          onChange={handleToggle}
+          className='w-3 h-3 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2'
+        />
+        <span className='text-xs text-gray-700 font-medium'>
+          Show Critical Path
+        </span>
+      </label>
+    </div>
+  );
+};
+
+const ShowSlackToggle = () => {
+  const { viewState, toggleSlack } = useViewContext();
+
+  const handleToggle = () => {
+    toggleSlack();
+  };
+
+  return (
+    <div className='flex items-center space-x-2 px-2 py-1'>
+      <label className='flex items-center space-x-2 cursor-pointer'>
+        <input
+          type='checkbox'
+          checked={viewState.showSlack}
+          onChange={handleToggle}
+          className='w-3 h-3 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2'
+        />
+        <span className='text-xs text-gray-700 font-medium'>Show Slack</span>
+      </label>
+    </div>
+  );
+};
+
+const ZoomToFitButton = () => {
+  const { zoomToFit } = useViewContext();
+  const { tasks } = useTaskContext();
+
+  const handleZoomToFit = () => {
+    zoomToFit();
+  };
+
+  const isDisabled = tasks.length === 0;
+
+  return (
+    <RibbonButton
+      icon={<ArrowsPointingOutIcon className='w-4 h-4' />}
+      label='Zoom to Fit'
+      onClick={handleZoomToFit}
+      disabled={isDisabled}
+      tooltip={
+        isDisabled ? 'No tasks to fit' : 'Zoom timeline to fit all tasks'
+      }
+      className={isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
+    />
+  );
+};
+
+const TodayButton = () => {
+  const { goToToday } = useViewContext();
+
+  const handleGoToToday = () => {
+    goToToday();
+  };
+
+  return (
+    <RibbonButton
+      icon={<CalendarDaysIcon className='w-4 h-4' />}
+      label='Today'
+      onClick={handleGoToToday}
+      tooltip='Scroll timeline to center current date in viewport'
+    />
+  );
+};
+
 const ViewTab = () => {
   return (
     <div className='flex flex-nowrap gap-0 p-2 bg-white w-full min-w-0'>
@@ -419,6 +507,7 @@ const ViewTab = () => {
       {/* Zoom Group */}
       <RibbonGroup title='Zoom'>
         <ZoomGroup />
+        <ZoomToFitButton />
       </RibbonGroup>
 
       {/* Calendar View Group */}
@@ -445,6 +534,8 @@ const ViewTab = () => {
         <StatusHighlightingToggle />
         <ShowWeekendsToggle />
         <ShowGridlinesToggle />
+        <ShowCriticalPathToggle />
+        <ShowSlackToggle />
       </RibbonGroup>
 
       {/* Resource Group */}

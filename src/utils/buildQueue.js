@@ -85,5 +85,9 @@ export const buildQueue = {
     'Prompt 078 – Go to Today Button',
     'Prompt 079 – Show Weekends Toggle',
     'Prompt 080 – Show Gridlines Toggle',
+    'Prompt 081 – Show Critical Path Toggle',
+    'Prompt 082 – Show Slack Toggle',
+    'Prompt 083 – Zoom to Fit Button',
+    'Prompt 085 – Today Button',
   ],
 };
