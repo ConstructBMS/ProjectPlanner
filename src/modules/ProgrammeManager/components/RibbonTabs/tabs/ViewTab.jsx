@@ -14,7 +14,6 @@ import {
   ArrowsPointingOutIcon,
   FunnelIcon,
   PaintBrushIcon,
-  HomeIcon,
   CalendarDaysIcon,
 } from '@heroicons/react/24/outline';
 
@@ -127,7 +126,7 @@ const CalendarViewGroup = () => {
 };
 
 const ZoomGroup = () => {
-  const { viewState, updateViewState, goToToday } = useViewContext();
+  const { viewState, updateViewState } = useViewContext();
 
   const maxZoom = 3.0;
   const minZoom = 0.3;
@@ -190,14 +189,6 @@ const ZoomGroup = () => {
         title='Fit all tasks to visible area'
       >
         <ArrowsPointingOutIcon className='w-4 h-4 text-gray-700' />
-      </button>
-      <button
-        onClick={goToToday}
-        className='w-[48px] h-[48px] bg-gray-100 rounded flex items-center justify-center hover:bg-blue-100 transition-colors duration-150'
-        title='Go to Today'
-        aria-label='Go to Today'
-      >
-        <HomeIcon className='w-4 h-4 text-gray-700' />
       </button>
       {/* Zoom Level Indicator */}
       <div className='flex items-center px-2 text-xs text-gray-600 font-medium'>
@@ -508,6 +499,7 @@ const ViewTab = () => {
       <RibbonGroup title='Zoom'>
         <ZoomGroup />
         <ZoomToFitButton />
+        <TodayButton />
       </RibbonGroup>
 
       {/* Calendar View Group */}

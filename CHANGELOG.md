@@ -5,11 +5,11 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2025-08-08] – Prompt 085
 
 ### Added
 
-- **Prompt 085: Today Button**
+- **Today Button**
   - Added "Today" button in View tab ribbon Zoom group
   - Clicking it scrolls Gantt chart to center current date in viewport
   - Timeline uses zoomScale to calculate pixel offset accurately
@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Respects weekend visibility settings when calculating position
   - Auto-resets highlight state after scrolling for clean UX
   - Works seamlessly with existing zoom controls and timeline features
+
+## [Unreleased]
+
+### Added
 
 - **Prompt 083: Zoom to Fit Button**
   - Added "Zoom to Fit" button in View tab ribbon Zoom group
@@ -448,5 +452,9 @@ projectplanner/
 - auto: Pre-commit hook update
 
 ### 2025-08-08 00:04:28
+
+- auto: Pre-commit hook update
+
+### 2025-08-08 02:55:16
 
 - auto: Pre-commit hook update
