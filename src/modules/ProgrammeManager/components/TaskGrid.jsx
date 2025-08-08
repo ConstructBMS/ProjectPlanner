@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { useTaskContext } from '../context/TaskContext';
 import { useViewContext } from '../context/ViewContext';
 import TaskLinkModal from './modals/TaskLinkModal';
+import { calculateWorkingDays } from '../utils/dateUtils';
 import {
   ChevronRightIcon,
   ChevronDownIcon,
@@ -310,7 +311,7 @@ const TaskGrid = React.memo(() => {
                   handleEditDoubleClick(task.id, 'duration', task.duration, e)
                 }
               >
-                {task.duration} days
+                {calculateWorkingDays(task.startDate, task.endDate)}d
               </div>
             )}
           </div>

@@ -5,6 +5,18 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-08-08] – Prompt 117
+
+### Added
+
+- **Task Duration (Working Days) Column**
+  - Enhanced Duration column in Task Grid to calculate working days between start and end dates
+  - Added `calculateWorkingDays` utility function that excludes weekends (Saturday/Sunday)
+  - Duration displayed as compact format (e.g., "12d") for better space utilization
+  - Automatic calculation based on task start and end dates
+  - Maintains existing inline editing functionality for duration field
+  - Working days calculation provides more accurate project planning metrics
+
 ## [2025-08-08] – Prompt 116
 
 ### Added
