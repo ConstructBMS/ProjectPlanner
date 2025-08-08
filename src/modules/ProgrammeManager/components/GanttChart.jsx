@@ -202,7 +202,6 @@ const GanttChart = () => {
 
   // Generate weekend highlighting blocks
   const weekendBlocks = useMemo(() => {
-    if (!viewState.showWeekends) return [];
 
     const blocks = [];
     const start = new Date(dateRange.start);
@@ -216,7 +215,25 @@ const GanttChart = () => {
       const daysFromStart = Math.floor(
         (date - startOfYear) / (1000 * 60 * 60 * 24)
       );
-      return daysFromStart;
+
+      if (viewState.showWeekends) {
+        return daysFromStart;
+      } else {
+        // Count only weekdays
+        let weekdayCount = 0;
+        for (
+          let d = new Date(startOfYear);
+          d <= date;
+          d.setDate(d.getDate() + 1)
+        ) {
+          const dayOfWeek = d.getDay();
+          if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+            weekdayCount++;
+          }
+          if (d >= date) break;
+        }
+        return weekdayCount;
+      }
     };
 
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
@@ -228,10 +245,11 @@ const GanttChart = () => {
         blocks.push(
           <div
             key={`weekend-${d.toISOString()}`}
-            className='gantt-weekend absolute top-0 bottom-0'
+            className='absolute top-0 bottom-0 bg-gray-200 opacity-60'
             style={{
               left: `${left}px`,
               width: `${scaledDayWidth}px`,
+              zIndex: 0,
             }}
           />
         );
@@ -675,7 +693,7 @@ const GanttChart = () => {
     d.setHours(0, 0, 0, 0);
     d.setDate(d.getDate() + 4 - (d.getDay() || 7));
     const yearStart = new Date(d.getFullYear(), 0, 1);
-    const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    const weekNo = Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
     return weekNo;
   };
 
@@ -770,18 +788,27 @@ const GanttChart = () => {
             const endDate = new Date(dateRange.end);
             const baseDayWidth = 2;
             const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
-            
-            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+
+            for (
+              let d = new Date(startDate);
+              d <= endDate;
+              d.setDate(d.getDate() + 1)
+            ) {
               const dayOfWeek = d.getDay();
-              
+
               // Skip weekends if showWeekends is false
-              if (!viewState.showWeekends && (dayOfWeek === 0 || dayOfWeek === 6)) {
+              if (
+                !viewState.showWeekends &&
+                (dayOfWeek === 0 || dayOfWeek === 6)
+              ) {
                 continue;
               }
-              
+
               // Check if this is the start of a new week (Monday or first day if weekends are shown)
-              const isWeekStart = viewState.showWeekends ? dayOfWeek === 1 : dayOfWeek === 1;
-              
+              const isWeekStart = viewState.showWeekends
+                ? dayOfWeek === 1
+                : dayOfWeek === 1;
+
               if (isWeekStart) {
                 const weekNumber = getWeek(d);
                 headers.push(
@@ -798,7 +825,7 @@ const GanttChart = () => {
             return headers;
           })()}
         </div>
-        
+
         {/* Day Headers */}
         <div className='flex border-b border-gray-200'>
           {(() => {
@@ -807,15 +834,22 @@ const GanttChart = () => {
             const endDate = new Date(dateRange.end);
             const baseDayWidth = 2;
             const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
-            
-            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+
+            for (
+              let d = new Date(startDate);
+              d <= endDate;
+              d.setDate(d.getDate() + 1)
+            ) {
               const dayOfWeek = d.getDay();
-              
+
               // Skip weekends if showWeekends is false
-              if (!viewState.showWeekends && (dayOfWeek === 0 || dayOfWeek === 6)) {
+              if (
+                !viewState.showWeekends &&
+                (dayOfWeek === 0 || dayOfWeek === 6)
+              ) {
                 continue;
               }
-              
+
               headers.push(
                 <div
                   key={d.toISOString()}

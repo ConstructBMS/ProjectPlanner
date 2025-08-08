@@ -33,6 +33,7 @@
 - Prompt 107: Added Expand Milestones button in Home ribbon (2025-08-08)
 - Prompt 108: Added milestone diamond icons to Gantt and sidebar (2025-08-08)
 - Prompt 109: Added calendar week headers to Gantt chart (2025-08-08)
+- Prompt 110: Added grey background shading for non-working weekend days in Gantt (2025-08-08)
 
 ## 🟡 In Progress
 

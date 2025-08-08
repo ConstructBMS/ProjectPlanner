@@ -5,6 +5,18 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-08-08] – Prompt 110
+
+### Added
+
+- **Non-Working Days Shading**
+  - Added grey background shading for weekend days in Gantt timeline
+  - Weekend blocks use `bg-gray-200 opacity-60` styling for subtle visual distinction
+  - Shading positioned behind task bars with `z-index: 0` for proper layering
+  - Weekend highlighting works regardless of weekend visibility toggle setting
+  - Proper date index calculation handles both weekend-visible and weekend-hidden modes
+  - Enhances task planning visibility by clearly marking non-working periods
+
 ## [2025-08-08] – Prompt 109
 
 ### Added
