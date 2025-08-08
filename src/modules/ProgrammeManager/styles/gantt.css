@@ -1,0 +1,13 @@
+/* Vertical Grid Lines for Gantt Timeline */
+
+.grid-day {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.grid-week {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.grid-month {
+  background-color: rgba(0, 0, 0, 0.2);
+}

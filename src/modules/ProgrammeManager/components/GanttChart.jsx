@@ -55,6 +55,97 @@ const GanttChart = () => {
 
   const tasks = getVisibleTasks(viewState.taskFilter);
 
+  // Calculate date range for grid lines
+  const dateRange = useMemo(() => {
+    if (tasks.length === 0) {
+      return { start: new Date('2024-01-01'), end: new Date('2024-12-31') };
+    }
+
+    const taskDates = tasks.flatMap(task => [
+      new Date(task.startDate),
+      new Date(task.endDate),
+    ]);
+
+    const minDate = new Date(Math.min(...taskDates));
+    const maxDate = new Date(Math.max(...taskDates));
+
+    // Add some padding (30 days on each side)
+    const padding = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
+    return {
+      start: new Date(minDate.getTime() - padding),
+      end: new Date(maxDate.getTime() + padding),
+    };
+  }, [tasks]);
+
+  // Generate vertical grid lines
+  const gridLines = useMemo(() => {
+    if (!viewState.showGridlines) return [];
+
+    const lines = [];
+    const start = new Date(dateRange.start);
+    const end = new Date(dateRange.end);
+    const baseDayWidth = 2;
+    const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
+
+    // Calculate start position offset
+    const startOfYear = new Date('2024-01-01');
+    const getDateIndex = date => {
+      const daysFromStart = Math.floor(
+        (date - startOfYear) / (1000 * 60 * 60 * 24)
+      );
+
+      if (viewState.showWeekends) {
+        return daysFromStart;
+      } else {
+        // Count only weekdays
+        let weekdayCount = 0;
+        for (
+          let d = new Date(startOfYear);
+          d <= date;
+          d.setDate(d.getDate() + 1)
+        ) {
+          const dayOfWeek = d.getDay();
+          if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+            weekdayCount++;
+          }
+          if (d >= date) break;
+        }
+        return weekdayCount;
+      }
+    };
+
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      // Skip weekends if showWeekends is false
+      if (!viewState.showWeekends) {
+        const dayOfWeek = d.getDay();
+        if (dayOfWeek === 0 || dayOfWeek === 6) continue;
+      }
+
+      const left = getDateIndex(d) * scaledDayWidth;
+      const isMonthStart = d.getDate() === 1;
+      const isWeekStart = d.getDay() === 1;
+
+      let className = 'grid-day';
+      if (isMonthStart) className = 'grid-month';
+      else if (isWeekStart) className = 'grid-week';
+
+      lines.push(
+        <div
+          key={d.toISOString()}
+          className={`absolute top-0 bottom-0 ${className}`}
+          style={{ left: `${left}px`, width: '1px' }}
+        />
+      );
+    }
+
+    return lines;
+  }, [
+    dateRange,
+    viewState.showGridlines,
+    viewState.showWeekends,
+    viewState.timelineZoom,
+  ]);
+
   // Update task refs when tasks change or view settings change
   useEffect(() => {
     const newRefs = {};
@@ -412,6 +503,13 @@ const GanttChart = () => {
         {/* Background Grid */}
         {viewState.showGridlines && (
           <div className='asta-timeline-grid absolute inset-0 opacity-20' />
+        )}
+
+        {/* Vertical Grid Lines */}
+        {viewState.showGridlines && (
+          <div className='absolute inset-0 pointer-events-none z-0'>
+            {gridLines}
+          </div>
         )}
 
         {/* Date Markers Overlay */}

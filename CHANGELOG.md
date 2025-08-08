@@ -5,6 +5,19 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-08-08] – Prompt 086
+
+### Added
+
+- **Vertical Grid Lines**
+  - Rendered vertical grid lines for days, weeks, and months in Gantt timeline
+  - Styled using .grid-day, .grid-week, .grid-month classes with different opacity levels
+  - Dynamically generated based on date range and zoom level
+  - Respects weekend visibility settings when generating grid lines
+  - Grid lines scroll horizontally with the chart and update on zoom changes
+  - Performance optimized with useMemo for efficient re-rendering
+  - Layered behind task bars with proper z-index positioning
+
 ## [2025-08-08] – Prompt 085
 
 ### Added
@@ -456,5 +469,9 @@ projectplanner/
 - auto: Pre-commit hook update
 
 ### 2025-08-08 02:55:16
+
+- auto: Pre-commit hook update
+
+### 2025-08-08 03:00:28
 
 - auto: Pre-commit hook update

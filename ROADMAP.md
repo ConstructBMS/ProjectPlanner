@@ -15,6 +15,7 @@
 - Prompt 082: "Show Slack" toggle wired with float calculation and rendering (2025-08-08)
 - Prompt 083: "Zoom to Fit" adjusts Gantt scale to display all tasks in view (2025-08-08)
 - Prompt 085: "Today" button scrolls Gantt timeline to current date (2025-08-08)
+- Prompt 086: Timeline now shows vertical grid lines for time intervals (2025-08-08)
 
 ## 🟡 In Progress
 
