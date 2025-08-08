@@ -5,6 +5,20 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-08-08] – Prompt 122
+
+### Added
+
+- **Inline Editing for Task Names in Grid**
+  - Enhanced existing inline editing functionality for task names in Task Grid
+  - Double-click on task name to switch to editable input field
+  - Save changes on Enter key or blur event with validation
+  - Revert changes on Escape key for user control
+  - Professional styling with blue border and focus ring
+  - Auto-focus on input field for immediate editing
+  - Validation ensures task names cannot be empty
+  - Seamless integration with existing task management system
+
 ## [2025-08-08] – Prompt 121
 
 ### Added
