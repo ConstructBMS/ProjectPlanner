@@ -57,6 +57,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Works for both regular tasks and milestones
   - Integrated with existing task hover functionality
 
+## [2025-08-08] – Prompt 090
+
+### Added
+
+- **Task Bar Hover Tooltip**
+  - Added tooltip on hover over Gantt task bars
+  - Tooltip displays task name, start date, end date, and duration
+  - Tooltip follows mouse cursor with smooth positioning
+  - Proper z-index layering ensures tooltip appears above other elements
+  - Responsive design with max-width and proper text formatting
+  - Works for both regular tasks and milestone tasks
+
 ## [2025-08-08] – Prompt 086
 
 ### Added
@@ -548,5 +560,9 @@ projectplanner/
 - auto: Pre-commit hook update
 
 ### 2025-08-08 03:15:09
+
+- auto: Pre-commit hook update
+
+### 2025-08-08 03:32:26
 
 - auto: Pre-commit hook update
