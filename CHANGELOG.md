@@ -258,6 +258,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Integrated with existing view state management
   - Enhances timeline navigation and current date awareness
 
+## [2025-08-08] – Prompt 114
+
+### Added
+
+- **Gantt Zoom In/Out Controls**
+  - Added Gantt zoom in/out buttons with adjustable scale
+  - Zoom In/Out buttons in Home tab Zoom group with magnifying glass icons
+  - Adjustable timeline scale from 10px to 100px per day
+  - Default zoom level of 20px per day for optimal visibility
+  - Zoom increments of 10px per click for precise control
+  - State persistence with localStorage for user preferences
+  - Real-time scaling of timeline headers, task bars, and grid elements
+  - Integrated with existing view state management system
+  - Professional zoom controls matching Asta PowerProject interface
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
