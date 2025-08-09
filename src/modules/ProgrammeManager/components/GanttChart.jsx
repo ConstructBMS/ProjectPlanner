@@ -60,6 +60,7 @@ const GanttChart = () => {
     startX: 0,
     originalStartDate: null,
     originalEndDate: null,
+    lastDayOffset: 0, // Track last day offset to prevent unnecessary updates
   });
 
   // Drag-to-link state
@@ -267,13 +268,13 @@ const GanttChart = () => {
     viewState.viewScale,
   ]);
 
-      // Calculate today marker position
-    const todayMarker = useMemo(() => {
-      if (!viewState.showGridlines) return null;
+  // Calculate today marker position
+  const todayMarker = useMemo(() => {
+    if (!viewState.showGridlines) return null;
 
-      const today = new Date();
-      const startOfYear = new Date('2024-01-01');
-      const scaledDayWidth = viewState.timelineZoom; // Direct pixels per day
+    const today = new Date();
+    const startOfYear = new Date('2024-01-01');
+    const scaledDayWidth = viewState.timelineZoom; // Direct pixels per day
 
     // Calculate days from start of year
     const daysFromStart = Math.floor(
@@ -787,6 +788,16 @@ const GanttChart = () => {
     return index * scaledDayWidth;
   };
 
+  // Enhanced day-based snapping for task dragging
+  const snapToDayGrid = deltaX => {
+    const scaledDayWidth = viewState.timelineZoom; // Direct pixels per day
+    const dayOffset = Math.round(deltaX / scaledDayWidth);
+    return {
+      dayOffset,
+      snappedDeltaX: dayOffset * scaledDayWidth,
+    };
+  };
+
   // Drag event handlers
   const handleTaskDragStart = (e, task) => {
     e.preventDefault();
@@ -797,6 +808,7 @@ const GanttChart = () => {
       startX: e.clientX,
       originalStartDate: new Date(task.startDate),
       originalEndDate: new Date(task.endDate),
+      lastDayOffset: 0, // Initialize day offset tracking
     });
 
     // Add global mouse event listeners
@@ -809,31 +821,46 @@ const GanttChart = () => {
 
     const deltaX = e.clientX - dragging.startX;
 
-    // Snap the delta to the grid
-    const snappedDeltaX = snapToGrid(deltaX);
-    const scaledDayWidth = viewState.timelineZoom; // Direct pixels per day
-    const dayOffset = Math.round(snappedDeltaX / scaledDayWidth);
+    // Snap to 1-day grid using enhanced snapping function
+    const { dayOffset, snappedDeltaX } = snapToDayGrid(deltaX);
 
-    // Find the task being dragged
-    const task = tasks.find(t => t.id === dragging.taskId);
-    if (!task) return;
+    // Only update task position if day offset has changed (prevents partial-pixel updates)
+    if (dayOffset !== dragging.lastDayOffset) {
+      // Find the task being dragged
+      const task = tasks.find(t => t.id === dragging.taskId);
+      if (!task) return;
 
-    // Calculate new dates using snapped values
-    let newStartDate = addDays(dragging.originalStartDate, dayOffset);
-    let newEndDate = addDays(dragging.originalEndDate, dayOffset);
+      // Calculate new dates using snapped values
+      let newStartDate = addDays(dragging.originalStartDate, dayOffset);
+      let newEndDate = addDays(dragging.originalEndDate, dayOffset);
 
-    // Snap both dates to weekdays (skip weekends)
-    newStartDate = snapToWeekday(newStartDate);
-    newEndDate = snapToWeekday(newEndDate);
+      // Snap both dates to weekdays (skip weekends)
+      newStartDate = snapToWeekday(newStartDate);
+      newEndDate = snapToWeekday(newEndDate);
 
-    // Ensure end date is not before start date
-    if (newEndDate < newStartDate) {
-      newEndDate = new Date(newStartDate);
+      // Ensure end date is not before start date
+      if (newEndDate < newStartDate) {
+        newEndDate = new Date(newStartDate);
+      }
+
+      // Update task dates temporarily (for visual feedback)
+      task.startDate = newStartDate.toISOString();
+      task.endDate = newEndDate.toISOString();
+
+      // Update drag state with new day offset
+      setDragging(prev => ({
+        ...prev,
+        lastDayOffset: dayOffset,
+      }));
+
+      console.log('Task snapped to day grid:', {
+        taskId: task.id,
+        dayOffset,
+        snappedDeltaX,
+        newStartDate: newStartDate.toISOString(),
+        newEndDate: newEndDate.toISOString(),
+      });
     }
-
-    // Update task dates temporarily (for visual feedback)
-    task.startDate = newStartDate.toISOString();
-    task.endDate = newEndDate.toISOString();
   };
 
   const handleTaskDragEnd = async () => {
@@ -867,6 +894,7 @@ const GanttChart = () => {
       startX: 0,
       originalStartDate: null,
       originalEndDate: null,
+      lastDayOffset: 0,
     });
 
     // Remove global event listeners
@@ -1092,7 +1120,7 @@ const GanttChart = () => {
     } else if (task.isGroup) {
       baseClasses += ' bg-green-100 border-green-400 text-green-800';
     } else if (isCritical) {
-      baseClasses += ' bg-red-500 opacity-70 border-red-600 text-white';
+      baseClasses += ' bg-red-600 opacity-70 border-red-600 text-white';
     } else {
       baseClasses += ' bg-blue-100 border-blue-400 text-blue-800';
     }
@@ -1441,7 +1469,11 @@ const GanttChart = () => {
                           {/* Progress indicator */}
                           {task.progress > 0 && (
                             <div
-                              className='h-full bg-green-400 rounded-l transition-all duration-300'
+                              className={`h-full rounded-l transition-all duration-300 ${
+                                task.isCritical || criticalPathTasks.includes(task.id)
+                                  ? 'bg-red-400'
+                                  : 'bg-green-400'
+                              }`}
                               style={{ width: `${task.progress}%` }}
                             />
                           )}

@@ -5,6 +5,33 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-08-08] – Prompt 096
+
+### Added
+
+- **Critical Path Task Highlighting in Red**
+  - Critical path tasks now display as red bars on the Gantt timeline for visual distinction
+  - Tasks with isCritical: true or those identified as critical path automatically use red styling
+  - Red bars use bg-red-600 class with red borders and white text for maximum visibility
+  - Progress indicators for critical tasks also use red coloring (bg-red-400) for consistency
+  - Critical path styling remains consistent even during hover, selection, and linking states
+  - Milestone diamonds for critical tasks maintain red coloring (text-red-600)
+  - Enhanced visual hierarchy making critical path tasks immediately identifiable
+  - Integrated with existing critical path calculation and display logic
+
+## [2025-08-08] – Prompt 094
+
+### Added
+
+- **Snap Tasks to Grid (1 Day)**
+  - Implemented enhanced snapping logic so task bars move in full day increments during drag
+  - Task bars now snap to 1-day grid intervals based on zoom scale, preventing partial-pixel placement
+  - Only updates visual preview when day offset actually changes, improving performance
+  - Real-time visual feedback during dragging with precise day-based positioning
+  - Enhanced drag state tracking to prevent unnecessary re-renders
+  - Integrated with existing weekend handling and weekday snapping logic
+  - Console logging for debugging drag operations and grid snapping behavior
+
 ## [2025-08-08] – Prompt 093
 
 ### Added
