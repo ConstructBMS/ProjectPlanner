@@ -396,6 +396,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Seamless integration with existing task state management
   - Professional appearance matching Asta PowerProject interface
 
+## [2025-08-08] – Prompt 123
+
+### Added
+
+- **Auto-Snap Gantt Bars to Workdays**
+  - Gantt bars now snap to working weekdays and skip weekends
+  - Enhanced drag logic prevents weekend misalignment
+  - snapToWeekday function moves Saturday to Friday, Sunday to Monday
+  - Visual weekend highlighting with grey background (bg-gray-200 opacity-60)
+  - Date conversion functions respect workday-only calculations
+  - Resize handles also snap to weekdays for consistent behavior
+  - Professional workday-only scheduling logic
+  - Integrated with existing showWeekends toggle functionality
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
