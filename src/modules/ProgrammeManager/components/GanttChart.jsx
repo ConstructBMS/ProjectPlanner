@@ -389,7 +389,6 @@ const GanttChart = () => {
     );
   }, [
     dateRange,
-    viewState.showGridlines,
     viewState.showWeekends,
     viewState.timelineZoom,
   ]);
