@@ -317,6 +317,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Integrated seamlessly with existing Task Grid structure
   - Professional appearance matching Asta PowerProject interface
 
+## [2025-08-08] – Prompt 118
+
+### Added
+
+- **Task Bar Hover Tooltip with Dates**
+  - Added comprehensive tooltip system for Gantt task bars
+  - Tooltip displays on hover with task name and complete date range
+  - Content includes: Task name, Start date, End date, Duration in days
+  - Additional indicators for Milestones and Critical Tasks
+  - Professional dark theme styling with fade-in transition
+  - Positioned dynamically near mouse cursor with proper z-index
+  - Format: "Task: Pour Concrete", "Start: 12 Aug 2025", "End: 19 Aug 2025"
+  - Smooth transition effects with duration-200 class
+  - Non-intrusive design with pointer-events-none
+  - Integrated with existing hover state management system
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
