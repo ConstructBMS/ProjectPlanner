@@ -535,6 +535,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Seamless integration with existing Gantt chart scrolling and zoom functionality
   - Optimized performance with useMemo for header generation
 
+## [2025-08-09] – Prompt 132
+
+### Added
+
+- **Baseline 1 Capture/Clear and Ghost Bars**
+  - Added Set Baseline and Clear Baseline buttons in ProjectTab ribbon
+  - Implemented setBaseline1() and clearBaseline1() functions in TaskContext
+  - Baseline bars render as thin gray ghost bars beneath live task bars
+  - Show Baseline toggle in ViewTab for visibility control
+  - Baseline bars positioned slightly below actual bars with opacity-50 styling
+  - Enhanced tooltips show baseline vs actual dates when baseline exists
+  - Baseline data persists in task objects (baselineStart, baselineEnd)
+  - Professional styling with proper contrast and visual hierarchy
+  - Seamless integration with existing task management and undo systems
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

@@ -51,7 +51,7 @@ const GanttChart = () => {
   const taskRefs = useRef({});
   const svgContainerRef = useRef(null);
   const timelineContainerRef = useRef(null);
-  
+
   // Scroll state for header synchronization
   const [scrollLeft, setScrollLeft] = useState(0);
 
@@ -346,7 +346,6 @@ const GanttChart = () => {
 
   // Generate today line indicator
   const todayLineIndicator = useMemo(() => {
-
     const today = new Date();
     const startOfYear = new Date('2024-01-01');
     const scaledDayWidth = viewState.timelineZoom; // Direct pixels per day
@@ -391,11 +390,7 @@ const GanttChart = () => {
         }}
       />
     );
-  }, [
-    dateRange,
-    viewState.showWeekends,
-    viewState.timelineZoom,
-  ]);
+  }, [dateRange, viewState.showWeekends, viewState.timelineZoom]);
 
   // Generate horizontal row grid lines
   const rowLines = useMemo(() => {
@@ -1175,7 +1170,7 @@ const GanttChart = () => {
   };
 
   // Handle horizontal scroll synchronization
-  const handleTimelineScroll = (e) => {
+  const handleTimelineScroll = e => {
     setScrollLeft(e.target.scrollLeft);
   };
 
@@ -1489,8 +1484,6 @@ const GanttChart = () => {
 
         {/* Today Line Indicator - Always visible */}
         {todayLineIndicator}
-
-
 
         {/* Drag-to-link connector line */}
         {dragToLink.isActive && (
@@ -1864,6 +1857,31 @@ const GanttChart = () => {
                 days
               </span>
             </div>
+            {tooltip.task.baselineStart && tooltip.task.baselineEnd && (
+              <>
+                <div className='text-gray-400 mt-2 pt-1 border-t border-gray-700'>
+                  Baseline:
+                </div>
+                <div className='flex justify-between text-gray-300'>
+                  <span className='text-gray-400'>Start:</span>
+                  <span>{formatDate(tooltip.task.baselineStart)}</span>
+                </div>
+                <div className='flex justify-between text-gray-300'>
+                  <span className='text-gray-400'>End:</span>
+                  <span>{formatDate(tooltip.task.baselineEnd)}</span>
+                </div>
+                <div className='flex justify-between text-gray-300'>
+                  <span className='text-gray-400'>Duration:</span>
+                  <span>
+                    {calculateDuration(
+                      tooltip.task.baselineStart,
+                      tooltip.task.baselineEnd
+                    )}{' '}
+                    days
+                  </span>
+                </div>
+              </>
+            )}
             {(tooltip.task.type === 'milestone' ||
               tooltip.task.isMilestone) && (
               <div className='text-purple-300 font-medium mt-2 pt-1 border-t border-gray-700'>

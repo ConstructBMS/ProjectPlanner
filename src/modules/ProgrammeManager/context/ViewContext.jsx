@@ -189,6 +189,15 @@ export const ViewProvider = ({ children }) => {
     console.log('Show Slack toggled');
   };
 
+  const toggleBaseline = () => {
+    setViewState(prev => {
+      const next = !prev.showBaseline;
+      window.localStorage.setItem('gantt.showBaseline', JSON.stringify(next));
+      return { ...prev, showBaseline: next };
+    });
+    console.log('Show Baseline toggled');
+  };
+
   const zoomToFit = () => {
     // This will trigger the Gantt chart to zoom to fit all tasks
     const zoomToFitAction = {
@@ -229,6 +238,7 @@ export const ViewProvider = ({ children }) => {
     toggleGridlines,
     toggleCriticalPath,
     toggleSlack,
+    toggleBaseline,
     zoomToFit,
     zoomIn,
     zoomOut,

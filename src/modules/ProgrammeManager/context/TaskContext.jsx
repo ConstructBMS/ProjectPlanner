@@ -815,6 +815,35 @@ export const TaskProvider = ({ children }) => {
     [saveToUndoStack]
   );
 
+  // Baseline operations
+  const setBaseline1 = useCallback(() => {
+    saveToUndoStack();
+
+    setTasks(prev =>
+      prev.map(task => ({
+        ...task,
+        baselineStart: task.startDate,
+        baselineEnd: task.endDate,
+      }))
+    );
+
+    console.log('Baseline 1 captured for all tasks');
+  }, [saveToUndoStack]);
+
+  const clearBaseline1 = useCallback(() => {
+    saveToUndoStack();
+
+    setTasks(prev =>
+      prev.map(task => ({
+        ...task,
+        baselineStart: null,
+        baselineEnd: null,
+      }))
+    );
+
+    console.log('Baseline 1 cleared for all tasks');
+  }, [saveToUndoStack]);
+
   // Linking mode operations
   const startLinkingMode = useCallback(taskId => {
     setLinkingMode(true);
@@ -902,6 +931,10 @@ export const TaskProvider = ({ children }) => {
       updateLink,
       deleteLinkById,
 
+      // Baseline operations
+      setBaseline1,
+      clearBaseline1,
+
       // Linking mode operations
       startLinkingMode,
       stopLinkingMode,
@@ -945,6 +978,8 @@ export const TaskProvider = ({ children }) => {
       unlinkTasks,
       updateLink,
       deleteLinkById,
+      setBaseline1,
+      clearBaseline1,
       startLinkingMode,
       stopLinkingMode,
       handleTaskClickForLinking,
