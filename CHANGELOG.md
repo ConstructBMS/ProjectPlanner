@@ -102,6 +102,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Non-interactive labels (pointer-events-none) prevent interference with bar interactions
   - Integrated with existing task bar styling and hover/selection states
 
+## [2025-08-08] – Prompt 103
+
+### Added
+
+- **Task Bar Resize Handles for Start/End Date Adjustment**
+  - Added left/right drag handles to Gantt task bars
+  - Resize handles (w-2 bg-white cursor-ew-resize) appear on left and right edges of task bars
+  - Handles only visible when task is hovered or selected for clean interface
+  - Left handle adjusts task start date, right handle adjusts task end date
+  - Visual feedback with white background, borders, and rounded corners
+  - Helpful tooltips guide users on drag functionality
+  - Proper cursor indication (cursor-ew-resize) for resize operations
+  - Integrated with existing task selection and hover states
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
