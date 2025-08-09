@@ -79,6 +79,7 @@ const TreeNode = React.memo(
   ({
     task,
     level = 0,
+    rowNumber,
     isExpanded,
     isSelected,
     isMultiSelected,
@@ -155,6 +156,9 @@ const TreeNode = React.memo(
           onMouseLeave={() => onHoverLeave(task.id)}
           onContextMenu={handleContextMenu}
         >
+          {/* Row Number */}
+          <span className='text-sm text-gray-400 pr-2 flex-shrink-0'>{rowNumber}</span>
+
           {/* Indentation */}
           <div className='flex-shrink-0' style={{ width: `${level * 16}px` }} />
 
@@ -199,6 +203,7 @@ const TreeNode = React.memo(
       isMultiSelected,
       isHovered,
       level,
+      rowNumber,
       hasChildren,
       isExpanded,
       task,
@@ -431,39 +436,47 @@ const SidebarTree = forwardRef((props, ref) => {
 
   // Memoize the rendered tree nodes
   const renderedNodes = useMemo(() => {
-    const renderNodes = (nodes, level = 0) => {
-      return nodes.map(node => {
-        const isExpanded = expandedIds.has(node.id);
-        const isSelected = selectedTaskId === node.id;
-        const isMultiSelected = selectedTaskIds.includes(node.id);
-        const isHovered = hoveredTaskId === node.id;
-
-        return (
-          <React.Fragment key={node.id}>
-            <TreeNode
-              task={node}
-              level={level}
-              isExpanded={isExpanded}
-              isSelected={isSelected}
-              isMultiSelected={isMultiSelected}
-              isHovered={isHovered}
-              onToggle={toggleNode}
-              onHover={setHoveredTask}
-              onHoverLeave={clearHoveredTask}
-              onContextMenu={handleContextMenu}
-              onMultiSelect={handleMultiSelect}
-            />
-            {isExpanded && node.children && node.children.length > 0 && (
-              <div className='ml-4'>
-                {renderNodes(node.children, level + 1)}
-              </div>
-            )}
-          </React.Fragment>
-        );
+    // Flatten tree to get all visible nodes with row numbers
+    const flattenTree = (nodes, level = 0, rowCounter = { value: 0 }) => {
+      const flattened = [];
+      nodes.forEach(node => {
+        rowCounter.value++;
+        flattened.push({ ...node, rowNumber: rowCounter.value, level });
+        
+        if (expandedIds.has(node.id) && node.children && node.children.length > 0) {
+          flattened.push(...flattenTree(node.children, level + 1, rowCounter));
+        }
       });
+      return flattened;
     };
 
-    return renderNodes(treeData);
+    const flattenedNodes = flattenTree(treeData);
+    
+    // Render flattened nodes directly
+    return flattenedNodes.map(node => {
+      const isExpanded = expandedIds.has(node.id);
+      const isSelected = selectedTaskId === node.id;
+      const isMultiSelected = selectedTaskIds.includes(node.id);
+      const isHovered = hoveredTaskId === node.id;
+
+      return (
+        <TreeNode
+          key={node.id}
+          task={node}
+          level={node.level}
+          rowNumber={node.rowNumber}
+          isExpanded={isExpanded}
+          isSelected={isSelected}
+          isMultiSelected={isMultiSelected}
+          isHovered={isHovered}
+          onToggle={toggleNode}
+          onHover={setHoveredTask}
+          onHoverLeave={clearHoveredTask}
+          onContextMenu={handleContextMenu}
+          onMultiSelect={handleMultiSelect}
+        />
+      );
+    });
   }, [
     treeData,
     expandedIds,

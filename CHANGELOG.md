@@ -273,6 +273,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Integrated with existing view state management system
   - Professional zoom controls matching Asta PowerProject interface
 
+## [2025-08-08] – Prompt 115
+
+### Added
+
+- **Task Row Numbering in Programme Tree**
+  - Added 1-based row numbering in the Programme Tree
+  - Row numbers displayed as 1, 2, 3... matching Asta style
+  - Numbers positioned before task indentation for clear alignment
+  - Styled with text-sm text-gray-400 pr-2 for subtle appearance
+  - Dynamic numbering that updates when tree is expanded/collapsed
+  - Only visible nodes are numbered (respects tree expansion state)
+  - Integrated seamlessly with existing tree structure and styling
+  - Enhances task identification and navigation in Programme Tree
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
