@@ -440,6 +440,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Professional dropdown styling with hover effects and click-outside-to-close
   - Seamless integration with existing timeline zoom and grid line systems
 
+## [2025-08-08] – Prompt 126
+
+### Added
+
+- **Critical Path Highlight Toggle in Gantt**
+  - Added "Highlight Critical Path" toggle in ViewTab ribbon
+  - ShowCriticalPathToggle component with checkbox interface
+  - Highlights the longest dependency chain in red on Gantt chart
+  - Critical path tasks display with red styling: bg-red-600 opacity-70
+  - Advanced CPM algorithm with forward/backward pass for accurate calculation
+  - Identifies tasks with zero float (any delay impacts project duration)
+  - Toggle off removes critical path highlighting
+  - Integrated with existing task bar styling and selection systems
+  - Professional appearance matching Asta PowerProject interface
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
