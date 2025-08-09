@@ -158,6 +158,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Toggle state persists across view changes and component updates
   - Integrated with existing task styling and selection system
 
+## [2025-08-08] – Prompt 107
+
+### Added
+
+- **Expand Milestones Button in Home Ribbon**
+  - Added 'Expand Milestones' ribbon button and milestone expansion logic
+  - "Expand Milestones" button in Home ribbon View group with flag icon
+  - Single-click expands all milestone tasks in the programme tree
+  - Loops through all tasks and sets isExpanded = true for milestone tasks
+  - Supports both task.type === 'milestone' and task.isMilestone flags
+  - Integrated with existing task state management and hierarchy system
+  - Helpful tooltip explains the milestone expansion functionality
+  - Works seamlessly with existing expand/collapse all functionality
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
