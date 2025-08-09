@@ -470,6 +470,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Integrated with existing task selection, critical path, and hover systems
   - Seamless compatibility with existing task management workflows
 
+## [2025-08-08] – Prompt 128
+
+### Added
+
+- **Dependencies Sidebar Panel in Task Properties**
+  - Added comprehensive Dependencies section to Task Properties Pane
+  - Shows predecessors and successors with task names and lag values
+  - Editable lag input fields for +/- days (range: -365 to +365)
+  - "Add Dependency" button with modal for creating new task links
+  - Remove dependency functionality with trash icon buttons
+  - Real-time auto-update of Gantt chart links
+  - Professional styling with hover effects and validation
+  - Link type display (FS, SS, FF, SF) with lag/lead indicators
+  - Empty state messages for no predecessors/successors
+  - Integrated with existing task linking and unlinkTasks systems
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
