@@ -448,7 +448,7 @@ const GanttChart = () => {
         blocks.push(
           <div
             key={`weekend-${d.toISOString()}`}
-            className='gantt-weekend absolute top-0 bottom-0'
+            className='absolute top-0 bottom-0 bg-gray-100 z-0'
             style={{
               left: `${left}px`,
               width: `${scaledDayWidth}px`,
@@ -1204,7 +1204,7 @@ const GanttChart = () => {
         {/* Background Grid */}
         <div className='absolute inset-0 pointer-events-none'>
           {/* Weekend Highlighting Blocks */}
-          {weekendBlocks}
+          {viewState.showWeekends && weekendBlocks}
 
           {viewState.showGridlines && (
             <>

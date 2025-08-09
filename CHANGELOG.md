@@ -19,6 +19,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enhanced visual hierarchy making critical path tasks immediately identifiable
   - Integrated with existing critical path calculation and display logic
 
+## [2025-08-08] – Prompt 097
+
+### Added
+
+- **Weekend Background Shading in Gantt Chart**
+  - Added light grey background shading for weekends (Saturdays and Sundays) on Gantt timeline
+  - Weekend blocks use bg-gray-100 class for subtle visual distinction
+  - Blocks stretch full height behind tasks with proper z-index layering (z-0)
+  - Weekend highlighting respects the showWeekends toggle setting
+  - Blocks render dynamically based on timeline zoom scale and date range
+  - Enhanced visual clarity making weekend days easily identifiable
+  - Integrated with existing grid lines and background rendering system
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
