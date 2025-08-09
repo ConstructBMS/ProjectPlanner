@@ -187,6 +187,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Dynamic color changes based on selection, hover, and critical path states
   - Integrated with existing task styling and interaction systems
 
+## [2025-08-08] – Prompt 109
+
+### Added
+
+- **Calendar Week Headers in Gantt Timeline**
+  - Gantt chart now includes calendar week headers (e.g. W32)
+  - Week headers display above daily columns in Day view mode
+  - Uses ISO week numbering system for accurate calendar weeks
+  - Styled with text-xs text-gray-600 bg-gray-100 py-1 border-b
+  - Week headers span the full width of their respective weeks
+  - Only visible in Day view mode for optimal user experience
+  - Proper positioning and alignment with existing timeline headers
+  - Integrated with weekend visibility settings
+  - Enhanced timeline navigation and week identification
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

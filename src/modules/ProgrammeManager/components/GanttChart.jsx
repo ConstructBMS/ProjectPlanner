@@ -21,7 +21,12 @@ import { useTaskContext } from '../context/TaskContext';
 import { useViewContext } from '../context/ViewContext';
 import DateMarkersOverlay from './DateMarkersOverlay';
 import { calculateCriticalPath } from '../utils/criticalPath';
-import { addDays, snapToWeekday, calculateDuration } from '../utils/dateUtils';
+import {
+  addDays,
+  snapToWeekday,
+  calculateDuration,
+  getWeek,
+} from '../utils/dateUtils';
 import '../styles/gantt.css';
 
 const GanttChart = () => {
@@ -809,18 +814,18 @@ const GanttChart = () => {
   };
 
   // Helper functions for date conversion
-  const getDateFromX = (x) => {
+  const getDateFromX = x => {
     const startOfYear = new Date('2024-01-01');
     const scaledDayWidth = viewState.timelineZoom;
     const dayIndex = Math.round(x / scaledDayWidth);
-    
+
     if (viewState.showWeekends) {
       return addDays(startOfYear, dayIndex);
     } else {
       // Count only weekdays
       let currentDate = new Date(startOfYear);
       let weekdayCount = 0;
-      
+
       while (weekdayCount < dayIndex) {
         currentDate.setDate(currentDate.getDate() + 1);
         const dayOfWeek = currentDate.getDay();
@@ -828,22 +833,28 @@ const GanttChart = () => {
           weekdayCount++;
         }
       }
-      
+
       return currentDate;
     }
   };
 
-  const getXFromDate = (date) => {
+  const getXFromDate = date => {
     const startOfYear = new Date('2024-01-01');
     const scaledDayWidth = viewState.timelineZoom;
-    
+
     if (viewState.showWeekends) {
-      const daysFromStart = Math.floor((date - startOfYear) / (1000 * 60 * 60 * 24));
+      const daysFromStart = Math.floor(
+        (date - startOfYear) / (1000 * 60 * 60 * 24)
+      );
       return daysFromStart * scaledDayWidth;
     } else {
       // Count only weekdays
       let weekdayCount = 0;
-      for (let d = new Date(startOfYear); d <= date; d.setDate(d.getDate() + 1)) {
+      for (
+        let d = new Date(startOfYear);
+        d <= date;
+        d.setDate(d.getDate() + 1)
+      ) {
         const dayOfWeek = d.getDay();
         if (dayOfWeek !== 0 && dayOfWeek !== 6) {
           weekdayCount++;
@@ -1062,7 +1073,7 @@ const GanttChart = () => {
       if (resizing.handle === 'start') {
         newStartDate = addDays(resizing.originalStartDate, dayOffset);
         newStartDate = snapToWeekday(newStartDate);
-        
+
         // Ensure start date doesn't go after end date
         if (newStartDate >= newEndDate) {
           newStartDate = new Date(newEndDate);
@@ -1072,7 +1083,7 @@ const GanttChart = () => {
       } else if (resizing.handle === 'end') {
         newEndDate = addDays(resizing.originalEndDate, dayOffset);
         newEndDate = snapToWeekday(newEndDate);
-        
+
         // Ensure end date doesn't go before start date
         if (newEndDate <= newStartDate) {
           newEndDate = new Date(newStartDate);
@@ -1272,6 +1283,83 @@ const GanttChart = () => {
     return headers;
   };
 
+  const generateWeekHeaders = () => {
+    const weekHeaders = [];
+    const startDate = new Date(dateRange.start);
+    const endDate = new Date(dateRange.end);
+    const scaledDayWidth = viewState.timelineZoom;
+
+    // Only show week headers for Day view
+    if (viewState.viewScale !== 'Day') {
+      return null;
+    }
+
+    let currentWeek = null;
+    let weekStartX = 0;
+    let weekWidth = 0;
+    let dayIndex = 0;
+
+    for (
+      let d = new Date(startDate);
+      d <= endDate;
+      d.setDate(d.getDate() + 1)
+    ) {
+      const dayOfWeek = d.getDay();
+      if (!viewState.showWeekends && (dayOfWeek === 0 || dayOfWeek === 6)) {
+        continue;
+      }
+
+      const weekNumber = getWeek(d);
+
+      if (currentWeek !== weekNumber) {
+        // Save previous week header if exists
+        if (currentWeek !== null && weekWidth > 0) {
+          weekHeaders.push(
+            <div
+              key={`week-header-${currentWeek}`}
+              className='text-xs text-gray-600 bg-gray-100 py-1 border-b border-gray-200 flex items-center justify-center font-medium'
+              style={{
+                left: `${weekStartX}px`,
+                width: `${weekWidth}px`,
+                position: 'absolute',
+              }}
+            >
+              W{currentWeek}
+            </div>
+          );
+        }
+
+        // Start new week
+        currentWeek = weekNumber;
+        weekStartX = dayIndex * scaledDayWidth;
+        weekWidth = scaledDayWidth;
+      } else {
+        weekWidth += scaledDayWidth;
+      }
+      
+      dayIndex++;
+    }
+
+    // Add the last week header
+    if (currentWeek !== null && weekWidth > 0) {
+      weekHeaders.push(
+        <div
+          key={`week-header-${currentWeek}`}
+          className='text-xs text-gray-600 bg-gray-100 py-1 border-b border-gray-200 flex items-center justify-center font-medium'
+          style={{
+            left: `${weekStartX}px`,
+            width: `${weekWidth}px`,
+            position: 'absolute',
+          }}
+        >
+          W{currentWeek}
+        </div>
+      );
+    }
+
+    return weekHeaders;
+  };
+
   const getTaskBarStyle = task => {
     const isSelected = selectedTaskId === task.id;
     const isHovered = hoveredTaskId === task.id;
@@ -1360,6 +1448,12 @@ const GanttChart = () => {
 
       {/* Timeline Headers */}
       <div className='border-b border-gray-300 bg-gray-50'>
+        {/* Week Headers (only for Day view) */}
+        {viewState.viewScale === 'Day' && (
+          <div className='relative border-b border-gray-200' style={{ height: '28px' }}>
+            {generateWeekHeaders()}
+          </div>
+        )}
         {/* Dynamic Headers based on View Scale */}
         <div className='flex border-b border-gray-200'>
           {generateTimelineHeaders()}
@@ -1643,7 +1737,8 @@ const GanttChart = () => {
                           {task.progress > 0 && (
                             <div
                               className={`h-full rounded-l transition-all duration-300 ${
-                                task.isCritical || criticalPathTasks.includes(task.id)
+                                task.isCritical ||
+                                criticalPathTasks.includes(task.id)
                                   ? 'bg-red-400'
                                   : 'bg-green-400'
                               }`}
@@ -1667,12 +1762,16 @@ const GanttChart = () => {
                               <div
                                 className='absolute left-0 top-0 bottom-0 w-2 bg-white cursor-ew-resize border border-gray-300 rounded-l'
                                 title='Drag to resize start date'
-                                onMouseDown={e => handleResizeStart(e, task, 'start')}
+                                onMouseDown={e =>
+                                  handleResizeStart(e, task, 'start')
+                                }
                               />
                               <div
                                 className='absolute right-0 top-0 bottom-0 w-2 bg-white cursor-ew-resize border border-gray-300 rounded-r'
                                 title='Drag to resize end date'
-                                onMouseDown={e => handleResizeStart(e, task, 'end')}
+                                onMouseDown={e =>
+                                  handleResizeStart(e, task, 'end')
+                                }
                               />
                             </>
                           )}

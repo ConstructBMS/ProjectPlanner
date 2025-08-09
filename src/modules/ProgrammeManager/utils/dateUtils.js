@@ -109,3 +109,20 @@ export const getWorkingDaysBetween = (startDate, endDate) => {
 
   return workingDays;
 };
+
+/**
+ * Get the ISO week number for a given date
+ * @param {Date} date - The date to get the week number for
+ * @returns {number} - The ISO week number (1-53)
+ */
+export const getWeek = (date) => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  // Thursday in current week decides the year
+  d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+  // January 4 is always in week 1
+  const week1 = new Date(d.getFullYear(), 0, 4);
+  // Adjust to Thursday in week 1 and count number of weeks from date to week1
+  const week = 1 + Math.round(((d.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+  return week;
+};
