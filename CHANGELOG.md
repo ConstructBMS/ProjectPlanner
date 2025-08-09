@@ -381,6 +381,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Integrated with existing task management functions
   - Professional appearance matching Asta PowerProject interface
 
+## [2025-08-08] – Prompt 122
+
+### Added
+
+- **Inline Editing for Task Names in Grid**
+  - Enabled double-click inline editing for task names in Task Grid
+  - Double-click on task name switches to editable input field
+  - Save changes on Enter key or blur event with validation
+  - Revert changes on Escape key press
+  - Input field with blue border and focus ring styling
+  - Validation prevents empty task names
+  - Auto-focus on input field when editing starts
+  - Seamless integration with existing task state management
+  - Professional appearance matching Asta PowerProject interface
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
