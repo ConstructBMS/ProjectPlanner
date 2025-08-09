@@ -230,6 +230,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enhances timeline navigation and current date awareness
   - Professional styling matching Asta PowerProject appearance
 
+## [2025-08-08] – Prompt 112
+
+### Added
+
+- **Project Start/End Date Ribbon Display**
+  - Added dynamic project start/end display to ribbon
+  - Project Status group shows current project dates in Home tab
+  - Displays format: "📅 Start: 12 Aug 2025 | End: 17 Oct 2025"
+  - Automatically calculates dates from first task's startDate and last task's endDate
+  - Real-time updates as project tasks are modified
+  - Professional styling with calendar emoji and proper date formatting
+  - Integrated seamlessly into existing ribbon interface
+  - Enhances project overview and timeline awareness
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
