@@ -74,6 +74,16 @@ const GanttChart = () => {
     currentY: 0,
   });
 
+  // Resize state
+  const [resizing, setResizing] = useState({
+    taskId: null,
+    handle: null, // 'start' or 'end'
+    startX: 0,
+    originalStartDate: null,
+    originalEndDate: null,
+    lastDayOffset: 0,
+  });
+
   const tasks = getVisibleTasks(viewState.taskFilter);
 
   // Calculate critical path when tasks or links change
@@ -798,6 +808,52 @@ const GanttChart = () => {
     };
   };
 
+  // Helper functions for date conversion
+  const getDateFromX = (x) => {
+    const startOfYear = new Date('2024-01-01');
+    const scaledDayWidth = viewState.timelineZoom;
+    const dayIndex = Math.round(x / scaledDayWidth);
+    
+    if (viewState.showWeekends) {
+      return addDays(startOfYear, dayIndex);
+    } else {
+      // Count only weekdays
+      let currentDate = new Date(startOfYear);
+      let weekdayCount = 0;
+      
+      while (weekdayCount < dayIndex) {
+        currentDate.setDate(currentDate.getDate() + 1);
+        const dayOfWeek = currentDate.getDay();
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+          weekdayCount++;
+        }
+      }
+      
+      return currentDate;
+    }
+  };
+
+  const getXFromDate = (date) => {
+    const startOfYear = new Date('2024-01-01');
+    const scaledDayWidth = viewState.timelineZoom;
+    
+    if (viewState.showWeekends) {
+      const daysFromStart = Math.floor((date - startOfYear) / (1000 * 60 * 60 * 24));
+      return daysFromStart * scaledDayWidth;
+    } else {
+      // Count only weekdays
+      let weekdayCount = 0;
+      for (let d = new Date(startOfYear); d <= date; d.setDate(d.getDate() + 1)) {
+        const dayOfWeek = d.getDay();
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+          weekdayCount++;
+        }
+        if (d >= date) break;
+      }
+      return weekdayCount * scaledDayWidth;
+    }
+  };
+
   // Drag event handlers
   const handleTaskDragStart = (e, task) => {
     e.preventDefault();
@@ -967,6 +1023,123 @@ const GanttChart = () => {
     // Remove global event listeners
     document.removeEventListener('mousemove', handleDragToLinkMove);
     document.removeEventListener('mouseup', handleDragToLinkEnd);
+  };
+
+  // Resize handlers
+  const handleResizeStart = (e, task, handle) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    setResizing({
+      taskId: task.id,
+      handle: handle, // 'start' or 'end'
+      startX: e.clientX,
+      originalStartDate: new Date(task.startDate),
+      originalEndDate: new Date(task.endDate),
+      lastDayOffset: 0,
+    });
+
+    // Add global mouse event listeners
+    document.addEventListener('mousemove', handleResizeMove);
+    document.addEventListener('mouseup', handleResizeEnd);
+  };
+
+  const handleResizeMove = e => {
+    if (!resizing.taskId) return;
+
+    const deltaX = e.clientX - resizing.startX;
+    const scaledDayWidth = viewState.timelineZoom;
+    const dayOffset = Math.round(deltaX / scaledDayWidth);
+
+    // Only update if day offset has changed
+    if (dayOffset !== resizing.lastDayOffset) {
+      const task = tasks.find(t => t.id === resizing.taskId);
+      if (!task) return;
+
+      let newStartDate = new Date(resizing.originalStartDate);
+      let newEndDate = new Date(resizing.originalEndDate);
+
+      if (resizing.handle === 'start') {
+        newStartDate = addDays(resizing.originalStartDate, dayOffset);
+        newStartDate = snapToWeekday(newStartDate);
+        
+        // Ensure start date doesn't go after end date
+        if (newStartDate >= newEndDate) {
+          newStartDate = new Date(newEndDate);
+          newStartDate.setDate(newStartDate.getDate() - 1);
+          newStartDate = snapToWeekday(newStartDate);
+        }
+      } else if (resizing.handle === 'end') {
+        newEndDate = addDays(resizing.originalEndDate, dayOffset);
+        newEndDate = snapToWeekday(newEndDate);
+        
+        // Ensure end date doesn't go before start date
+        if (newEndDate <= newStartDate) {
+          newEndDate = new Date(newStartDate);
+          newEndDate.setDate(newEndDate.getDate() + 1);
+          newEndDate = snapToWeekday(newEndDate);
+        }
+      }
+
+      // Update task dates temporarily (for visual feedback)
+      task.startDate = newStartDate.toISOString();
+      task.endDate = newEndDate.toISOString();
+
+      // Update resize state
+      setResizing(prev => ({
+        ...prev,
+        lastDayOffset: dayOffset,
+      }));
+
+      console.log('Task resized with grid snapping:', {
+        taskId: task.id,
+        handle: resizing.handle,
+        dayOffset,
+        newStartDate: newStartDate.toISOString(),
+        newEndDate: newEndDate.toISOString(),
+      });
+    }
+  };
+
+  const handleResizeEnd = async () => {
+    if (!resizing.taskId) return;
+
+    const task = tasks.find(t => t.id === resizing.taskId);
+    if (task) {
+      try {
+        // Update task dates via TaskContext
+        updateTask(resizing.taskId, {
+          startDate: task.startDate,
+          endDate: task.endDate,
+        });
+
+        console.log('Task resized successfully:', {
+          taskId: resizing.taskId,
+          handle: resizing.handle,
+          newStartDate: task.startDate,
+          newEndDate: task.endDate,
+        });
+      } catch (error) {
+        console.error('Error updating task dates:', error);
+        // Revert to original dates on error
+        task.startDate = resizing.originalStartDate.toISOString();
+        task.endDate = resizing.originalEndDate.toISOString();
+      }
+    }
+
+    // Clean up
+    setResizing({
+      taskId: null,
+      handle: null,
+      startX: 0,
+      originalStartDate: null,
+      originalEndDate: null,
+      lastDayOffset: 0,
+    });
+
+    // Remove global event listeners
+    document.removeEventListener('mousemove', handleResizeMove);
+    document.removeEventListener('mouseup', handleResizeEnd);
   };
 
   // Combined drag handler for both task dragging and drag-to-link
@@ -1494,10 +1667,12 @@ const GanttChart = () => {
                               <div
                                 className='absolute left-0 top-0 bottom-0 w-2 bg-white cursor-ew-resize border border-gray-300 rounded-l'
                                 title='Drag to resize start date'
+                                onMouseDown={e => handleResizeStart(e, task, 'start')}
                               />
                               <div
                                 className='absolute right-0 top-0 bottom-0 w-2 bg-white cursor-ew-resize border border-gray-300 rounded-r'
                                 title='Drag to resize end date'
+                                onMouseDown={e => handleResizeStart(e, task, 'end')}
                               />
                             </>
                           )}

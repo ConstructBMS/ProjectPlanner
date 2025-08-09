@@ -116,6 +116,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Proper cursor indication (cursor-ew-resize) for resize operations
   - Integrated with existing task selection and hover states
 
+## [2025-08-08] – Prompt 104
+
+### Added
+
+- **Grid Snapping for Task Bar Resizing**
+  - Gantt task bar resize now snaps to day-based grid columns
+  - Resize handles snap to exact day units using grid snapping logic
+  - Each column represents 1 day with precise day-based positioning
+  - Helper functions getDateFromX() and getXFromDate() for accurate date conversion
+  - Snap logic rounds to nearest date index for consistent day alignment
+  - Weekend handling respects showWeekends toggle for accurate positioning
+  - Real-time visual feedback during resize operations with grid snapping
+  - Integrated with existing task dragging and date management system
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
