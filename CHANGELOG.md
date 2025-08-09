@@ -410,6 +410,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Professional workday-only scheduling logic
   - Integrated with existing showWeekends toggle functionality
 
+## [2025-08-08] – Prompt 124
+
+### Added
+
+- **Vertical Daily Grid Lines in Gantt Chart**
+  - Added vertical daily grid lines to Gantt chart for improved timeline readability
+  - 1px border lines rendered for each day column in the timeline
+  - Alternating light grey lines with different opacity levels for visual hierarchy
+  - Grid lines respect showWeekends toggle and view scale settings
+  - Daily lines (grid-day), weekly lines (grid-week), and monthly lines (grid-month)
+  - Professional styling with rgba(0, 0, 0, 0.08) to rgba(0, 0, 0, 0.25) opacity
+  - Integrated with existing showGridlines toggle functionality
+  - Background rendering with pointer-events-none for non-intrusive interaction
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
