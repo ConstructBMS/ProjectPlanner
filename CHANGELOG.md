@@ -5,6 +5,20 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-08-08] – Prompt 092
+
+### Added
+
+- **Task Bar Drag-to-Move Functionality**
+  - Enabled horizontal drag-to-move for Gantt task bars to adjust start and end dates
+  - Click and drag on task bar left side (80%) initiates date adjustment mode
+  - Movement snaps to nearest day based on timeline zoom scale for precise positioning
+  - Automatic weekend handling - dates snap to weekdays when weekends are hidden
+  - Real-time visual feedback during dragging with temporary date updates
+  - Changes committed to database via Supabase on mouse release
+  - Integrated with existing drag-to-link functionality (right side 20% of task bar)
+  - Performance optimized with proper event listener management and cleanup
+
 ## [2025-08-08] – Prompt 089
 
 ### Added
