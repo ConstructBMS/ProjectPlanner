@@ -46,6 +46,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Proper z-index layering ensures arrows appear behind task bars
   - Integrated with existing task positioning and timeline scaling
 
+## [2025-08-08] – Prompt 099
+
+### Added
+
+- **Task Selection and Highlighting in Gantt Chart**
+  - Tasks are now clickable and highlight when selected
+  - Selected tasks display with yellow border (border-2 border-yellow-400) and glow effect (shadow-md shadow-yellow-300)
+  - Task selection state is managed via React state and TaskContext
+  - Clicking on empty space clears task selection
+  - Selected task names are highlighted with yellow text and bold font
+  - Selection works for both regular task bars and milestone diamonds
+  - Integrated with existing linking mode and drag functionality
+  - Visual feedback provides clear indication of currently selected task
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
