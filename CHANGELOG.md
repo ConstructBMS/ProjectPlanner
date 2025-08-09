@@ -144,6 +144,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - High z-index ensures tooltip appears above all other elements
   - Integrated with existing hover state management and task interactions
 
+## [2025-08-08] – Prompt 106
+
+### Added
+
+- **Critical Path Toggle and Red Task Bar Highlighting**
+  - Added critical path toggle button and styling for critical tasks in Gantt chart
+  - "Show Critical Path" toggle button in Home ribbon Status group
+  - Critical tasks display with red bars (bg-red-600) instead of blue when toggle is active
+  - Toggle button shows visual feedback with blue background when enabled
+  - Critical path calculation integrates with task dependencies and links
+  - Tooltip includes "Critical Task" indicator for critical path tasks
+  - Toggle state persists across view changes and component updates
+  - Integrated with existing task styling and selection system
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
