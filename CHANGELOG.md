@@ -455,6 +455,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Integrated with existing task bar styling and selection systems
   - Professional appearance matching Asta PowerProject interface
 
+## [2025-08-08] – Prompt 127
+
+### Added
+
+- **Milestone Task Type and Diamond Gantt Icons**
+  - Added support for Milestone task type and diamond Gantt icons
+  - task.type = 'milestone' support with legacy isMilestone compatibility
+  - DiamondIcon component with SVG diamond shape (rotated square)
+  - Milestones render as diamond icons at task start date in Gantt chart
+  - Tooltip displays task title on milestone hover
+  - Milestone dropdown in Task Properties Panel (Task/Milestone selection)
+  - Professional diamond styling with color variations for different states
+  - Integrated with existing task selection, critical path, and hover systems
+  - Seamless compatibility with existing task management workflows
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
