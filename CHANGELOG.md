@@ -365,6 +365,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Clear visual distinction between milestones, groups, and regular tasks
   - Maintains existing icon hierarchy (milestone > group > regular task)
 
+## [2025-08-08] – Prompt 121
+
+### Added
+
+- **Right-Click Context Menu on Task Rows**
+  - Added comprehensive right-click context menu to Task Grid rows
+  - Context menu opens on right-click with task-specific options
+  - Menu positioned absolutely near cursor with z-50 layering
+  - Required options: Edit Task (📝), Delete Task (❌), Add Subtask (➕)
+  - Additional options: Link To, Mark as Milestone, Expand/Collapse All
+  - Professional styling with hover effects and proper spacing
+  - Auto-close on outside click or Escape key press
+  - Screen boundary detection prevents menu from going off-screen
+  - Integrated with existing task management functions
+  - Professional appearance matching Asta PowerProject interface
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
