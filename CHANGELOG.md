@@ -32,6 +32,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enhanced visual clarity making weekend days easily identifiable
   - Integrated with existing grid lines and background rendering system
 
+## [2025-08-08] – Prompt 098
+
+### Added
+
+- **Task Dependency Arrows in Gantt Chart**
+  - Task dependency arrows now render between tasks with predecessors
+  - Implements Finish-to-Start logic with arrows from predecessor end to successor start
+  - Uses SVG lines positioned between task bar midpoints for clear visual connections
+  - Arrowhead markers provide directional indication for dependency flow
+  - Supports both taskLinks and predecessor-based dependencies
+  - Interactive tooltips show dependency relationships and link types
+  - Proper z-index layering ensures arrows appear behind task bars
+  - Integrated with existing task positioning and timeline scaling
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
