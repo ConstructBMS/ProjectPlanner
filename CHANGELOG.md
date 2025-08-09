@@ -172,6 +172,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Helpful tooltip explains the milestone expansion functionality
   - Works seamlessly with existing expand/collapse all functionality
 
+## [2025-08-08] – Prompt 108
+
+### Added
+
+- **Milestone Diamond Icons in Gantt and Programme Tree**
+  - Added milestone diamond icons in Gantt and Programme Tree
+  - Diamond-shaped SVG icons visually distinguish milestones from regular tasks
+  - Gantt chart renders diamond icons instead of bars for milestone tasks
+  - SidebarTree displays diamond icons next to milestone task names
+  - Purple color scheme (text-purple-600/text-purple-500) for consistent styling
+  - Proper sizing (w-4 h-4) for optimal visibility and alignment
+  - Supports both task.type === 'milestone' and task.isMilestone flags
+  - Dynamic color changes based on selection, hover, and critical path states
+  - Integrated with existing task styling and interaction systems
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
