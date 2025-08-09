@@ -88,6 +88,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Dynamic positioning updates with timeline zoom scale changes
   - Integrated with existing grid lines system for unified display control
 
+## [2025-08-08] – Prompt 102
+
+### Added
+
+- **Task Name Labels Inside Gantt Bars**
+  - Task bars now include labels with task names, styled like Asta
+  - Task names displayed centered inside each Gantt bar for clear identification
+  - White text styling (text-white text-xs font-medium) for optimal readability
+  - Text truncation (truncate) prevents overflow on narrow bars
+  - Conditional visibility - labels only show when bars are wide enough (>60px)
+  - Proper padding (px-1) ensures text doesn't touch bar edges
+  - Non-interactive labels (pointer-events-none) prevent interference with bar interactions
+  - Integrated with existing task bar styling and hover/selection states
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
