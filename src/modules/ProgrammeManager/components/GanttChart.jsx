@@ -342,7 +342,6 @@ const GanttChart = () => {
 
   // Generate today line indicator
   const todayLineIndicator = useMemo(() => {
-    if (!viewState.showGridlines) return null;
 
     const today = new Date();
     const startOfYear = new Date('2024-01-01');
@@ -381,7 +380,7 @@ const GanttChart = () => {
 
     return (
       <div
-        className='absolute top-0 bottom-0 w-1 bg-red-500 z-50'
+        className='absolute top-0 bottom-0 w-[2px] bg-red-600 z-50'
         style={{
           left: `${left}px`,
           pointerEvents: 'none',
@@ -1482,14 +1481,14 @@ const GanttChart = () => {
               {gridLines}
               {/* Horizontal Row Grid Lines */}
               {rowLines}
-              {/* Today Line Indicator */}
-              {todayLineIndicator}
             </>
           )}
         </div>
 
-        {/* Today Marker */}
-        {todayMarker}
+        {/* Today Line Indicator - Always visible */}
+        {todayLineIndicator}
+
+
 
         {/* Drag-to-link connector line */}
         {dragToLink.isActive && (

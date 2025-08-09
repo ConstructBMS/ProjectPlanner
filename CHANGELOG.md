@@ -216,6 +216,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enhances task planning visibility and timeline readability
   - Professional appearance matching Asta PowerProject style
 
+## [2025-08-08] – Prompt 111
+
+### Added
+
+- **Today Line Marker in Gantt Chart**
+  - Added vertical "Today" marker in Gantt chart
+  - Red vertical line (w-[2px] bg-red-600) indicates current date
+  - Positioned absolutely with z-50 for high visibility
+  - Automatically calculates position based on timeline date range
+  - Always visible regardless of gridlines setting
+  - Handles weekend visibility settings correctly
+  - Enhances timeline navigation and current date awareness
+  - Professional styling matching Asta PowerProject appearance
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
