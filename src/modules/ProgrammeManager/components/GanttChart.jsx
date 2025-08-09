@@ -28,6 +28,10 @@ import {
   calculateDuration,
   getWeek,
 } from '../utils/dateUtils';
+import {
+  validateTaskDates,
+  getPredecessors,
+} from '../utils/scheduleUtils';
 import '../styles/gantt.css';
 
 const GanttChart = () => {
@@ -54,6 +58,13 @@ const GanttChart = () => {
 
   // Scroll state for header synchronization
   const [scrollLeft, setScrollLeft] = useState(0);
+  
+  // Constraint state for visual feedback
+  const [constraintWarning, setConstraintWarning] = useState({
+    taskId: null,
+    message: '',
+    timestamp: 0,
+  });
 
   // Tooltip state
   const [tooltip, setTooltip] = useState({
@@ -898,18 +909,36 @@ const GanttChart = () => {
       let newStartDate = addDays(dragging.originalStartDate, dayOffset);
       let newEndDate = addDays(dragging.originalEndDate, dayOffset);
 
-      // Snap both dates to weekdays (skip weekends)
-      newStartDate = snapToWeekday(newStartDate);
-      newEndDate = snapToWeekday(newEndDate);
+      // Get predecessor constraints
+      const predecessors = getPredecessors(task.id, taskLinks, tasks);
 
-      // Ensure end date is not before start date
-      if (newEndDate < newStartDate) {
-        newEndDate = new Date(newStartDate);
+      // Validate dates with constraints
+      const validation = validateTaskDates(
+        task,
+        newStartDate,
+        newEndDate,
+        predecessors,
+        viewState.showWeekends
+      );
+
+      // Update task dates with validated values
+      task.startDate = validation.startDate.toISOString();
+      task.endDate = validation.endDate.toISOString();
+
+      // Show constraint warning if needed
+      if (validation.wasConstrained) {
+        setConstraintWarning({
+          taskId: task.id,
+          message: 'Task position adjusted due to constraints',
+          timestamp: Date.now(),
+        });
+      } else {
+        setConstraintWarning({
+          taskId: null,
+          message: '',
+          timestamp: 0,
+        });
       }
-
-      // Update task dates temporarily (for visual feedback)
-      task.startDate = newStartDate.toISOString();
-      task.endDate = newEndDate.toISOString();
 
       // Update drag state with new day offset
       setDragging(prev => ({
@@ -917,12 +946,13 @@ const GanttChart = () => {
         lastDayOffset: dayOffset,
       }));
 
-      console.log('Task snapped to day grid:', {
+      console.log('Task dragged with constraints:', {
         taskId: task.id,
         dayOffset,
         snappedDeltaX,
-        newStartDate: newStartDate.toISOString(),
-        newEndDate: newEndDate.toISOString(),
+        newStartDate: validation.startDate.toISOString(),
+        newEndDate: validation.endDate.toISOString(),
+        wasConstrained: validation.wasConstrained,
       });
     }
   };
@@ -951,6 +981,13 @@ const GanttChart = () => {
         task.endDate = dragging.originalEndDate.toISOString();
       }
     }
+
+    // Clear constraint warning
+    setConstraintWarning({
+      taskId: null,
+      message: '',
+      timestamp: 0,
+    });
 
     // Clean up
     setDragging({
@@ -1069,29 +1106,42 @@ const GanttChart = () => {
 
       if (resizing.handle === 'start') {
         newStartDate = addDays(resizing.originalStartDate, dayOffset);
-        newStartDate = snapToWeekday(newStartDate);
-
-        // Ensure start date doesn't go after end date
-        if (newStartDate >= newEndDate) {
-          newStartDate = new Date(newEndDate);
-          newStartDate.setDate(newStartDate.getDate() - 1);
-          newStartDate = snapToWeekday(newStartDate);
-        }
       } else if (resizing.handle === 'end') {
         newEndDate = addDays(resizing.originalEndDate, dayOffset);
-        newEndDate = snapToWeekday(newEndDate);
-
-        // Ensure end date doesn't go before start date
-        if (newEndDate <= newStartDate) {
-          newEndDate = new Date(newStartDate);
-          newEndDate.setDate(newEndDate.getDate() + 1);
-          newEndDate = snapToWeekday(newEndDate);
-        }
       }
 
-      // Update task dates temporarily (for visual feedback)
-      task.startDate = newStartDate.toISOString();
-      task.endDate = newEndDate.toISOString();
+      // Get predecessor constraints (only for start handle)
+      const predecessors = resizing.handle === 'start' 
+        ? getPredecessors(task.id, taskLinks, tasks)
+        : [];
+
+      // Validate dates with constraints
+      const validation = validateTaskDates(
+        task,
+        newStartDate,
+        newEndDate,
+        predecessors,
+        viewState.showWeekends
+      );
+
+      // Update task dates with validated values
+      task.startDate = validation.startDate.toISOString();
+      task.endDate = validation.endDate.toISOString();
+
+      // Show constraint warning if needed
+      if (validation.wasConstrained) {
+        setConstraintWarning({
+          taskId: task.id,
+          message: `Task ${resizing.handle} adjusted due to constraints`,
+          timestamp: Date.now(),
+        });
+      } else {
+        setConstraintWarning({
+          taskId: null,
+          message: '',
+          timestamp: 0,
+        });
+      }
 
       // Update resize state
       setResizing(prev => ({
@@ -1099,12 +1149,13 @@ const GanttChart = () => {
         lastDayOffset: dayOffset,
       }));
 
-      console.log('Task resized with grid snapping:', {
+      console.log('Task resized with constraints:', {
         taskId: task.id,
         handle: resizing.handle,
         dayOffset,
-        newStartDate: newStartDate.toISOString(),
-        newEndDate: newEndDate.toISOString(),
+        newStartDate: validation.startDate.toISOString(),
+        newEndDate: validation.endDate.toISOString(),
+        wasConstrained: validation.wasConstrained,
       });
     }
   };
@@ -1134,6 +1185,13 @@ const GanttChart = () => {
         task.endDate = resizing.originalEndDate.toISOString();
       }
     }
+
+    // Clear constraint warning
+    setConstraintWarning({
+      taskId: null,
+      message: '',
+      timestamp: 0,
+    });
 
     // Clean up
     setResizing({
@@ -1374,6 +1432,8 @@ const GanttChart = () => {
       task.type === 'milestone' ||
       task.isMilestone ||
       (task.duration || 1) === 0;
+    const isConstrained = constraintWarning.taskId === task.id && 
+      Date.now() - constraintWarning.timestamp < 2000; // Show for 2 seconds
 
     let baseClasses =
       'rounded-sm transition-all duration-200 cursor-move border';
@@ -1399,6 +1459,11 @@ const GanttChart = () => {
       baseClasses += ' bg-purple-100 border-purple-400 ring-2 ring-purple-500';
     } else if (isCritical) {
       baseClasses += ' ring-2 ring-red-500 border-red-600 shadow-md opacity-70';
+    }
+
+    // Add constraint warning styling
+    if (isConstrained) {
+      baseClasses += ' animate-pulse border-red-500 ring-2 ring-red-400';
     }
 
     return baseClasses;

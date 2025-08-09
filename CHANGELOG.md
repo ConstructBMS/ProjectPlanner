@@ -550,6 +550,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Professional styling with proper contrast and visual hierarchy
   - Seamless integration with existing task management and undo systems
 
+## [2025-08-09] – Prompt 133
+
+### Added
+
+- **Drag/Resize Constraints with Visual Feedback**
+  - Enforced minimum 1-day duration for regular tasks (milestones can have 0 days)
+  - Respect FS (Finish-to-Start) dependencies with lag consideration
+  - Prevent negative durations and invalid date ranges
+  - Workday clamping respects showWeekends setting
+  - Visual constraint warnings with red pulsing border for 2 seconds
+  - Automatic snapping to nearest valid date when constraints are violated
+  - Enhanced scheduleUtils.js with constraint validation functions
+  - Real-time constraint checking during drag and resize operations
+  - Professional error handling with graceful fallbacks
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
