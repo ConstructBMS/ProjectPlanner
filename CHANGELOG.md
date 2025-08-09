@@ -486,6 +486,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Empty state messages for no predecessors/successors
   - Integrated with existing task linking and unlinkTasks systems
 
+## [2025-08-08] – Prompt 129
+
+### Added
+
+- **Drag-to-Link Dependency Mode in Gantt Chart**
+  - Enabled intuitive drag-to-link feature for creating task dependencies
+  - Click and drag from right 20% of task bar to start linking
+  - Real-time visual connector line with dashed stroke and arrowhead
+  - Drop on target task to create Finish-to-Start (FS) dependency
+  - Automatic dependency creation with lag: 0 via linkTasks() function
+  - Prevents self-linking and validates target task existence
+  - Professional blue styling (#3B82F6) with high z-index visibility
+  - Status indicator in timeline header during drag operations
+  - Seamless integration with existing dependency management system
+  - Auto-refresh of dependencies panel and Gantt arrow connectors
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
