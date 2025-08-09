@@ -463,7 +463,7 @@ const GanttChart = () => {
         blocks.push(
           <div
             key={`weekend-${d.toISOString()}`}
-            className='absolute top-0 bottom-0 bg-gray-100 z-0'
+            className='absolute top-0 bottom-0 bg-gray-200 opacity-60 z-0'
             style={{
               left: `${left}px`,
               width: `${scaledDayWidth}px`,
@@ -1336,7 +1336,7 @@ const GanttChart = () => {
       } else {
         weekWidth += scaledDayWidth;
       }
-      
+
       dayIndex++;
     }
 
@@ -1450,7 +1450,10 @@ const GanttChart = () => {
       <div className='border-b border-gray-300 bg-gray-50'>
         {/* Week Headers (only for Day view) */}
         {viewState.viewScale === 'Day' && (
-          <div className='relative border-b border-gray-200' style={{ height: '28px' }}>
+          <div
+            className='relative border-b border-gray-200'
+            style={{ height: '28px' }}
+          >
             {generateWeekHeaders()}
           </div>
         )}

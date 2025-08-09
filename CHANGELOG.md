@@ -202,6 +202,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Integrated with weekend visibility settings
   - Enhanced timeline navigation and week identification
 
+## [2025-08-08] – Prompt 110
+
+### Added
+
+- **Non-Working Days Shading in Gantt Timeline**
+  - Added grey background shading for non-working weekend days in Gantt
+  - Weekend days (Saturday/Sunday) display with subtle grey background
+  - Styled with bg-gray-200 opacity-60 for optimal visibility
+  - Background layers positioned absolutely behind task bars (z-0)
+  - Width automatically adjusts to timeline zoom scale
+  - Integrated with existing weekend visibility toggle
+  - Enhances task planning visibility and timeline readability
+  - Professional appearance matching Asta PowerProject style
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
