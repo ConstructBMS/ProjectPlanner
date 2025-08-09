@@ -74,6 +74,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enhanced visual clarity for task row separation and alignment
   - Integrated with existing grid lines system for unified grid control
 
+## [2025-08-08] – Prompt 101
+
+### Added
+
+- **Vertical "Today" Marker Line in Gantt Chart**
+  - Added vertical "Today" marker line to Gantt chart
+  - Red vertical line (w-1 bg-red-500) marks today's date on the timeline
+  - Line only renders when today's date is within the visible timeline range
+  - Position calculated based on offset from timeline start using new Date()
+  - High z-index (z-50) ensures line appears above all other elements
+  - Respects weekend visibility toggle for accurate positioning
+  - Dynamic positioning updates with timeline zoom scale changes
+  - Integrated with existing grid lines system for unified display control
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

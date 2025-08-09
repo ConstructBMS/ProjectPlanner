@@ -366,7 +366,7 @@ const GanttChart = () => {
 
     return (
       <div
-        className='gantt-today-line absolute top-0 bottom-0 w-[1px] bg-red-500 z-20'
+        className='absolute top-0 bottom-0 w-1 bg-red-500 z-50'
         style={{
           left: `${left}px`,
           pointerEvents: 'none',
