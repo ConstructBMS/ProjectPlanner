@@ -333,6 +333,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Non-intrusive design with pointer-events-none
   - Integrated with existing hover state management system
 
+## [2025-08-08] – Prompt 119
+
+### Added
+
+- **Critical Path Highlighting Toggle**
+  - Added ribbon toggle for critical path highlighting in Gantt chart
+  - "Show Critical Path" button in Home tab Status group with ExclamationTriangleIcon
+  - Toggle button with visual feedback (blue background when active)
+  - Professional tooltip: "Toggle visibility of the project's critical path"
+  - Critical path calculation using dependency data and CPM algorithm
+  - Critical tasks highlighted with red styling: bg-red-600 opacity-70
+  - Tasks with zero slack (any delay impacts project end date) are identified
+  - Forward/backward pass algorithm for accurate critical path computation
+  - Persistent state management with localStorage integration
+  - Integrated with existing task bar styling system
+  - Professional appearance matching Asta PowerProject interface
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
