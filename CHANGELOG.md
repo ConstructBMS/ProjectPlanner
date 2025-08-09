@@ -5,6 +5,47 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-08-08] – Prompt 086
+
+### Added
+
+- **Vertical Grid Lines in Gantt Timeline for Days, Weeks, and Months**
+  - Rendered vertical grid lines for days, weeks, and months in Gantt timeline
+  - Styled using .grid-day, .grid-week, .grid-month classes with proper opacity
+  - Dynamically generated based on date range and zoom level
+  - Grid lines appear behind task bars with proper z-index layering
+  - Different visual weights for day (light), week (medium), and month (strong) boundaries
+  - Performance optimized with useMemo for smooth scrolling and zooming
+  - Integrated with existing grid lines toggle and weekend visibility controls
+
+## [2025-08-08] – Prompt 128
+
+### Added
+
+- **Dependencies Section in Task Properties Panel**
+  - Added comprehensive dependencies management section to Task Properties Panel
+  - Users can view, edit, and create new task dependencies with lag information
+  - Predecessors and successors display with editable lag values (+/- days)
+  - Add button to link new tasks with configurable link types (FS, SS, FF, SF)
+  - Remove dependency functionality with confirmation
+  - Real-time lag updates that auto-update Gantt links
+  - Professional modal interface for adding new dependencies
+  - Integrated with existing task linking system for seamless workflow
+
+## [2025-08-08] – Prompt 127
+
+### Added
+
+- **Milestone Task Type and Diamond Gantt Rendering**
+  - Added support for `task.type = 'milestone'` alongside existing `isMilestone` property
+  - Enhanced GanttChart to render milestones as diamond-shaped icons instead of bars
+  - Improved DiamondIcon component with proper diamond shape (rotated square)
+  - Milestone tasks display as centered diamond icons at task start date
+  - Tooltip shows task title when hovering over milestone diamonds
+  - Milestone checkbox in Task Properties Panel with dual support for type and isMilestone
+  - Backward compatibility maintained for existing milestone tasks
+  - Professional milestone visualization matching industry standards
+
 ## [2025-08-08] – Prompt 125
 
 ### Added

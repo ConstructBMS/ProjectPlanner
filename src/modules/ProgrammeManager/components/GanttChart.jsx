@@ -13,19 +13,15 @@ const DiamondIcon = ({ className = 'w-4 h-4', color = 'text-purple-600' }) => (
     fill='currentColor'
     xmlns='http://www.w3.org/2000/svg'
   >
-    <path d='M12 2L2 12L12 22L22 12L12 2Z' />
+    {/* Diamond shape - rotated square */}
+    <path d='M12 2L22 12L12 22L2 12L12 2Z' />
   </svg>
 );
 import { useTaskContext } from '../context/TaskContext';
 import { useViewContext } from '../context/ViewContext';
 import DateMarkersOverlay from './DateMarkersOverlay';
 import { calculateCriticalPath } from '../utils/criticalPath';
-import {
-  calculateDuration,
-  addDays,
-  snapToWeekday,
-  addWorkingDays,
-} from '../utils/dateUtils';
+import { addDays, snapToWeekday } from '../utils/dateUtils';
 import '../styles/gantt.css';
 
 const GanttChart = () => {
@@ -41,6 +37,7 @@ const GanttChart = () => {
     handleTaskClickForLinking,
     taskLinks,
     updateTask,
+    linkTasks,
   } = useTaskContext();
 
   const { viewState, updateViewState } = useViewContext();
@@ -63,6 +60,17 @@ const GanttChart = () => {
     startX: 0,
     originalStartDate: null,
     originalEndDate: null,
+  });
+
+  // Drag-to-link state
+  const [dragToLink, setDragToLink] = useState({
+    isActive: false,
+    fromTaskId: null,
+    fromTask: null,
+    startX: 0,
+    startY: 0,
+    currentX: 0,
+    currentY: 0,
   });
 
   const tasks = getVisibleTasks(viewState.taskFilter);
@@ -660,6 +668,7 @@ const GanttChart = () => {
 
   const handleTaskLeave = () => {
     clearHoveredTask();
+    setTooltip({ visible: false, x: 0, y: 0, task: null });
   };
 
   // Grid snapping helper functions
@@ -668,24 +677,6 @@ const GanttChart = () => {
     const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
     const index = Math.round(x / scaledDayWidth);
     return index * scaledDayWidth;
-  };
-
-  const getDateFromX = x => {
-    const baseDayWidth = 2;
-    const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
-    const dayIndex = Math.round(x / scaledDayWidth);
-    const startOfYear = new Date('2024-01-01');
-    const date = new Date(startOfYear);
-    date.setDate(date.getDate() + dayIndex);
-    return date;
-  };
-
-  const getXFromDate = date => {
-    const startOfYear = new Date('2024-01-01');
-    const dayIndex = Math.floor((date - startOfYear) / (1000 * 60 * 60 * 24));
-    const baseDayWidth = 2;
-    const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
-    return dayIndex * scaledDayWidth;
   };
 
   // Drag event handlers
@@ -776,6 +767,92 @@ const GanttChart = () => {
     document.removeEventListener('mouseup', handleTaskDragEnd);
   };
 
+  // Drag-to-link handlers
+  const handleDragToLinkStart = (e, task) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    setDragToLink({
+      isActive: true,
+      fromTaskId: task.id,
+      fromTask: task,
+      startX: e.clientX,
+      startY: e.clientY,
+      currentX: e.clientX,
+      currentY: e.clientY,
+    });
+
+    // Add global mouse event listeners
+    document.addEventListener('mousemove', handleDragToLinkMove);
+    document.addEventListener('mouseup', handleDragToLinkEnd);
+  };
+
+  const handleDragToLinkMove = e => {
+    if (!dragToLink.isActive) return;
+
+    setDragToLink(prev => ({
+      ...prev,
+      currentX: e.clientX,
+      currentY: e.clientY,
+    }));
+  };
+
+  const handleDragToLinkEnd = e => {
+    if (!dragToLink.isActive) return;
+
+    // Find the task under the cursor
+    const elementUnderCursor = document.elementFromPoint(e.clientX, e.clientY);
+    const taskElement = elementUnderCursor?.closest('[data-task-id]');
+
+    if (taskElement) {
+      const toTaskId = taskElement.getAttribute('data-task-id');
+      const toTask = tasks.find(t => t.id === toTaskId);
+
+      if (toTask && toTask.id !== dragToLink.fromTaskId) {
+        // Create the dependency
+        linkTasks(dragToLink.fromTaskId, toTask.id, 'FS', 0);
+        console.log('Created dependency:', {
+          from: dragToLink.fromTaskId,
+          to: toTaskId,
+        });
+      }
+    }
+
+    // Clean up
+    setDragToLink({
+      isActive: false,
+      fromTaskId: null,
+      fromTask: null,
+      startX: 0,
+      startY: 0,
+      currentX: 0,
+      currentY: 0,
+    });
+
+    // Remove global event listeners
+    document.removeEventListener('mousemove', handleDragToLinkMove);
+    document.removeEventListener('mouseup', handleDragToLinkEnd);
+  };
+
+  // Combined drag handler for both task dragging and drag-to-link
+  const handleTaskMouseDown = (e, task) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Check if this is a drag-to-link operation (click on right side of task)
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const taskWidth = rect.width;
+
+    // If click is on the right side of the task (last 20% of the task), start drag-to-link
+    if (clickX >= taskWidth * 0.8) {
+      handleDragToLinkStart(e, task);
+    } else {
+      // Otherwise, start normal task dragging
+      handleTaskDragStart(e, task);
+    }
+  };
+
   const formatDate = dateString => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -800,7 +877,11 @@ const GanttChart = () => {
     switch (viewState.viewScale) {
       case 'Day':
         // Daily headers - show each day
-        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        for (
+          let d = new Date(startDate);
+          d <= endDate;
+          d.setDate(d.getDate() + 1)
+        ) {
           const dayOfWeek = d.getDay();
           if (!viewState.showWeekends && (dayOfWeek === 0 || dayOfWeek === 6)) {
             continue;
@@ -819,7 +900,11 @@ const GanttChart = () => {
 
       case 'Week':
         // Weekly headers - show week numbers
-        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 7)) {
+        for (
+          let d = new Date(startDate);
+          d <= endDate;
+          d.setDate(d.getDate() + 7)
+        ) {
           const weekNumber = getWeek(d);
           headers.push(
             <div
@@ -835,7 +920,11 @@ const GanttChart = () => {
 
       case 'Month':
         // Monthly headers - show month names
-        for (let d = new Date(startDate); d <= endDate; d.setMonth(d.getMonth() + 1)) {
+        for (
+          let d = new Date(startDate);
+          d <= endDate;
+          d.setMonth(d.getMonth() + 1)
+        ) {
           const monthName = d.toLocaleDateString('en-US', { month: 'short' });
           const year = d.getFullYear();
           headers.push(
@@ -852,7 +941,11 @@ const GanttChart = () => {
 
       default:
         // Default to daily view
-        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        for (
+          let d = new Date(startDate);
+          d <= endDate;
+          d.setDate(d.getDate() + 1)
+        ) {
           const dayOfWeek = d.getDay();
           if (!viewState.showWeekends && (dayOfWeek === 0 || dayOfWeek === 6)) {
             continue;
@@ -880,7 +973,10 @@ const GanttChart = () => {
       task.isCritical ||
       (viewState.showCriticalPath && criticalPathTasks.includes(task.id));
     const isDragging = dragging.taskId === task.id;
-    const isMilestone = task.isMilestone || (task.duration || 1) === 0;
+    const isMilestone =
+      task.type === 'milestone' ||
+      task.isMilestone ||
+      (task.duration || 1) === 0;
 
     let baseClasses =
       'rounded-sm transition-all duration-200 cursor-move border';
@@ -946,9 +1042,11 @@ const GanttChart = () => {
           <div className='text-xs text-gray-500'>
             {linkingMode
               ? '🔗 Linking mode active'
-              : selectedTaskId
-                ? `Selected: ${tasks.find(t => t.id === selectedTaskId)?.name || 'Unknown'}`
-                : 'No task selected'}
+              : dragToLink.isActive
+                ? '🔗 Drag to link mode active'
+                : selectedTaskId
+                  ? `Selected: ${tasks.find(t => t.id === selectedTaskId)?.name || 'Unknown'}`
+                  : 'No task selected'}
           </div>
         </div>
       </div>
@@ -970,125 +1068,66 @@ const GanttChart = () => {
         onClick={handleChartClick}
       >
         {/* Background Grid */}
-        {viewState.showGridlines && (
-          <div className='asta-timeline-grid absolute inset-0 opacity-20' />
-        )}
-
-        {/* Weekend Highlighting Blocks */}
-        <div className='absolute inset-0 pointer-events-none z-0'>
-          {weekendBlocks}
+        <div className='absolute inset-0 pointer-events-none'>
+          {viewState.showGridlines && (
+            <>
+              {/* Vertical Grid Lines */}
+              {gridLines}
+              {/* Horizontal Row Grid Lines */}
+              {rowLines}
+            </>
+          )}
         </div>
 
-        {/* Vertical Grid Lines */}
-        {viewState.showGridlines && (
-          <div className='absolute inset-0 pointer-events-none z-0'>
-            {gridLines}
-          </div>
+        {/* Drag-to-link connector line */}
+        {dragToLink.isActive && (
+          <svg
+            className='absolute inset-0 pointer-events-none z-50'
+            style={{ width: '100%', height: '100%' }}
+          >
+            <defs>
+              <marker
+                id='drag-arrowhead'
+                markerWidth='8'
+                markerHeight='8'
+                refX='8'
+                refY='4'
+                orient='auto'
+              >
+                <path d='M0,0 L8,4 L0,8 Z' fill='#3B82F6' />
+              </marker>
+            </defs>
+            {(() => {
+              const containerRect =
+                timelineContainerRef.current?.getBoundingClientRect();
+              if (!containerRect) return null;
+
+              const x1 = dragToLink.startX - containerRect.left;
+              const y1 = dragToLink.startY - containerRect.top;
+              const x2 = dragToLink.currentX - containerRect.left;
+              const y2 = dragToLink.currentY - containerRect.top;
+
+              return (
+                <line
+                  x1={x1}
+                  y1={y1}
+                  x2={x2}
+                  y2={y2}
+                  stroke='#3B82F6'
+                  strokeWidth='2'
+                  strokeDasharray='5,5'
+                  markerEnd='url(#drag-arrowhead)'
+                />
+              );
+            })()}
+          </svg>
         )}
 
-        {/* Horizontal Row Grid Lines */}
-        {viewState.showGridlines && (
-          <div className='absolute inset-0 pointer-events-none z-0'>
-            {rowLines}
-          </div>
-        )}
-
-        {/* Today Line Indicator */}
-        <div
-          className='absolute top-0 bottom-0 w-[2px] bg-red-600 z-50 pointer-events-none'
-          style={{
-            left: (() => {
-              const today = new Date();
-              const startOfYear = new Date('2024-01-01');
-
-              // Calculate today's position based on showWeekends setting
-              const getDateIndex = date => {
-                const daysFromStart = Math.floor(
-                  (date - startOfYear) / (1000 * 60 * 60 * 24)
-                );
-
-                if (viewState.showWeekends) {
-                  return daysFromStart;
-                } else {
-                  // Count only weekdays
-                  let weekdayCount = 0;
-                  for (
-                    let d = new Date(startOfYear);
-                    d <= date;
-                    d.setDate(d.getDate() + 1)
-                  ) {
-                    const dayOfWeek = d.getDay();
-                    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-                      weekdayCount++;
-                    }
-                    if (d >= date) break;
-                  }
-                  return weekdayCount;
-                }
-              };
-
-              const daysFromStart = getDateIndex(today);
-              const baseDayWidth = 2;
-              const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
-              return `${daysFromStart * scaledDayWidth}px`;
-            })(),
-          }}
-          title={`Today: ${new Date().toLocaleDateString()}`}
-        />
-
-        {/* Date Markers Overlay */}
-        <DateMarkersOverlay />
-
-        {/* Today Highlight Overlay */}
-        {viewState.showTodayHighlight && (
-          <div
-            className='absolute inset-y-0 bg-yellow-200 border-l-2 border-yellow-400 opacity-75 z-20 pointer-events-none animate-pulse'
-            style={{
-              left: (() => {
-                const today = new Date();
-                const startOfYear = new Date('2024-01-01');
-
-                // Calculate today's position based on showWeekends setting
-                const getDateIndex = date => {
-                  const daysFromStart = Math.floor(
-                    (date - startOfYear) / (1000 * 60 * 60 * 24)
-                  );
-
-                  if (viewState.showWeekends) {
-                    return daysFromStart;
-                  } else {
-                    // Count only weekdays
-                    let weekdayCount = 0;
-                    for (
-                      let d = new Date(startOfYear);
-                      d <= date;
-                      d.setDate(d.getDate() + 1)
-                    ) {
-                      const dayOfWeek = d.getDay();
-                      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-                        weekdayCount++;
-                      }
-                      if (d >= date) break;
-                    }
-                    return weekdayCount;
-                  }
-                };
-
-                const daysFromStart = getDateIndex(today);
-                const baseDayWidth = 2;
-                const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
-                return `${daysFromStart * scaledDayWidth}px`;
-              })(),
-              width: `${2 * viewState.timelineZoom}px`,
-            }}
-            title={`Today: ${new Date().toLocaleDateString()}`}
-          />
-        )}
-
-        {/* SVG Container for Dependency Arrows */}
+        {/* Dependency Arrows */}
         <svg
           ref={svgContainerRef}
-          className='absolute inset-0 w-full h-full pointer-events-none z-10'
+          className='absolute inset-0 pointer-events-none z-10'
+          style={{ width: '100%', height: '100%' }}
         >
           <defs>
             <marker
@@ -1152,12 +1191,18 @@ const GanttChart = () => {
                   baseDurationWidth * viewState.timelineZoom;
 
                 const left = `${Math.max(daysFromStart * scaledDayWidth, 0)}px`;
-                const width = task.isMilestone
-                  ? `${20 * viewState.timelineZoom}px`
-                  : `${Math.max(duration * scaledDurationWidth, 40 * viewState.timelineZoom)}px`;
+                const width =
+                  task.type === 'milestone' ||
+                  task.isMilestone ||
+                  duration === 0
+                    ? `${20 * viewState.timelineZoom}px`
+                    : `${Math.max(duration * scaledDurationWidth, 40 * viewState.timelineZoom)}px`;
 
                 // Check if task is a milestone (zero duration or isMilestone flag)
-                const isMilestone = task.isMilestone || duration === 0;
+                const isMilestone =
+                  task.type === 'milestone' ||
+                  task.isMilestone ||
+                  duration === 0;
 
                 return (
                   <div
@@ -1209,7 +1254,8 @@ const GanttChart = () => {
                             top: '4px',
                             height: '16px',
                           }}
-                          onMouseDown={e => handleTaskDragStart(e, task)}
+                          data-task-id={task.id}
+                          onMouseDown={e => handleTaskMouseDown(e, task)}
                           onClick={e => {
                             e.stopPropagation();
                             handleTaskClick(task.id);
@@ -1256,7 +1302,8 @@ const GanttChart = () => {
                             top: '2px',
                             height: 'calc(100% - 4px)',
                           }}
-                          onMouseDown={e => handleTaskDragStart(e, task)}
+                          data-task-id={task.id}
+                          onMouseDown={e => handleTaskMouseDown(e, task)}
                           onClick={e => {
                             e.stopPropagation();
                             handleTaskClick(task.id);
@@ -1375,17 +1422,22 @@ const GanttChart = () => {
           }}
         >
           <div className='font-semibold mb-2 text-blue-300'>
-            Task: {tooltip.task.name}
+            {tooltip.task.type === 'milestone' || tooltip.task.isMilestone
+              ? 'Milestone: '
+              : 'Task: '}
+            {tooltip.task.name}
           </div>
           <div className='space-y-1 text-gray-200'>
             <div className='flex justify-between'>
-              <span className='text-gray-400'>Start:</span>
+              <span className='text-gray-400'>Date:</span>
               <span>{formatDate(tooltip.task.startDate)}</span>
             </div>
-            <div className='flex justify-between'>
-              <span className='text-gray-400'>End:</span>
-              <span>{formatDate(tooltip.task.endDate)}</span>
-            </div>
+            {(tooltip.task.type === 'milestone' ||
+              tooltip.task.isMilestone) && (
+              <div className='text-purple-300 font-medium mt-2 pt-1 border-t border-gray-700'>
+                Milestone
+              </div>
+            )}
             {(tooltip.task.isCritical ||
               (viewState.showCriticalPath &&
                 criticalPathTasks.includes(tooltip.task.id))) && (
