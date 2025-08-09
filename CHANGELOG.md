@@ -244,6 +244,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Integrated seamlessly into existing ribbon interface
   - Enhances project overview and timeline awareness
 
+## [2025-08-08] – Prompt 113
+
+### Added
+
+- **"Go to Today" Gantt Scroll Button**
+  - Added "Go to Today" Gantt scroll button to ribbon
+  - Clock icon button in Home tab Zoom group
+  - Smooth scrolls Gantt chart to today's date when clicked
+  - Centers today's date in the viewport for optimal visibility
+  - Uses ref.scrollLeft technique with smooth scrolling behavior
+  - Handles weekend visibility settings correctly
+  - Integrated with existing view state management
+  - Enhances timeline navigation and current date awareness
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
