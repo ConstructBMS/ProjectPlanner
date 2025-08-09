@@ -157,7 +157,9 @@ const TreeNode = React.memo(
           onContextMenu={handleContextMenu}
         >
           {/* Row Number */}
-          <span className='text-sm text-gray-400 pr-2 flex-shrink-0'>{rowNumber}</span>
+          <span className='text-sm text-gray-400 pr-2 flex-shrink-0'>
+            {rowNumber}
+          </span>
 
           {/* Indentation */}
           <div className='flex-shrink-0' style={{ width: `${level * 16}px` }} />
@@ -399,7 +401,19 @@ const SidebarTree = forwardRef((props, ref) => {
   // Expose methods via forwardRef
   useImperativeHandle(ref, () => ({
     expandAll: () => {
-      const allIds = new Set();
+      // Collect all node IDs that have children
+      const collectAllIds = (nodes) => {
+        const ids = new Set();
+        nodes.forEach(node => {
+          if (node.children && node.children.length > 0) {
+            ids.add(node.id);
+            ids.add(...collectAllIds(node.children));
+          }
+        });
+        return ids;
+      };
+      
+      const allIds = collectAllIds(treeData);
       setExpandedIds(allIds);
     },
     collapseAll: () => {
@@ -442,8 +456,12 @@ const SidebarTree = forwardRef((props, ref) => {
       nodes.forEach(node => {
         rowCounter.value++;
         flattened.push({ ...node, rowNumber: rowCounter.value, level });
-        
-        if (expandedIds.has(node.id) && node.children && node.children.length > 0) {
+
+        if (
+          expandedIds.has(node.id) &&
+          node.children &&
+          node.children.length > 0
+        ) {
           flattened.push(...flattenTree(node.children, level + 1, rowCounter));
         }
       });
@@ -451,7 +469,7 @@ const SidebarTree = forwardRef((props, ref) => {
     };
 
     const flattenedNodes = flattenTree(treeData);
-    
+
     // Render flattened nodes directly
     return flattenedNodes.map(node => {
       const isExpanded = expandedIds.has(node.id);

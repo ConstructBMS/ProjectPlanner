@@ -287,6 +287,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Integrated seamlessly with existing tree structure and styling
   - Enhances task identification and navigation in Programme Tree
 
+## [2025-08-08] – Prompt 116
+
+### Added
+
+- **Expand/Collapse All Button in Sidebar Tree**
+  - Added ribbon toggle to expand/collapse all task groups in Sidebar Tree
+  - "Expand/Collapse All" button in Home tab Hierarchy group with double arrow icon
+  - Toggle button with dynamic icon (ChevronDoubleDownIcon/ChevronRightIcon)
+  - Visual feedback with blue background when all items are expanded
+  - Proper tooltips: "Expand all groups and tasks in the tree" / "Collapse all groups and tasks in the tree"
+  - Integrated with SidebarTree ref system for direct control
+  - Recursively expands/collapses all hierarchical task groups
+  - Maintains programme root node expanded state when collapsing
+  - Professional toggle functionality matching Asta PowerProject interface
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
