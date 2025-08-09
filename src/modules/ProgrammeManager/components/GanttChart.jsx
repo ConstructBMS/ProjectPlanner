@@ -21,7 +21,7 @@ import { useTaskContext } from '../context/TaskContext';
 import { useViewContext } from '../context/ViewContext';
 import DateMarkersOverlay from './DateMarkersOverlay';
 import { calculateCriticalPath } from '../utils/criticalPath';
-import { addDays, snapToWeekday } from '../utils/dateUtils';
+import { addDays, snapToWeekday, calculateDuration } from '../utils/dateUtils';
 import '../styles/gantt.css';
 
 const GanttChart = () => {
@@ -1483,15 +1483,20 @@ const GanttChart = () => {
           }}
         >
           <div className='font-semibold mb-2 text-blue-300'>
-            {tooltip.task.type === 'milestone' || tooltip.task.isMilestone
-              ? 'Milestone: '
-              : 'Task: '}
             {tooltip.task.name}
           </div>
           <div className='space-y-1 text-gray-200'>
             <div className='flex justify-between'>
-              <span className='text-gray-400'>Date:</span>
+              <span className='text-gray-400'>Start:</span>
               <span>{formatDate(tooltip.task.startDate)}</span>
+            </div>
+            <div className='flex justify-between'>
+              <span className='text-gray-400'>End:</span>
+              <span>{formatDate(tooltip.task.endDate)}</span>
+            </div>
+            <div className='flex justify-between'>
+              <span className='text-gray-400'>Duration:</span>
+              <span>{calculateDuration(tooltip.task.startDate, tooltip.task.endDate)} days</span>
             </div>
             {(tooltip.task.type === 'milestone' ||
               tooltip.task.isMilestone) && (

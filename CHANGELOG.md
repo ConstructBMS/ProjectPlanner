@@ -5,6 +5,20 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-08-08] – Prompt 090
+
+### Added
+
+- **Gantt Task Bar Hover Tooltip with Dates and Duration**
+  - Added comprehensive tooltip on hover over Gantt task bars showing complete task information
+  - Tooltip displays task name, start date, end date, and duration in days
+  - Enhanced tooltip content with clear labeling (Start:, End:, Duration:)
+  - Smooth fade-in/out animation with backdrop blur effect for professional appearance
+  - High z-index (9999) ensures tooltip appears above all other elements
+  - Responsive positioning that follows mouse cursor with proper offset
+  - Integrated with existing milestone and critical path indicators
+  - Performance optimized tooltip state management with proper cleanup
+
 ## [2025-08-08] – Prompt 088
 
 ### Added
