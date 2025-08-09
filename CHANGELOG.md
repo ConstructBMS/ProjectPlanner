@@ -424,6 +424,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Integrated with existing showGridlines toggle functionality
   - Background rendering with pointer-events-none for non-intrusive interaction
 
+## [2025-08-08] – Prompt 125
+
+### Added
+
+- **View Scale Dropdown in Ribbon**
+  - Added ribbon dropdown to change Gantt view scale (Day/Week/Month)
+  - ViewScaleDropdown component in ViewTab with Day, Week, Month options
+  - Dropdown positioned in Timeline Zoom group with professional styling
+  - Gantt rendering adapts to selected granularity:
+    - Day: 1 column per day with daily headers
+    - Week: 1 column per week with week numbers (W32, W33)
+    - Month: 1 column per month with month names (Aug 2025)
+  - Integrated with ViewContext for persistent state management
+  - Professional dropdown styling with hover effects and click-outside-to-close
+  - Seamless integration with existing timeline zoom and grid line systems
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
