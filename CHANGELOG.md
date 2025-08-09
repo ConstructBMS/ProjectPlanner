@@ -302,6 +302,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Maintains programme root node expanded state when collapsing
   - Professional toggle functionality matching Asta PowerProject interface
 
+## [2025-08-08] – Prompt 117
+
+### Added
+
+- **Task Duration Column in Task Grid**
+  - Added calculated Duration column to Task Grid
+  - Duration column displays working days between start and end dates
+  - Shows format: "12d" (number + "d" suffix) for clear readability
+  - Uses calculateWorkingDays function to skip weekends in calculations
+  - Column width optimized at 64px (w-16) with center alignment
+  - Supports inline editing with double-click functionality
+  - Proper validation for duration input (positive numbers only)
+  - Integrated seamlessly with existing Task Grid structure
+  - Professional appearance matching Asta PowerProject interface
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
