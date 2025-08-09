@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { useTaskContext } from '../context/TaskContext';
 import { useViewContext } from '../context/ViewContext';
 import { useSelectionContext } from '../context/SelectionContext';
+import { useFilterContext } from '../context/FilterContext';
 import TaskLinkModal from './modals/TaskLinkModal';
 import ContextMenu from './ContextMenu';
 import { calculateWorkingDays } from '../utils/dateUtils';
@@ -39,24 +40,30 @@ const TaskGrid = React.memo(() => {
   } = useTaskContext();
 
   const { viewState } = useViewContext();
+
+  const { isSelected, handleTaskClick, getSelectedCount } =
+    useSelectionContext();
   
-  const {
-    isSelected,
-    handleTaskClick,
-    getSelectedCount,
-  } = useSelectionContext();
+  const { applyFilters } = useFilterContext();
 
   const visibleTasks = useMemo(() => {
     try {
-      if (getVisibleTasks && typeof getVisibleTasks === 'function' && viewState) {
-        return getVisibleTasks(viewState.taskFilter || 'Show All');
+      let tasks = [];
+      if (
+        getVisibleTasks &&
+        typeof getVisibleTasks === 'function' &&
+        viewState
+      ) {
+        tasks = getVisibleTasks(viewState.taskFilter || 'Show All');
       }
-      return [];
+      
+      // Apply quick filters
+      return applyFilters(tasks);
     } catch (error) {
       console.warn('Error getting visible tasks:', error);
       return [];
     }
-  }, [getVisibleTasks, viewState?.taskFilter]);
+  }, [getVisibleTasks, viewState?.taskFilter, applyFilters]);
 
   // Inline editing state
   const [editingField, setEditingField] = useState(null); // { taskId, field }
@@ -241,7 +248,11 @@ const TaskGrid = React.memo(() => {
       }
 
       // Use new selection context for multi-select
-      handleTaskClick(taskId, e, visibleTasks.map(t => t.id));
+      handleTaskClick(
+        taskId,
+        e,
+        visibleTasks.map(t => t.id)
+      );
     },
     [linkingMode, handleTaskClickForLinking, handleTaskClick, visibleTasks]
   );
@@ -287,7 +298,7 @@ const TaskGrid = React.memo(() => {
 
           {/* Task Icon */}
           <div className='w-8 h-8 flex items-center justify-center'>
-            {(task.type === 'milestone' || task.isMilestone) ? (
+            {task.type === 'milestone' || task.isMilestone ? (
               <DiamondIcon className='w-4 h-4' color='text-purple-500' />
             ) : task.isGroup ? (
               <FolderIcon className='w-4 h-4 text-blue-600' />

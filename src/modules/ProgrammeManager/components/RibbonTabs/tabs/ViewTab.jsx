@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useViewContext } from '../../../context/ViewContext';
 import { useTaskContext } from '../../../context/TaskContext';
+import { useFilterContext } from '../../../context/FilterContext';
 import RibbonButton from '../shared/RibbonButton';
 import RibbonGroup from '../shared/RibbonGroup';
 import {
@@ -317,17 +318,28 @@ const CriticalPathStyleDropdown = () => {
   );
 };
 
-const TaskFiltersDropdown = () => {
+const QuickFiltersDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [expandedSections, setExpandedSections] = useState({
+    status: true,
+    resource: true,
+    dateRange: true,
+  });
   const dropdownRef = useRef();
-  const { viewState, updateViewState } = useViewContext();
-
-  // Load saved filter on mount
-  useEffect(() => {
-    if (viewState.taskFilter) {
-      // Filter is already loaded from viewState
-    }
-  }, [viewState.taskFilter]);
+  
+  const { viewState } = useViewContext();
+  const { tasks } = useTaskContext();
+  const {
+    filters,
+    setStatusFilter,
+    setResourceFilter,
+    setDateRangeFilter,
+    clearAllFilters,
+    hasActiveFilters,
+    getActiveFilterCount,
+    getAvailableResources,
+    getAvailableStatuses,
+  } = useFilterContext();
 
   useEffect(() => {
     const handleClickOutside = event => {
@@ -339,53 +351,188 @@ const TaskFiltersDropdown = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleSelect = filter => {
-    updateViewState({ taskFilter: filter });
-    console.log('Task Filter:', filter);
-    setIsOpen(false);
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
   };
 
-  const filterOptions = [
-    { value: 'Show All', label: 'Show All', icon: '👁️' },
-    { value: 'Critical Tasks', label: 'Critical Tasks', icon: '🚨' },
-    { value: 'Milestones', label: 'Milestones', icon: '🎯' },
-    { value: 'Delayed Tasks', label: 'Delayed Tasks', icon: '⏰' },
-    { value: 'Grouped by Phase', label: 'Grouped by Phase', icon: '📊' },
-  ];
+  const handleStatusSelect = (status) => {
+    setStatusFilter(status);
+  };
 
-  // Filter options are available for future use
+  const handleResourceSelect = (resource) => {
+    setResourceFilter(resource);
+  };
+
+  const handleDateRangeChange = (type, value) => {
+    if (type === 'start') {
+      setDateRangeFilter(value, filters.dateRange.end);
+    } else {
+      setDateRangeFilter(filters.dateRange.start, value);
+    }
+  };
+
+  const availableResources = getAvailableResources(tasks);
+  const availableStatuses = getAvailableStatuses();
+  const activeFilterCount = getActiveFilterCount();
 
   return (
     <div className='relative' ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`w-[48px] h-[48px] rounded flex items-center justify-center transition-colors duration-150 ${
-          viewState.taskFilter !== 'Show All'
+          hasActiveFilters()
             ? 'bg-blue-50 border-2 border-blue-500'
             : 'bg-gray-100 hover:bg-blue-100 border-2 border-transparent'
         }`}
-        title='Filter tasks by category or status'
+        title='Quick Filters: Status, Resource, Date Range'
       >
         <FunnelIcon className='w-4 h-4 text-gray-700' />
+        {activeFilterCount > 0 && (
+          <div className='absolute -top-1 -right-1 w-4 h-4 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center'>
+            {activeFilterCount}
+          </div>
+        )}
       </button>
 
       {isOpen && (
-        <div className='absolute top-full left-0 mt-1 z-10 w-[160px] bg-white shadow-md rounded border border-gray-200'>
-          {filterOptions.map(option => (
-            <div
-              key={option.value}
-              className={`px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors duration-150 flex items-center gap-2 ${
-                viewState.taskFilter === option.value ? 'bg-blue-50' : ''
-              }`}
-              onClick={() => handleSelect(option.value)}
-            >
-              <span className='text-sm'>{option.icon}</span>
-              <span className='text-xs text-gray-700'>{option.label}</span>
-              {viewState.taskFilter === option.value && (
-                <div className='ml-auto w-2 h-2 bg-blue-500 rounded-full' />
+        <div className='absolute top-full left-0 mt-1 z-10 w-[280px] bg-white shadow-lg rounded-lg border border-gray-200 max-h-96 overflow-y-auto'>
+          {/* Header */}
+          <div className='px-4 py-3 border-b border-gray-200 bg-gray-50'>
+            <div className='flex items-center justify-between'>
+              <h3 className='text-sm font-semibold text-gray-700'>Quick Filters</h3>
+              {hasActiveFilters() && (
+                <button
+                  onClick={clearAllFilters}
+                  className='text-xs text-blue-600 hover:text-blue-800 font-medium'
+                >
+                  Clear All
+                </button>
               )}
             </div>
-          ))}
+          </div>
+
+          {/* Status Filter Section */}
+          <div className='border-b border-gray-100'>
+            <button
+              onClick={() => toggleSection('status')}
+              className='w-full px-4 py-2 flex items-center justify-between hover:bg-gray-50'
+            >
+              <span className='text-sm font-medium text-gray-700'>Status</span>
+              <ChevronDownIcon 
+                className={`w-4 h-4 text-gray-500 transition-transform ${
+                  expandedSections.status ? 'rotate-180' : ''
+                }`} 
+              />
+            </button>
+            {expandedSections.status && (
+              <div className='px-4 pb-3 space-y-1'>
+                {availableStatuses.map(status => (
+                  <label key={status} className='flex items-center space-x-2 cursor-pointer'>
+                    <input
+                      type='radio'
+                      name='status'
+                      value={status}
+                      checked={filters.status === status}
+                      onChange={() => handleStatusSelect(status)}
+                      className='w-3 h-3 text-blue-600'
+                    />
+                    <span className='text-xs text-gray-700'>{status}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Resource Filter Section */}
+          <div className='border-b border-gray-100'>
+            <button
+              onClick={() => toggleSection('resource')}
+              className='w-full px-4 py-2 flex items-center justify-between hover:bg-gray-50'
+            >
+              <span className='text-sm font-medium text-gray-700'>Resource</span>
+              <ChevronDownIcon 
+                className={`w-4 h-4 text-gray-500 transition-transform ${
+                  expandedSections.resource ? 'rotate-180' : ''
+                }`} 
+              />
+            </button>
+            {expandedSections.resource && (
+              <div className='px-4 pb-3 space-y-1'>
+                <label className='flex items-center space-x-2 cursor-pointer'>
+                  <input
+                    type='radio'
+                    name='resource'
+                    value='All'
+                    checked={filters.resource === 'All'}
+                    onChange={() => handleResourceSelect('All')}
+                    className='w-3 h-3 text-blue-600'
+                  />
+                  <span className='text-xs text-gray-700'>All Resources</span>
+                </label>
+                {availableResources.map(resource => (
+                  <label key={resource} className='flex items-center space-x-2 cursor-pointer'>
+                    <input
+                      type='radio'
+                      name='resource'
+                      value={resource}
+                      checked={filters.resource === resource}
+                      onChange={() => handleResourceSelect(resource)}
+                      className='w-3 h-3 text-blue-600'
+                    />
+                    <span className='text-xs text-gray-700'>{resource}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Date Range Filter Section */}
+          <div className='border-b border-gray-100'>
+            <button
+              onClick={() => toggleSection('dateRange')}
+              className='w-full px-4 py-2 flex items-center justify-between hover:bg-gray-50'
+            >
+              <span className='text-sm font-medium text-gray-700'>Date Range</span>
+              <ChevronDownIcon 
+                className={`w-4 h-4 text-gray-500 transition-transform ${
+                  expandedSections.dateRange ? 'rotate-180' : ''
+                }`} 
+              />
+            </button>
+            {expandedSections.dateRange && (
+              <div className='px-4 pb-3 space-y-2'>
+                <div>
+                  <label className='block text-xs text-gray-600 mb-1'>Start Date</label>
+                  <input
+                    type='date'
+                    value={filters.dateRange.start ? filters.dateRange.start.split('T')[0] : ''}
+                    onChange={(e) => handleDateRangeChange('start', e.target.value)}
+                    className='w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500'
+                  />
+                </div>
+                <div>
+                  <label className='block text-xs text-gray-600 mb-1'>End Date</label>
+                  <input
+                    type='date'
+                    value={filters.dateRange.end ? filters.dateRange.end.split('T')[0] : ''}
+                    onChange={(e) => handleDateRangeChange('end', e.target.value)}
+                    className='w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500'
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className='px-4 py-2 bg-gray-50 text-xs text-gray-500'>
+            {activeFilterCount > 0 
+              ? `${activeFilterCount} filter${activeFilterCount !== 1 ? 's' : ''} active`
+              : 'No filters applied'
+            }
+          </div>
         </div>
       )}
     </div>
@@ -596,7 +743,7 @@ const ViewTab = () => {
 
       {/* Task Filters Group */}
       <RibbonGroup title='Task Filters'>
-        <TaskFiltersDropdown />
+        <QuickFiltersDropdown />
       </RibbonGroup>
 
       {/* View Group */}

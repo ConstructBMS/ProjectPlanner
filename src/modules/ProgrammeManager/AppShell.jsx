@@ -3,6 +3,7 @@ import { TaskProvider } from './context/TaskContext';
 import { ViewProvider } from './context/ViewContext';
 import { CalendarProvider } from './context/CalendarContext';
 import { SelectionProvider } from './context/SelectionContext';
+import { FilterProvider } from './context/FilterContext';
 import RibbonTabs from './components/RibbonTabs/RibbonTabs';
 import SidebarTree from './components/SidebarTree';
 import TaskGrid from './components/TaskGrid';
@@ -59,12 +60,14 @@ function AppShellContent() {
 
 export default function AppShell() {
   return (
-    <SelectionProvider>
-      <CalendarProvider>
-        <ViewProvider>
-          <AppShellContent />
-        </ViewProvider>
-      </CalendarProvider>
-    </SelectionProvider>
+    <FilterProvider>
+      <SelectionProvider>
+        <CalendarProvider>
+          <ViewProvider>
+            <AppShellContent />
+          </ViewProvider>
+        </CalendarProvider>
+      </SelectionProvider>
+    </FilterProvider>
   );
 }

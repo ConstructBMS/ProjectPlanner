@@ -52,6 +52,7 @@ const GanttChart = () => {
   const { viewState, updateViewState } = useViewContext();
   const { getCalendarForTask } = useCalendarContext();
   const { isSelected, handleTaskClick } = useSelectionContext();
+  const { applyFilters } = useFilterContext();
 
   const taskRefs = useRef({});
   const svgContainerRef = useRef(null);
@@ -105,7 +106,8 @@ const GanttChart = () => {
     lastDayOffset: 0,
   });
 
-  const tasks = getVisibleTasks(viewState.taskFilter);
+  const allTasks = getVisibleTasks(viewState.taskFilter);
+  const tasks = applyFilters(allTasks);
 
   // Calculate critical path when tasks or links change
   const criticalPathTasks = useMemo(() => {
@@ -790,7 +792,11 @@ const GanttChart = () => {
       handleTaskClickForLinking(taskId);
     } else {
       // Use new selection context for multi-select
-      handleTaskClick(taskId, event, tasks.map(t => t.id));
+      handleTaskClick(
+        taskId,
+        event,
+        tasks.map(t => t.id)
+      );
     }
   };
 

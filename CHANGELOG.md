@@ -597,6 +597,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Professional multi-select behavior matching industry standards
   - Seamless integration with existing linking and editing modes
 
+## [2025-08-09] – Prompt 136
+
+### Added
+
+- **Quick Filters Dropdown in View Tab**
+  - Status filter: All, Not Started, In Progress, Completed, Delayed, On Hold, Cancelled
+  - Resource filter: dynamic list of assigned resources from tasks
+  - Date range filter: show only tasks overlapping selected range
+  - Collapsible sections for each filter type
+  - Active filter count indicator with badge
+  - Clear All Filters button for quick reset
+  - Filter persistence in localStorage
+  - Instant application to both Grid and Gantt views
+  - Professional dropdown UI with expandable sections
+  - Filter status display in dropdown footer
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
