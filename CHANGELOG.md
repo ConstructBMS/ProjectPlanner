@@ -60,6 +60,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Integrated with existing linking mode and drag functionality
   - Visual feedback provides clear indication of currently selected task
 
+## [2025-08-08] – Prompt 100
+
+### Added
+
+- **Horizontal Grid Lines per Task Row in Gantt Chart**
+  - Added horizontal row lines to Gantt for each task
+  - Each task row displays a light grey horizontal line beneath it using border-b border-gray-200
+  - Lines stretch full width of the Gantt area for consistent row alignment
+  - Grid lines respect the showGridlines toggle setting
+  - Lines render dynamically based on task count and row height (32px spacing)
+  - Proper z-index layering ensures lines appear behind task bars
+  - Enhanced visual clarity for task row separation and alignment
+  - Integrated with existing grid lines system for unified grid control
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

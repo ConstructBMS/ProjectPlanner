@@ -391,7 +391,7 @@ const GanttChart = () => {
       lines.push(
         <div
           key={`row-line-${task.id}`}
-          className='gantt-row-line absolute left-0 right-0'
+          className='absolute left-0 right-0 border-b border-gray-200'
           style={{
             top: `${(index + 1) * rowHeight}px`,
             height: '1px',
