@@ -350,6 +350,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Integrated with existing task bar styling system
   - Professional appearance matching Asta PowerProject interface
 
+## [2025-08-08] – Prompt 120
+
+### Added
+
+- **Milestone Icon in Task Rows**
+  - Added milestone diamond icon to task rows in both Task Grid and Sidebar Tree
+  - Visual indicator for tasks flagged as milestone: true or type: 'milestone'
+  - Purple diamond icon (text-purple-500) positioned before task name
+  - Consistent implementation across TaskGrid.jsx and SidebarTree.jsx
+  - SVG diamond icon with proper sizing (w-4 h-4) and styling
+  - Integrated with existing task type detection system
+  - Professional appearance matching Asta PowerProject interface
+  - Clear visual distinction between milestones, groups, and regular tasks
+  - Maintains existing icon hierarchy (milestone > group > regular task)
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
