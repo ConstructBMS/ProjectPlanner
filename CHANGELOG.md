@@ -5,6 +5,19 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-08-08] – Prompt 091
+
+### Added
+
+- **Today Line Indicator in Gantt Timeline**
+  - Added red vertical line indicator for today's date in Gantt timeline
+  - Thin red line (1px width) spans from top to bottom of the chart
+  - Line positioned correctly based on today's date and zoom scale
+  - Respects weekend visibility toggle (shows/hides based on showWeekends setting)
+  - Renders above weekend backgrounds with proper z-index layering (z-20)
+  - Only displays when today's date falls within the visible timeline range
+  - Performance optimized with useMemo for smooth scrolling and zooming
+
 ## [2025-08-08] – Prompt 090
 
 ### Added

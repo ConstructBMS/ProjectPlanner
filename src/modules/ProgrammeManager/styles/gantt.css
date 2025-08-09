@@ -32,6 +32,7 @@
 /* Today Line Indicator for Gantt Chart */
 
 .gantt-today-line {
+  background-color: #ef4444; /* Red color */
   pointer-events: none;
   box-shadow: 0 0 4px rgba(239, 68, 68, 0.3);
 }
