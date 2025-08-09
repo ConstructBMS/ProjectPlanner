@@ -5,6 +5,19 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-08-08] – Prompt 089
+
+### Added
+
+- **Weekend Highlighting in Gantt Chart Background**
+  - Added shaded background blocks for weekends (Saturday and Sunday) in Gantt timeline
+  - Weekend blocks calculated dynamically based on project date range and zoom scale
+  - Light blue translucent background (rgba(33, 150, 243, 0.08)) for visual distinction
+  - Blocks render behind task bars with proper z-index layering (z-1)
+  - Respects weekend visibility toggle (shows/hides based on showWeekends setting)
+  - Performance optimized with useMemo for smooth scrolling and zooming
+  - Integrated with existing grid lines system for unified background rendering
+
 ## [2025-08-08] – Prompt 091
 
 ### Added
