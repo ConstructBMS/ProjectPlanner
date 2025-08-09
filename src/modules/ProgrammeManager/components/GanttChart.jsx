@@ -28,10 +28,9 @@ import {
   calculateDuration,
   getWeek,
 } from '../utils/dateUtils';
-import {
-  validateTaskDates,
-  getPredecessors,
-} from '../utils/scheduleUtils';
+import { validateTaskDates, getPredecessors } from '../utils/scheduleUtils';
+import { useCalendarContext } from '../context/CalendarContext';
+import { isWorkday, snapToWorkday } from '../utils/calendarUtils';
 import '../styles/gantt.css';
 
 const GanttChart = () => {
@@ -51,6 +50,7 @@ const GanttChart = () => {
   } = useTaskContext();
 
   const { viewState, updateViewState } = useViewContext();
+  const { getCalendarForTask } = useCalendarContext();
 
   const taskRefs = useRef({});
   const svgContainerRef = useRef(null);
@@ -58,7 +58,7 @@ const GanttChart = () => {
 
   // Scroll state for header synchronization
   const [scrollLeft, setScrollLeft] = useState(0);
-  
+
   // Constraint state for visual feedback
   const [constraintWarning, setConstraintWarning] = useState({
     taskId: null,
@@ -428,8 +428,8 @@ const GanttChart = () => {
     return lines;
   }, [tasks, viewState.showGridlines]);
 
-  // Generate weekend highlighting blocks
-  const weekendBlocks = useMemo(() => {
+  // Generate non-working day highlighting blocks
+  const nonWorkingDayBlocks = useMemo(() => {
     const blocks = [];
     const start = new Date(dateRange.start);
     const end = new Date(dateRange.end);
@@ -463,14 +463,13 @@ const GanttChart = () => {
     };
 
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      const dayOfWeek = d.getDay();
-      if (dayOfWeek === 6 || dayOfWeek === 0) {
-        // Saturday or Sunday
+      // Use global calendar for non-working day highlighting
+      if (!isWorkday(d, globalCalendar)) {
         const left = getDateIndex(d) * scaledDayWidth;
 
         blocks.push(
           <div
-            key={`weekend-${d.toISOString()}`}
+            key={`nonworking-${d.toISOString()}`}
             className='absolute top-0 bottom-0 bg-gray-200 opacity-60 z-0'
             style={{
               left: `${left}px`,
@@ -482,7 +481,7 @@ const GanttChart = () => {
     }
 
     return blocks;
-  }, [dateRange, viewState.showWeekends, viewState.timelineZoom]);
+  }, [dateRange, viewState.showWeekends, viewState.timelineZoom, globalCalendar]);
 
   // Update task refs when tasks change or view settings change
   useEffect(() => {
@@ -912,13 +911,16 @@ const GanttChart = () => {
       // Get predecessor constraints
       const predecessors = getPredecessors(task.id, taskLinks, tasks);
 
+      // Get calendar for this task
+      const taskCalendar = getCalendarForTask(task.id, task);
+
       // Validate dates with constraints
       const validation = validateTaskDates(
         task,
         newStartDate,
         newEndDate,
         predecessors,
-        viewState.showWeekends
+        taskCalendar
       );
 
       // Update task dates with validated values
@@ -1111,9 +1113,13 @@ const GanttChart = () => {
       }
 
       // Get predecessor constraints (only for start handle)
-      const predecessors = resizing.handle === 'start' 
-        ? getPredecessors(task.id, taskLinks, tasks)
-        : [];
+      const predecessors =
+        resizing.handle === 'start'
+          ? getPredecessors(task.id, taskLinks, tasks)
+          : [];
+
+      // Get calendar for this task
+      const taskCalendar = getCalendarForTask(task.id, task);
 
       // Validate dates with constraints
       const validation = validateTaskDates(
@@ -1121,7 +1127,7 @@ const GanttChart = () => {
         newStartDate,
         newEndDate,
         predecessors,
-        viewState.showWeekends
+        taskCalendar
       );
 
       // Update task dates with validated values
@@ -1432,7 +1438,8 @@ const GanttChart = () => {
       task.type === 'milestone' ||
       task.isMilestone ||
       (task.duration || 1) === 0;
-    const isConstrained = constraintWarning.taskId === task.id && 
+    const isConstrained =
+      constraintWarning.taskId === task.id &&
       Date.now() - constraintWarning.timestamp < 2000; // Show for 2 seconds
 
     let baseClasses =
@@ -1534,8 +1541,8 @@ const GanttChart = () => {
       >
         {/* Background Grid */}
         <div className='absolute inset-0 pointer-events-none'>
-          {/* Weekend Highlighting Blocks */}
-          {viewState.showWeekends && weekendBlocks}
+                  {/* Non-Working Day Highlighting Blocks */}
+        {viewState.showWeekends && nonWorkingDayBlocks}
 
           {viewState.showGridlines && (
             <>

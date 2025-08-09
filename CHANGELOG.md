@@ -565,6 +565,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Real-time constraint checking during drag and resize operations
   - Professional error handling with graceful fallbacks
 
+## [2025-08-09] – Prompt 134
+
+### Added
+
+- **Working Calendar System with Global and Per-Task Calendars**
+  - Global working calendar with configurable working days (Mon-Sun)
+  - Holiday management with add/remove functionality
+  - Per-task calendar override with checkbox toggle
+  - Task-specific working days and holiday configuration
+  - Calendar-aware date calculations (addWorkdays, diffWorkdays, snapToWorkday)
+  - Non-working day highlighting in Gantt chart based on calendar
+  - Calendar persistence in localStorage
+  - Professional calendar management UI in Task Properties
+  - Seamless integration with existing drag/resize constraints
+  - Calendar validation and error handling
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

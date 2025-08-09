@@ -6,14 +6,11 @@ import { addDays } from './dateUtils';
  * @param {boolean} showWeekends - Whether weekends are enabled
  * @returns {Date} - The clamped date
  */
-export const clampToWorkdays = (date, showWeekends = false) => {
-  if (showWeekends) return date;
-  
-  const clamped = new Date(date);
-  while (clamped.getDay() === 0 || clamped.getDay() === 6) {
-    clamped.setDate(clamped.getDate() + 1);
+export const clampToWorkdays = (date, calendar = DEFAULT_CALENDAR) => {
+  if (isWorkday(date, calendar)) {
+    return new Date(date);
   }
-  return clamped;
+  return nextWorkday(date, calendar);
 };
 
 /**
@@ -23,24 +20,28 @@ export const clampToWorkdays = (date, showWeekends = false) => {
  * @param {boolean} showWeekends - Whether weekends are enabled
  * @returns {Date} - The adjusted start date respecting FS constraints
  */
-export const respectFS = (predecessors, candidateStart, showWeekends = false) => {
+export const respectFS = (
+  predecessors,
+  candidateStart,
+  calendar = DEFAULT_CALENDAR
+) => {
   if (!predecessors || predecessors.length === 0) {
-    return clampToWorkdays(candidateStart, showWeekends);
+    return clampToWorkdays(candidateStart, calendar);
   }
 
   let latestPredecessorEnd = new Date(candidateStart);
-  
+
   predecessors.forEach(pred => {
     const predEnd = new Date(pred.endDate);
     const lag = pred.lag || 0;
     const adjustedEnd = addDays(predEnd, lag);
-    
+
     if (adjustedEnd > latestPredecessorEnd) {
       latestPredecessorEnd = adjustedEnd;
     }
   });
 
-  return clampToWorkdays(latestPredecessorEnd, showWeekends);
+  return clampToWorkdays(latestPredecessorEnd, calendar);
 };
 
 /**
@@ -48,12 +49,12 @@ export const respectFS = (predecessors, candidateStart, showWeekends = false) =>
  * @param {Object} task - The task object
  * @returns {number} - Minimum duration in days
  */
-export const getMinDuration = (task) => {
+export const getMinDuration = task => {
   // Milestones have 0 duration
   if (task.type === 'milestone' || task.isMilestone) {
     return 0;
   }
-  
+
   // Regular tasks have minimum 1 day duration
   return 1;
 };
@@ -67,13 +68,19 @@ export const getMinDuration = (task) => {
  * @param {boolean} showWeekends - Whether weekends are enabled
  * @returns {Object} - { startDate, endDate, wasConstrained }
  */
-export const validateTaskDates = (task, candidateStart, candidateEnd, predecessors, showWeekends = false) => {
+export const validateTaskDates = (
+  task,
+  candidateStart,
+  candidateEnd,
+  predecessors,
+  calendar = DEFAULT_CALENDAR
+) => {
   let startDate = new Date(candidateStart);
   let endDate = new Date(candidateEnd);
   let wasConstrained = false;
 
   // Respect FS dependencies for start date
-  const fsConstrainedStart = respectFS(predecessors, startDate, showWeekends);
+  const fsConstrainedStart = respectFS(predecessors, startDate, calendar);
   if (fsConstrainedStart > startDate) {
     startDate = fsConstrainedStart;
     wasConstrained = true;
@@ -81,25 +88,27 @@ export const validateTaskDates = (task, candidateStart, candidateEnd, predecesso
 
   // Ensure minimum duration
   const minDuration = getMinDuration(task);
-  const currentDuration = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
-  
+  const currentDuration = Math.ceil(
+    (endDate - startDate) / (1000 * 60 * 60 * 24)
+  );
+
   if (currentDuration < minDuration) {
     endDate = addDays(startDate, minDuration);
-    endDate = clampToWorkdays(endDate, showWeekends);
+    endDate = clampToWorkdays(endDate, calendar);
     wasConstrained = true;
   }
 
   // Ensure end date is not before start date
   if (endDate <= startDate) {
     endDate = addDays(startDate, minDuration);
-    endDate = clampToWorkdays(endDate, showWeekends);
+    endDate = clampToWorkdays(endDate, calendar);
     wasConstrained = true;
   }
 
   return {
     startDate,
     endDate,
-    wasConstrained
+    wasConstrained,
   };
 };
 

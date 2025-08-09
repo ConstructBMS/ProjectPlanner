@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTaskContext } from '../context/TaskContext';
+import { useCalendarContext } from '../context/CalendarContext';
 import DeleteTaskModal from './modals/DeleteTaskModal';
 import {
   CalendarIcon,
@@ -13,6 +14,7 @@ import {
   PencilIcon,
   PlusIcon,
   TrashIcon,
+  CogIcon,
 } from '@heroicons/react/24/outline';
 
 // Task Properties Pane Component
@@ -26,6 +28,14 @@ const TaskPropertiesPane = () => {
     unlinkTasks,
     updateLink,
   } = useTaskContext();
+  
+  const {
+    getCalendarForTask,
+    setTaskCalendar,
+    removeTaskCalendar,
+    hasTaskCalendar,
+    globalCalendar,
+  } = useCalendarContext();
   const [editingTask, setEditingTask] = useState(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [showAddDependencyModal, setShowAddDependencyModal] = useState(false);
@@ -357,6 +367,114 @@ const TaskPropertiesPane = () => {
                   <span className='text-xs text-gray-500'>%</span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Calendar Section */}
+          <div className='bg-white border border-gray-200 rounded-lg p-4'>
+            <div className='flex items-center gap-2 mb-3'>
+              <CogIcon className='w-4 h-4 text-purple-600' />
+              <h4 className='text-sm font-semibold text-gray-700'>Calendar</h4>
+            </div>
+
+            <div className='space-y-3'>
+              <div className='flex items-center justify-between'>
+                <label className='flex items-center space-x-2 cursor-pointer'>
+                  <input
+                    type='checkbox'
+                    checked={editingTask.useTaskCalendar || false}
+                    onChange={e => handleFieldChange('useTaskCalendar', e.target.checked)}
+                    className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2'
+                  />
+                  <span className='text-sm font-medium text-gray-700'>
+                    Use Task-Specific Calendar
+                  </span>
+                </label>
+              </div>
+
+              {editingTask.useTaskCalendar && (
+                <div className='pl-6 space-y-3 border-l-2 border-purple-200'>
+                  <div>
+                    <label className='block text-xs font-medium text-gray-600 mb-1'>
+                      Calendar Name
+                    </label>
+                    <input
+                      type='text'
+                      value={editingTask.taskCalendar?.name || 'Task Calendar'}
+                      onChange={e => {
+                        const updatedCalendar = {
+                          ...editingTask.taskCalendar,
+                          name: e.target.value,
+                        };
+                        handleFieldChange('taskCalendar', updatedCalendar);
+                      }}
+                      className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                      placeholder='Enter calendar name'
+                    />
+                  </div>
+
+                  <div>
+                    <label className='block text-xs font-medium text-gray-600 mb-1'>
+                      Working Days
+                    </label>
+                    <div className='grid grid-cols-2 gap-2'>
+                      {[
+                        { key: 'monday', label: 'Mon' },
+                        { key: 'tuesday', label: 'Tue' },
+                        { key: 'wednesday', label: 'Wed' },
+                        { key: 'thursday', label: 'Thu' },
+                        { key: 'friday', label: 'Fri' },
+                        { key: 'saturday', label: 'Sat' },
+                        { key: 'sunday', label: 'Sun' },
+                      ].map(({ key, label }) => (
+                        <label key={key} className='flex items-center space-x-2'>
+                          <input
+                            type='checkbox'
+                            checked={editingTask.taskCalendar?.workingDays?.[key] ?? globalCalendar.workingDays[key]}
+                            onChange={e => {
+                              const updatedCalendar = {
+                                ...editingTask.taskCalendar,
+                                workingDays: {
+                                  ...editingTask.taskCalendar?.workingDays,
+                                  ...globalCalendar.workingDays,
+                                  [key]: e.target.checked,
+                                },
+                              };
+                              handleFieldChange('taskCalendar', updatedCalendar);
+                            }}
+                            className='w-3 h-3 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2'
+                          />
+                          <span className='text-xs text-gray-700'>{label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className='block text-xs font-medium text-gray-600 mb-1'>
+                      Task Holidays (YYYY-MM-DD)
+                    </label>
+                    <textarea
+                      value={editingTask.taskCalendar?.holidays?.join('\n') || ''}
+                      onChange={e => {
+                        const holidays = e.target.value
+                          .split('\n')
+                          .map(line => line.trim())
+                          .filter(line => /^\d{4}-\d{2}-\d{2}$/.test(line));
+                        
+                        const updatedCalendar = {
+                          ...editingTask.taskCalendar,
+                          holidays,
+                        };
+                        handleFieldChange('taskCalendar', updatedCalendar);
+                      }}
+                      className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                      rows={3}
+                      placeholder='2024-12-25&#10;2024-12-26&#10;2025-01-01'
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
