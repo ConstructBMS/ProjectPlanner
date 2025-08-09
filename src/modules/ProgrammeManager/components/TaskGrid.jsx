@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useTaskContext } from '../context/TaskContext';
 import { useViewContext } from '../context/ViewContext';
+import { useSelectionContext } from '../context/SelectionContext';
 import TaskLinkModal from './modals/TaskLinkModal';
 import ContextMenu from './ContextMenu';
 import { calculateWorkingDays } from '../utils/dateUtils';
@@ -38,6 +39,12 @@ const TaskGrid = React.memo(() => {
   } = useTaskContext();
 
   const { viewState } = useViewContext();
+  
+  const {
+    isSelected,
+    handleTaskClick,
+    getSelectedCount,
+  } = useSelectionContext();
 
   const visibleTasks = useMemo(() => {
     try {
@@ -233,11 +240,10 @@ const TaskGrid = React.memo(() => {
         return;
       }
 
-      // Normal selection logic
-      const isMultiSelect = e.shiftKey || e.ctrlKey || e.metaKey;
-      selectMultipleTasks(taskId, isMultiSelect);
+      // Use new selection context for multi-select
+      handleTaskClick(taskId, e, visibleTasks.map(t => t.id));
     },
-    [linkingMode, handleTaskClickForLinking, selectMultipleTasks]
+    [linkingMode, handleTaskClickForLinking, handleTaskClick, visibleTasks]
   );
 
   const handleGroupToggle = useCallback(
@@ -251,16 +257,15 @@ const TaskGrid = React.memo(() => {
   // Memoize the grid rows to prevent unnecessary re-renders
   const gridRows = useMemo(() => {
     return visibleTasks.map(task => {
-      const isSelected = selectedTaskId === task.id;
-      const isMultiSelected = selectedTaskIds.includes(task.id);
+      const isTaskSelected = isSelected(task.id);
       const isEditing = editingField?.taskId === task.id && editingField?.field;
 
       return (
         <div
           key={task.id}
           className={`asta-grid-row flex items-center border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150 ${
-            isSelected ? 'bg-blue-50 border-blue-200' : ''
-          } ${isMultiSelected ? 'bg-blue-100' : ''}`}
+            isTaskSelected ? 'bg-blue-50 ring-1 ring-blue-300' : ''
+          }`}
           onClick={e => handleRowClick(task.id, e)}
           onContextMenu={e => handleContextMenu(e, task)}
         >

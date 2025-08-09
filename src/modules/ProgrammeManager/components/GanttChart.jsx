@@ -51,6 +51,7 @@ const GanttChart = () => {
 
   const { viewState, updateViewState } = useViewContext();
   const { getCalendarForTask } = useCalendarContext();
+  const { isSelected, handleTaskClick } = useSelectionContext();
 
   const taskRefs = useRef({});
   const svgContainerRef = useRef(null);
@@ -481,7 +482,12 @@ const GanttChart = () => {
     }
 
     return blocks;
-  }, [dateRange, viewState.showWeekends, viewState.timelineZoom, globalCalendar]);
+  }, [
+    dateRange,
+    viewState.showWeekends,
+    viewState.timelineZoom,
+    globalCalendar,
+  ]);
 
   // Update task refs when tasks change or view settings change
   useEffect(() => {
@@ -779,11 +785,12 @@ const GanttChart = () => {
     });
   }, [taskLinks, tasks]);
 
-  const handleTaskClick = taskId => {
+  const handleGanttTaskClick = (taskId, event) => {
     if (linkingMode) {
       handleTaskClickForLinking(taskId);
     } else {
-      selectTask(taskId);
+      // Use new selection context for multi-select
+      handleTaskClick(taskId, event, tasks.map(t => t.id));
     }
   };
 
@@ -1427,7 +1434,7 @@ const GanttChart = () => {
   };
 
   const getTaskBarStyle = task => {
-    const isSelected = selectedTaskId === task.id;
+    const isTaskSelected = isSelected(task.id);
     const isHovered = hoveredTaskId === task.id;
     const isLinkStart = linkingMode && linkStartTaskId === task.id;
     const isCritical =
@@ -1458,8 +1465,8 @@ const GanttChart = () => {
     if (isDragging) {
       baseClasses +=
         ' ring-2 ring-orange-500 border-orange-600 shadow-lg opacity-80';
-    } else if (isSelected && !isCritical) {
-      baseClasses += ' border-2 border-yellow-400 shadow-md shadow-yellow-300';
+    } else if (isTaskSelected && !isCritical) {
+      baseClasses += ' ring-2 ring-blue-400 border-blue-500 shadow-md';
     } else if (isHovered && !isCritical) {
       baseClasses += ' ring-1 ring-blue-300 border-blue-500 shadow-sm';
     } else if (isLinkStart) {
@@ -1541,8 +1548,8 @@ const GanttChart = () => {
       >
         {/* Background Grid */}
         <div className='absolute inset-0 pointer-events-none'>
-                  {/* Non-Working Day Highlighting Blocks */}
-        {viewState.showWeekends && nonWorkingDayBlocks}
+          {/* Non-Working Day Highlighting Blocks */}
+          {viewState.showWeekends && nonWorkingDayBlocks}
 
           {viewState.showGridlines && (
             <>
@@ -1733,7 +1740,7 @@ const GanttChart = () => {
                           onMouseDown={e => handleTaskMouseDown(e, task)}
                           onClick={e => {
                             e.stopPropagation();
-                            handleTaskClick(task.id);
+                            handleGanttTaskClick(task.id, e);
                           }}
                           onMouseEnter={e => {
                             handleTaskHover(task.id);
@@ -1781,7 +1788,7 @@ const GanttChart = () => {
                           onMouseDown={e => handleTaskMouseDown(e, task)}
                           onClick={e => {
                             e.stopPropagation();
-                            handleTaskClick(task.id);
+                            handleGanttTaskClick(task.id, e);
                           }}
                           onMouseEnter={e => {
                             handleTaskHover(task.id);

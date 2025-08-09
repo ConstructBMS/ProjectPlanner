@@ -581,6 +581,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Seamless integration with existing drag/resize constraints
   - Calendar validation and error handling
 
+## [2025-08-09] – Prompt 135
+
+### Added
+
+- **Unified Multi-Select System Across Grid and Gantt Views**
+  - Ctrl/Cmd+Click: toggle individual task selection
+  - Shift+Click: select range from last anchor to clicked item
+  - Centralized selection state management with SelectionContext
+  - Synchronized selection between TaskGrid and GanttChart views
+  - Visual feedback with blue highlighting (bg-blue-50 ring-1 ring-blue-300)
+  - Gantt bar selection styling with ring-2 ring-blue-400 border-blue-500
+  - Keyboard support: Escape key clears all selection
+  - Selection anchor tracking for range selection
+  - Professional multi-select behavior matching industry standards
+  - Seamless integration with existing linking and editing modes
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

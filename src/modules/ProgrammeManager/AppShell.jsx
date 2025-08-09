@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { TaskProvider } from './context/TaskContext';
 import { ViewProvider } from './context/ViewContext';
 import { CalendarProvider } from './context/CalendarContext';
+import { SelectionProvider } from './context/SelectionContext';
 import RibbonTabs from './components/RibbonTabs/RibbonTabs';
 import SidebarTree from './components/SidebarTree';
 import TaskGrid from './components/TaskGrid';
@@ -58,10 +59,12 @@ function AppShellContent() {
 
 export default function AppShell() {
   return (
-    <CalendarProvider>
-      <ViewProvider>
-        <AppShellContent />
-      </ViewProvider>
-    </CalendarProvider>
+    <SelectionProvider>
+      <CalendarProvider>
+        <ViewProvider>
+          <AppShellContent />
+        </ViewProvider>
+      </CalendarProvider>
+    </SelectionProvider>
   );
 }
