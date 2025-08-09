@@ -27,7 +27,7 @@ export const ViewProvider = ({ children }) => {
     zoomLevel: 'Week',
     calendarView: 'Workweek',
     viewScale: 'Day', // View scale: Day, Week, Month
-    timelineZoom: 1.0, // Scaling factor for timeline zoom
+    timelineZoom: 20, // Pixels per day (10-100 range)
     taskFilter: 'Show All', // Task filter setting
     statusHighlighting: false, // Toggle for status-based row highlighting
     showWeekends: true, // Toggle for showing weekend columns in timeline
@@ -201,18 +201,18 @@ export const ViewProvider = ({ children }) => {
 
   const zoomIn = () => {
     setViewState(prev => {
-      const newZoom = Math.min(prev.timelineZoom + 0.2, 3.0);
+      const newZoom = Math.min(prev.timelineZoom + 10, 100);
       return { ...prev, timelineZoom: newZoom };
     });
-    console.log('Zoom In triggered');
+    console.log('Zoom In triggered - New zoom:', Math.min(viewState.timelineZoom + 10, 100));
   };
 
   const zoomOut = () => {
     setViewState(prev => {
-      const newZoom = Math.max(prev.timelineZoom - 0.2, 0.3);
+      const newZoom = Math.max(prev.timelineZoom - 10, 10);
       return { ...prev, timelineZoom: newZoom };
     });
-    console.log('Zoom Out triggered');
+    console.log('Zoom Out triggered - New zoom:', Math.max(viewState.timelineZoom - 10, 10));
   };
 
   const updateViewScale = scale => {

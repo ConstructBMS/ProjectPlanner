@@ -128,8 +128,7 @@ const GanttChart = () => {
     const lines = [];
     const start = new Date(dateRange.start);
     const end = new Date(dateRange.end);
-    const baseDayWidth = 2;
-    const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
+    const scaledDayWidth = viewState.timelineZoom; // Direct pixels per day
 
     // Calculate start position offset
     const startOfYear = new Date('2024-01-01');
@@ -268,14 +267,13 @@ const GanttChart = () => {
     viewState.viewScale,
   ]);
 
-  // Calculate today marker position
-  const todayMarker = useMemo(() => {
-    if (!viewState.showGridlines) return null;
+      // Calculate today marker position
+    const todayMarker = useMemo(() => {
+      if (!viewState.showGridlines) return null;
 
-    const today = new Date();
-    const startOfYear = new Date('2024-01-01');
-    const baseDayWidth = 2;
-    const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
+      const today = new Date();
+      const startOfYear = new Date('2024-01-01');
+      const scaledDayWidth = viewState.timelineZoom; // Direct pixels per day
 
     // Calculate days from start of year
     const daysFromStart = Math.floor(
@@ -310,7 +308,7 @@ const GanttChart = () => {
 
     return (
       <div
-        className="today-marker absolute top-0 bottom-0 z-30"
+        className='today-marker absolute top-0 bottom-0 z-30'
         style={{
           left: `${left}px`,
           width: '2px',
@@ -332,8 +330,7 @@ const GanttChart = () => {
 
     const today = new Date();
     const startOfYear = new Date('2024-01-01');
-    const baseDayWidth = 2;
-    const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
+    const scaledDayWidth = viewState.timelineZoom; // Direct pixels per day
 
     // Calculate days from start of year
     const daysFromStart = Math.floor(
@@ -368,7 +365,7 @@ const GanttChart = () => {
 
     return (
       <div
-        className="gantt-today-line absolute top-0 bottom-0 w-[1px] bg-red-500 z-20"
+        className='gantt-today-line absolute top-0 bottom-0 w-[1px] bg-red-500 z-20'
         style={{
           left: `${left}px`,
           pointerEvents: 'none',
@@ -412,8 +409,7 @@ const GanttChart = () => {
     const blocks = [];
     const start = new Date(dateRange.start);
     const end = new Date(dateRange.end);
-    const baseDayWidth = 2;
-    const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
+    const scaledDayWidth = viewState.timelineZoom; // Direct pixels per day
 
     // Calculate start position offset
     const startOfYear = new Date('2024-01-01');
@@ -786,8 +782,7 @@ const GanttChart = () => {
 
   // Grid snapping helper functions
   const snapToGrid = x => {
-    const baseDayWidth = 2;
-    const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
+    const scaledDayWidth = viewState.timelineZoom; // Direct pixels per day
     const index = Math.round(x / scaledDayWidth);
     return index * scaledDayWidth;
   };
@@ -816,8 +811,7 @@ const GanttChart = () => {
 
     // Snap the delta to the grid
     const snappedDeltaX = snapToGrid(deltaX);
-    const baseDayWidth = 2;
-    const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
+    const scaledDayWidth = viewState.timelineZoom; // Direct pixels per day
     const dayOffset = Math.round(snappedDeltaX / scaledDayWidth);
 
     // Find the task being dragged
@@ -984,8 +978,7 @@ const GanttChart = () => {
     const headers = [];
     const startDate = new Date(dateRange.start);
     const endDate = new Date(dateRange.end);
-    const baseDayWidth = 2;
-    const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
+    const scaledDayWidth = viewState.timelineZoom; // Direct pixels per day
 
     switch (viewState.viewScale) {
       case 'Day':
@@ -1184,7 +1177,7 @@ const GanttChart = () => {
         <div className='absolute inset-0 pointer-events-none'>
           {/* Weekend Highlighting Blocks */}
           {weekendBlocks}
-          
+
           {viewState.showGridlines && (
             <>
               {/* Vertical Grid Lines */}
@@ -1305,11 +1298,8 @@ const GanttChart = () => {
                 };
 
                 const daysFromStart = getDateIndex(startDate);
-                const baseDayWidth = 2; // Base width per day
-                const baseDurationWidth = 20; // Base width per duration unit
-                const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
-                const scaledDurationWidth =
-                  baseDurationWidth * viewState.timelineZoom;
+                const scaledDayWidth = viewState.timelineZoom; // Direct pixels per day
+                const scaledDurationWidth = viewState.timelineZoom; // Direct pixels per day
 
                 const left = `${Math.max(daysFromStart * scaledDayWidth, 0)}px`;
                 const width =
@@ -1500,7 +1490,7 @@ const GanttChart = () => {
                                     new Date(task.baselineStart)) /
                                     (1000 * 60 * 60 * 24)
                                 ) * scaledDurationWidth,
-                                40 * viewState.timelineZoom
+                                40
                               )}px`,
                             }}
                             title={`Baseline: ${formatDate(new Date(task.baselineStart))} - ${formatDate(new Date(task.baselineEnd))}`}
@@ -1556,7 +1546,13 @@ const GanttChart = () => {
             </div>
             <div className='flex justify-between'>
               <span className='text-gray-400'>Duration:</span>
-              <span>{calculateDuration(tooltip.task.startDate, tooltip.task.endDate)} days</span>
+              <span>
+                {calculateDuration(
+                  tooltip.task.startDate,
+                  tooltip.task.endDate
+                )}{' '}
+                days
+              </span>
             </div>
             {(tooltip.task.type === 'milestone' ||
               tooltip.task.isMilestone) && (

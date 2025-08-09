@@ -5,6 +5,19 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-08-08] – Prompt 093
+
+### Added
+
+- **Gantt Chart Zoom Controls**
+  - Added Zoom In and Zoom Out buttons to Home ribbon tab for dynamic timeline scaling
+  - Zoom scale now ranges from 10px/day to 100px/day for precise timeline control
+  - Each zoom button click adjusts scale by 10 pixels for smooth zooming experience
+  - Gantt chart dynamically re-renders task positions, grid lines, and timeline headers on zoom changes
+  - Integrated with existing zoom-to-fit and go-to-today functionality
+  - Performance optimized zoom calculations using direct pixel-per-day values
+  - Maintains weekend visibility and grid line settings across zoom levels
+
 ## [2025-08-08] – Prompt 092
 
 ### Added
