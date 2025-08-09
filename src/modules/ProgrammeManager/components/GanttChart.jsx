@@ -20,6 +20,7 @@ const DiamondIcon = ({ className = 'w-4 h-4', color = 'text-purple-600' }) => (
 import { useTaskContext } from '../context/TaskContext';
 import { useViewContext } from '../context/ViewContext';
 import DateMarkersOverlay from './DateMarkersOverlay';
+import GanttHeader from './GanttHeader';
 import { calculateCriticalPath } from '../utils/criticalPath';
 import {
   addDays,
@@ -50,6 +51,9 @@ const GanttChart = () => {
   const taskRefs = useRef({});
   const svgContainerRef = useRef(null);
   const timelineContainerRef = useRef(null);
+  
+  // Scroll state for header synchronization
+  const [scrollLeft, setScrollLeft] = useState(0);
 
   // Tooltip state
   const [tooltip, setTooltip] = useState({
@@ -1170,6 +1174,11 @@ const GanttChart = () => {
     }
   };
 
+  // Handle horizontal scroll synchronization
+  const handleTimelineScroll = (e) => {
+    setScrollLeft(e.target.scrollLeft);
+  };
+
   const formatDate = dateString => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -1444,22 +1453,15 @@ const GanttChart = () => {
         </div>
       </div>
 
-      {/* Timeline Headers */}
-      <div className='border-b border-gray-300 bg-gray-50'>
-        {/* Week Headers (only for Day view) */}
-        {viewState.viewScale === 'Day' && (
-          <div
-            className='relative border-b border-gray-200'
-            style={{ height: '28px' }}
-          >
-            {generateWeekHeaders()}
-          </div>
-        )}
-        {/* Dynamic Headers based on View Scale */}
-        <div className='flex border-b border-gray-200'>
-          {generateTimelineHeaders()}
-        </div>
-      </div>
+      {/* Dual-Row Timeline Header */}
+      <GanttHeader
+        startDate={dateRange.start}
+        endDate={dateRange.end}
+        zoomScale={viewState.timelineZoom}
+        showWeekends={viewState.showWeekends}
+        viewScale={viewState.viewScale}
+        scrollLeft={scrollLeft}
+      />
 
       {/* Asta-style Timeline Grid */}
       <div
@@ -1468,6 +1470,7 @@ const GanttChart = () => {
           viewState.showGridlines ? 'divide-y divide-gray-300' : ''
         }`}
         onClick={handleChartClick}
+        onScroll={handleTimelineScroll}
       >
         {/* Background Grid */}
         <div className='absolute inset-0 pointer-events-none'>

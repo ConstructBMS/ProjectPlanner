@@ -519,6 +519,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Professional modal design with color-coded information sections
   - Seamless integration with existing task management and undo systems
 
+## [2025-08-09] – Prompt 131
+
+### Added
+
+- **Dual-Row Sticky Gantt Header (Months over Days)**
+  - Implemented dual-row timeline header with months over days layout
+  - Top row shows month and year blocks spanning total days per month
+  - Bottom row shows individual day cells (01-31) with weekend styling
+  - Sticky positioning with position: sticky, top: 0, z-50 above grid content
+  - Horizontal scroll synchronization with Gantt body via shared scrollLeft
+  - Respects current zoomScale and showWeekends settings
+  - Professional styling with proper borders, shadows, and typography
+  - Weekend days styled with gray text and background when showWeekends enabled
+  - Seamless integration with existing Gantt chart scrolling and zoom functionality
+  - Optimized performance with useMemo for header generation
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
