@@ -1,5 +1,3 @@
-import React from 'react';
-
 export default function Sidebar() {
   return (
     <div className='w-[250px] border-r border-gray-300 bg-white p-2 overflow-y-auto'>

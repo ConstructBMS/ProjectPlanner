@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { TaskProvider } from './context/TaskContext';
 import { ViewProvider } from './context/ViewContext';
 import RibbonTabs from './components/RibbonTabs/RibbonTabs';
@@ -9,7 +9,6 @@ import TaskPropertiesPane from './components/TaskPropertiesPane';
 
 function AppShellContent() {
   const sidebarRef = useRef();
-  const [showPropertiesPane, setShowPropertiesPane] = useState(true);
 
   const handleExpandAll = () => {
     sidebarRef.current?.expandAll?.();
@@ -17,11 +16,6 @@ function AppShellContent() {
 
   const handleCollapseAll = () => {
     sidebarRef.current?.collapseAll?.();
-  };
-
-  const togglePropertiesPane = () => {
-    setShowPropertiesPane(prev => !prev);
-    console.log('Properties pane toggled:', !showPropertiesPane);
   };
   return (
     <TaskProvider>

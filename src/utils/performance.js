@@ -55,7 +55,7 @@ class PerformanceMonitor {
       if (metric.duration !== null) {
         summary[operation] = {
           duration: metric.duration,
-          average: this.getAverage(operation),
+          average: this.getAverage(),
         };
       }
     }
@@ -63,7 +63,7 @@ class PerformanceMonitor {
   }
 
   // Get average duration for an operation
-  getAverage(operationName) {
+  getAverage() {
     const durations = Array.from(this.metrics.values())
       .filter(m => m.duration !== null)
       .map(m => m.duration);

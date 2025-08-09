@@ -1,4 +1,3 @@
-import React from 'react';
 import AppShell from '../modules/ProgrammeManager/AppShell';
 
 export default function Dashboard() {

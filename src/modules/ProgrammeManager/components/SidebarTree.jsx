@@ -14,7 +14,6 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 import {
-  arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
@@ -28,7 +27,6 @@ import {
   ChevronDownIcon,
   FolderIcon,
   DocumentIcon,
-  FlagIcon,
 } from '@heroicons/react/24/outline';
 
 // Diamond icon component for milestones
@@ -44,51 +42,48 @@ const DiamondIcon = ({ className = 'w-4 h-4', color = 'text-purple-600' }) => (
 );
 
 // Mock tree data for programme structure
-const treeData = [
-  {
-    id: 'programme',
-    label: 'Programme',
-    children: [
-      {
-        id: 'resources',
-        label: 'Permanent Resources',
-        children: [
-          { id: 'crane', label: 'Tower Crane' },
-          { id: 'engineer', label: 'Services Engineer' },
-        ],
-      },
-      {
-        id: 'tempworks',
-        label: 'Temporary Works',
-        children: [{ id: 'scaffold', label: 'Scaffold Platforms' }],
-      },
-      {
-        id: 'calendars',
-        label: 'Calendars',
-        children: [],
-      },
-      {
-        id: 'costcodes',
-        label: 'Cost Codes',
-        children: [],
-      },
-    ],
-  },
-];
+// const treeData = [
+//   {
+//     id: 'programme',
+//     label: 'Programme',
+//     children: [
+//       {
+//         id: 'resources',
+//         label: 'Permanent Resources',
+//         children: [
+//           { id: 'crane', label: 'Tower Crane' },
+//           { id: 'engineer', label: 'Services Engineer' },
+//         ],
+//       },
+//       {
+//         id: 'tempworks',
+//         label: 'Temporary Works',
+//         children: [{ id: 'scaffold', label: 'Scaffold Platforms' }],
+//       },
+//       {
+//         id: 'calendars',
+//         label: 'Calendars',
+//         children: [],
+//       },
+//       {
+//         id: 'costcodes',
+//         label: 'Cost Codes',
+//         children: [],
+//       },
+//     ],
+//   },
+// ];
 
 // Memoized tree node component
 const TreeNode = React.memo(
   ({
     task,
     level = 0,
-    rowNumber,
     isExpanded,
     isSelected,
     isMultiSelected,
     isHovered,
     onToggle,
-    onSelect,
-    onDoubleClick,
     onHover,
     onHoverLeave,
     onContextMenu,
@@ -104,21 +99,6 @@ const TreeNode = React.memo(
     } = useSortable({ id: task.id });
 
     const hasChildren = task.children && task.children.length > 0;
-
-    const style = {
-      transform: CSS.Transform.toString(transform),
-      transition,
-      opacity: isDragging ? 0.5 : 1,
-    };
-
-    const handleContextMenu = useCallback(
-      e => {
-        e.preventDefault();
-        e.stopPropagation();
-        onContextMenu(e, task);
-      },
-      [onContextMenu, task]
-    );
 
     const handleClick = useCallback(
       e => {
@@ -138,131 +118,99 @@ const TreeNode = React.memo(
       [task.id, onMultiSelect]
     );
 
-    const handleDoubleClick = useCallback(
+    const handleDoubleClick = useCallback(e => {
+      e.stopPropagation();
+    }, []);
+
+    const handleContextMenu = useCallback(
       e => {
+        e.preventDefault();
         e.stopPropagation();
-        onDoubleClick(task);
+        onContextMenu(e, task);
       },
-      [onDoubleClick, task]
+      [onContextMenu, task]
     );
 
-    const handleMouseEnter = useCallback(() => {
-      onHover(task.id);
-    }, [onHover, task.id]);
-
-    const handleMouseLeave = useCallback(() => {
-      onHoverLeave();
-    }, [onHoverLeave]);
-
-    const handleToggle = useCallback(
-      e => {
-        e.stopPropagation();
-        onToggle(task.id);
-      },
-      [onToggle, task.id]
-    );
-
-    // Memoize the node content
-    const nodeContent = useMemo(
-      () => (
+    const nodeContent = useMemo(() => {
+      return (
         <div
           ref={setNodeRef}
-          {...attributes}
-          {...listeners}
-          className={`asta-tree-node flex items-center px-2 py-1 cursor-pointer select-none transition-colors duration-150 ${
-            isSelected ? 'bg-blue-100 text-blue-900' : ''
-          } ${isMultiSelected ? 'bg-yellow-100' : ''} ${
-            isHovered ? 'bg-gray-50' : ''
-          }`}
           style={{
             transform: CSS.Transform.toString(transform),
             transition,
             opacity: isDragging ? 0.5 : 1,
-            paddingLeft: `${level * 20 + 8}px`,
           }}
+          className={`
+            flex items-center gap-2 px-2 py-1 text-sm cursor-pointer select-none
+            ${isSelected ? 'bg-blue-100 text-blue-900' : ''}
+            ${isMultiSelected ? 'bg-blue-50 text-blue-800' : ''}
+            ${isHovered ? 'bg-gray-100' : ''}
+            hover:bg-gray-50 transition-colors duration-150
+          `}
+          {...attributes}
+          {...listeners}
           onClick={handleClick}
           onDoubleClick={handleDoubleClick}
+          onMouseEnter={() => onHover(task.id)}
+          onMouseLeave={() => onHoverLeave(task.id)}
           onContextMenu={handleContextMenu}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
         >
-          {/* Row Number */}
-          <div className='flex-shrink-0 text-sm text-gray-400 pr-2'>
-            {rowNumber}
-          </div>
+          {/* Indentation */}
+          <div className='flex-shrink-0' style={{ width: `${level * 16}px` }} />
 
-          {/* Expand/Collapse Button */}
-          <div className='flex-shrink-0 w-4 h-4 mr-1'>
-            {hasChildren && (
-              <button
-                onClick={handleToggle}
-                className='w-4 h-4 flex items-center justify-center hover:bg-gray-200 rounded transition-colors duration-150'
-              >
-                {isExpanded ? (
-                  <ChevronDownIcon className='w-3 h-3 text-gray-600' />
-                ) : (
-                  <ChevronRightIcon className='w-3 h-3 text-gray-600' />
-                )}
-              </button>
-            )}
-          </div>
+          {/* Expand/Collapse button */}
+          {hasChildren && (
+            <button
+              onClick={e => {
+                e.stopPropagation();
+                onToggle(task.id);
+              }}
+              className='p-1 hover:bg-gray-200 rounded transition-colors duration-150'
+            >
+              {isExpanded ? (
+                <ChevronDownIcon className='w-3 h-3 text-gray-600' />
+              ) : (
+                <ChevronRightIcon className='w-3 h-3 text-gray-600' />
+              )}
+            </button>
+          )}
 
-          {/* Task Icon */}
-          <div className='flex-shrink-0 w-4 h-4 mr-2'>
-            {task.isMilestone ? (
-              <DiamondIcon className='w-3 h-3' color='text-purple-500' />
+          {/* Icon */}
+          <div className='flex-shrink-0'>
+            {task.type === 'milestone' || task.isMilestone ? (
+              <DiamondIcon className='w-4 h-4' color='text-purple-500' />
             ) : task.isGroup ? (
               <FolderIcon className='w-4 h-4 text-blue-600' />
             ) : (
-              <DocumentIcon className='w-4 h-4 text-gray-600' />
+              <DocumentIcon className='w-4 h-4 text-gray-500' />
             )}
           </div>
 
-          {/* Task Name */}
-          <div className='flex-1 min-w-0'>
-            <div className='truncate text-sm font-medium'>{task.name}</div>
-            {task.assignee && (
-              <div className='text-xs text-gray-500 truncate'>
-                {task.assignee}
-              </div>
-            )}
-          </div>
-
-          {/* Status Indicator */}
-          <div className='flex-shrink-0 ml-2'>
-            <div
-              className={`w-2 h-2 rounded-full ${
-                task.status === 'Complete'
-                  ? 'bg-green-500'
-                  : task.status === 'In Progress'
-                    ? 'bg-blue-500'
-                    : task.status === 'Delayed'
-                      ? 'bg-red-500'
-                      : 'bg-gray-400'
-              }`}
-            />
-          </div>
+          {/* Label */}
+          <span className='flex-1 truncate'>{task.name || task.label}</span>
         </div>
-      ),
-      [
-        setNodeRef,
-        attributes,
-        listeners,
-        level,
-        isSelected,
-        isMultiSelected,
-        isHovered,
-        handleClick,
-        handleDoubleClick,
-        handleContextMenu,
-        handleMouseEnter,
-        handleMouseLeave,
-        handleToggle,
-        hasChildren,
-        isExpanded,
-        task,
-      ]
-    );
+      );
+    }, [
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+      isSelected,
+      isMultiSelected,
+      isHovered,
+      level,
+      hasChildren,
+      isExpanded,
+      task,
+      onToggle,
+      onHover,
+      onHoverLeave,
+      handleClick,
+      handleDoubleClick,
+      handleContextMenu,
+      attributes,
+      listeners,
+    ]);
 
     return nodeContent;
   }
@@ -275,12 +223,10 @@ const SidebarTree = forwardRef((props, ref) => {
   const {
     getHierarchicalTasks,
     getVisibleTasks,
-    selectTask,
     selectedTaskId,
     hoveredTaskId,
     setHoveredTask,
     clearHoveredTask,
-    toggleGroupCollapse,
     reorderTasksById,
     deleteTask,
     updateTask,
@@ -290,8 +236,6 @@ const SidebarTree = forwardRef((props, ref) => {
 
   // Start with only the root programme node expanded
   const [expandedIds, setExpandedIds] = useState(new Set(['programme']));
-  const [selectedId, setSelectedId] = useState(null);
-  const [activeTask, setActiveTask] = useState(null);
 
   // Multi-selection state
   const [selectedTaskIds, setSelectedTaskIds] = useState([]);
@@ -333,28 +277,6 @@ const SidebarTree = forwardRef((props, ref) => {
       return newSet;
     });
   }, []);
-
-  const handleNodeSelect = useCallback(
-    id => {
-      setSelectedId(id);
-      selectTask(id);
-    },
-    [selectTask]
-  );
-
-  const handleTaskToggle = useCallback(
-    taskId => {
-      toggleGroupCollapse(taskId);
-    },
-    [toggleGroupCollapse]
-  );
-
-  const handleTaskSelect = useCallback(
-    taskId => {
-      selectTask(taskId);
-    },
-    [selectTask]
-  );
 
   // Multi-selection logic
   const handleMultiSelect = useCallback(
@@ -409,14 +331,6 @@ const SidebarTree = forwardRef((props, ref) => {
     });
   }, []);
 
-  const closeContextMenu = useCallback(() => {
-    setContextMenu({
-      isOpen: false,
-      position: { x: 0, y: 0 },
-      task: null,
-    });
-  }, []);
-
   const handleContextMenuAction = useCallback(
     (action, task) => {
       switch (action) {
@@ -436,7 +350,7 @@ const SidebarTree = forwardRef((props, ref) => {
           break;
         case 'milestone':
           if (task) {
-            updateTask(task.id, { isMilestone: true });
+            updateTask(task.id, { type: 'milestone', isMilestone: true });
           }
           break;
         case 'expandAll':
@@ -452,62 +366,11 @@ const SidebarTree = forwardRef((props, ref) => {
     [deleteTask, updateTask]
   );
 
-  // Handle double-click to open task modal
-  const handleTaskDoubleClick = useCallback(task => {
-    setTaskModal({
-      isOpen: true,
-      task,
-    });
-  }, []);
-
-  // Handle task modal close
-  const closeTaskModal = useCallback(() => {
-    setTaskModal({
-      isOpen: false,
-      task: null,
-    });
-  }, []);
-
-  // Handle task modal save
-  const handleTaskSave = useCallback(
-    updatedTask => {
-      updateTask(updatedTask.id, updatedTask);
-    },
-    [updateTask]
-  );
-
-  // Bulk actions
-  const handleBulkAction = useCallback(
-    action => {
-      switch (action) {
-        case 'delete':
-          selectedTaskIds.forEach(taskId => {
-            deleteTask(taskId);
-          });
-          setSelectedTaskIds([]);
-          setLastSelectedIndex(-1);
-          break;
-
-        case 'link':
-          // TODO: Implement bulk linking
-          break;
-
-        case 'milestone':
-          selectedTaskIds.forEach(taskId => {
-            updateTask(taskId, { isMilestone: true });
-          });
-          break;
-      }
-    },
-    [selectedTaskIds, deleteTask, updateTask]
-  );
-
   // Handle drag start
   const handleDragStart = useCallback(
     event => {
       const { active } = event;
-      const task = getHierarchicalTasks().find(t => t.id === active.id);
-      setActiveTask(task);
+      getHierarchicalTasks().find(t => t.id === active.id);
     },
     [getHierarchicalTasks]
   );
@@ -516,8 +379,6 @@ const SidebarTree = forwardRef((props, ref) => {
   const handleDragEnd = useCallback(
     event => {
       const { active, over } = event;
-
-      setActiveTask(null);
 
       if (active.id !== over.id) {
         const sourceId = active.id;
@@ -534,15 +395,6 @@ const SidebarTree = forwardRef((props, ref) => {
   useImperativeHandle(ref, () => ({
     expandAll: () => {
       const allIds = new Set();
-      const addIds = nodes => {
-        nodes.forEach(node => {
-          allIds.add(node.id);
-          if (node.children) {
-            addIds(node.children);
-          }
-        });
-      };
-      addIds(treeData);
       setExpandedIds(allIds);
     },
     collapseAll: () => {
@@ -579,29 +431,23 @@ const SidebarTree = forwardRef((props, ref) => {
 
   // Memoize the rendered tree nodes
   const renderedNodes = useMemo(() => {
-    let rowCounter = 1;
-
     const renderNodes = (nodes, level = 0) => {
       return nodes.map(node => {
         const isExpanded = expandedIds.has(node.id);
         const isSelected = selectedTaskId === node.id;
         const isMultiSelected = selectedTaskIds.includes(node.id);
         const isHovered = hoveredTaskId === node.id;
-        const currentRowNumber = rowCounter++;
 
         return (
           <React.Fragment key={node.id}>
             <TreeNode
               task={node}
               level={level}
-              rowNumber={currentRowNumber}
               isExpanded={isExpanded}
               isSelected={isSelected}
               isMultiSelected={isMultiSelected}
               isHovered={isHovered}
               onToggle={toggleNode}
-              onSelect={handleNodeSelect}
-              onDoubleClick={handleTaskDoubleClick}
               onHover={setHoveredTask}
               onHoverLeave={clearHoveredTask}
               onContextMenu={handleContextMenu}
@@ -625,8 +471,6 @@ const SidebarTree = forwardRef((props, ref) => {
     selectedTaskIds,
     hoveredTaskId,
     toggleNode,
-    handleNodeSelect,
-    handleTaskDoubleClick,
     setHoveredTask,
     clearHoveredTask,
     handleContextMenu,
@@ -693,13 +537,18 @@ const SidebarTree = forwardRef((props, ref) => {
             <div className='flex justify-end gap-2'>
               <button
                 className='px-4 py-2 text-gray-600 hover:bg-gray-100 rounded'
-                onClick={closeTaskModal}
+                onClick={() => setTaskModal({ isOpen: false, task: null })}
               >
                 Cancel
               </button>
               <button
                 className='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700'
-                onClick={() => handleTaskSave(taskModal.task)}
+                onClick={() => {
+                  if (taskModal.task) {
+                    updateTask(taskModal.task.id, taskModal.task);
+                  }
+                  setTaskModal({ isOpen: false, task: null });
+                }}
               >
                 Save
               </button>

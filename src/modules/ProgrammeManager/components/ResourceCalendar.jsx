@@ -58,11 +58,6 @@ const ResourceCalendar = () => {
       currentDate.getMonth(),
       1
     );
-    const endOfMonth = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth() + 1,
-      0
-    );
     const startOfCalendar = new Date(startOfMonth);
     startOfCalendar.setDate(
       startOfCalendar.getDate() - startOfCalendar.getDay()
@@ -107,14 +102,6 @@ const ResourceCalendar = () => {
     if (workload === 2) return 'bg-yellow-100';
     if (workload >= 3) return 'bg-red-100';
     return 'bg-gray-100';
-  };
-
-  const getWorkloadText = workload => {
-    if (workload === 0) return 'Available';
-    if (workload === 1) return 'Light';
-    if (workload === 2) return 'Moderate';
-    if (workload >= 3) return 'Heavy';
-    return '';
   };
 
   return (
@@ -182,9 +169,9 @@ const ResourceCalendar = () => {
         ))}
 
         {/* Calendar Days */}
-        {calendarDays.map((day, index) => (
+        {calendarDays.map(day => (
           <div
-            key={index}
+            key={`day-${day.date.toISOString()}`}
             className={`
               min-h-[80px] p-2 border border-gray-100 ${getWorkloadColor(day.workload)}
               ${day.isCurrentMonth ? '' : 'opacity-50'}

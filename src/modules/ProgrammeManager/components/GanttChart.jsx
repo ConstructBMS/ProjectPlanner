@@ -268,6 +268,64 @@ const GanttChart = () => {
     viewState.viewScale,
   ]);
 
+  // Calculate today marker position
+  const todayMarker = useMemo(() => {
+    if (!viewState.showGridlines) return null;
+
+    const today = new Date();
+    const startOfYear = new Date('2024-01-01');
+    const baseDayWidth = 2;
+    const scaledDayWidth = baseDayWidth * viewState.timelineZoom;
+
+    // Calculate days from start of year
+    const daysFromStart = Math.floor(
+      (today - startOfYear) / (1000 * 60 * 60 * 24)
+    );
+
+    // Calculate left position
+    let left;
+    if (viewState.showWeekends) {
+      left = daysFromStart * scaledDayWidth;
+    } else {
+      // Count only weekdays
+      let weekdayCount = 0;
+      for (
+        let d = new Date(startOfYear);
+        d <= today;
+        d.setDate(d.getDate() + 1)
+      ) {
+        const dayOfWeek = d.getDay();
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+          weekdayCount++;
+        }
+        if (d >= today) break;
+      }
+      left = weekdayCount * scaledDayWidth;
+    }
+
+    // Check if today is within the visible date range
+    if (today < dateRange.start || today > dateRange.end) {
+      return null;
+    }
+
+    return (
+      <div
+        className="today-marker absolute top-0 bottom-0 z-30"
+        style={{
+          left: `${left}px`,
+          width: '2px',
+          height: '100%',
+          pointerEvents: 'none',
+        }}
+      />
+    );
+  }, [
+    dateRange,
+    viewState.showGridlines,
+    viewState.showWeekends,
+    viewState.timelineZoom,
+  ]);
+
   // Generate horizontal row grid lines
   const rowLines = useMemo(() => {
     if (!viewState.showGridlines) return [];
@@ -1078,6 +1136,9 @@ const GanttChart = () => {
             </>
           )}
         </div>
+
+        {/* Today Marker */}
+        {todayMarker}
 
         {/* Drag-to-link connector line */}
         {dragToLink.isActive && (

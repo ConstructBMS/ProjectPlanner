@@ -1,5 +1,3 @@
-import React from 'react';
-
 const RibbonGroup = ({ title, children, disabled = false }) => {
   return (
     <div className={`asta-group ${disabled ? 'opacity-50' : ''}`}>

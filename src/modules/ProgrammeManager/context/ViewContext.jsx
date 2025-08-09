@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 
 const ViewContext = createContext();
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useViewContext = () => {
   const context = useContext(ViewContext);
   if (!context) {
@@ -214,7 +215,7 @@ export const ViewProvider = ({ children }) => {
     console.log('Zoom Out triggered');
   };
 
-  const updateViewScale = (scale) => {
+  const updateViewScale = scale => {
     setViewState(prev => ({ ...prev, viewScale: scale }));
     console.log('View scale updated to:', scale);
   };

@@ -96,11 +96,13 @@ export default [
         process: 'readonly',
         __dirname: 'readonly',
         __filename: 'readonly',
+        require: 'readonly',
+        module: 'readonly',
+        exports: 'readonly',
       },
     },
     rules: {
-      'no-console': 'off',
-      'no-unused-vars': 'warn',
+      'no-undef': 'off',
     },
   },
   {

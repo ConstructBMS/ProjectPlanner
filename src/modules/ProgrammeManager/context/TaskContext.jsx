@@ -8,6 +8,7 @@ import {
 
 const TaskContext = createContext();
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useTaskContext = () => {
   const context = useContext(TaskContext);
   if (!context) {
@@ -30,6 +31,7 @@ export const TaskProvider = ({ children }) => {
       assignee: 'John Smith',
       progress: 50,
       color: '#3B82F6',
+      type: 'task',
       isMilestone: false,
       notes: 'Excavate foundation for building A',
       parentId: null,
@@ -50,6 +52,7 @@ export const TaskProvider = ({ children }) => {
       assignee: 'Mike Johnson',
       progress: 100,
       color: '#10B981',
+      type: 'task',
       isMilestone: false,
       notes: 'Pour concrete for foundation',
       parentId: null,
@@ -70,6 +73,7 @@ export const TaskProvider = ({ children }) => {
       assignee: 'Sarah Wilson',
       progress: 25,
       color: '#F59E0B',
+      type: 'task',
       isMilestone: false,
       notes: 'Install structural steel framework',
       parentId: null,
@@ -93,9 +97,6 @@ export const TaskProvider = ({ children }) => {
 
   // Multi-selection state
   const [selectedTaskIds, setSelectedTaskIds] = useState([]);
-
-  // Clipboard state
-  const [clipboardTasks, setClipboardTasks] = useState([]);
 
   // Task links/dependencies with enhanced structure
   const [taskLinks, setTaskLinks] = useState([
@@ -216,6 +217,7 @@ export const TaskProvider = ({ children }) => {
       assignee: '',
       progress: 0,
       color: '#3B82F6',
+      type: 'task',
       isMilestone: false,
       notes: '',
       parentId: null,
@@ -243,6 +245,7 @@ export const TaskProvider = ({ children }) => {
       assignee: '',
       progress: 0,
       color: '#F59E0B',
+      type: 'milestone',
       isMilestone: true,
       notes: '',
       parentId: null,
@@ -273,6 +276,7 @@ export const TaskProvider = ({ children }) => {
         assignee: '',
         progress: 0,
         color: '#3B82F6',
+        type: 'task',
         isMilestone: false,
         notes: '',
         parentId: null,
@@ -332,6 +336,7 @@ export const TaskProvider = ({ children }) => {
         assignee: '',
         progress: 0,
         color: '#8B5CF6',
+        type: 'task',
         isMilestone: false,
         notes: '',
         parentId: null,
@@ -357,11 +362,11 @@ export const TaskProvider = ({ children }) => {
           }
 
           // Update selected tasks to be children of the summary task
-          return updated.map(task =>
-            selectedIds.includes(task.id)
+          return updated.map(task => {
+            return selectedIds.includes(task.id)
               ? { ...task, parentId: summaryTaskId }
-              : task
-          );
+              : task;
+          });
         });
 
         console.log(
@@ -433,6 +438,72 @@ export const TaskProvider = ({ children }) => {
     [saveToUndoStack, selectedTaskId, getTaskDescendants]
   );
 
+  // Enhanced delete function with cascade option
+  const deleteTaskWithCascade = useCallback(
+    (taskId, cascade = false) => {
+      saveToUndoStack();
+
+      // Get all tasks that depend on this task (successors)
+      const getDependentTasks = taskId => {
+        const dependents = new Set();
+        const visited = new Set();
+
+        const findDependents = currentTaskId => {
+          if (visited.has(currentTaskId)) return;
+          visited.add(currentTaskId);
+
+          // Find all tasks that depend on the current task
+          const dependentLinks = taskLinks.filter(
+            link => link.fromId === currentTaskId
+          );
+          dependentLinks.forEach(link => {
+            dependents.add(link.toId);
+            if (cascade) {
+              findDependents(link.toId);
+            }
+          });
+        };
+
+        findDependents(taskId);
+        return Array.from(dependents);
+      };
+
+      // Get all tasks to remove
+      const descendants = getTaskDescendants(taskId);
+      const dependents = cascade ? getDependentTasks(taskId) : [];
+      const tasksToRemove = [taskId, ...descendants, ...dependents];
+
+      // Remove tasks
+      setTasks(prev => prev.filter(task => !tasksToRemove.includes(task.id)));
+
+      // Remove any links involving the deleted tasks
+      setTaskLinks(prev =>
+        prev.filter(
+          link =>
+            !tasksToRemove.includes(link.fromId) &&
+            !tasksToRemove.includes(link.toId)
+        )
+      );
+
+      // Clear selection if deleted task was selected
+      if (selectedTaskId === taskId || tasksToRemove.includes(selectedTaskId)) {
+        setSelectedTaskId(null);
+      }
+      setSelectedTaskIds(prev =>
+        prev.filter(id => !tasksToRemove.includes(id))
+      );
+
+      console.log('Deleted task with cascade:', {
+        taskId,
+        cascade,
+        tasksRemoved: tasksToRemove.length,
+        descendants: descendants.length,
+        dependents: dependents.length,
+      });
+    },
+    [saveToUndoStack, selectedTaskId, getTaskDescendants, taskLinks]
+  );
+
   const updateTask = useCallback(
     (taskId, updates) => {
       saveToUndoStack();
@@ -501,6 +572,7 @@ export const TaskProvider = ({ children }) => {
         assignee: '',
         progress: 0,
         color: '#8B5CF6',
+        type: 'task',
         isMilestone: false,
         notes: '',
         parentId: null,
@@ -512,9 +584,11 @@ export const TaskProvider = ({ children }) => {
       setTasks(prev => [
         ...prev,
         groupTask,
-        ...prev.map(task =>
-          taskIds.includes(task.id) ? { ...task, parentId: groupId } : task
-        ),
+        ...prev.map(task => {
+          return taskIds.includes(task.id)
+            ? { ...task, parentId: groupId }
+            : task;
+        }),
       ]);
 
       setNextId(prev => prev + 1);
@@ -531,11 +605,11 @@ export const TaskProvider = ({ children }) => {
 
       // Update child tasks to have no parent
       setTasks(prev =>
-        prev.map(task =>
-          childTasks.some(child => child.id === task.id)
+        prev.map(task => {
+          return childTasks.some(child => child.id === task.id)
             ? { ...task, parentId: null }
-            : task
-        )
+            : task;
+        })
       );
 
       // Remove the group task
@@ -546,17 +620,21 @@ export const TaskProvider = ({ children }) => {
 
   const toggleGroupCollapse = useCallback(groupId => {
     setTasks(prev =>
-      prev.map(task =>
-        task.id === groupId ? { ...task, isExpanded: !task.isExpanded } : task
-      )
+      prev.map(task => {
+        return task.id === groupId
+          ? { ...task, isExpanded: !task.isExpanded }
+          : task;
+      })
     );
   }, []);
 
   const expandMilestones = useCallback(() => {
     setTasks(prev =>
-      prev.map(task =>
-        task.isMilestone ? { ...task, isExpanded: true } : task
-      )
+      prev.map(task => {
+        return task.type === 'milestone' || task.isMilestone
+          ? { ...task, isExpanded: true }
+          : task;
+      })
     );
   }, []);
 
@@ -595,88 +673,6 @@ export const TaskProvider = ({ children }) => {
     [saveToUndoStack]
   );
 
-  const moveTaskUp = useCallback(
-    taskId => {
-      saveToUndoStack();
-      setTasks(prev => {
-        const currentIndex = prev.findIndex(t => t.id === taskId);
-        if (currentIndex <= 0) return prev; // Already at top or not found
-
-        const currentTask = prev[currentIndex];
-
-        // Find the previous task at the same hierarchy level (same parentId)
-        let targetIndex = -1;
-        for (let i = currentIndex - 1; i >= 0; i--) {
-          if (prev[i].parentId === currentTask.parentId) {
-            targetIndex = i;
-            break;
-          }
-        }
-
-        if (targetIndex === -1) return prev; // No task above at same level
-
-        const updated = [...prev];
-        // Swap the tasks
-        [updated[currentIndex], updated[targetIndex]] = [
-          updated[targetIndex],
-          updated[currentIndex],
-        ];
-
-        console.log(
-          'Moved task up:',
-          taskId,
-          'from position',
-          currentIndex,
-          'to',
-          targetIndex
-        );
-        return updated;
-      });
-    },
-    [saveToUndoStack]
-  );
-
-  const moveTaskDown = useCallback(
-    taskId => {
-      saveToUndoStack();
-      setTasks(prev => {
-        const currentIndex = prev.findIndex(t => t.id === taskId);
-        if (currentIndex === -1 || currentIndex >= prev.length - 1) return prev; // Not found or already at bottom
-
-        const currentTask = prev[currentIndex];
-
-        // Find the next task at the same hierarchy level (same parentId)
-        let targetIndex = -1;
-        for (let i = currentIndex + 1; i < prev.length; i++) {
-          if (prev[i].parentId === currentTask.parentId) {
-            targetIndex = i;
-            break;
-          }
-        }
-
-        if (targetIndex === -1) return prev; // No task below at same level
-
-        const updated = [...prev];
-        // Swap the tasks
-        [updated[currentIndex], updated[targetIndex]] = [
-          updated[targetIndex],
-          updated[currentIndex],
-        ];
-
-        console.log(
-          'Moved task down:',
-          taskId,
-          'from position',
-          currentIndex,
-          'to',
-          targetIndex
-        );
-        return updated;
-      });
-    },
-    [saveToUndoStack]
-  );
-
   // Helper functions
   const getHierarchicalTasks = useCallback(() => {
     return hierarchicalTasks;
@@ -686,8 +682,21 @@ export const TaskProvider = ({ children }) => {
     (filter = 'Show All') => {
       const visible = [];
 
+      // Ensure hierarchicalTasks is available and properly initialized
+      if (
+        !hierarchicalTasks ||
+        !Array.isArray(hierarchicalTasks) ||
+        hierarchicalTasks.length === 0
+      ) {
+        return visible;
+      }
+
       const addVisible = hierarchicalTasks => {
+        if (!Array.isArray(hierarchicalTasks)) return;
+
         hierarchicalTasks.forEach(task => {
+          if (!task) return;
+
           // Apply filter logic
           let shouldInclude = true;
 
@@ -696,7 +705,7 @@ export const TaskProvider = ({ children }) => {
               shouldInclude = task.priority === 'High' || task.isCritical;
               break;
             case 'Milestones':
-              shouldInclude = task.isMilestone;
+              shouldInclude = task.type === 'milestone' || task.isMilestone;
               break;
             case 'Delayed Tasks': {
               const today = new Date();
@@ -860,6 +869,7 @@ export const TaskProvider = ({ children }) => {
       insertTaskBelow,
       insertSummaryTask,
       deleteTask,
+      deleteTaskWithCascade,
       updateTask,
 
       // Selection operations
@@ -915,6 +925,7 @@ export const TaskProvider = ({ children }) => {
       insertTaskBelow,
       insertSummaryTask,
       deleteTask,
+      deleteTaskWithCascade,
       updateTask,
       selectTask,
       clearSelection,

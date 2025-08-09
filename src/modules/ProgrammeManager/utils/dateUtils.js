@@ -42,10 +42,10 @@ export const calculateWorkingDays = (start, end) => {
  * @param {Date} date - The date to snap
  * @returns {Date} - The snapped date (weekday only)
  */
-export const snapToWeekday = (date) => {
+export const snapToWeekday = date => {
   const result = new Date(date);
   const dayOfWeek = result.getDay();
-  
+
   // If it's Saturday (6), move to Friday (5)
   if (dayOfWeek === 6) {
     result.setDate(result.getDate() - 1);
@@ -54,7 +54,7 @@ export const snapToWeekday = (date) => {
   else if (dayOfWeek === 0) {
     result.setDate(result.getDate() + 1);
   }
-  
+
   return result;
 };
 
@@ -68,17 +68,17 @@ export const addWorkingDays = (date, workingDays) => {
   const result = new Date(date);
   let daysAdded = 0;
   let currentDay = 0;
-  
+
   while (daysAdded < workingDays) {
     result.setDate(result.getDate() + 1);
     currentDay = result.getDay();
-    
+
     // Only count weekdays (Monday = 1, Tuesday = 2, ..., Friday = 5)
     if (currentDay !== 0 && currentDay !== 6) {
       daysAdded++;
     }
   }
-  
+
   return result;
 };
 
@@ -91,14 +91,14 @@ export const addWorkingDays = (date, workingDays) => {
 export const getWorkingDaysBetween = (startDate, endDate) => {
   const start = new Date(startDate);
   const end = new Date(endDate);
-  
+
   // Set both dates to start of day
   start.setHours(0, 0, 0, 0);
   end.setHours(0, 0, 0, 0);
-  
+
   let workingDays = 0;
   const current = new Date(start);
-  
+
   while (current <= end) {
     const dayOfWeek = current.getDay();
     if (dayOfWeek !== 0 && dayOfWeek !== 6) {
@@ -106,6 +106,6 @@ export const getWorkingDaysBetween = (startDate, endDate) => {
     }
     current.setDate(current.getDate() + 1);
   }
-  
+
   return workingDays;
 };

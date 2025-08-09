@@ -1,4 +1,3 @@
-import React from 'react';
 import { useViewContext } from '../context/ViewContext';
 
 const DateMarkersOverlay = () => {

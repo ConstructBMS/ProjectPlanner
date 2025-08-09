@@ -5,6 +5,20 @@ All notable changes to the ProjectPlanner module will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2025-08-08] – Prompt 087
+
+### Added
+
+- **Today's Date Marker in Gantt Chart**
+  - Added red vertical line (2px wide) to indicate today's date in Gantt timeline
+  - Marker dynamically positions based on today's date, project start date, and zoom scale
+  - Automatically scrolls horizontally with Gantt chart and repositions on zoom level changes
+  - Respects weekend visibility toggle (shows/hides based on showWeekends setting)
+  - Styled with .today-marker CSS class using red color (#ef4444) and subtle shadow
+  - High z-index (30) ensures marker appears above grid lines but below task bars
+  - Performance optimized with useMemo for smooth scrolling and zooming
+  - Only displays when today's date falls within the visible timeline range
+
 ## [2025-08-08] – Prompt 086
 
 ### Added

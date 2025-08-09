@@ -1,4 +1,3 @@
-import React from 'react';
 import RibbonButton from '../shared/RibbonButton';
 import RibbonGroup from '../shared/RibbonGroup';
 import {

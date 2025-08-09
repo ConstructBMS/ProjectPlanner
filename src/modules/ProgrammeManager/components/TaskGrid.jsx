@@ -26,11 +26,9 @@ import {
 
 const TaskGrid = React.memo(() => {
   const {
-    tasks,
     selectedTaskId,
     selectedTaskIds,
     linkingMode,
-    linkStartTaskId,
     deleteTask,
     updateTask,
     selectMultipleTasks,
@@ -41,7 +39,17 @@ const TaskGrid = React.memo(() => {
 
   const { viewState } = useViewContext();
 
-  const visibleTasks = useMemo(() => getVisibleTasks(), [getVisibleTasks]);
+  const visibleTasks = useMemo(() => {
+    try {
+      if (getVisibleTasks && typeof getVisibleTasks === 'function' && viewState) {
+        return getVisibleTasks(viewState.taskFilter || 'Show All');
+      }
+      return [];
+    } catch (error) {
+      console.warn('Error getting visible tasks:', error);
+      return [];
+    }
+  }, [getVisibleTasks, viewState?.taskFilter]);
 
   // Inline editing state
   const [editingField, setEditingField] = useState(null); // { taskId, field }
@@ -98,48 +106,7 @@ const TaskGrid = React.memo(() => {
     });
   }, []);
 
-  const handleContextMenuAction = useCallback((action, task) => {
-    switch (action) {
-      case 'edit':
-        // Start editing the task name
-        startEditing(task.id, 'name', task.name);
-        break;
-      case 'delete':
-        deleteTask(task.id);
-        break;
-      case 'addSubtask':
-        // Add subtask functionality - you can implement this based on your needs
-        console.log('Add subtask for:', task.name);
-        break;
-      default:
-        console.log('Unknown context menu action:', action);
-    }
-  }, [deleteTask, startEditing]);
-
-  const handleRowClick = useCallback(
-    (taskId, e) => {
-      // If in linking mode, handle linking logic
-      if (linkingMode) {
-        handleTaskClickForLinking(taskId);
-        return;
-      }
-
-      // Normal selection logic
-      const isMultiSelect = e.shiftKey || e.ctrlKey || e.metaKey;
-      selectMultipleTasks(taskId, isMultiSelect);
-    },
-    [linkingMode, handleTaskClickForLinking, selectMultipleTasks]
-  );
-
-  const handleGroupToggle = useCallback(
-    (taskId, e) => {
-      e.stopPropagation(); // Prevent row selection when clicking expand/collapse
-      toggleGroupCollapse(taskId);
-    },
-    [toggleGroupCollapse]
-  );
-
-  // Inline editing functions
+  // Inline editing functions - moved before handleContextMenuAction
   const startEditing = useCallback((taskId, field, currentValue) => {
     setEditingField({ taskId, field });
 
@@ -149,7 +116,7 @@ const TaskGrid = React.memo(() => {
       try {
         const date = new Date(currentValue);
         initialValue = date.toISOString().split('T')[0]; // YYYY-MM-DD format for date input
-      } catch (e) {
+      } catch {
         initialValue = currentValue;
       }
     }
@@ -160,35 +127,6 @@ const TaskGrid = React.memo(() => {
   const stopEditing = useCallback(() => {
     setEditingField(null);
     setEditValue('');
-  }, []);
-
-  const handleEditDoubleClick = useCallback(
-    (taskId, field, currentValue, e) => {
-      e.stopPropagation();
-      startEditing(taskId, field, currentValue);
-    },
-    [startEditing]
-  );
-
-  const handleEditChange = useCallback(e => {
-    setEditValue(e.target.value);
-  }, []);
-
-  const handleEditKeyDown = useCallback(e => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      commitEdit();
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      stopEditing();
-    }
-  }, []);
-
-  const handleEditBlur = useCallback(() => {
-    // Small delay to allow for Enter key processing
-    window.setTimeout(() => {
-      commitEdit();
-    }, 100);
   }, []);
 
   const commitEdit = useCallback(() => {
@@ -234,6 +172,82 @@ const TaskGrid = React.memo(() => {
     stopEditing();
   }, [editingField, editValue, updateTask, stopEditing]);
 
+  const handleEditKeyDown = useCallback(
+    e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        commitEdit();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        stopEditing();
+      }
+    },
+    [commitEdit, stopEditing]
+  );
+
+  const handleEditBlur = useCallback(() => {
+    // Small delay to allow for Enter key processing
+    window.setTimeout(() => {
+      commitEdit();
+    }, 100);
+  }, [commitEdit]);
+
+  const handleEditDoubleClick = useCallback(
+    (taskId, field, currentValue, e) => {
+      e.stopPropagation();
+      startEditing(taskId, field, currentValue);
+    },
+    [startEditing]
+  );
+
+  const handleEditChange = useCallback(e => {
+    setEditValue(e.target.value);
+  }, []);
+
+  const handleContextMenuAction = useCallback(
+    (action, task) => {
+      switch (action) {
+        case 'edit':
+          // Start editing the task name
+          startEditing(task.id, 'name', task.name);
+          break;
+        case 'delete':
+          deleteTask(task.id);
+          break;
+        case 'addSubtask':
+          // Add subtask functionality - you can implement this based on your needs
+          console.log('Add subtask for:', task.name);
+          break;
+        default:
+          console.log('Unknown context menu action:', action);
+      }
+    },
+    [deleteTask, startEditing]
+  );
+
+  const handleRowClick = useCallback(
+    (taskId, e) => {
+      // If in linking mode, handle linking logic
+      if (linkingMode) {
+        handleTaskClickForLinking(taskId);
+        return;
+      }
+
+      // Normal selection logic
+      const isMultiSelect = e.shiftKey || e.ctrlKey || e.metaKey;
+      selectMultipleTasks(taskId, isMultiSelect);
+    },
+    [linkingMode, handleTaskClickForLinking, selectMultipleTasks]
+  );
+
+  const handleGroupToggle = useCallback(
+    (taskId, e) => {
+      e.stopPropagation(); // Prevent row selection when clicking expand/collapse
+      toggleGroupCollapse(taskId);
+    },
+    [toggleGroupCollapse]
+  );
+
   // Memoize the grid rows to prevent unnecessary re-renders
   const gridRows = useMemo(() => {
     return visibleTasks.map(task => {
@@ -268,7 +282,7 @@ const TaskGrid = React.memo(() => {
 
           {/* Task Icon */}
           <div className='w-8 h-8 flex items-center justify-center'>
-            {task.isMilestone ? (
+            {(task.type === 'milestone' || task.isMilestone) ? (
               <DiamondIcon className='w-4 h-4' color='text-purple-500' />
             ) : task.isGroup ? (
               <FolderIcon className='w-4 h-4 text-blue-600' />
@@ -444,6 +458,7 @@ const TaskGrid = React.memo(() => {
     handleEditBlur,
     handleDeleteTask,
     handleCreateLink,
+    handleContextMenu,
   ]);
 
   return (

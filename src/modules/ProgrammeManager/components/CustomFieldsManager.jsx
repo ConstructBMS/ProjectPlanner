@@ -82,8 +82,8 @@ const CustomFieldsManager = () => {
     if (!newField.name.trim()) return;
 
     setCustomFields(prev =>
-      prev.map(field =>
-        field.id === editingField.id
+      prev.map(field => {
+        return field.id === editingField.id
           ? {
               ...field,
               name: newField.name.trim(),
@@ -94,8 +94,8 @@ const CustomFieldsManager = () => {
                   : [],
               required: newField.required,
             }
-          : field
-      )
+          : field;
+      })
     );
 
     setEditingField(null);
@@ -335,7 +335,7 @@ const CustomFieldsManager = () => {
                 </label>
                 <div className='space-y-2'>
                   {newField.options.map((option, index) => (
-                    <div key={index} className='flex items-center gap-2'>
+                    <div key={`option-${option}`} className='flex items-center gap-2'>
                       <input
                         type='text'
                         value={option}

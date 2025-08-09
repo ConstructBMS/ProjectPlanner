@@ -122,7 +122,9 @@ const AdvancedSearch = ({ onResultsChange }) => {
 
     // Milestone filter
     if (searchCriteria.isMilestone) {
-      results = results.filter(task => task.isMilestone);
+      results = results.filter(
+        task => task.type === 'milestone' || task.isMilestone
+      );
     }
 
     return results;

@@ -38,7 +38,6 @@ import {
   ArrowUturnLeftIcon,
   ArrowUturnRightIcon,
   TrashIcon,
-  ChevronLeftIcon,
 } from '@heroicons/react/24/outline';
 
 export default function HomeTab({ onExpandAll, onCollapseAll }) {
@@ -236,10 +235,20 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
           tooltip='Create summary tasks from selected items'
         />
         <RibbonButton
-          icon={isAllExpanded ? <ChevronRightIcon className='w-4 h-4' /> : <ChevronDoubleDownIcon className='w-4 h-4' />}
+          icon={
+            isAllExpanded ? (
+              <ChevronRightIcon className='w-4 h-4' />
+            ) : (
+              <ChevronDoubleDownIcon className='w-4 h-4' />
+            )
+          }
           label='Expand/Collapse All'
           onClick={handleExpandCollapseToggle}
-          tooltip={isAllExpanded ? 'Collapse all groups and tasks in the tree' : 'Expand all groups and tasks in the tree'}
+          tooltip={
+            isAllExpanded
+              ? 'Collapse all groups and tasks in the tree'
+              : 'Expand all groups and tasks in the tree'
+          }
           className={isAllExpanded ? 'bg-blue-50 border-blue-500' : ''}
         />
         <RibbonButton
@@ -418,7 +427,7 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
           icon={<ClockIcon className='w-4 h-4' />}
           label='Go to Today'
           onClick={goToToday}
-          tooltip='Scroll Gantt to today\'s date'
+          tooltip="Scroll Gantt to today's date"
         />
       </RibbonGroup>
 

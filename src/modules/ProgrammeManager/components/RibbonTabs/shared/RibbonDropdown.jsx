@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
 import Tooltip from '../../common/Tooltip';
 
@@ -16,7 +16,7 @@ const RibbonDropdown = ({
   const dropdownRef = useRef(null);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    const handleClickOutside = event => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false);
       }
@@ -28,7 +28,7 @@ const RibbonDropdown = ({
     };
   }, []);
 
-  const handleSelect = (option) => {
+  const handleSelect = option => {
     setSelectedOption(option);
     setIsOpen(false);
     if (onSelect) {
@@ -37,7 +37,7 @@ const RibbonDropdown = ({
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className='relative' ref={dropdownRef}>
       <Tooltip content={tooltip || label}>
         <button
           onClick={() => !disabled && setIsOpen(!isOpen)}
@@ -67,10 +67,10 @@ const RibbonDropdown = ({
       </Tooltip>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 min-w-[120px]">
+        <div className='absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 min-w-[120px]'>
           {options.map((option, index) => (
             <button
-              key={index}
+              key={`option-${option.value || option.label || index}`}
               onClick={() => handleSelect(option)}
               className={`
                 w-full px-3 py-2 text-left text-sm hover:bg-gray-100 transition-colors duration-150
@@ -88,4 +88,4 @@ const RibbonDropdown = ({
   );
 };
 
-export default RibbonDropdown; 
+export default RibbonDropdown;

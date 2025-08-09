@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 
 const Tooltip = ({ children, content, position = 'top', disabled = false }) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -19,14 +19,14 @@ const Tooltip = ({ children, content, position = 'top', disabled = false }) => {
   };
 
   const handleMouseEnter = () => {
-    timeoutRef.current = setTimeout(() => {
+    timeoutRef.current = window.setTimeout(() => {
       setIsVisible(true);
     }, 300);
   };
 
   const handleMouseLeave = () => {
     if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
+      window.clearTimeout(timeoutRef.current);
     }
     setIsVisible(false);
   };
@@ -45,7 +45,7 @@ const Tooltip = ({ children, content, position = 'top', disabled = false }) => {
               Unavailable
               <div
                 className={`absolute w-0 h-0 border-4 border-transparent ${arrowClasses[position]}`}
-              ></div>
+              />
             </div>
           </div>
         )}
@@ -66,7 +66,7 @@ const Tooltip = ({ children, content, position = 'top', disabled = false }) => {
             {content}
             <div
               className={`absolute w-0 h-0 border-4 border-transparent ${arrowClasses[position]}`}
-            ></div>
+            />
           </div>
         </div>
       )}
