@@ -502,6 +502,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Seamless integration with existing dependency management system
   - Auto-refresh of dependencies panel and Gantt arrow connectors
 
+## [2025-08-08] – Prompt 130
+
+### Added
+
+- **Delete Task with Optional Cascade Dependency Removal**
+  - Added comprehensive Delete Task functionality with cascade options
+  - Delete button available in TaskPropertiesPane, context menus, TaskGrid, and HomeTab ribbon
+  - Professional DeleteTaskModal with confirmation and impact analysis
+  - "Also delete dependent tasks?" checkbox for cascade deletion
+  - Recursive dependency detection and removal with visited tracking
+  - Automatic descendant task removal (child tasks)
+  - Impact analysis showing dependent and descendant task counts
+  - Total tasks to delete counter with dynamic button text
+  - Comprehensive cleanup of tasks, links, and selections
+  - Professional modal design with color-coded information sections
+  - Seamless integration with existing task management and undo systems
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
