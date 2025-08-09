@@ -130,6 +130,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Real-time visual feedback during resize operations with grid snapping
   - Integrated with existing task dragging and date management system
 
+## [2025-08-08] – Prompt 105
+
+### Added
+
+- **Enhanced Task Tooltip on Gantt Bar Hover**
+  - Gantt bars now show tooltip with task details on hover
+  - Tooltip displays task name, start date, end date, and duration in days
+  - Sophisticated dark theme styling with proper spacing and borders
+  - Tooltip positioned near mouse cursor for optimal user experience
+  - Special indicators for milestones and critical tasks
+  - Smooth transitions and animations for professional appearance
+  - High z-index ensures tooltip appears above all other elements
+  - Integrated with existing hover state management and task interactions
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
