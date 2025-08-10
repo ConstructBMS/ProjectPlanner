@@ -10,12 +10,18 @@ import {
   getLevelingStats,
 } from '../../utils/levelingEngine';
 import {
+  detectOverallocations,
+  calculateDailyAllocations,
+} from '../../utils/resourceLevelingUtils';
+import ResourceLevelingDialog from '../../modals/ResourceLevelingDialog';
+import {
   ChartBarIcon,
   ArrowPathIcon,
   EyeIcon,
   CheckIcon,
   XMarkIcon,
   ExclamationTriangleIcon,
+  CogIcon,
 } from '@heroicons/react/24/outline';
 
 const AllocationTab = () => {
@@ -30,6 +36,9 @@ const AllocationTab = () => {
     isApplying: false,
     result: null,
   });
+
+  // Resource leveling dialog state
+  const [showLevelingDialog, setShowLevelingDialog] = useState(false);
 
   // Mock resources for demonstration (in a real app, this would come from a resource context)
   const mockResources = [
@@ -52,8 +61,13 @@ const AllocationTab = () => {
     }));
 
     try {
-      const preview = generateLevelingPreview(tasks, taskLinks, mockResources, globalCalendar);
-      
+      const preview = generateLevelingPreview(
+        tasks,
+        taskLinks,
+        mockResources,
+        globalCalendar
+      );
+
       setLevelingState(prev => ({
         ...prev,
         isAnalyzing: false,
@@ -77,7 +91,10 @@ const AllocationTab = () => {
    * Apply resource leveling changes
    */
   const applyLeveling = useCallback(async () => {
-    if (!levelingState.preview || levelingState.preview.proposedShifts.length === 0) {
+    if (
+      !levelingState.preview ||
+      levelingState.preview.proposedShifts.length === 0
+    ) {
       return;
     }
 
@@ -138,7 +155,40 @@ const AllocationTab = () => {
     return getLevelingStats(tasks, mockResources, globalCalendar);
   }, [tasks, mockResources, globalCalendar]);
 
+  /**
+   * Get current resource conflicts using new leveling utilities
+   */
+  const getCurrentConflicts = useCallback(() => {
+    try {
+      const allocations = calculateDailyAllocations(tasks, mockResources);
+      return detectOverallocations(allocations, mockResources);
+    } catch (error) {
+      console.error('Error calculating conflicts:', error);
+      return [];
+    }
+  }, [tasks, mockResources]);
+
+  /**
+   * Handle tasks update from leveling dialog
+   */
+  const handleTasksUpdate = useCallback(async (updatedTasks) => {
+    try {
+      // Update each task
+      for (const task of updatedTasks) {
+        await updateTask(task.id, task);
+      }
+      
+      // Trigger auto-scheduling to recalculate dates and float
+      setTimeout(() => {
+        performAutoScheduling();
+      }, 100);
+    } catch (error) {
+      console.error('Failed to update tasks:', error);
+    }
+  }, [updateTask, performAutoScheduling]);
+
   const stats = getCurrentStats();
+  const currentConflicts = getCurrentConflicts();
 
   return (
     <div className='flex flex-nowrap gap-0 p-2 bg-white w-full min-w-0'>
@@ -165,25 +215,29 @@ const AllocationTab = () => {
         <RibbonButton
           icon={<ArrowPathIcon className='w-4 h-4 text-gray-700' />}
           label='Level Resources'
-          onClick={applyLeveling}
-          disabled={
-            !levelingState.preview ||
-            levelingState.preview.proposedShifts.length === 0 ||
-            levelingState.isApplying
-          }
+          onClick={() => setShowLevelingDialog(true)}
+          disabled={currentConflicts.length === 0}
           tooltip={
-            levelingState.preview?.proposedShifts.length > 0
-              ? `Apply ${levelingState.preview.proposedShifts.length} task shifts to resolve conflicts`
-              : 'No leveling actions available'
+            currentConflicts.length > 0
+              ? `Resolve ${currentConflicts.length} resource conflicts with automatic leveling`
+              : 'No resource conflicts detected'
           }
         />
-        {levelingState.preview?.hasConflicts && (
+        <RibbonButton
+          icon={<CogIcon className='w-4 h-4 text-gray-700' />}
+          label='Advanced Leveling'
+          onClick={() => setShowLevelingDialog(true)}
+          tooltip='Open advanced resource leveling dialog with configuration options'
+        />
+        {currentConflicts.length > 0 && (
           <RibbonButton
-            icon={<ExclamationTriangleIcon className='w-4 h-4 text-orange-600' />}
-            label={`${stats.totalConflicts} Conflicts`}
+            icon={
+              <ExclamationTriangleIcon className='w-4 h-4 text-orange-600' />
+            }
+            label={`${currentConflicts.length} Conflicts`}
             onClick={() => {}} // Read-only display
             disabled={true}
-            tooltip={`${stats.totalConflicts} resource conflicts detected`}
+            tooltip={`${currentConflicts.length} resource conflicts detected`}
           />
         )}
       </RibbonGroup>
@@ -223,7 +277,7 @@ const AllocationTab = () => {
         <div className='px-3 py-2 text-xs text-gray-600 space-y-1'>
           <div className='flex justify-between'>
             <span>Conflicts:</span>
-            <span className='font-medium'>{stats.totalConflicts}</span>
+            <span className='font-medium'>{currentConflicts.length}</span>
           </div>
           <div className='flex justify-between'>
             <span>Non-Critical:</span>
@@ -235,7 +289,9 @@ const AllocationTab = () => {
           </div>
           <div className='flex justify-between'>
             <span>Avg Float:</span>
-            <span className='font-medium'>{stats.averageFloat.toFixed(1)}d</span>
+            <span className='font-medium'>
+              {stats.averageFloat.toFixed(1)}d
+            </span>
           </div>
         </div>
       </RibbonGroup>
@@ -243,32 +299,56 @@ const AllocationTab = () => {
       {/* Preview Panel (if available) */}
       {levelingState.preview && (
         <div className='ml-4 p-3 bg-gray-50 rounded border border-gray-200 min-w-80'>
-          <h4 className='text-sm font-medium text-gray-900 mb-2'>Leveling Preview</h4>
-          <p className='text-xs text-gray-600 mb-3'>{levelingState.preview.message}</p>
-          
+          <h4 className='text-sm font-medium text-gray-900 mb-2'>
+            Leveling Preview
+          </h4>
+          <p className='text-xs text-gray-600 mb-3'>
+            {levelingState.preview.message}
+          </p>
+
           {levelingState.preview.proposedShifts.length > 0 && (
             <div className='space-y-2'>
-              <h5 className='text-xs font-medium text-gray-700'>Proposed Shifts:</h5>
-              {levelingState.preview.proposedShifts.slice(0, 3).map((shift, index) => (
-                <div key={index} className='text-xs bg-white p-2 rounded border'>
-                  <div className='font-medium text-gray-800'>{shift.taskName}</div>
-                  <div className='text-gray-600'>
-                    Shift: {shift.maxShift}d • Float: {shift.totalFloat}d
+              <h5 className='text-xs font-medium text-gray-700'>
+                Proposed Shifts:
+              </h5>
+              {levelingState.preview.proposedShifts
+                .slice(0, 3)
+                .map((shift, index) => (
+                  <div
+                    key={index}
+                    className='text-xs bg-white p-2 rounded border'
+                  >
+                    <div className='font-medium text-gray-800'>
+                      {shift.taskName}
+                    </div>
+                    <div className='text-gray-600'>
+                      Shift: {shift.maxShift}d • Float: {shift.totalFloat}d
+                    </div>
+                    <div className='text-gray-500'>
+                      {shift.conflictResource} conflict on{' '}
+                      {new Date(shift.conflictDate).toLocaleDateString()}
+                    </div>
                   </div>
-                  <div className='text-gray-500'>
-                    {shift.conflictResource} conflict on {new Date(shift.conflictDate).toLocaleDateString()}
-                  </div>
-                </div>
-              ))}
+                ))}
               {levelingState.preview.proposedShifts.length > 3 && (
                 <div className='text-xs text-gray-500'>
-                  +{levelingState.preview.proposedShifts.length - 3} more shifts...
+                  +{levelingState.preview.proposedShifts.length - 3} more
+                  shifts...
                 </div>
               )}
             </div>
           )}
         </div>
       )}
+
+      {/* Resource Leveling Dialog */}
+      <ResourceLevelingDialog
+        isOpen={showLevelingDialog}
+        onClose={() => setShowLevelingDialog(false)}
+        tasks={tasks}
+        resources={mockResources}
+        onTasksUpdate={handleTasksUpdate}
+      />
     </div>
   );
 };

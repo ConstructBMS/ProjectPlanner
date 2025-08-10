@@ -1082,6 +1082,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Professional file management interface with statistics and validation
   - Comprehensive attachments utilities for upload, storage, and preview handling
 
+## [2025-08-09] – Prompt 168
+
+### Added
+
+- **Automatic Resource Leveling**
+  - Comprehensive resource leveling utilities for detecting and resolving overallocations
+  - Advanced leveling algorithm with configurable strategies (forward, backward, balanced)
+  - Professional Resource Leveling Dialog with real-time conflict analysis
+  - Automatic detection of resource conflicts based on daily allocations and capacity limits
+  - Intelligent task prioritization based on critical path, float, duration, and progress
+  - Dependency and constraint-aware leveling that respects project relationships
+  - Undo functionality with step-by-step reversal of leveling changes
+  - Real-time progress tracking and conflict resolution statistics
+  - Configuration options for max iterations, shift days, thresholds, and strategies
+  - Integration with Allocation Tab providing "Level Resources" and "Advanced Leveling" buttons
+  - Comprehensive leveling reports with recommendations and performance metrics
+  - Professional UI with validation, warnings, and detailed results display
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
