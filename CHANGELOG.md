@@ -972,6 +972,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Integration with existing Gantt chart rendering system
   - Comprehensive bar style utilities for management and validation
 
+## [2025-08-09] – Prompt 160
+
+### Added
+
+- **Multi-Baseline Support**
+  - Baseline Manager dialog with comprehensive baseline management interface
+  - Multiple baseline storage with custom names and descriptions
+  - Active baseline selection for comparison mode
+  - Professional baseline comparison with detailed change tracking
+  - Performance metrics calculation (schedule, cost, scope, overall)
+  - Import/export functionality for baseline configurations
+  - Integration with existing Gantt chart baseline visualization
+  - Comprehensive baseline utilities for management and comparison
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
