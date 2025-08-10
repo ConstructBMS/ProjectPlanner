@@ -26,6 +26,9 @@ export const LayoutProvider = ({ children }) => {
       resource: 120,
       status: 100,
       progress: 80,
+      work: 80,
+      cost: 100,
+      units: 80,
     },
     paneSizes: {
       sidebar: 300,
@@ -40,6 +43,9 @@ export const LayoutProvider = ({ children }) => {
       'resource',
       'status',
       'progress',
+      'work',
+      'cost',
+      'units',
     ],
   });
 
@@ -175,6 +181,9 @@ export const LayoutProvider = ({ children }) => {
         resource: 120,
         status: 100,
         progress: 80,
+        work: 80,
+        cost: 100,
+        units: 80,
       },
       paneSizes: {
         sidebar: 300,
@@ -189,6 +198,9 @@ export const LayoutProvider = ({ children }) => {
         'resource',
         'status',
         'progress',
+        'work',
+        'cost',
+        'units',
       ],
     };
     setCurrentLayout(defaultLayout);
@@ -204,6 +216,9 @@ export const LayoutProvider = ({ children }) => {
       { key: 'resource', label: 'Resource', defaultWidth: 120 },
       { key: 'status', label: 'Status', defaultWidth: 100 },
       { key: 'progress', label: 'Progress', defaultWidth: 80 },
+      { key: 'work', label: 'Work (hrs)', defaultWidth: 80 },
+      { key: 'cost', label: 'Cost (£)', defaultWidth: 100 },
+      { key: 'units', label: 'Units (%)', defaultWidth: 80 },
       { key: 'priority', label: 'Priority', defaultWidth: 80 },
       { key: 'assignedTo', label: 'Assigned To', defaultWidth: 120 },
       { key: 'notes', label: 'Notes', defaultWidth: 150 },

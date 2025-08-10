@@ -648,6 +648,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Print window with proper styling and color preservation
   - Export progress indicators and error handling
 
+## [2025-08-09] – Prompt 139
+
+### Added
+
+- **Resource Data Columns in TaskGrid**
+  - Work column: displays total assigned hours with "h" suffix
+  - Cost column: shows calculated cost in £ with proper currency formatting
+  - Units column: displays average allocation percentage with "%" suffix
+  - Live calculation updates when resource assignments change
+  - Right-aligned formatting for numerical values
+  - Integration with existing column visibility and width management
+  - Support for sorting by resource columns
+  - Graceful handling of missing resource assignment data
+  - Professional formatting with decimal precision (1 decimal place)
+  - Currency formatting using locale-specific number formatting
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

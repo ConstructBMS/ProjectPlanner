@@ -45,19 +45,50 @@ const TaskGrid = React.memo(() => {
   const { isSelected, handleTaskClick, getSelectedCount } =
     useSelectionContext();
 
-  const { applyFilters } = useFilterContext();
+    const { applyFilters } = useFilterContext();
   
-  const { 
-    getColumnWidth, 
-    isColumnVisible, 
+  const {
+    getColumnWidth,
+    isColumnVisible,
     getAvailableColumns,
-    updateColumnWidth 
+    updateColumnWidth,
   } = useLayoutContext();
+
+  // Resource calculation functions
+  const calculateTaskWork = useCallback((task) => {
+    if (!task.resourceAssignments || !Array.isArray(task.resourceAssignments)) {
+      return 0;
+    }
+    return task.resourceAssignments.reduce((total, assignment) => {
+      return total + (assignment.work || 0);
+    }, 0);
+  }, []);
+
+  const calculateTaskCost = useCallback((task) => {
+    if (!task.resourceAssignments || !Array.isArray(task.resourceAssignments)) {
+      return 0;
+    }
+    return task.resourceAssignments.reduce((total, assignment) => {
+      const work = assignment.work || 0;
+      const rate = assignment.rate || 0;
+      return total + (work * rate);
+    }, 0);
+  }, []);
+
+  const calculateTaskUnits = useCallback((task) => {
+    if (!task.resourceAssignments || !Array.isArray(task.resourceAssignments) || task.resourceAssignments.length === 0) {
+      return 0;
+    }
+    const totalAllocation = task.resourceAssignments.reduce((total, assignment) => {
+      return total + (assignment.allocation || 0);
+    }, 0);
+    return totalAllocation / task.resourceAssignments.length;
+  }, []);
 
   // Render column content based on column type
   const renderColumnContent = (columnKey, task, isEditing, editingField) => {
     const isEditingThisField = isEditing && editingField.field === columnKey;
-    
+
     switch (columnKey) {
       case 'taskName':
         return isEditingThisField ? (
@@ -80,7 +111,7 @@ const TaskGrid = React.memo(() => {
             {task.name}
           </div>
         );
-      
+
       case 'startDate':
         return isEditingThisField ? (
           <input
@@ -102,7 +133,7 @@ const TaskGrid = React.memo(() => {
             {new Date(task.startDate).toLocaleDateString()}
           </div>
         );
-      
+
       case 'endDate':
         return isEditingThisField ? (
           <input
@@ -124,21 +155,21 @@ const TaskGrid = React.memo(() => {
             {new Date(task.endDate).toLocaleDateString()}
           </div>
         );
-      
+
       case 'duration':
         return (
           <div className='text-center'>
             {calculateWorkingDays(task.startDate, task.endDate)}d
           </div>
         );
-      
+
       case 'resource':
         return (
           <div className='truncate'>
             {task.resource || task.assignedTo || '-'}
           </div>
         );
-      
+
       case 'status':
         return (
           <span
@@ -155,7 +186,7 @@ const TaskGrid = React.memo(() => {
             {task.status || 'Not Started'}
           </span>
         );
-      
+
       case 'progress':
         return (
           <div className='flex items-center gap-1'>
@@ -170,28 +201,37 @@ const TaskGrid = React.memo(() => {
             </span>
           </div>
         );
-      
+
+      case 'work':
+        return (
+          <div className='text-right'>
+            {calculateTaskWork(task).toFixed(1)}h
+          </div>
+        );
+
+      case 'cost':
+        return (
+          <div className='text-right'>
+            £{calculateTaskCost(task).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
+        );
+
+      case 'units':
+        return (
+          <div className='text-right'>
+            {calculateTaskUnits(task).toFixed(1)}%
+          </div>
+        );
+
       case 'priority':
-        return (
-          <div className='text-center'>
-            {task.priority || '-'}
-          </div>
-        );
-      
+        return <div className='text-center'>{task.priority || '-'}</div>;
+
       case 'assignedTo':
-        return (
-          <div className='truncate'>
-            {task.assignedTo || '-'}
-          </div>
-        );
-      
+        return <div className='truncate'>{task.assignedTo || '-'}</div>;
+
       case 'notes':
-        return (
-          <div className='truncate'>
-            {task.notes || '-'}
-          </div>
-        );
-      
+        return <div className='truncate'>{task.notes || '-'}</div>;
+
       default:
         return <div className='truncate'>{task[columnKey] || '-'}</div>;
     }
@@ -461,7 +501,7 @@ const TaskGrid = React.memo(() => {
           {/* Dynamic Columns */}
           {getAvailableColumns().map(column => {
             if (!isColumnVisible(column.key)) return null;
-            
+
             return (
               <div
                 key={column.key}
