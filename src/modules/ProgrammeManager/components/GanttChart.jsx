@@ -51,7 +51,13 @@ const GanttChart = () => {
 
   const { viewState, updateViewState } = useViewContext();
   const { getCalendarForTask } = useCalendarContext();
-  const { isSelected, handleTaskClick } = useSelectionContext();
+  const { 
+    isSelected, 
+    handleTaskClick, 
+    clearSelection, 
+    addToSelection, 
+    selectAll 
+  } = useSelectionContext();
   const { applyFilters } = useFilterContext();
 
   const taskRefs = useRef({});
@@ -104,6 +110,15 @@ const GanttChart = () => {
     originalStartDate: null,
     originalEndDate: null,
     lastDayOffset: 0,
+  });
+
+  // Marquee selection state
+  const [marquee, setMarquee] = useState({
+    isActive: false,
+    startX: 0,
+    startY: 0,
+    currentX: 0,
+    currentY: 0,
   });
 
   const allTasks = getVisibleTasks(viewState.taskFilter);
@@ -1251,6 +1266,97 @@ const GanttChart = () => {
     setScrollLeft(e.target.scrollLeft);
   };
 
+  // Marquee selection handlers
+  const handleMarqueeStart = (e) => {
+    // Only start marquee if clicking on empty space (not on a task)
+    if (e.target === timelineContainerRef.current || e.target.closest('.task-row') === null) {
+      const rect = timelineContainerRef.current.getBoundingClientRect();
+      const startX = e.clientX - rect.left;
+      const startY = e.clientY - rect.top;
+
+      setMarquee({
+        isActive: true,
+        startX,
+        startY,
+        currentX: startX,
+        currentY: startY,
+      });
+
+      // Clear selection if not holding Shift/Ctrl
+      if (!e.shiftKey && !e.ctrlKey && !e.metaKey) {
+        clearSelection();
+      }
+    }
+  };
+
+  const handleMarqueeMove = (e) => {
+    if (marquee.isActive) {
+      const rect = timelineContainerRef.current.getBoundingClientRect();
+      const currentX = e.clientX - rect.left;
+      const currentY = e.clientY - rect.top;
+
+      setMarquee(prev => ({
+        ...prev,
+        currentX,
+        currentY,
+      }));
+    }
+  };
+
+  const handleMarqueeEnd = (e) => {
+    if (marquee.isActive) {
+      const rect = timelineContainerRef.current.getBoundingClientRect();
+      const endX = e.clientX - rect.left;
+      const endY = e.clientY - rect.top;
+
+      // Calculate marquee bounds
+      const left = Math.min(marquee.startX, endX);
+      const top = Math.min(marquee.startY, endY);
+      const width = Math.abs(endX - marquee.startX);
+      const height = Math.abs(endY - marquee.startY);
+
+      // Find tasks that intersect with the marquee
+      const intersectingTasks = tasks.filter(task => {
+        const taskElement = taskRefs.current[task.id];
+        if (!taskElement) return false;
+
+        const taskRect = taskElement.getBoundingClientRect();
+        const taskLeft = taskRect.left - rect.left;
+        const taskTop = taskRect.top - rect.top;
+        const taskRight = taskLeft + taskRect.width;
+        const taskBottom = taskTop + taskRect.height;
+
+        // Check if task intersects with marquee
+        return !(taskLeft > left + width || 
+                taskRight < left || 
+                taskTop > top + height || 
+                taskBottom < top);
+      });
+
+      // Update selection based on modifier keys
+      if (e.shiftKey || e.ctrlKey || e.metaKey) {
+        // Add to existing selection
+        intersectingTasks.forEach(task => {
+          addToSelection(task.id);
+        });
+      } else {
+        // Replace selection
+        if (intersectingTasks.length > 0) {
+          selectAll(intersectingTasks.map(task => task.id));
+        }
+      }
+
+      // Clear marquee
+      setMarquee({
+        isActive: false,
+        startX: 0,
+        startY: 0,
+        currentX: 0,
+        currentY: 0,
+      });
+    }
+  };
+
   const formatDate = dateString => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -1551,6 +1657,9 @@ const GanttChart = () => {
         }`}
         onClick={handleChartClick}
         onScroll={handleTimelineScroll}
+        onMouseDown={handleMarqueeStart}
+        onMouseMove={handleMarqueeMove}
+        onMouseUp={handleMarqueeEnd}
       >
         {/* Background Grid */}
         <div className='absolute inset-0 pointer-events-none'>
@@ -1612,6 +1721,19 @@ const GanttChart = () => {
               );
             })()}
           </svg>
+        )}
+
+        {/* Marquee Selection Box */}
+        {marquee.isActive && (
+          <div
+            className='absolute border-2 border-blue-500 bg-blue-100 bg-opacity-30 pointer-events-none z-40'
+            style={{
+              left: Math.min(marquee.startX, marquee.currentX),
+              top: Math.min(marquee.startY, marquee.currentY),
+              width: Math.abs(marquee.currentX - marquee.startX),
+              height: Math.abs(marquee.currentY - marquee.startY),
+            }}
+          />
         )}
 
         {/* Dependency Arrows */}
@@ -1696,7 +1818,7 @@ const GanttChart = () => {
                   <div
                     key={task.id}
                     ref={taskRefs.current[task.id]}
-                    className={`flex items-center h-8 hover:bg-gray-50 ${
+                    className={`task-row flex items-center h-8 hover:bg-gray-50 ${
                       viewState.showGridlines
                         ? 'border-b border-gray-300'
                         : 'border-b border-gray-100'

@@ -664,6 +664,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Professional formatting with decimal precision (1 decimal place)
   - Currency formatting using locale-specific number formatting
 
+## [2025-08-09] – Prompt 140
+
+### Added
+
+- **Marquee Selection in Gantt Chart**
+  - Click-drag selection box (marquee) for multi-select tasks visually
+  - Semi-transparent blue selection rectangle during drag operation
+  - Collision detection: selects all task bars intersecting with marquee bounds
+  - Modifier key support: Shift/Ctrl/Cmd for additive selection
+  - Automatic selection clearing when not using modifier keys
+  - Real-time visual feedback during drag operation
+  - Integration with existing multi-selection system
+  - Proper event handling to prevent conflicts with task dragging
+  - High z-index overlay to ensure visibility above other elements
+  - Responsive selection box that adapts to drag direction
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
