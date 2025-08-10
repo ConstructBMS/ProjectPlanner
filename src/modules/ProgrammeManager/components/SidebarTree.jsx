@@ -29,17 +29,12 @@ import {
   DocumentIcon,
 } from '@heroicons/react/24/outline';
 
-// Diamond icon component for milestones
-const DiamondIcon = ({ className = 'w-4 h-4', color = 'text-purple-600' }) => (
-  <svg
-    className={`${className} ${color}`}
-    viewBox='0 0 24 24'
-    fill='currentColor'
-    xmlns='http://www.w3.org/2000/svg'
-  >
-    <path d='M12 2L2 12L12 22L22 12L12 2Z' />
-  </svg>
-);
+// Import milestone shape utilities
+import {
+  getTaskMilestoneShape,
+  getMilestoneColor,
+  createMilestoneShapeComponent,
+} from '../utils/milestoneShapeUtils';
 
 // Mock tree data for programme structure
 // const treeData = [
@@ -90,6 +85,7 @@ const TreeNode = React.memo(
     onContextMenu,
     onMultiSelect,
   }) => {
+    const { viewState } = useViewContext();
     const {
       attributes,
       listeners,
@@ -184,7 +180,18 @@ const TreeNode = React.memo(
           {/* Icon */}
           <div className='flex-shrink-0'>
             {task.type === 'milestone' || task.isMilestone ? (
-              <DiamondIcon className='w-4 h-4' color='text-purple-500' />
+              createMilestoneShapeComponent(
+                getTaskMilestoneShape(task, viewState.globalMilestoneShape),
+                'w-4 h-4',
+                getMilestoneColor(
+                  {
+                    ...task,
+                    selected: isSelected,
+                    hovered: isHovered,
+                  },
+                  getTaskMilestoneShape(task, viewState.globalMilestoneShape)
+                )
+              )
             ) : task.isGroup ? (
               <FolderIcon className='w-4 h-4 text-blue-600' />
             ) : (
@@ -402,7 +409,7 @@ const SidebarTree = forwardRef((props, ref) => {
   useImperativeHandle(ref, () => ({
     expandAll: () => {
       // Collect all node IDs that have children
-      const collectAllIds = (nodes) => {
+      const collectAllIds = nodes => {
         const ids = new Set();
         nodes.forEach(node => {
           if (node.children && node.children.length > 0) {
@@ -412,7 +419,7 @@ const SidebarTree = forwardRef((props, ref) => {
         });
         return ids;
       };
-      
+
       const allIds = collectAllIds(treeData);
       setExpandedIds(allIds);
     },

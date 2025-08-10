@@ -1157,6 +1157,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Improved tooltips showing baseline name, dates, and variance information
   - Seamless integration with existing baseline toggle functionality
 
+## [2025-08-09] – Prompt 172
+
+### Added
+
+- **Custom Milestone Shapes**
+  - Multiple milestone shape options: Diamond, Triangle, Circle, and Star
+  - Professional milestone shape dropdown in FormatTab with visual previews
+  - Global milestone shape setting that applies to all milestones in the project
+  - Per-task milestone shape overrides for individual customization
+  - Dynamic milestone rendering across Gantt chart, task grid, and sidebar tree
+  - Color-coded milestone shapes with automatic state-based coloring (critical, selected, hovered)
+  - Comprehensive milestone shape utilities for validation, statistics, and configuration
+  - Milestone shape statistics showing distribution across the project
+  - Enhanced milestone shape previews with descriptions and default colors
+  - Seamless integration with existing milestone functionality
+  - Automatic saving and loading of global milestone shape preference
+  - Professional SVG-based milestone shapes with consistent styling
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

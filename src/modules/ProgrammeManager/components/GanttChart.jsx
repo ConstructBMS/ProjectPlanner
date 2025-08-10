@@ -5,18 +5,12 @@ import {
   FolderIcon,
 } from '@heroicons/react/24/outline';
 
-// Diamond icon component for milestones
-const DiamondIcon = ({ className = 'w-4 h-4', color = 'text-purple-600' }) => (
-  <svg
-    className={`${className} ${color}`}
-    viewBox='0 0 24 24'
-    fill='currentColor'
-    xmlns='http://www.w3.org/2000/svg'
-  >
-    {/* Diamond shape - rotated square */}
-    <path d='M12 2L22 12L12 22L2 12L12 2Z' />
-  </svg>
-);
+// Import milestone shape utilities
+import {
+  getTaskMilestoneShape,
+  getMilestoneColor,
+  createMilestoneShapeComponent,
+} from '../utils/milestoneShapeUtils';
 import { useTaskContext } from '../context/TaskContext';
 import { useViewContext } from '../context/ViewContext';
 import DateMarkersOverlay from './DateMarkersOverlay';
@@ -2165,18 +2159,18 @@ const GanttChart = () => {
                             });
                           }}
                         >
-                          <DiamondIcon
-                            className='w-4 h-4'
-                            color={
-                              task.isCritical
-                                ? 'text-red-600'
-                                : selectedTaskId === task.id
-                                  ? 'text-blue-600'
-                                  : hoveredTaskId === task.id
-                                    ? 'text-blue-500'
-                                    : 'text-purple-600'
-                            }
-                          />
+                          {createMilestoneShapeComponent(
+                            getTaskMilestoneShape(task, viewState.globalMilestoneShape),
+                            'w-4 h-4',
+                            getMilestoneColor(
+                              {
+                                ...task,
+                                selected: selectedTaskId === task.id,
+                                hovered: hoveredTaskId === task.id,
+                              },
+                              getTaskMilestoneShape(task, viewState.globalMilestoneShape)
+                            )
+                          )}
                         </div>
                       ) : isTaskSplit(task) ? (
                         // Render split task segments

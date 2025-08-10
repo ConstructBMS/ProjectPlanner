@@ -53,17 +53,12 @@ import {
   getCostVariance,
 } from '../utils/costUtils';
 
-// Diamond icon component for milestones
-const DiamondIcon = ({ className = 'w-4 h-4', color = 'text-purple-600' }) => (
-  <svg
-    className={`${className} ${color}`}
-    viewBox='0 0 24 24'
-    fill='currentColor'
-    xmlns='http://www.w3.org/2000/svg'
-  >
-    <path d='M12 2L2 12L12 22L22 12L12 2Z' />
-  </svg>
-);
+// Import milestone shape utilities
+import {
+  getTaskMilestoneShape,
+  getMilestoneColor,
+  createMilestoneShapeComponent,
+} from '../utils/milestoneShapeUtils';
 import {
   ChevronRightIcon,
   ChevronDownIcon,
@@ -779,7 +774,17 @@ const TaskGrid = React.memo(() => {
           {/* Task Icon */}
           <div className='w-8 h-8 flex items-center justify-center'>
             {task.type === 'milestone' || task.isMilestone ? (
-              <DiamondIcon className='w-4 h-4' color='text-purple-500' />
+              createMilestoneShapeComponent(
+                getTaskMilestoneShape(task, viewState.globalMilestoneShape),
+                'w-4 h-4',
+                getMilestoneColor(
+                  {
+                    ...task,
+                    selected: selectedTaskId === task.id,
+                  },
+                  getTaskMilestoneShape(task, viewState.globalMilestoneShape)
+                )
+              )
             ) : task.isGroup ? (
               <FolderIcon className='w-4 h-4 text-blue-600' />
             ) : (
@@ -854,7 +859,9 @@ const TaskGrid = React.memo(() => {
                 className='px-2 py-2 font-semibold text-center'
                 style={{ width: column.width }}
               >
-                {column.label || getAvailableColumns().find(col => col.key === column.key)?.label}
+                {column.label ||
+                  getAvailableColumns().find(col => col.key === column.key)
+                    ?.label}
               </div>
             ))}
           <div className='w-16 px-2 py-2 font-semibold text-center'>

@@ -44,6 +44,9 @@ export const ViewProvider = ({ children }) => {
     activeBaselineId: null, // ID of the currently selected baseline for overlay
     baselines: [], // Array of available baselines
 
+    // Milestone shapes
+    globalMilestoneShape: 'diamond', // Default milestone shape for all milestones
+
     // Progress line
     statusDate: null, // Status date for progress line (defaults to today)
 
@@ -145,7 +148,26 @@ export const ViewProvider = ({ children }) => {
         const activeBaselineId = JSON.parse(savedActiveBaselineId);
         setViewState(prev => ({ ...prev, activeBaselineId }));
       } catch (error) {
-        console.error('Error loading saved activeBaselineId preference:', error);
+        console.error(
+          'Error loading saved activeBaselineId preference:',
+          error
+        );
+      }
+    }
+
+    // Load saved globalMilestoneShape preference
+    const savedGlobalMilestoneShape = window.localStorage.getItem(
+      'gantt.globalMilestoneShape'
+    );
+    if (savedGlobalMilestoneShape !== null) {
+      try {
+        const globalMilestoneShape = JSON.parse(savedGlobalMilestoneShape);
+        setViewState(prev => ({ ...prev, globalMilestoneShape }));
+      } catch (error) {
+        console.error(
+          'Error loading saved globalMilestoneShape preference:',
+          error
+        );
       }
     }
   }, []);
@@ -228,25 +250,40 @@ export const ViewProvider = ({ children }) => {
     console.log('Show Baseline toggled');
   };
 
-  const setActiveBaseline = (baselineId) => {
+  const setActiveBaseline = baselineId => {
     setViewState(prev => {
       const next = {
         ...prev,
         activeBaselineId: baselineId,
         showBaseline: baselineId !== null, // Auto-show baseline when one is selected
       };
-      window.localStorage.setItem('gantt.activeBaselineId', JSON.stringify(baselineId));
+      window.localStorage.setItem(
+        'gantt.activeBaselineId',
+        JSON.stringify(baselineId)
+      );
       return next;
     });
     console.log('Active baseline set to:', baselineId);
   };
 
-  const updateBaselines = (baselines) => {
+  const updateBaselines = baselines => {
     setViewState(prev => ({
       ...prev,
       baselines,
     }));
     console.log('Baselines updated:', baselines.length);
+  };
+
+  const setGlobalMilestoneShape = (shapeKey) => {
+    setViewState(prev => {
+      const next = {
+        ...prev,
+        globalMilestoneShape: shapeKey,
+      };
+      window.localStorage.setItem('gantt.globalMilestoneShape', JSON.stringify(shapeKey));
+      return next;
+    });
+    console.log('Global milestone shape set to:', shapeKey);
   };
 
   const zoomToFit = () => {
@@ -307,6 +344,7 @@ export const ViewProvider = ({ children }) => {
     toggleBaseline,
     setActiveBaseline,
     updateBaselines,
+    setGlobalMilestoneShape,
     zoomToFit,
     zoomIn,
     zoomOut,
