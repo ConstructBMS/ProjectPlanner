@@ -958,6 +958,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Integration with existing task management and resource allocation systems
   - Comprehensive cost utilities for calculations, formatting, and analysis
 
+## [2025-08-09] – Prompt 159
+
+### Added
+
+- **Custom Gantt Bar Styling**
+  - Format Tab with comprehensive bar style configuration interface
+  - Style customization by task type, status, priority, and resource assignment
+  - Professional color picker integration with real-time preview
+  - Style validation with error handling and warnings
+  - Import/export functionality for style configurations
+  - Auto-generation of resource color palettes
+  - Integration with existing Gantt chart rendering system
+  - Comprehensive bar style utilities for management and validation
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

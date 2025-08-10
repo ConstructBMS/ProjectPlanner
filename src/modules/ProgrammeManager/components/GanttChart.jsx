@@ -74,6 +74,10 @@ import {
   getSegmentTooltip,
   calculateSegmentGaps,
 } from '../utils/taskSegmentUtils';
+import {
+  getTaskBarStyle,
+  createBarStyleObject,
+} from '../utils/barStyleUtils';
 import TaskSplitModal from './modals/TaskSplitModal';
 import '../styles/gantt.css';
 
@@ -1651,6 +1655,10 @@ const GanttChart = () => {
       task.constraints.type &&
       task.constraints.type !== 'ASAP';
 
+    // Get custom bar style from user settings
+    const customBarStyle = getTaskBarStyle(task, viewState.userSettings);
+    const customStyleObject = createBarStyleObject(customBarStyle);
+
     // Get default color based on task type
     const getDefaultColor = task => {
       if (task.type === 'milestone' || task.isMilestone) {
@@ -1706,17 +1714,24 @@ const GanttChart = () => {
       baseClasses += ` border-2 ${constraintStyling.borderColor}`;
     }
 
+    // Merge custom styles with default styles
+    const mergedStyle = {
+      backgroundColor: isCritical
+        ? criticalPathStyling.backgroundColor
+        : customStyleObject.backgroundColor || `${taskColor}20`,
+      borderColor: isCritical
+        ? criticalPathStyling.borderColor
+        : customStyleObject.borderColor || `${taskColor}60`,
+      color: isCritical ? criticalPathStyling.color : customStyleObject.color,
+      opacity: customStyleObject.opacity,
+      borderRadius: customStyleObject.borderRadius,
+      border: customStyleObject.border,
+      transition: customStyleObject.transition,
+    };
+
     return {
       className: baseClasses,
-      style: {
-        backgroundColor: isCritical
-          ? criticalPathStyling.backgroundColor
-          : `${taskColor}20`, // 20% opacity
-        borderColor: isCritical
-          ? criticalPathStyling.borderColor
-          : `${taskColor}60`, // 60% opacity
-        color: isCritical ? criticalPathStyling.color : undefined,
-      },
+      style: mergedStyle,
     };
   };
 
@@ -2108,15 +2123,19 @@ const GanttChart = () => {
                         getTaskSegments(task).map((segment, segmentIndex) => {
                           const segmentStartDate = new Date(segment.startDate);
                           const segmentDaysFromStart = Math.ceil(
-                            (segmentStartDate.getTime() - new Date('2024-01-01').getTime()) / (1000 * 60 * 60 * 24)
+                            (segmentStartDate.getTime() -
+                              new Date('2024-01-01').getTime()) /
+                              (1000 * 60 * 60 * 24)
                           );
                           const segmentWidth = `${Math.max(segment.duration * scaledDayWidth, 40)}px`;
                           const segmentLeft = `${Math.max(segmentDaysFromStart * scaledDayWidth, 0)}px`;
-                          
+
                           return (
                             <div
                               key={segment.id}
-                              className={getSegmentStyling(segment, task).className}
+                              className={
+                                getSegmentStyling(segment, task).className
+                              }
                               style={{
                                 left: segmentLeft,
                                 width: segmentWidth,
@@ -2157,7 +2176,9 @@ const GanttChart = () => {
                               {segment.progress > 0 && (
                                 <div
                                   className={`h-full rounded-l transition-all duration-300 ${
-                                    task.isCritical ? 'bg-red-400' : 'bg-green-400'
+                                    task.isCritical
+                                      ? 'bg-red-400'
+                                      : 'bg-green-400'
                                   }`}
                                   style={{ width: `${segment.progress}%` }}
                                 />
@@ -2600,7 +2621,7 @@ const GanttChart = () => {
         isOpen={taskSplitModal.isOpen}
         task={taskSplitModal.task}
         onClose={() => setTaskSplitModal({ isOpen: false, task: null })}
-        onSplitTask={(updatedTask) => {
+        onSplitTask={updatedTask => {
           updateTask(updatedTask.id, updatedTask);
           setTaskSplitModal({ isOpen: false, task: null });
         }}
