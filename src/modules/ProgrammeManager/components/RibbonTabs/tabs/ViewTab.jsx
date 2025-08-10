@@ -1155,6 +1155,34 @@ const ViewTab = ({ contentRef }) => {
         <TodayButton />
       </RibbonGroup>
 
+      {/* Histogram Zoom Group */}
+      <RibbonGroup title='Histogram Zoom'>
+        <RibbonButton
+          icon={<MagnifyingGlassPlusIcon className='w-4 h-4' />}
+          label='Zoom In'
+          onClick={() => console.log('Histogram Zoom In')}
+          tooltip='Zoom into the resource histogram'
+        />
+        <RibbonButton
+          icon={<MagnifyingGlassMinusIcon className='w-4 h-4' />}
+          label='Zoom Out'
+          onClick={() => console.log('Histogram Zoom Out')}
+          tooltip='Zoom out of the resource histogram'
+        />
+        <RibbonButton
+          icon={<ArrowsPointingOutIcon className='w-4 h-4' />}
+          label='Fit to Data'
+          onClick={() => console.log('Histogram Fit to Data')}
+          tooltip='Fit histogram to show all data'
+        />
+        <RibbonButton
+          icon={<ArrowPathIcon className='w-4 h-4' />}
+          label='Reset Zoom'
+          onClick={() => console.log('Histogram Reset Zoom')}
+          tooltip='Reset histogram zoom to default'
+        />
+      </RibbonGroup>
+
       {/* Calendar View Group */}
       <RibbonGroup title='Calendar View'>
         <CalendarViewGroup />
