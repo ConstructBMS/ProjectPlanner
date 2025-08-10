@@ -1,9 +1,14 @@
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useState } from 'react';
 import ErrorBoundary from './components/ErrorBoundary';
+import { ProjectsProvider } from './modules/ProgrammeManager/context/ProjectsContext';
 
-// Lazy load the main application component
+// Lazy load the main application components
 const ProgrammeManager = lazy(
   () => import('./modules/ProgrammeManager/AppShell')
+);
+
+const PortfolioDashboard = lazy(
+  () => import('./pages/PortfolioDashboard')
 );
 
 // Loading component
@@ -17,11 +22,33 @@ const LoadingSpinner = () => (
 );
 
 function App() {
+  const [currentView, setCurrentView] = useState('portfolio'); // 'portfolio' or 'project'
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
+
+  const handleProjectSelect = (projectId) => {
+    setSelectedProjectId(projectId);
+    setCurrentView('project');
+  };
+
+  const handleBackToPortfolio = () => {
+    setCurrentView('portfolio');
+    setSelectedProjectId(null);
+  };
+
   return (
     <ErrorBoundary>
-      <Suspense fallback={<LoadingSpinner />}>
-        <ProgrammeManager />
-      </Suspense>
+      <ProjectsProvider>
+        <Suspense fallback={<LoadingSpinner />}>
+          {currentView === 'portfolio' ? (
+            <PortfolioDashboard onProjectSelect={handleProjectSelect} />
+          ) : (
+            <ProgrammeManager 
+              projectId={selectedProjectId}
+              onBackToPortfolio={handleBackToPortfolio}
+            />
+          )}
+        </Suspense>
+      </ProjectsProvider>
     </ErrorBoundary>
   );
 }

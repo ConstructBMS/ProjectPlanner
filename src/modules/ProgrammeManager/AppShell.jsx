@@ -13,7 +13,7 @@ import TaskGrid from './components/TaskGrid';
 import GanttChart from './components/GanttChart';
 import TaskPropertiesPane from './components/TaskPropertiesPane';
 
-function AppShellContent() {
+function AppShellContent({ projectId, onBackToPortfolio }) {
   const sidebarRef = useRef();
   const contentRef = useRef();
   const { getPaneSize } = useLayoutContext();
@@ -31,8 +31,19 @@ function AppShellContent() {
         ref={contentRef}
         className='h-screen w-screen flex flex-col overflow-hidden bg-gray-100'
       >
-        {/* RibbonTabs - Fixed at top, full width */}
-        <div className='z-10'>
+        {/* Header with Back to Portfolio Button */}
+        <div className='z-10 bg-white border-b border-gray-200'>
+          <div className='flex items-center justify-between px-4 py-2'>
+            <button
+              onClick={onBackToPortfolio}
+              className='inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+            >
+              ← Back to Portfolio
+            </button>
+            <div className='text-sm text-gray-500'>
+              {projectId ? `Project ID: ${projectId}` : 'Current Project'}
+            </div>
+          </div>
           <RibbonTabs
             onExpandAll={handleExpandAll}
             onCollapseAll={handleCollapseAll}
@@ -87,7 +98,7 @@ function AppShellContent() {
   );
 }
 
-export default function AppShell() {
+export default function AppShell({ projectId, onBackToPortfolio }) {
   return (
     <UndoRedoProvider>
       <LayoutProvider>
@@ -96,7 +107,7 @@ export default function AppShell() {
             <CalendarProvider>
               <ViewProvider>
                 <GanttProvider>
-                  <AppShellContent />
+                  <AppShellContent projectId={projectId} onBackToPortfolio={onBackToPortfolio} />
                 </GanttProvider>
               </ViewProvider>
             </CalendarProvider>

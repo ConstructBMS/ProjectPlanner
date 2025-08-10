@@ -1175,6 +1175,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Automatic saving and loading of global milestone shape preference
   - Professional SVG-based milestone shapes with consistent styling
 
+## [2025-08-09] – Prompt 173
+
+### Added
+
+- **Project Portfolio Dashboard**
+  - Comprehensive portfolio dashboard with high-level KPIs for all active projects
+  - Key metrics display: total projects, active projects, total budget, overdue projects
+  - Visual charts showing project status distribution and progress distribution
+  - Interactive project table with search, filtering, and sorting capabilities
+  - Professional project cards with progress bars, status badges, and timeline information
+  - Navigation system between portfolio view and individual project views
+  - Supabase integration for project data storage and retrieval
+  - Mock project data for demonstration with realistic construction projects
+  - Advanced filtering by project status, manager, and location
+  - Sortable project list by name, progress, budget, dates, and manager
+  - Responsive design with mobile-friendly layout
+  - Real-time metrics calculation and caching for performance
+  - Project selection and navigation to detailed project views
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
