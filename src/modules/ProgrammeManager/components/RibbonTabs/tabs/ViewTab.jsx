@@ -3,6 +3,7 @@ import { useViewContext } from '../../../context/ViewContext';
 import { useTaskContext } from '../../../context/TaskContext';
 import { useFilterContext } from '../../../context/FilterContext';
 import { useLayoutContext } from '../../../context/LayoutContext';
+import PrintExportDialog from '../../PrintExportDialog';
 import RibbonButton from '../shared/RibbonButton';
 import RibbonGroup from '../shared/RibbonGroup';
 import {
@@ -570,7 +571,7 @@ const SaveLayoutPresetButton = () => {
   const [presetName, setPresetName] = useState('');
   const [showNameInput, setShowNameInput] = useState(false);
   const dropdownRef = useRef();
-  
+
   const { savePreset, savedPresets } = useLayoutContext();
 
   useEffect(() => {
@@ -594,7 +595,7 @@ const SaveLayoutPresetButton = () => {
     }
   };
 
-  const handleKeyPress = (e) => {
+  const handleKeyPress = e => {
     if (e.key === 'Enter') {
       handleSavePreset();
     } else if (e.key === 'Escape') {
@@ -616,16 +617,18 @@ const SaveLayoutPresetButton = () => {
       {isOpen && (
         <div className='absolute top-full left-0 mt-1 z-10 w-[240px] bg-white shadow-lg rounded-lg border border-gray-200'>
           <div className='px-4 py-3 border-b border-gray-200 bg-gray-50'>
-            <h3 className='text-sm font-semibold text-gray-700'>Save Layout Preset</h3>
+            <h3 className='text-sm font-semibold text-gray-700'>
+              Save Layout Preset
+            </h3>
           </div>
-          
+
           <div className='p-4 space-y-3'>
             {showNameInput ? (
               <div className='space-y-2'>
                 <input
                   type='text'
                   value={presetName}
-                  onChange={(e) => setPresetName(e.target.value)}
+                  onChange={e => setPresetName(e.target.value)}
                   onKeyDown={handleKeyPress}
                   placeholder='Enter preset name...'
                   className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500'
@@ -658,13 +661,18 @@ const SaveLayoutPresetButton = () => {
                 Save Current Layout
               </button>
             )}
-            
+
             {savedPresets.length > 0 && (
               <div className='pt-2 border-t border-gray-200'>
-                <p className='text-xs text-gray-500 mb-2'>Saved Presets ({savedPresets.length})</p>
+                <p className='text-xs text-gray-500 mb-2'>
+                  Saved Presets ({savedPresets.length})
+                </p>
                 <div className='space-y-1 max-h-32 overflow-y-auto'>
                   {savedPresets.map(preset => (
-                    <div key={preset.id} className='text-xs text-gray-600 px-2 py-1 bg-gray-50 rounded'>
+                    <div
+                      key={preset.id}
+                      className='text-xs text-gray-600 px-2 py-1 bg-gray-50 rounded'
+                    >
                       {preset.name}
                     </div>
                   ))}
@@ -678,11 +686,40 @@ const SaveLayoutPresetButton = () => {
   );
 };
 
+const PrintExportButton = ({ contentRef }) => {
+  const [showDialog, setShowDialog] = useState(false);
+
+  const handlePrintExport = () => {
+    setShowDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setShowDialog(false);
+  };
+
+  return (
+    <>
+      <RibbonButton
+        icon={<DocumentArrowDownIcon className='w-4 h-4' />}
+        label='Print/Export'
+        onClick={handlePrintExport}
+        tooltip='Print or export as PDF with scaling and date range options'
+      />
+      <PrintExportDialog
+        isOpen={showDialog}
+        onClose={handleCloseDialog}
+        contentRef={contentRef}
+      />
+    </>
+  );
+};
+
 const LoadLayoutPresetDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef();
-  
-  const { savedPresets, loadPreset, deletePreset, resetToDefault } = useLayoutContext();
+
+  const { savedPresets, loadPreset, deletePreset, resetToDefault } =
+    useLayoutContext();
 
   useEffect(() => {
     const handleClickOutside = event => {
@@ -694,7 +731,7 @@ const LoadLayoutPresetDropdown = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleLoadPreset = (presetId) => {
+  const handleLoadPreset = presetId => {
     loadPreset(presetId);
     setIsOpen(false);
   };
@@ -706,7 +743,7 @@ const LoadLayoutPresetDropdown = () => {
     }
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = dateString => {
     return new Date(dateString).toLocaleDateString();
   };
 
@@ -723,9 +760,11 @@ const LoadLayoutPresetDropdown = () => {
       {isOpen && (
         <div className='absolute top-full left-0 mt-1 z-10 w-[280px] bg-white shadow-lg rounded-lg border border-gray-200 max-h-80 overflow-y-auto'>
           <div className='px-4 py-3 border-b border-gray-200 bg-gray-50'>
-            <h3 className='text-sm font-semibold text-gray-700'>Load Layout Preset</h3>
+            <h3 className='text-sm font-semibold text-gray-700'>
+              Load Layout Preset
+            </h3>
           </div>
-          
+
           <div className='p-2'>
             {savedPresets.length === 0 ? (
               <div className='px-3 py-4 text-center text-sm text-gray-500'>
@@ -740,23 +779,35 @@ const LoadLayoutPresetDropdown = () => {
                     className='px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors rounded flex items-center justify-between group'
                   >
                     <div>
-                      <div className='text-sm font-medium text-gray-700'>{preset.name}</div>
-                      <div className='text-xs text-gray-500'>Saved {formatDate(preset.createdAt)}</div>
+                      <div className='text-sm font-medium text-gray-700'>
+                        {preset.name}
+                      </div>
+                      <div className='text-xs text-gray-500'>
+                        Saved {formatDate(preset.createdAt)}
+                      </div>
                     </div>
                     <button
-                      onClick={(e) => handleDeletePreset(e, preset.id)}
+                      onClick={e => handleDeletePreset(e, preset.id)}
                       className='opacity-0 group-hover:opacity-100 p-1 text-red-500 hover:text-red-700 transition-opacity'
                       title='Delete preset'
                     >
-                      <svg className='w-3 h-3' fill='currentColor' viewBox='0 0 20 20'>
-                        <path fillRule='evenodd' d='M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z' clipRule='evenodd' />
+                      <svg
+                        className='w-3 h-3'
+                        fill='currentColor'
+                        viewBox='0 0 20 20'
+                      >
+                        <path
+                          fillRule='evenodd'
+                          d='M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z'
+                          clipRule='evenodd'
+                        />
                       </svg>
                     </button>
                   </div>
                 ))}
               </div>
             )}
-            
+
             <div className='mt-3 pt-3 border-t border-gray-200'>
               <button
                 onClick={() => {
@@ -951,7 +1002,7 @@ const TodayButton = () => {
   );
 };
 
-const ViewTab = () => {
+const ViewTab = ({ contentRef }) => {
   return (
     <div className='flex flex-nowrap gap-0 p-2 bg-white w-full min-w-0'>
       {/* Timeline Zoom Group */}
@@ -986,6 +1037,11 @@ const ViewTab = () => {
       <RibbonGroup title='Layout Presets'>
         <SaveLayoutPresetButton />
         <LoadLayoutPresetDropdown />
+      </RibbonGroup>
+
+      {/* Print & Export Group */}
+      <RibbonGroup title='Print & Export'>
+        <PrintExportButton contentRef={contentRef} />
       </RibbonGroup>
 
       {/* View Group */}

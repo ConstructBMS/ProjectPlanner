@@ -9,7 +9,7 @@ import FormatTab from './tabs/FormatTab';
 
 const tabs = ['Home', 'View', 'Project', 'Allocation', '4D', 'Format'];
 
-export default function RibbonTabs({ onExpandAll, onCollapseAll }) {
+export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
   const [activeTab, setActiveTab] = useState('Home');
   const { viewState, updateViewState } = useViewContext();
 
@@ -32,7 +32,7 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll }) {
           <HomeTab onExpandAll={onExpandAll} onCollapseAll={onCollapseAll} />
         );
       case 'View':
-        return <ViewTab />;
+        return <ViewTab contentRef={contentRef} />;
       case 'Project':
         return <ProjectTab />;
       case 'Allocation':

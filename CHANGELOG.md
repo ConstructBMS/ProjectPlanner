@@ -630,6 +630,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Preset metadata including creation dates and names
   - Comprehensive layout state management with LayoutContext
 
+## [2025-08-09] – Prompt 138
+
+### Added
+
+- **Print & PDF Export System with Advanced Options**
+  - PDF export using jsPDF and html2canvas for high-quality output
+  - Print functionality with custom print styles and headers
+  - Date range filtering for export content
+  - Scale options: fit to page width/height or custom percentage (25-200%)
+  - Page orientation selection (Portrait/Landscape)
+  - Content selection: include/exclude Grid, Gantt, and Properties panes
+  - Customizable margins (0-50mm) for all sides
+  - Professional export dialog with comprehensive options
+  - Automatic header generation with project name and date
+  - Multi-page PDF support for large content
+  - Print window with proper styling and color preservation
+  - Export progress indicators and error handling
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

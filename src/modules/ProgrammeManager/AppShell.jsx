@@ -13,6 +13,7 @@ import TaskPropertiesPane from './components/TaskPropertiesPane';
 
 function AppShellContent() {
   const sidebarRef = useRef();
+  const contentRef = useRef();
   const { getPaneSize } = useLayoutContext();
 
   const handleExpandAll = () => {
@@ -24,24 +25,28 @@ function AppShellContent() {
   };
   return (
     <TaskProvider>
-      <div className='h-screen w-screen flex flex-col overflow-hidden bg-gray-100'>
+      <div ref={contentRef} className='h-screen w-screen flex flex-col overflow-hidden bg-gray-100'>
         {/* RibbonTabs - Fixed at top, full width */}
         <div className='z-10'>
           <RibbonTabs
             onExpandAll={handleExpandAll}
             onCollapseAll={handleCollapseAll}
+            contentRef={contentRef}
           />
         </div>
 
         {/* Main Content Area - Flex row with three panes */}
         <div className='flex-1 flex overflow-hidden'>
           {/* SidebarTree - Left pane */}
-          <div 
+          <div
             className='bg-white border-r border-gray-300 overflow-auto'
-            style={{ 
-              width: getPaneSize('sidebar') === 'flex-1' ? '300px' : getPaneSize('sidebar'),
+            style={{
+              width:
+                getPaneSize('sidebar') === 'flex-1'
+                  ? '300px'
+                  : getPaneSize('sidebar'),
               minWidth: '200px',
-              maxWidth: '400px'
+              maxWidth: '400px',
             }}
           >
             <SidebarTree ref={sidebarRef} />
@@ -59,12 +64,15 @@ function AppShellContent() {
         </div>
 
         {/* TaskPropertiesPane - Bottom pane, full width */}
-        <div 
+        <div
           className='bg-white border-t border-gray-300 overflow-auto'
-          style={{ 
-            height: getPaneSize('properties') === 'flex-1' ? '256px' : getPaneSize('properties'),
+          style={{
+            height:
+              getPaneSize('properties') === 'flex-1'
+                ? '256px'
+                : getPaneSize('properties'),
             minHeight: '200px',
-            maxHeight: '400px'
+            maxHeight: '400px',
           }}
         >
           <TaskPropertiesPane />
