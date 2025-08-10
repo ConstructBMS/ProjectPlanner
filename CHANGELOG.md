@@ -1117,6 +1117,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Professional UI with validation, warnings, and detailed exception management
   - Enhanced calendar utilities supporting working hours and exception handling
 
+## [2025-08-09] – Prompt 170
+
+### Added
+
+- **Custom Grid Columns**
+  - Full customization of task grid columns with add/remove/reorder functionality
+  - Professional Column Chooser Dialog with drag-to-reorder and search/filter capabilities
+  - Comprehensive grid column utilities for managing configurations, validation, and persistence
+  - Organized column categories: Basic, Schedule, Resource, Progress, Cost, and Baseline
+  - Rich metadata system for columns including types, validation, and display options
+  - Visual drag-and-drop interface for reordering columns with real-time feedback
+  - Easy show/hide functionality for individual columns with toggle controls
+  - Advanced search and filter for available columns by name, description, or category
+  - Auto-fit column widths based on content analysis and optimal sizing
+  - Column usage statistics and data completeness analysis
+  - Export and import grid configurations as JSON files for sharing and backup
+  - Save and load different column configurations as presets
+  - Comprehensive default grid configuration with all available columns
+  - Automatic saving and loading of grid configurations to localStorage
+  - Robust validation system for column configurations and grid layouts
+  - Integration with ViewTab ribbon providing "Customize Columns" button
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

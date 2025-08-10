@@ -5,6 +5,20 @@ import React, {
   useCallback,
   useEffect,
 } from 'react';
+import {
+  createDefaultGridConfig,
+  loadGridConfigFromStorage,
+  saveGridConfigToStorage,
+  validateGridConfig,
+  getAvailableColumns as getAvailableColumnsUtil,
+  getVisibleColumns,
+  getColumnWidth as getColumnWidthUtil,
+  toggleColumnVisibility as toggleColumnVisibilityUtil,
+  updateColumnWidth as updateColumnWidthUtil,
+  reorderColumns,
+  addColumnToGrid,
+  removeColumnFromGrid,
+} from '../utils/gridColumnUtils';
 
 const LayoutContext = createContext();
 
@@ -17,55 +31,24 @@ export const useLayoutContext = () => {
 };
 
 export const LayoutProvider = ({ children }) => {
+  const [gridConfig, setGridConfig] = useState(() => {
+    return loadGridConfigFromStorage();
+  });
+
   const [currentLayout, setCurrentLayout] = useState({
-    columnWidths: {
-      taskName: 200,
-      startDate: 120,
-      endDate: 120,
-      duration: 80,
-      resource: 120,
-      status: 100,
-      progress: 80,
-      work: 80,
-      cost: 100,
-      units: 80,
-      startVariance: 100,
-      finishVariance: 100,
-      durationVariance: 100,
-      scheduleStatus: 120,
-      deadline: 120,
-      criticalPath: 100,
-      totalFloat: 100,
-      freeFloat: 100,
-    },
     paneSizes: {
       sidebar: 300,
       properties: 280,
       gantt: 'flex-1',
     },
-    visibleColumns: [
-      'taskName',
-      'startDate',
-      'endDate',
-      'duration',
-      'resource',
-      'status',
-      'progress',
-      'work',
-      'cost',
-      'units',
-      'startVariance',
-      'finishVariance',
-      'durationVariance',
-      'scheduleStatus',
-      'deadline',
-      'criticalPath',
-      'totalFloat',
-      'freeFloat',
-    ],
   });
 
   const [savedPresets, setSavedPresets] = useState([]);
+
+  // Save grid config to localStorage when it changes
+  useEffect(() => {
+    saveGridConfigToStorage(gridConfig);
+  }, [gridConfig]);
 
   // Load saved presets from localStorage on mount
   useEffect(() => {
@@ -89,16 +72,21 @@ export const LayoutProvider = ({ children }) => {
     }
   }, [savedPresets]);
 
+  // Update grid configuration
+  const updateGridConfig = useCallback((newConfig) => {
+    const validation = validateGridConfig(newConfig);
+    if (validation.isValid) {
+      setGridConfig(newConfig);
+    } else {
+      console.error('Invalid grid configuration:', validation.errors);
+    }
+  }, []);
+
   // Update column width
   const updateColumnWidth = useCallback((columnName, width) => {
-    setCurrentLayout(prev => ({
-      ...prev,
-      columnWidths: {
-        ...prev.columnWidths,
-        [columnName]: Math.max(80, width), // Minimum width of 80px
-      },
-    }));
-  }, []);
+    const newConfig = updateColumnWidthUtil(gridConfig, columnName, width);
+    setGridConfig(newConfig);
+  }, [gridConfig]);
 
   // Update pane size
   const updatePaneSize = useCallback((paneName, size) => {
@@ -113,32 +101,23 @@ export const LayoutProvider = ({ children }) => {
 
   // Toggle column visibility
   const toggleColumnVisibility = useCallback(columnName => {
-    setCurrentLayout(prev => {
-      const isVisible = prev.visibleColumns.includes(columnName);
-      const newVisibleColumns = isVisible
-        ? prev.visibleColumns.filter(col => col !== columnName)
-        : [...prev.visibleColumns, columnName];
-
-      return {
-        ...prev,
-        visibleColumns: newVisibleColumns,
-      };
-    });
-  }, []);
+    const newConfig = toggleColumnVisibilityUtil(gridConfig, columnName);
+    setGridConfig(newConfig);
+  }, [gridConfig]);
 
   // Set column visibility
   const setColumnVisibility = useCallback((columnName, isVisible) => {
-    setCurrentLayout(prev => {
-      const newVisibleColumns = isVisible
-        ? [...new Set([...prev.visibleColumns, columnName])]
-        : prev.visibleColumns.filter(col => col !== columnName);
-
-      return {
-        ...prev,
-        visibleColumns: newVisibleColumns,
-      };
-    });
-  }, []);
+    const newConfig = {
+      ...gridConfig,
+      columns: gridConfig.columns.map(col => 
+        col.key === columnName 
+          ? { ...col, visible: isVisible }
+          : col
+      ),
+      lastModified: new Date().toISOString(),
+    };
+    setGridConfig(newConfig);
+  }, [gridConfig]);
 
   // Save current layout as a preset
   const savePreset = useCallback(
@@ -146,7 +125,10 @@ export const LayoutProvider = ({ children }) => {
       const newPreset = {
         id: Date.now().toString(),
         name,
-        layout: { ...currentLayout },
+        layout: { 
+          ...currentLayout,
+          gridConfig: { ...gridConfig }
+        },
         createdAt: new Date().toISOString(),
       };
 
@@ -165,7 +147,7 @@ export const LayoutProvider = ({ children }) => {
 
       return newPreset;
     },
-    [currentLayout]
+    [currentLayout, gridConfig]
   );
 
   // Load a preset
@@ -174,6 +156,9 @@ export const LayoutProvider = ({ children }) => {
       const preset = savedPresets.find(p => p.id === presetId);
       if (preset) {
         setCurrentLayout({ ...preset.layout });
+        if (preset.layout.gridConfig) {
+          setGridConfig(preset.layout.gridConfig);
+        }
         return preset;
       }
       return null;
@@ -189,84 +174,35 @@ export const LayoutProvider = ({ children }) => {
   // Reset to default layout
   const resetToDefault = useCallback(() => {
     const defaultLayout = {
-      columnWidths: {
-        taskName: 200,
-        startDate: 120,
-        endDate: 120,
-        duration: 80,
-        resource: 120,
-        status: 100,
-        progress: 80,
-        work: 80,
-        cost: 100,
-        units: 80,
-      },
       paneSizes: {
         sidebar: 300,
         properties: 280,
         gantt: 'flex-1',
       },
-      visibleColumns: [
-        'taskName',
-        'startDate',
-        'endDate',
-        'duration',
-        'resource',
-        'status',
-        'progress',
-        'work',
-        'cost',
-        'units',
-      ],
     };
     setCurrentLayout(defaultLayout);
+    setGridConfig(createDefaultGridConfig());
   }, []);
 
   // Get available column definitions
   const getAvailableColumns = useCallback(() => {
-    return [
-      { key: 'taskName', label: 'Task Name', defaultWidth: 200 },
-      { key: 'startDate', label: 'Start Date', defaultWidth: 120 },
-      { key: 'endDate', label: 'End Date', defaultWidth: 120 },
-      { key: 'duration', label: 'Duration', defaultWidth: 80 },
-      { key: 'resource', label: 'Resource', defaultWidth: 120 },
-      { key: 'status', label: 'Status', defaultWidth: 100 },
-      { key: 'progress', label: 'Progress', defaultWidth: 80 },
-      { key: 'work', label: 'Work (hrs)', defaultWidth: 80 },
-      { key: 'cost', label: 'Cost (£)', defaultWidth: 100 },
-      { key: 'units', label: 'Units (%)', defaultWidth: 80 },
-      { key: 'startVariance', label: 'Start Variance', defaultWidth: 100 },
-      { key: 'finishVariance', label: 'Finish Variance', defaultWidth: 100 },
-      {
-        key: 'durationVariance',
-        label: 'Duration Variance',
-        defaultWidth: 100,
-      },
-      { key: 'scheduleStatus', label: 'Schedule Status', defaultWidth: 120 },
-      { key: 'deadline', label: 'Deadline', defaultWidth: 120 },
-      { key: 'criticalPath', label: 'Critical Path', defaultWidth: 100 },
-      { key: 'totalFloat', label: 'Total Float', defaultWidth: 100 },
-      { key: 'freeFloat', label: 'Free Float', defaultWidth: 100 },
-      { key: 'priority', label: 'Priority', defaultWidth: 80 },
-      { key: 'assignedTo', label: 'Assigned To', defaultWidth: 120 },
-      { key: 'notes', label: 'Notes', defaultWidth: 150 },
-    ];
+    return getAvailableColumnsUtil();
   }, []);
 
   // Check if a column is visible
   const isColumnVisible = useCallback(
     columnName => {
-      return currentLayout.visibleColumns.includes(columnName);
+      return getVisibleColumns(gridConfig).some(col => col.key === columnName);
     },
-    [currentLayout.visibleColumns]
+    [gridConfig]
   );
 
   // Get column width
   const getColumnWidth = useCallback(
     columnName => {
-      return currentLayout.columnWidths[columnName] || 120;
+      return getColumnWidthUtil(gridConfig, columnName);
     },
-    [currentLayout.columnWidths]
+    [gridConfig]
   );
 
   // Get pane size
@@ -280,8 +216,10 @@ export const LayoutProvider = ({ children }) => {
   const value = {
     // Current layout state
     currentLayout,
+    gridConfig,
 
     // Layout setters
+    updateGridConfig,
     updateColumnWidth,
     updatePaneSize,
     toggleColumnVisibility,

@@ -5,6 +5,7 @@ import { useFilterContext } from '../../../context/FilterContext';
 import { useLayoutContext } from '../../../context/LayoutContext';
 import PrintExportDialog from '../../PrintExportDialog';
 import ResourceHistogram from '../../ResourceHistogram';
+import ColumnChooserDialog from '../../modals/ColumnChooserDialog';
 import RibbonButton from '../shared/RibbonButton';
 import RibbonGroup from '../shared/RibbonGroup';
 import {
@@ -22,6 +23,7 @@ import {
   ChartBarIcon,
   XMarkIcon,
   ClockIcon,
+  TableCellsIcon,
 } from '@heroicons/react/24/outline';
 
 const TimelineZoomDropdown = () => {
@@ -1139,6 +1141,9 @@ const TodayButton = () => {
 
 const ViewTab = ({ contentRef }) => {
   const [showResourceHistogram, setShowResourceHistogram] = useState(false);
+  const [showColumnChooser, setShowColumnChooser] = useState(false);
+  const { gridConfig, updateGridConfig } = useLayoutContext();
+  const { tasks } = useTaskContext();
 
   return (
     <div className='flex flex-nowrap gap-0 p-2 bg-white w-full min-w-0'>
@@ -1214,6 +1219,12 @@ const ViewTab = ({ contentRef }) => {
         <RibbonButton
           icon={<EyeIcon className='w-4 h-4 text-gray-700' />}
           label='View Options'
+        />
+        <RibbonButton
+          icon={<TableCellIcon className='w-4 h-4 text-blue-600' />}
+          label='Customize Columns'
+          onClick={() => setShowColumnChooser(true)}
+          tooltip='Add, remove, and reorder grid columns'
         />
         <StatusHighlightingToggle />
         <ShowWeekendsToggle />
@@ -1307,6 +1318,15 @@ const ViewTab = ({ contentRef }) => {
         </div>
       </div>
     )}
+
+    {/* Column Chooser Dialog */}
+    <ColumnChooserDialog
+      isOpen={showColumnChooser}
+      onClose={() => setShowColumnChooser(false)}
+      gridConfig={gridConfig}
+      onConfigChange={updateGridConfig}
+      tasks={tasks}
+    />
   </>
   );
 };

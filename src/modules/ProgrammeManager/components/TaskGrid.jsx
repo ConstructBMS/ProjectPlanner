@@ -94,6 +94,7 @@ const TaskGrid = React.memo(() => {
   const { applyFilters } = useFilterContext();
 
   const {
+    gridConfig,
     getColumnWidth,
     isColumnVisible,
     getAvailableColumns,
@@ -166,7 +167,11 @@ const TaskGrid = React.memo(() => {
             {(isRecurringTask(task) || isRecurringInstance(task)) && (
               <span
                 className='text-xs text-blue-600'
-                title={task.recurrence ? formatRecurrenceRule(task.recurrence) : 'Recurring task instance'}
+                title={
+                  task.recurrence
+                    ? formatRecurrenceRule(task.recurrence)
+                    : 'Recurring task instance'
+                }
               >
                 🔄
               </span>
@@ -266,11 +271,13 @@ const TaskGrid = React.memo(() => {
 
       case 'cost':
         // Find the resource for this task
-        const resource = tasks.find(t => t.id === task.resourceId) || 
-                        { name: task.resource || task.assignedTo, costRate: 0 };
+        const resource = tasks.find(t => t.id === task.resourceId) || {
+          name: task.resource || task.assignedTo,
+          costRate: 0,
+        };
         const taskCost = calculateTaskCost(task, resource);
         const costVariance = getCostVariance(task, resource);
-        
+
         return (
           <div className='text-right'>
             <div className='font-medium text-green-600'>
@@ -781,24 +788,18 @@ const TaskGrid = React.memo(() => {
           </div>
 
           {/* Dynamic Columns */}
-          {getAvailableColumns().map(column => {
-            if (!isColumnVisible(column.key)) return null;
-
-            return (
+          {gridConfig?.columns
+            ?.filter(col => col.visible)
+            .sort((a, b) => a.order - b.order)
+            .map(column => (
               <div
                 key={column.key}
                 className='px-2 py-1 text-sm'
-                style={{ width: getColumnWidth(column.key) }}
+                style={{ width: column.width }}
               >
                 {renderColumnContent(column.key, task, isEditing, editingField)}
               </div>
-            );
-          })}
-
-          {/* Assignee */}
-          <div className='w-24 px-2 py-1 text-sm truncate'>
-            {task.assignee || '-'}
-          </div>
+            ))}
 
           {/* Actions */}
           <div className='w-16 px-2 py-1 flex items-center justify-center gap-1'>
@@ -844,19 +845,18 @@ const TaskGrid = React.memo(() => {
         <div className='asta-grid-header flex items-center border-b-2 border-gray-300 bg-gray-50 sticky top-0 z-10'>
           <div className='w-8 h-8' />
           <div className='w-8 h-8' />
-          {getAvailableColumns().map(column => {
-            if (!isColumnVisible(column.key)) return null;
-            return (
+          {gridConfig?.columns
+            ?.filter(col => col.visible)
+            .sort((a, b) => a.order - b.order)
+            .map(column => (
               <div
                 key={column.key}
                 className='px-2 py-2 font-semibold text-center'
-                style={{ width: getColumnWidth(column.key) }}
+                style={{ width: column.width }}
               >
-                {column.label}
+                {column.label || getAvailableColumns().find(col => col.key === column.key)?.label}
               </div>
-            );
-          })}
-          <div className='w-24 px-2 py-2 font-semibold'>Assignee</div>
+            ))}
           <div className='w-16 px-2 py-2 font-semibold text-center'>
             Actions
           </div>
@@ -875,24 +875,24 @@ const TaskGrid = React.memo(() => {
       />
 
       {/* Context Menu */}
-              <ContextMenu
-          isOpen={contextMenu.isOpen}
-          position={contextMenu.position}
-          onClose={closeContextMenu}
-          onAction={handleContextMenuAction}
-          task={contextMenu.task}
-        />
-        <TaskSplitModal
-          isOpen={taskSplitModal.isOpen}
-          task={taskSplitModal.task}
-          onClose={() => setTaskSplitModal({ isOpen: false, task: null })}
-          onSplitTask={(updatedTask) => {
-            updateTask(updatedTask.id, updatedTask);
-            setTaskSplitModal({ isOpen: false, task: null });
-          }}
-        />
-      </>
-    );
+      <ContextMenu
+        isOpen={contextMenu.isOpen}
+        position={contextMenu.position}
+        onClose={closeContextMenu}
+        onAction={handleContextMenuAction}
+        task={contextMenu.task}
+      />
+      <TaskSplitModal
+        isOpen={taskSplitModal.isOpen}
+        task={taskSplitModal.task}
+        onClose={() => setTaskSplitModal({ isOpen: false, task: null })}
+        onSplitTask={updatedTask => {
+          updateTask(updatedTask.id, updatedTask);
+          setTaskSplitModal({ isOpen: false, task: null });
+        }}
+      />
+    </>
+  );
 });
 
 TaskGrid.displayName = 'TaskGrid';
