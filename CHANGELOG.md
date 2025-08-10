@@ -1032,6 +1032,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Historical data tracking and trend visualization
   - Comprehensive EVA utilities for calculations and validation
 
+## [2025-08-09] – Prompt 164
+
+### Added
+
+- **Per-Resource Calendar Assignment**
+  - Individual working calendar assignment for resources
+  - Resource Properties Pane with "Working Calendar" section
+  - Calendar selection from project calendar list with default indicators
+  - Real-time calendar validation with error and warning display
+  - Resource availability calculation and preview (30-day forecast)
+  - Working days and hours summary display
+  - Integration with scheduling algorithm to respect resource availability
+  - Comprehensive resource calendar utilities for management and validation
+  - Conflict detection for resource allocation and overtime violations
+  - Weekly allocation calculation and limits enforcement
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

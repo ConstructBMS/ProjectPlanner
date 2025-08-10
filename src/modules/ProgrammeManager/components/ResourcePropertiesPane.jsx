@@ -5,6 +5,7 @@ import {
   ExclamationTriangleIcon,
   CheckIcon,
   ChartBarIcon,
+  CalendarIcon,
 } from '@heroicons/react/24/outline';
 import {
   validateCostRate,
@@ -12,11 +13,29 @@ import {
   getResourceCostSummary,
   formatCost,
 } from '../utils/costUtils';
+import {
+  getResourceCalendarSummary,
+  getAvailableCalendars,
+  validateResourceCalendar,
+  updateResourceCalendar,
+  calculateResourceAvailability,
+  checkResourceAllocationConflicts,
+  DEFAULT_RESOURCE_CALENDAR_CONFIG,
+} from '../utils/resourceCalendarUtils';
 
-const ResourcePropertiesPane = ({ resource, tasks, onResourceUpdate }) => {
+const ResourcePropertiesPane = ({ resource, tasks, onResourceUpdate, projectCalendars = {} }) => {
   const [editingResource, setEditingResource] = useState(null);
   const [hasChanges, setHasChanges] = useState(false);
-  const [costRateValidation, setCostRateValidation] = useState({ isValid: true, errors: [], warnings: [] });
+  const [costRateValidation, setCostRateValidation] = useState({
+    isValid: true,
+    errors: [],
+    warnings: [],
+  });
+  const [calendarValidation, setCalendarValidation] = useState({
+    isValid: true,
+    errors: [],
+    warnings: [],
+  });
 
   // Initialize editing resource when resource changes
   useEffect(() => {
@@ -37,6 +56,14 @@ const ResourcePropertiesPane = ({ resource, tasks, onResourceUpdate }) => {
       setCostRateValidation(validation);
     }
   }, [editingResource?.costRate]);
+
+  // Validate calendar assignment when it changes
+  useEffect(() => {
+    if (editingResource) {
+      const validation = validateResourceCalendar(editingResource, projectCalendars);
+      setCalendarValidation(validation);
+    }
+  }, [editingResource?.calendarId, projectCalendars]);
 
   const handleFieldChange = (field, value) => {
     if (!editingResource) return;
@@ -80,13 +107,19 @@ const ResourcePropertiesPane = ({ resource, tasks, onResourceUpdate }) => {
   // Calculate resource cost summary
   const costSummary = getResourceCostSummary(resource.id, tasks, []);
 
+  // Get calendar information
+  const calendarSummary = getResourceCalendarSummary(editingResource, projectCalendars, DEFAULT_RESOURCE_CALENDAR_CONFIG);
+  const availableCalendars = getAvailableCalendars(projectCalendars, DEFAULT_RESOURCE_CALENDAR_CONFIG);
+
   return (
     <div className='w-80 bg-gray-50 border-l border-gray-200 p-4 overflow-y-auto'>
       {/* Header */}
       <div className='flex items-center justify-between mb-4'>
         <div className='flex items-center gap-2'>
           <UserIcon className='w-5 h-5 text-blue-600' />
-          <h3 className='text-lg font-semibold text-gray-900'>Resource Properties</h3>
+          <h3 className='text-lg font-semibold text-gray-900'>
+            Resource Properties
+          </h3>
         </div>
         {hasChanges && (
           <span className='px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full'>
@@ -99,7 +132,9 @@ const ResourcePropertiesPane = ({ resource, tasks, onResourceUpdate }) => {
       <div className='bg-white border border-gray-200 rounded-lg p-4 mb-4'>
         <div className='flex items-center gap-2 mb-3'>
           <UserIcon className='w-4 h-4 text-gray-600' />
-          <h4 className='text-sm font-semibold text-gray-700'>Resource Information</h4>
+          <h4 className='text-sm font-semibold text-gray-700'>
+            Resource Information
+          </h4>
         </div>
 
         <div className='space-y-3'>
@@ -162,7 +197,9 @@ const ResourcePropertiesPane = ({ resource, tasks, onResourceUpdate }) => {
                 min='0'
                 step='0.01'
                 value={editingResource.costRate || ''}
-                onChange={e => handleFieldChange('costRate', parseFloat(e.target.value) || 0)}
+                onChange={e =>
+                  handleFieldChange('costRate', parseFloat(e.target.value) || 0)
+                }
                 className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
                 placeholder='0.00'
               />
@@ -174,7 +211,9 @@ const ResourcePropertiesPane = ({ resource, tasks, onResourceUpdate }) => {
               </label>
               <select
                 value={editingResource.costRateUnit || 'day'}
-                onChange={e => handleFieldChange('costRateUnit', e.target.value)}
+                onChange={e =>
+                  handleFieldChange('costRateUnit', e.target.value)
+                }
                 className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
               >
                 <option value='hour'>Per Hour</option>
@@ -188,7 +227,11 @@ const ResourcePropertiesPane = ({ resource, tasks, onResourceUpdate }) => {
           {/* Current Rate Display */}
           <div className='p-2 bg-gray-50 border border-gray-200 rounded'>
             <div className='text-sm text-gray-700'>
-              <strong>Current Rate:</strong> {formatCostRate(editingResource.costRate, editingResource.costRateUnit)}
+              <strong>Current Rate:</strong>{' '}
+              {formatCostRate(
+                editingResource.costRate,
+                editingResource.costRateUnit
+              )}
             </div>
           </div>
 
@@ -197,7 +240,9 @@ const ResourcePropertiesPane = ({ resource, tasks, onResourceUpdate }) => {
             <div className='p-3 bg-red-50 border border-red-200 rounded'>
               <div className='flex items-center gap-2 mb-2'>
                 <ExclamationTriangleIcon className='w-4 h-4 text-red-600' />
-                <span className='text-sm font-medium text-red-900'>Validation Errors</span>
+                <span className='text-sm font-medium text-red-900'>
+                  Validation Errors
+                </span>
               </div>
               <ul className='text-xs text-red-700 space-y-1'>
                 {costRateValidation.errors.map((error, index) => (
@@ -211,7 +256,9 @@ const ResourcePropertiesPane = ({ resource, tasks, onResourceUpdate }) => {
             <div className='p-3 bg-yellow-50 border border-yellow-200 rounded'>
               <div className='flex items-center gap-2 mb-2'>
                 <ExclamationTriangleIcon className='w-4 h-4 text-yellow-600' />
-                <span className='text-sm font-medium text-yellow-900'>Warnings</span>
+                <span className='text-sm font-medium text-yellow-900'>
+                  Warnings
+                </span>
               </div>
               <ul className='text-xs text-yellow-700 space-y-1'>
                 {costRateValidation.warnings.map((warning, index) => (
@@ -226,8 +273,126 @@ const ResourcePropertiesPane = ({ resource, tasks, onResourceUpdate }) => {
             <div className='p-3 bg-green-50 border border-green-200 rounded'>
               <div className='flex items-center gap-2'>
                 <CheckIcon className='w-4 h-4 text-green-600' />
-                <span className='text-sm text-green-700'>Cost rate is valid</span>
+                <span className='text-sm text-green-700'>
+                  Cost rate is valid
+                </span>
               </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Working Calendar Section */}
+      <div className='bg-white border border-gray-200 rounded-lg p-4 mb-4'>
+        <div className='flex items-center gap-2 mb-3'>
+          <CalendarIcon className='w-4 h-4 text-purple-600' />
+          <h4 className='text-sm font-semibold text-gray-700'>Working Calendar</h4>
+        </div>
+
+        <div className='space-y-3'>
+          <div>
+            <label className='block text-xs font-medium text-gray-600 mb-1'>
+              Calendar Assignment
+            </label>
+            <select
+              value={editingResource.calendarId || ''}
+              onChange={e => handleFieldChange('calendarId', e.target.value || null)}
+              className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+            >
+              <option value=''>No Calendar Assigned</option>
+              {availableCalendars.map(calendar => (
+                <option key={calendar.id} value={calendar.id}>
+                  {calendar.name} {calendar.isDefault ? '(Default)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Current Calendar Display */}
+          <div className='p-2 bg-gray-50 border border-gray-200 rounded'>
+            <div className='text-sm text-gray-700'>
+              <strong>Current Calendar:</strong> {calendarSummary.calendarName}
+            </div>
+            <div className='text-xs text-gray-500 mt-1'>
+              {calendarSummary.workingDays} working days, {calendarSummary.totalWeeklyHours}h per week
+            </div>
+          </div>
+
+          {/* Calendar Validation */}
+          {!calendarValidation.isValid && (
+            <div className='p-3 bg-red-50 border border-red-200 rounded'>
+              <div className='flex items-center gap-2 mb-2'>
+                <ExclamationTriangleIcon className='w-4 h-4 text-red-600' />
+                <span className='text-sm font-medium text-red-900'>
+                  Calendar Errors
+                </span>
+              </div>
+              <ul className='text-xs text-red-700 space-y-1'>
+                {calendarValidation.errors.map((error, index) => (
+                  <li key={index}>• {error}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {calendarValidation.warnings.length > 0 && (
+            <div className='p-3 bg-yellow-50 border border-yellow-200 rounded'>
+              <div className='flex items-center gap-2 mb-2'>
+                <ExclamationTriangleIcon className='w-4 h-4 text-yellow-600' />
+                <span className='text-sm font-medium text-yellow-900'>
+                  Calendar Warnings
+                </span>
+              </div>
+              <ul className='text-xs text-yellow-700 space-y-1'>
+                {calendarValidation.warnings.map((warning, index) => (
+                  <li key={index}>• {warning}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Success indicator */}
+          {calendarValidation.isValid && editingResource.calendarId && (
+            <div className='p-3 bg-green-50 border border-green-200 rounded'>
+              <div className='flex items-center gap-2'>
+                <CheckIcon className='w-4 h-4 text-green-600' />
+                <span className='text-sm text-green-700'>
+                  Calendar assignment is valid
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Availability Preview */}
+          {editingResource.calendarId && (
+            <div>
+              <h5 className='text-xs font-medium text-gray-600 mb-2'>
+                Next 30 Days Availability
+              </h5>
+              {(() => {
+                const startDate = new Date();
+                const endDate = new Date();
+                endDate.setDate(endDate.getDate() + 30);
+                
+                const availability = calculateResourceAvailability(
+                  editingResource,
+                  startDate,
+                  endDate,
+                  projectCalendars,
+                  DEFAULT_RESOURCE_CALENDAR_CONFIG
+                );
+
+                return (
+                  <div className='p-2 bg-blue-50 border border-blue-200 rounded'>
+                    <div className='text-xs text-blue-700'>
+                      <strong>Available:</strong> {availability.totalWorkingDays} days, {availability.totalWorkingHours}h
+                    </div>
+                    <div className='text-xs text-blue-600 mt-1'>
+                      <strong>Unavailable:</strong> {availability.unavailableDates.length} days
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
         </div>
@@ -271,10 +436,15 @@ const ResourcePropertiesPane = ({ resource, tasks, onResourceUpdate }) => {
           {/* Task breakdown */}
           {costSummary.tasks.length > 0 && (
             <div>
-              <h5 className='text-xs font-medium text-gray-600 mb-2'>Task Breakdown</h5>
+              <h5 className='text-xs font-medium text-gray-600 mb-2'>
+                Task Breakdown
+              </h5>
               <div className='max-h-32 overflow-y-auto space-y-1'>
                 {costSummary.tasks.map(task => (
-                  <div key={task.taskId} className='flex justify-between items-center text-xs p-1 bg-gray-50 rounded'>
+                  <div
+                    key={task.taskId}
+                    className='flex justify-between items-center text-xs p-1 bg-gray-50 rounded'
+                  >
                     <span className='truncate' title={task.taskName}>
                       {task.taskName}
                     </span>
