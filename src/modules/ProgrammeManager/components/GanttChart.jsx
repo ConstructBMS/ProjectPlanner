@@ -67,6 +67,14 @@ import {
   getFloatDisplayPosition,
   isFloatDisplayEnabled,
 } from '../utils/floatUtils';
+import {
+  isTaskSplit,
+  getTaskSegments,
+  getSegmentStyling,
+  getSegmentTooltip,
+  calculateSegmentGaps,
+} from '../utils/taskSegmentUtils';
+import TaskSplitModal from './modals/TaskSplitModal';
 import '../styles/gantt.css';
 
 const GanttChart = () => {
@@ -141,6 +149,10 @@ const GanttChart = () => {
     taskId: null,
     message: '',
     timestamp: 0,
+  });
+  const [taskSplitModal, setTaskSplitModal] = useState({
+    isOpen: false,
+    task: null,
   });
 
   // Tooltip state
@@ -2091,6 +2103,77 @@ const GanttChart = () => {
                             }
                           />
                         </div>
+                      ) : isTaskSplit(task) ? (
+                        // Render split task segments
+                        getTaskSegments(task).map((segment, segmentIndex) => {
+                          const segmentStartDate = new Date(segment.startDate);
+                          const segmentDaysFromStart = Math.ceil(
+                            (segmentStartDate.getTime() - new Date('2024-01-01').getTime()) / (1000 * 60 * 60 * 24)
+                          );
+                          const segmentWidth = `${Math.max(segment.duration * scaledDayWidth, 40)}px`;
+                          const segmentLeft = `${Math.max(segmentDaysFromStart * scaledDayWidth, 0)}px`;
+                          
+                          return (
+                            <div
+                              key={segment.id}
+                              className={getSegmentStyling(segment, task).className}
+                              style={{
+                                left: segmentLeft,
+                                width: segmentWidth,
+                                height: 'calc(100% - 4px)',
+                                position: 'absolute',
+                                top: '2px',
+                                ...getSegmentStyling(segment, task).style,
+                              }}
+                              data-task-id={task.id}
+                              data-segment-id={segment.id}
+                              onMouseDown={e => handleTaskMouseDown(e, task)}
+                              onClick={e => {
+                                e.stopPropagation();
+                                handleGanttTaskClick(task.id, e);
+                              }}
+                              onMouseEnter={e => {
+                                handleTaskHover(task.id);
+                                setTooltip({
+                                  visible: true,
+                                  x: e.clientX,
+                                  y: e.clientY,
+                                  task,
+                                  segment,
+                                });
+                              }}
+                              onMouseLeave={() => {
+                                handleTaskLeave();
+                                setTooltip({
+                                  visible: false,
+                                  x: 0,
+                                  y: 0,
+                                  task: null,
+                                  segment: null,
+                                });
+                              }}
+                            >
+                              {/* Progress indicator for segment */}
+                              {segment.progress > 0 && (
+                                <div
+                                  className={`h-full rounded-l transition-all duration-300 ${
+                                    task.isCritical ? 'bg-red-400' : 'bg-green-400'
+                                  }`}
+                                  style={{ width: `${segment.progress}%` }}
+                                />
+                              )}
+
+                              {/* Segment label */}
+                              {parseFloat(segmentWidth) > 60 && (
+                                <div className='absolute inset-0 flex items-center justify-center px-1 pointer-events-none'>
+                                  <span className='text-white text-xs font-medium truncate'>
+                                    {task.name} ({segmentIndex + 1})
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })
                       ) : (
                         <div
                           className={getTaskBarStyle(task).className}
@@ -2150,31 +2233,35 @@ const GanttChart = () => {
                           )}
 
                           {/* Float Labels */}
-                          {isFloatDisplayEnabled(viewState) && (() => {
-                            const floatDisplay = getFloatDisplayPosition(task, parseFloat(width));
-                            if (!floatDisplay) return null;
-                            
-                            return (
-                              <div className='absolute top-0 right-0 pointer-events-none'>
-                                {floatDisplay.showTotalFloat && (
-                                  <div
-                                    className='bg-red-600 text-white text-xs px-1 rounded-sm mb-0.5'
-                                    title={getFloatTooltip(task, 'total')}
-                                  >
-                                    {floatDisplay.totalFloatText}
-                                  </div>
-                                )}
-                                {floatDisplay.showFreeFloat && (
-                                  <div
-                                    className='bg-blue-600 text-white text-xs px-1 rounded-sm'
-                                    title={getFloatTooltip(task, 'free')}
-                                  >
-                                    {floatDisplay.freeFloatText}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })()}
+                          {isFloatDisplayEnabled(viewState) &&
+                            (() => {
+                              const floatDisplay = getFloatDisplayPosition(
+                                task,
+                                parseFloat(width)
+                              );
+                              if (!floatDisplay) return null;
+
+                              return (
+                                <div className='absolute top-0 right-0 pointer-events-none'>
+                                  {floatDisplay.showTotalFloat && (
+                                    <div
+                                      className='bg-red-600 text-white text-xs px-1 rounded-sm mb-0.5'
+                                      title={getFloatTooltip(task, 'total')}
+                                    >
+                                      {floatDisplay.totalFloatText}
+                                    </div>
+                                  )}
+                                  {floatDisplay.showFreeFloat && (
+                                    <div
+                                      className='bg-blue-600 text-white text-xs px-1 rounded-sm'
+                                      title={getFloatTooltip(task, 'free')}
+                                    >
+                                      {floatDisplay.freeFloatText}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })()}
 
                           {/* Resize Handles */}
                           {(selectedTaskId === task.id ||
@@ -2473,7 +2560,8 @@ const GanttChart = () => {
                 </div>
               </div>
             )}
-            {(tooltip.task.totalFloat !== undefined || tooltip.task.freeFloat !== undefined) && (
+            {(tooltip.task.totalFloat !== undefined ||
+              tooltip.task.freeFloat !== undefined) && (
               <div className='text-blue-300 font-medium mt-2 pt-1 border-t border-gray-700'>
                 <div className='flex justify-between'>
                   <span>Total Float:</span>
@@ -2488,9 +2576,35 @@ const GanttChart = () => {
                 </div>
               </div>
             )}
+            {tooltip.segment && (
+              <div className='text-purple-300 font-medium mt-2 pt-1 border-t border-gray-700'>
+                <div className='flex justify-between'>
+                  <span>Segment:</span>
+                  <span>{tooltip.segment.duration} days</span>
+                </div>
+                <div className='flex justify-between'>
+                  <span>Progress:</span>
+                  <span>{tooltip.segment.progress || 0}%</span>
+                </div>
+                <div className='text-xs text-gray-400 mt-1'>
+                  {getSegmentTooltip(tooltip.segment, tooltip.task)}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
+
+      {/* Task Split Modal */}
+      <TaskSplitModal
+        isOpen={taskSplitModal.isOpen}
+        task={taskSplitModal.task}
+        onClose={() => setTaskSplitModal({ isOpen: false, task: null })}
+        onSplitTask={(updatedTask) => {
+          updateTask(updatedTask.id, updatedTask);
+          setTaskSplitModal({ isOpen: false, task: null });
+        }}
+      />
     </div>
   );
 };

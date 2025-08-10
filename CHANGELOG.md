@@ -915,6 +915,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Integration with existing critical path and scheduling systems
   - Comprehensive float status indicators and visual feedback
 
+## [2025-08-09] – Prompt 156
+
+### Added
+
+- **Task Splitting**
+  - Context menu option to split tasks into multiple segments with gaps
+  - Professional task segment management with validation and error handling
+  - Split task segments displayed as separate bars in Gantt chart with gaps
+  - Task splitting modal with segment editing, validation, and summary
+  - Segment progress tracking and individual segment tooltips
+  - Automatic duration calculation and segment gap detection
+  - Integration with existing task management and scheduling systems
+  - Professional segment utilities for creation, validation, and styling
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

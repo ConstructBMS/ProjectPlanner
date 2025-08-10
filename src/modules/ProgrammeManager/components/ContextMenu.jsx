@@ -7,6 +7,7 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
   PlusIcon,
+  ScissorsIcon,
 } from '@heroicons/react/24/outline';
 
 const ContextMenu = ({ isOpen, position, onClose, onAction, task = null }) => {
@@ -122,6 +123,15 @@ const ContextMenu = ({ isOpen, position, onClose, onAction, task = null }) => {
       >
         <PlusIcon className='w-4 h-4' />
         <span>Add Subtask</span>
+      </button>
+
+      {/* Split Task */}
+      <button
+        onClick={() => handleAction('splitTask')}
+        className='w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-purple-50 flex items-center gap-2 transition-colors'
+      >
+        <ScissorsIcon className='w-4 h-4' />
+        <span>{task?.isSplit ? 'Edit Segments' : 'Split Task'}</span>
       </button>
 
       {/* Divider */}

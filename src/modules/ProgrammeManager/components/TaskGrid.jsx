@@ -32,6 +32,14 @@ import {
   getFloatStyling,
   getFloatTooltip,
 } from '../utils/floatUtils';
+import {
+  isTaskSplit,
+  getTaskSegments,
+  getSegmentStyling,
+  getSegmentTooltip,
+  calculateSegmentGaps,
+} from '../utils/taskSegmentUtils';
+import TaskSplitModal from './modals/TaskSplitModal';
 
 // Diamond icon component for milestones
 const DiamondIcon = ({ className = 'w-4 h-4', color = 'text-purple-600' }) => (
@@ -476,6 +484,10 @@ const TaskGrid = React.memo(() => {
     position: { x: 0, y: 0 },
     task: null,
   });
+  const [taskSplitModal, setTaskSplitModal] = useState({
+    isOpen: false,
+    task: null,
+  });
 
   const handleDeleteTask = useCallback(
     (taskId, e) => {
@@ -628,11 +640,29 @@ const TaskGrid = React.memo(() => {
           // Add subtask functionality - you can implement this based on your needs
           console.log('Add subtask for:', task.name);
           break;
+        case 'splitTask':
+          setTaskSplitModal({ isOpen: true, task });
+          break;
+        case 'link':
+          // TODO: Implement link functionality
+          console.log('Link task:', task.name);
+          break;
+        case 'milestone':
+          updateTask(task.id, { isMilestone: !task.isMilestone });
+          break;
+        case 'expandAll':
+          // TODO: Implement expand all functionality
+          console.log('Expand all');
+          break;
+        case 'collapseAll':
+          // TODO: Implement collapse all functionality
+          console.log('Collapse all');
+          break;
         default:
           console.log('Unknown context menu action:', action);
       }
     },
-    [deleteTask, startEditing]
+    [deleteTask, startEditing, updateTask]
   );
 
   const handleRowClick = useCallback(
@@ -798,15 +828,24 @@ const TaskGrid = React.memo(() => {
       />
 
       {/* Context Menu */}
-      <ContextMenu
-        isOpen={contextMenu.isOpen}
-        position={contextMenu.position}
-        onClose={closeContextMenu}
-        onAction={handleContextMenuAction}
-        task={contextMenu.task}
-      />
-    </>
-  );
+              <ContextMenu
+          isOpen={contextMenu.isOpen}
+          position={contextMenu.position}
+          onClose={closeContextMenu}
+          onAction={handleContextMenuAction}
+          task={contextMenu.task}
+        />
+        <TaskSplitModal
+          isOpen={taskSplitModal.isOpen}
+          task={taskSplitModal.task}
+          onClose={() => setTaskSplitModal({ isOpen: false, task: null })}
+          onSplitTask={(updatedTask) => {
+            updateTask(updatedTask.id, updatedTask);
+            setTaskSplitModal({ isOpen: false, task: null });
+          }}
+        />
+      </>
+    );
 });
 
 TaskGrid.displayName = 'TaskGrid';
