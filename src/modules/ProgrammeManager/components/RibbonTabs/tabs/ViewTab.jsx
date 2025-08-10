@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useViewContext } from '../../../context/ViewContext';
 import { useTaskContext } from '../../../context/TaskContext';
 import { useFilterContext } from '../../../context/FilterContext';
+import { useLayoutContext } from '../../../context/LayoutContext';
 import RibbonButton from '../shared/RibbonButton';
 import RibbonGroup from '../shared/RibbonGroup';
 import {
@@ -326,7 +327,7 @@ const QuickFiltersDropdown = () => {
     dateRange: true,
   });
   const dropdownRef = useRef();
-  
+
   const { viewState } = useViewContext();
   const { tasks } = useTaskContext();
   const {
@@ -351,18 +352,18 @@ const QuickFiltersDropdown = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const toggleSection = (section) => {
+  const toggleSection = section => {
     setExpandedSections(prev => ({
       ...prev,
       [section]: !prev[section],
     }));
   };
 
-  const handleStatusSelect = (status) => {
+  const handleStatusSelect = status => {
     setStatusFilter(status);
   };
 
-  const handleResourceSelect = (resource) => {
+  const handleResourceSelect = resource => {
     setResourceFilter(resource);
   };
 
@@ -402,7 +403,9 @@ const QuickFiltersDropdown = () => {
           {/* Header */}
           <div className='px-4 py-3 border-b border-gray-200 bg-gray-50'>
             <div className='flex items-center justify-between'>
-              <h3 className='text-sm font-semibold text-gray-700'>Quick Filters</h3>
+              <h3 className='text-sm font-semibold text-gray-700'>
+                Quick Filters
+              </h3>
               {hasActiveFilters() && (
                 <button
                   onClick={clearAllFilters}
@@ -421,16 +424,19 @@ const QuickFiltersDropdown = () => {
               className='w-full px-4 py-2 flex items-center justify-between hover:bg-gray-50'
             >
               <span className='text-sm font-medium text-gray-700'>Status</span>
-              <ChevronDownIcon 
+              <ChevronDownIcon
                 className={`w-4 h-4 text-gray-500 transition-transform ${
                   expandedSections.status ? 'rotate-180' : ''
-                }`} 
+                }`}
               />
             </button>
             {expandedSections.status && (
               <div className='px-4 pb-3 space-y-1'>
                 {availableStatuses.map(status => (
-                  <label key={status} className='flex items-center space-x-2 cursor-pointer'>
+                  <label
+                    key={status}
+                    className='flex items-center space-x-2 cursor-pointer'
+                  >
                     <input
                       type='radio'
                       name='status'
@@ -452,11 +458,13 @@ const QuickFiltersDropdown = () => {
               onClick={() => toggleSection('resource')}
               className='w-full px-4 py-2 flex items-center justify-between hover:bg-gray-50'
             >
-              <span className='text-sm font-medium text-gray-700'>Resource</span>
-              <ChevronDownIcon 
+              <span className='text-sm font-medium text-gray-700'>
+                Resource
+              </span>
+              <ChevronDownIcon
                 className={`w-4 h-4 text-gray-500 transition-transform ${
                   expandedSections.resource ? 'rotate-180' : ''
-                }`} 
+                }`}
               />
             </button>
             {expandedSections.resource && (
@@ -473,7 +481,10 @@ const QuickFiltersDropdown = () => {
                   <span className='text-xs text-gray-700'>All Resources</span>
                 </label>
                 {availableResources.map(resource => (
-                  <label key={resource} className='flex items-center space-x-2 cursor-pointer'>
+                  <label
+                    key={resource}
+                    className='flex items-center space-x-2 cursor-pointer'
+                  >
                     <input
                       type='radio'
                       name='resource'
@@ -495,30 +506,46 @@ const QuickFiltersDropdown = () => {
               onClick={() => toggleSection('dateRange')}
               className='w-full px-4 py-2 flex items-center justify-between hover:bg-gray-50'
             >
-              <span className='text-sm font-medium text-gray-700'>Date Range</span>
-              <ChevronDownIcon 
+              <span className='text-sm font-medium text-gray-700'>
+                Date Range
+              </span>
+              <ChevronDownIcon
                 className={`w-4 h-4 text-gray-500 transition-transform ${
                   expandedSections.dateRange ? 'rotate-180' : ''
-                }`} 
+                }`}
               />
             </button>
             {expandedSections.dateRange && (
               <div className='px-4 pb-3 space-y-2'>
                 <div>
-                  <label className='block text-xs text-gray-600 mb-1'>Start Date</label>
+                  <label className='block text-xs text-gray-600 mb-1'>
+                    Start Date
+                  </label>
                   <input
                     type='date'
-                    value={filters.dateRange.start ? filters.dateRange.start.split('T')[0] : ''}
-                    onChange={(e) => handleDateRangeChange('start', e.target.value)}
+                    value={
+                      filters.dateRange.start
+                        ? filters.dateRange.start.split('T')[0]
+                        : ''
+                    }
+                    onChange={e =>
+                      handleDateRangeChange('start', e.target.value)
+                    }
                     className='w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500'
                   />
                 </div>
                 <div>
-                  <label className='block text-xs text-gray-600 mb-1'>End Date</label>
+                  <label className='block text-xs text-gray-600 mb-1'>
+                    End Date
+                  </label>
                   <input
                     type='date'
-                    value={filters.dateRange.end ? filters.dateRange.end.split('T')[0] : ''}
-                    onChange={(e) => handleDateRangeChange('end', e.target.value)}
+                    value={
+                      filters.dateRange.end
+                        ? filters.dateRange.end.split('T')[0]
+                        : ''
+                    }
+                    onChange={e => handleDateRangeChange('end', e.target.value)}
                     className='w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500'
                   />
                 </div>
@@ -528,10 +555,219 @@ const QuickFiltersDropdown = () => {
 
           {/* Footer */}
           <div className='px-4 py-2 bg-gray-50 text-xs text-gray-500'>
-            {activeFilterCount > 0 
+            {activeFilterCount > 0
               ? `${activeFilterCount} filter${activeFilterCount !== 1 ? 's' : ''} active`
-              : 'No filters applied'
-            }
+              : 'No filters applied'}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const SaveLayoutPresetButton = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [presetName, setPresetName] = useState('');
+  const [showNameInput, setShowNameInput] = useState(false);
+  const dropdownRef = useRef();
+  
+  const { savePreset, savedPresets } = useLayoutContext();
+
+  useEffect(() => {
+    const handleClickOutside = event => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+        setShowNameInput(false);
+        setPresetName('');
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSavePreset = () => {
+    if (presetName.trim()) {
+      savePreset(presetName.trim());
+      setPresetName('');
+      setShowNameInput(false);
+      setIsOpen(false);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSavePreset();
+    } else if (e.key === 'Escape') {
+      setShowNameInput(false);
+      setPresetName('');
+    }
+  };
+
+  return (
+    <div className='relative' ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className='w-[48px] h-[48px] bg-gray-100 hover:bg-blue-100 rounded flex items-center justify-center transition-colors duration-150 border-2 border-transparent'
+        title='Save current layout as preset'
+      >
+        <DocumentDuplicateIcon className='w-4 h-4 text-gray-700' />
+      </button>
+
+      {isOpen && (
+        <div className='absolute top-full left-0 mt-1 z-10 w-[240px] bg-white shadow-lg rounded-lg border border-gray-200'>
+          <div className='px-4 py-3 border-b border-gray-200 bg-gray-50'>
+            <h3 className='text-sm font-semibold text-gray-700'>Save Layout Preset</h3>
+          </div>
+          
+          <div className='p-4 space-y-3'>
+            {showNameInput ? (
+              <div className='space-y-2'>
+                <input
+                  type='text'
+                  value={presetName}
+                  onChange={(e) => setPresetName(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  placeholder='Enter preset name...'
+                  className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500'
+                  autoFocus
+                />
+                <div className='flex space-x-2'>
+                  <button
+                    onClick={handleSavePreset}
+                    disabled={!presetName.trim()}
+                    className='px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed'
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowNameInput(false);
+                      setPresetName('');
+                    }}
+                    className='px-3 py-1 text-xs bg-gray-300 text-gray-700 rounded hover:bg-gray-400'
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowNameInput(true)}
+                className='w-full px-3 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors'
+              >
+                Save Current Layout
+              </button>
+            )}
+            
+            {savedPresets.length > 0 && (
+              <div className='pt-2 border-t border-gray-200'>
+                <p className='text-xs text-gray-500 mb-2'>Saved Presets ({savedPresets.length})</p>
+                <div className='space-y-1 max-h-32 overflow-y-auto'>
+                  {savedPresets.map(preset => (
+                    <div key={preset.id} className='text-xs text-gray-600 px-2 py-1 bg-gray-50 rounded'>
+                      {preset.name}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const LoadLayoutPresetDropdown = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef();
+  
+  const { savedPresets, loadPreset, deletePreset, resetToDefault } = useLayoutContext();
+
+  useEffect(() => {
+    const handleClickOutside = event => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLoadPreset = (presetId) => {
+    loadPreset(presetId);
+    setIsOpen(false);
+  };
+
+  const handleDeletePreset = (e, presetId) => {
+    e.stopPropagation();
+    if (confirm('Are you sure you want to delete this preset?')) {
+      deletePreset(presetId);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  return (
+    <div className='relative' ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className='w-[48px] h-[48px] bg-gray-100 hover:bg-blue-100 rounded flex items-center justify-center transition-colors duration-150 border-2 border-transparent'
+        title='Load saved layout preset'
+      >
+        <PaperClipIcon className='w-4 h-4 text-gray-700' />
+      </button>
+
+      {isOpen && (
+        <div className='absolute top-full left-0 mt-1 z-10 w-[280px] bg-white shadow-lg rounded-lg border border-gray-200 max-h-80 overflow-y-auto'>
+          <div className='px-4 py-3 border-b border-gray-200 bg-gray-50'>
+            <h3 className='text-sm font-semibold text-gray-700'>Load Layout Preset</h3>
+          </div>
+          
+          <div className='p-2'>
+            {savedPresets.length === 0 ? (
+              <div className='px-3 py-4 text-center text-sm text-gray-500'>
+                No saved presets
+              </div>
+            ) : (
+              <div className='space-y-1'>
+                {savedPresets.map(preset => (
+                  <div
+                    key={preset.id}
+                    onClick={() => handleLoadPreset(preset.id)}
+                    className='px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors rounded flex items-center justify-between group'
+                  >
+                    <div>
+                      <div className='text-sm font-medium text-gray-700'>{preset.name}</div>
+                      <div className='text-xs text-gray-500'>Saved {formatDate(preset.createdAt)}</div>
+                    </div>
+                    <button
+                      onClick={(e) => handleDeletePreset(e, preset.id)}
+                      className='opacity-0 group-hover:opacity-100 p-1 text-red-500 hover:text-red-700 transition-opacity'
+                      title='Delete preset'
+                    >
+                      <svg className='w-3 h-3' fill='currentColor' viewBox='0 0 20 20'>
+                        <path fillRule='evenodd' d='M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z' clipRule='evenodd' />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            <div className='mt-3 pt-3 border-t border-gray-200'>
+              <button
+                onClick={() => {
+                  resetToDefault();
+                  setIsOpen(false);
+                }}
+                className='w-full px-3 py-2 text-sm bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors'
+              >
+                Reset to Default Layout
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -744,6 +980,12 @@ const ViewTab = () => {
       {/* Task Filters Group */}
       <RibbonGroup title='Task Filters'>
         <QuickFiltersDropdown />
+      </RibbonGroup>
+
+      {/* Layout Presets Group */}
+      <RibbonGroup title='Layout Presets'>
+        <SaveLayoutPresetButton />
+        <LoadLayoutPresetDropdown />
       </RibbonGroup>
 
       {/* View Group */}

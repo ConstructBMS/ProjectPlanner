@@ -613,6 +613,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Professional dropdown UI with expandable sections
   - Filter status display in dropdown footer
 
+## [2025-08-09] – Prompt 137
+
+### Added
+
+- **Layout Presets System for UI Configuration**
+  - Save current layout as named presets (column widths, pane sizes, visible columns)
+  - Load saved presets with instant application
+  - Delete individual presets with confirmation
+  - Reset to default layout functionality
+  - Layout persistence in localStorage
+  - Dynamic column width management with minimum constraints
+  - Pane size configuration for sidebar, properties, and Gantt areas
+  - Column visibility toggling for all available columns
+  - Professional preset management UI with save/load dropdowns
+  - Preset metadata including creation dates and names
+  - Comprehensive layout state management with LayoutContext
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

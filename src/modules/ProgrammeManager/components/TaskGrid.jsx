@@ -3,6 +3,7 @@ import { useTaskContext } from '../context/TaskContext';
 import { useViewContext } from '../context/ViewContext';
 import { useSelectionContext } from '../context/SelectionContext';
 import { useFilterContext } from '../context/FilterContext';
+import { useLayoutContext } from '../context/LayoutContext';
 import TaskLinkModal from './modals/TaskLinkModal';
 import ContextMenu from './ContextMenu';
 import { calculateWorkingDays } from '../utils/dateUtils';
@@ -43,8 +44,158 @@ const TaskGrid = React.memo(() => {
 
   const { isSelected, handleTaskClick, getSelectedCount } =
     useSelectionContext();
-  
+
   const { applyFilters } = useFilterContext();
+  
+  const { 
+    getColumnWidth, 
+    isColumnVisible, 
+    getAvailableColumns,
+    updateColumnWidth 
+  } = useLayoutContext();
+
+  // Render column content based on column type
+  const renderColumnContent = (columnKey, task, isEditing, editingField) => {
+    const isEditingThisField = isEditing && editingField.field === columnKey;
+    
+    switch (columnKey) {
+      case 'taskName':
+        return isEditingThisField ? (
+          <input
+            type='text'
+            value={editValue}
+            onChange={handleEditChange}
+            onKeyDown={handleEditKeyDown}
+            onBlur={handleEditBlur}
+            className='w-full px-1 py-0.5 border border-blue-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500'
+            autoFocus
+          />
+        ) : (
+          <div
+            className='truncate cursor-pointer'
+            onDoubleClick={e =>
+              handleEditDoubleClick(task.id, 'name', task.name, e)
+            }
+          >
+            {task.name}
+          </div>
+        );
+      
+      case 'startDate':
+        return isEditingThisField ? (
+          <input
+            type='date'
+            value={editValue}
+            onChange={handleEditChange}
+            onKeyDown={handleEditKeyDown}
+            onBlur={handleEditBlur}
+            className='w-full px-1 py-0.5 border border-blue-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500'
+            autoFocus
+          />
+        ) : (
+          <div
+            className='cursor-pointer'
+            onDoubleClick={e =>
+              handleEditDoubleClick(task.id, 'startDate', task.startDate, e)
+            }
+          >
+            {new Date(task.startDate).toLocaleDateString()}
+          </div>
+        );
+      
+      case 'endDate':
+        return isEditingThisField ? (
+          <input
+            type='date'
+            value={editValue}
+            onChange={handleEditChange}
+            onKeyDown={handleEditKeyDown}
+            onBlur={handleEditBlur}
+            className='w-full px-1 py-0.5 border border-blue-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500'
+            autoFocus
+          />
+        ) : (
+          <div
+            className='cursor-pointer'
+            onDoubleClick={e =>
+              handleEditDoubleClick(task.id, 'endDate', task.endDate, e)
+            }
+          >
+            {new Date(task.endDate).toLocaleDateString()}
+          </div>
+        );
+      
+      case 'duration':
+        return (
+          <div className='text-center'>
+            {calculateWorkingDays(task.startDate, task.endDate)}d
+          </div>
+        );
+      
+      case 'resource':
+        return (
+          <div className='truncate'>
+            {task.resource || task.assignedTo || '-'}
+          </div>
+        );
+      
+      case 'status':
+        return (
+          <span
+            className={`px-2 py-1 rounded-full text-xs font-medium ${
+              task.status === 'Complete'
+                ? 'bg-green-100 text-green-800'
+                : task.status === 'In Progress'
+                  ? 'bg-blue-100 text-blue-800'
+                  : task.status === 'Delayed'
+                    ? 'bg-red-100 text-red-800'
+                    : 'bg-gray-100 text-gray-800'
+            }`}
+          >
+            {task.status || 'Not Started'}
+          </span>
+        );
+      
+      case 'progress':
+        return (
+          <div className='flex items-center gap-1'>
+            <div className='flex-1 bg-gray-200 rounded-full h-2'>
+              <div
+                className='bg-blue-600 h-2 rounded-full transition-all duration-300'
+                style={{ width: `${task.progress || 0}%` }}
+              />
+            </div>
+            <span className='text-xs text-gray-600 w-8'>
+              {task.progress || 0}%
+            </span>
+          </div>
+        );
+      
+      case 'priority':
+        return (
+          <div className='text-center'>
+            {task.priority || '-'}
+          </div>
+        );
+      
+      case 'assignedTo':
+        return (
+          <div className='truncate'>
+            {task.assignedTo || '-'}
+          </div>
+        );
+      
+      case 'notes':
+        return (
+          <div className='truncate'>
+            {task.notes || '-'}
+          </div>
+        );
+      
+      default:
+        return <div className='truncate'>{task[columnKey] || '-'}</div>;
+    }
+  };
 
   const visibleTasks = useMemo(() => {
     try {
@@ -56,7 +207,7 @@ const TaskGrid = React.memo(() => {
       ) {
         tasks = getVisibleTasks(viewState.taskFilter || 'Show All');
       }
-      
+
       // Apply quick filters
       return applyFilters(tasks);
     } catch (error) {
@@ -307,133 +458,20 @@ const TaskGrid = React.memo(() => {
             )}
           </div>
 
-          {/* Task Name */}
-          <div className='flex-1 px-2 py-1 min-w-0'>
-            {isEditing && editingField.field === 'name' ? (
-              <input
-                type='text'
-                value={editValue}
-                onChange={handleEditChange}
-                onKeyDown={handleEditKeyDown}
-                onBlur={handleEditBlur}
-                className='w-full px-1 py-0.5 border border-blue-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500'
-                autoFocus
-              />
-            ) : (
+          {/* Dynamic Columns */}
+          {getAvailableColumns().map(column => {
+            if (!isColumnVisible(column.key)) return null;
+            
+            return (
               <div
-                className='truncate cursor-pointer'
-                onDoubleClick={e =>
-                  handleEditDoubleClick(task.id, 'name', task.name, e)
-                }
+                key={column.key}
+                className='px-2 py-1 text-sm'
+                style={{ width: getColumnWidth(column.key) }}
               >
-                {task.name}
+                {renderColumnContent(column.key, task, isEditing, editingField)}
               </div>
-            )}
-          </div>
-
-          {/* Start Date */}
-          <div className='w-24 px-2 py-1 text-sm'>
-            {isEditing && editingField.field === 'startDate' ? (
-              <input
-                type='date'
-                value={editValue}
-                onChange={handleEditChange}
-                onKeyDown={handleEditKeyDown}
-                onBlur={handleEditBlur}
-                className='w-full px-1 py-0.5 border border-blue-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500'
-                autoFocus
-              />
-            ) : (
-              <div
-                className='cursor-pointer'
-                onDoubleClick={e =>
-                  handleEditDoubleClick(task.id, 'startDate', task.startDate, e)
-                }
-              >
-                {new Date(task.startDate).toLocaleDateString()}
-              </div>
-            )}
-          </div>
-
-          {/* End Date */}
-          <div className='w-24 px-2 py-1 text-sm'>
-            {isEditing && editingField.field === 'endDate' ? (
-              <input
-                type='date'
-                value={editValue}
-                onChange={handleEditChange}
-                onKeyDown={handleEditKeyDown}
-                onBlur={handleEditBlur}
-                className='w-full px-1 py-0.5 border border-blue-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500'
-                autoFocus
-              />
-            ) : (
-              <div
-                className='cursor-pointer'
-                onDoubleClick={e =>
-                  handleEditDoubleClick(task.id, 'endDate', task.endDate, e)
-                }
-              >
-                {new Date(task.endDate).toLocaleDateString()}
-              </div>
-            )}
-          </div>
-
-          {/* Duration */}
-          <div className='w-16 px-2 py-1 text-sm text-center'>
-            {isEditing && editingField.field === 'duration' ? (
-              <input
-                type='text'
-                value={editValue}
-                onChange={handleEditChange}
-                onKeyDown={handleEditKeyDown}
-                onBlur={handleEditBlur}
-                className='w-full px-1 py-0.5 border border-blue-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500'
-                autoFocus
-              />
-            ) : (
-              <div
-                className='cursor-pointer'
-                onDoubleClick={e =>
-                  handleEditDoubleClick(task.id, 'duration', task.duration, e)
-                }
-              >
-                {calculateWorkingDays(task.startDate, task.endDate)}d
-              </div>
-            )}
-          </div>
-
-          {/* Status */}
-          <div className='w-20 px-2 py-1 text-sm'>
-            <span
-              className={`px-2 py-1 rounded-full text-xs font-medium ${
-                task.status === 'Complete'
-                  ? 'bg-green-100 text-green-800'
-                  : task.status === 'In Progress'
-                    ? 'bg-blue-100 text-blue-800'
-                    : task.status === 'Delayed'
-                      ? 'bg-red-100 text-red-800'
-                      : 'bg-gray-100 text-gray-800'
-              }`}
-            >
-              {task.status}
-            </span>
-          </div>
-
-          {/* Progress */}
-          <div className='w-20 px-2 py-1 text-sm'>
-            <div className='flex items-center gap-1'>
-              <div className='flex-1 bg-gray-200 rounded-full h-2'>
-                <div
-                  className='bg-blue-600 h-2 rounded-full transition-all duration-300'
-                  style={{ width: `${task.progress}%` }}
-                />
-              </div>
-              <span className='text-xs text-gray-600 w-8'>
-                {task.progress}%
-              </span>
-            </div>
-          </div>
+            );
+          })}
 
           {/* Assignee */}
           <div className='w-24 px-2 py-1 text-sm truncate'>
@@ -484,14 +522,18 @@ const TaskGrid = React.memo(() => {
         <div className='asta-grid-header flex items-center border-b-2 border-gray-300 bg-gray-50 sticky top-0 z-10'>
           <div className='w-8 h-8' />
           <div className='w-8 h-8' />
-          <div className='flex-1 px-2 py-2 font-semibold'>Task Name</div>
-          <div className='w-24 px-2 py-2 font-semibold'>Start Date</div>
-          <div className='w-24 px-2 py-2 font-semibold'>End Date</div>
-          <div className='w-16 px-2 py-2 font-semibold text-center'>
-            Duration
-          </div>
-          <div className='w-20 px-2 py-2 font-semibold'>Status</div>
-          <div className='w-20 px-2 py-2 font-semibold'>Progress</div>
+          {getAvailableColumns().map(column => {
+            if (!isColumnVisible(column.key)) return null;
+            return (
+              <div
+                key={column.key}
+                className='px-2 py-2 font-semibold text-center'
+                style={{ width: getColumnWidth(column.key) }}
+              >
+                {column.label}
+              </div>
+            );
+          })}
           <div className='w-24 px-2 py-2 font-semibold'>Assignee</div>
           <div className='w-16 px-2 py-2 font-semibold text-center'>
             Actions
