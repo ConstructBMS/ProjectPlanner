@@ -786,6 +786,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Visual indicators for tasks with and without baseline data
   - Comprehensive baseline performance analysis utilities
 
+## [2025-08-09] – Prompt 147
+
+### Added
+
+- **Auto-Scheduling Engine (Forward/Backward Pass)**
+  - Complete scheduling engine with forward and backward pass algorithms
+  - Support for all link types: FS (Finish-to-Start), SS (Start-to-Start), FF (Finish-to-Finish), SF (Start-to-Finish)
+  - Positive and negative lag support for all link types
+  - Automatic date recalculation when dependencies or durations change
+  - Calendar-aware scheduling respecting non-working days
+  - Critical path calculation with total and free float analysis
+  - Circular dependency detection and validation
+  - Real-time auto-scheduling with configurable triggers
+  - Manual scheduling controls in Project tab
+  - Comprehensive error handling and validation
+  - Integration with existing task and calendar systems
+  - Debounced scheduling to prevent excessive recalculations
+  - Professional scheduling statistics and reporting
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

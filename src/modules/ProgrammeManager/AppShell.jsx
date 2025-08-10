@@ -6,6 +6,7 @@ import { SelectionProvider } from './context/SelectionContext';
 import { FilterProvider } from './context/FilterContext';
 import { LayoutProvider } from './context/LayoutContext';
 import { UndoRedoProvider } from './context/UndoRedoContext';
+import { GanttProvider } from './context/GanttContext';
 import RibbonTabs from './components/RibbonTabs/RibbonTabs';
 import SidebarTree from './components/SidebarTree';
 import TaskGrid from './components/TaskGrid';
@@ -26,7 +27,10 @@ function AppShellContent() {
   };
   return (
     <TaskProvider>
-      <div ref={contentRef} className='h-screen w-screen flex flex-col overflow-hidden bg-gray-100'>
+      <div
+        ref={contentRef}
+        className='h-screen w-screen flex flex-col overflow-hidden bg-gray-100'
+      >
         {/* RibbonTabs - Fixed at top, full width */}
         <div className='z-10'>
           <RibbonTabs
@@ -91,7 +95,9 @@ export default function AppShell() {
           <SelectionProvider>
             <CalendarProvider>
               <ViewProvider>
-                <AppShellContent />
+                <GanttProvider>
+                  <AppShellContent />
+                </GanttProvider>
               </ViewProvider>
             </CalendarProvider>
           </SelectionProvider>

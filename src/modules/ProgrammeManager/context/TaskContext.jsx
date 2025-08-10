@@ -4,8 +4,18 @@ import {
   useState,
   useCallback,
   useMemo,
+  useEffect,
 } from 'react';
 import { useUndoRedoContext } from './UndoRedoContext';
+import { 
+  updateAllSummaryTasks, 
+  getVisibleTasks, 
+  getHierarchicalTasks,
+  getTaskDescendants,
+  getTaskAncestors,
+  isTaskVisible
+} from '../utils/rollupUtils';
+import { useCalendarContext } from './CalendarContext';
 
 const TaskContext = createContext();
 
@@ -19,6 +29,9 @@ export const useTaskContext = () => {
 };
 
 export const TaskProvider = ({ children }) => {
+  // Get global calendar for rollup calculations
+  const { globalCalendar } = useCalendarContext();
+  
   // Task data
   const [tasks, setTasks] = useState([
     {
@@ -921,11 +934,11 @@ export const TaskProvider = ({ children }) => {
 
       pushUndoAction(action);
       setTaskLinks(prev => [...prev, newLink]);
-      
+
       // Add history entries for both tasks
       const fromTask = tasks.find(t => t.id === fromId);
       const toTask = tasks.find(t => t.id === toId);
-      
+
       if (fromTask) {
         const fromHistoryEntry = {
           id: `history-${Date.now()}-from`,
@@ -936,12 +949,17 @@ export const TaskProvider = ({ children }) => {
           newValue: toTask?.name || toId,
           user: 'Current User',
         };
-        const updatedFromHistory = [...(fromTask.history || []), fromHistoryEntry];
-        setTasks(prev => prev.map(task => 
-          task.id === fromId ? { ...task, history: updatedFromHistory } : task
-        ));
+        const updatedFromHistory = [
+          ...(fromTask.history || []),
+          fromHistoryEntry,
+        ];
+        setTasks(prev =>
+          prev.map(task =>
+            task.id === fromId ? { ...task, history: updatedFromHistory } : task
+          )
+        );
       }
-      
+
       if (toTask) {
         const toHistoryEntry = {
           id: `history-${Date.now()}-to`,
@@ -953,11 +971,13 @@ export const TaskProvider = ({ children }) => {
           user: 'Current User',
         };
         const updatedToHistory = [...(toTask.history || []), toHistoryEntry];
-        setTasks(prev => prev.map(task => 
-          task.id === toId ? { ...task, history: updatedToHistory } : task
-        ));
+        setTasks(prev =>
+          prev.map(task =>
+            task.id === toId ? { ...task, history: updatedToHistory } : task
+          )
+        );
       }
-      
+
       console.log('Created task link:', newLink);
     },
     [taskLinks, createUndoAction, pushUndoAction]
@@ -999,11 +1019,11 @@ export const TaskProvider = ({ children }) => {
       setTaskLinks(prev =>
         prev.filter(link => !(link.fromId === fromId && link.toId === toId))
       );
-      
+
       // Add history entries for both tasks
       const fromTask = tasks.find(t => t.id === fromId);
       const toTask = tasks.find(t => t.id === toId);
-      
+
       if (fromTask) {
         const fromHistoryEntry = {
           id: `history-${Date.now()}-from`,
@@ -1014,12 +1034,17 @@ export const TaskProvider = ({ children }) => {
           newValue: 'None',
           user: 'Current User',
         };
-        const updatedFromHistory = [...(fromTask.history || []), fromHistoryEntry];
-        setTasks(prev => prev.map(task => 
-          task.id === fromId ? { ...task, history: updatedFromHistory } : task
-        ));
+        const updatedFromHistory = [
+          ...(fromTask.history || []),
+          fromHistoryEntry,
+        ];
+        setTasks(prev =>
+          prev.map(task =>
+            task.id === fromId ? { ...task, history: updatedFromHistory } : task
+          )
+        );
       }
-      
+
       if (toTask) {
         const toHistoryEntry = {
           id: `history-${Date.now()}-to`,
@@ -1031,11 +1056,13 @@ export const TaskProvider = ({ children }) => {
           user: 'Current User',
         };
         const updatedToHistory = [...(toTask.history || []), toHistoryEntry];
-        setTasks(prev => prev.map(task => 
-          task.id === toId ? { ...task, history: updatedToHistory } : task
-        ));
+        setTasks(prev =>
+          prev.map(task =>
+            task.id === toId ? { ...task, history: updatedToHistory } : task
+          )
+        );
       }
-      
+
       console.log('Removed task link:', { fromId, toId });
     },
     [taskLinks, createUndoAction, pushUndoAction]
@@ -1057,6 +1084,15 @@ export const TaskProvider = ({ children }) => {
       saveToUndoStack();
       setTaskLinks(prev => prev.filter(link => link.id !== linkId));
       console.log('Deleted task link:', linkId);
+    },
+    [saveToUndoStack]
+  );
+
+  const updateTaskLinks = useCallback(
+    newTaskLinks => {
+      saveToUndoStack();
+      setTaskLinks(newTaskLinks);
+      console.log('Updated task links:', newTaskLinks.length, 'links');
     },
     [saveToUndoStack]
   );
@@ -1172,6 +1208,7 @@ export const TaskProvider = ({ children }) => {
       unlinkTasks,
       updateLink,
       deleteLinkById,
+      updateTaskLinks,
 
       // Baseline operations
       setBaseline1,
@@ -1217,6 +1254,7 @@ export const TaskProvider = ({ children }) => {
       unlinkTasks,
       updateLink,
       deleteLinkById,
+      updateTaskLinks,
       setBaseline1,
       clearBaseline1,
       startLinkingMode,
