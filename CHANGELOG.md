@@ -1256,6 +1256,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Optimized performance with efficient state loading and saving
   - Responsive design that works across different screen sizes
 
+## [2025-08-09] – Prompt 177
+
+### Added
+
+- **Inline Lag/Lead Editing**
+  - Comprehensive dependency lag/lead editing system with inline popup modal
+  - Click-to-edit functionality on dependency arrows in Gantt chart
+  - Support for positive (lag) and negative (lead) time values
+  - Real-time link type selection with visual feedback and descriptions
+  - Professional modal interface with task information display
+  - Keyboard shortcuts (Enter to save, Escape to cancel) for efficient editing
+  - Input validation with error handling and user feedback
+  - Reset functionality to restore default values
+  - Click-outside-to-close behavior for intuitive user experience
+  - Automatic focus and text selection for immediate editing
+  - Visual indicators showing lag/lead status in input field
+  - Comprehensive link type descriptions for user education
+  - Seamless integration with existing task linking system
+  - Immediate scheduling updates after dependency modifications
+  - Professional error handling with clear user feedback
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

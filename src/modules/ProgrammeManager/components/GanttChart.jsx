@@ -88,6 +88,7 @@ import {
   DEFAULT_PROGRESS_EDIT_CONFIG,
 } from '../utils/progressEditUtils';
 import TaskSplitModal from './modals/TaskSplitModal';
+import DependencyLagModal from './modals/DependencyLagModal';
 import '../styles/gantt.css';
 
 const GanttChart = () => {
@@ -218,6 +219,9 @@ const GanttChart = () => {
   // Progress edit state
   const [progressEditState, setProgressEditState] = useState(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [showDependencyModal, setShowDependencyModal] = useState(false);
+  const [selectedLink, setSelectedLink] = useState(null);
+  const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
 
   const allTasks = getVisibleTasks(viewState.taskFilter);
   const tasks = applyFilters(allTasks);
@@ -878,9 +882,20 @@ const GanttChart = () => {
         arrow.appendChild(title);
 
         // Add click handler to edit link
-        arrow.addEventListener('click', () => {
-          console.log('Link clicked:', link);
-          // Could open edit modal here
+        arrow.addEventListener('click', (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          
+          // Calculate modal position
+          const rect = event.target.getBoundingClientRect();
+          const position = {
+            x: rect.left + rect.width / 2,
+            y: rect.top,
+          };
+          
+          setSelectedLink(link);
+          setModalPosition(position);
+          setShowDependencyModal(true);
         });
 
         svg.appendChild(arrow);
@@ -2160,7 +2175,10 @@ const GanttChart = () => {
                           }}
                         >
                           {createMilestoneShapeComponent(
-                            getTaskMilestoneShape(task, viewState.globalMilestoneShape),
+                            getTaskMilestoneShape(
+                              task,
+                              viewState.globalMilestoneShape
+                            ),
                             'w-4 h-4',
                             getMilestoneColor(
                               {
@@ -2168,7 +2186,10 @@ const GanttChart = () => {
                                 selected: selectedTaskId === task.id,
                                 hovered: hoveredTaskId === task.id,
                               },
-                              getTaskMilestoneShape(task, viewState.globalMilestoneShape)
+                              getTaskMilestoneShape(
+                                task,
+                                viewState.globalMilestoneShape
+                              )
                             )
                           )}
                         </div>
@@ -2932,6 +2953,25 @@ const GanttChart = () => {
           setTaskSplitModal({ isOpen: false, task: null });
         }}
       />
+
+      {/* Dependency Lag/Lead Modal */}
+      {showDependencyModal && selectedLink && (
+        <DependencyLagModal
+          link={selectedLink}
+          position={modalPosition}
+          onClose={() => {
+            setShowDependencyModal(false);
+            setSelectedLink(null);
+            setModalPosition({ x: 0, y: 0 });
+          }}
+          onSave={(updatedLink) => {
+            console.log('Dependency updated:', updatedLink);
+            setShowDependencyModal(false);
+            setSelectedLink(null);
+            setModalPosition({ x: 0, y: 0 });
+          }}
+        />
+      )}
     </div>
   );
 };
