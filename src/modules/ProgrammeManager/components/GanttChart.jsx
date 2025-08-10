@@ -80,6 +80,7 @@ import {
   compareWithBaseline,
   getBaselineComparisonMode,
 } from '../utils/baselineManagerUtils';
+import { getTaskBarLabels, getLabelTooltip } from '../utils/barLabelUtils';
 import TaskSplitModal from './modals/TaskSplitModal';
 import '../styles/gantt.css';
 
@@ -2246,14 +2247,40 @@ const GanttChart = () => {
                             />
                           )}
 
-                          {/* Task Name Label */}
-                          {width !== '0px' && parseFloat(width) > 60 && (
-                            <div className='absolute inset-0 flex items-center justify-center px-1 pointer-events-none'>
-                              <span className='text-white text-xs font-medium truncate'>
-                                {task.name}
-                              </span>
-                            </div>
-                          )}
+                          {/* Custom Bar Labels */}
+                          {(() => {
+                            const barWidth = parseFloat(width);
+                            const labels = getTaskBarLabels(task, viewState.userSettings, barWidth);
+                            
+                            return labels.map((label, index) => (
+                              <div
+                                key={label.id}
+                                className={`absolute pointer-events-none ${label.className}`}
+                                style={label.style}
+                                title={getLabelTooltip(label, task)}
+                              >
+                                {label.value}
+                              </div>
+                            ));
+                          })()}
+
+                          {/* Fallback Task Name Label */}
+                          {width !== '0px' && parseFloat(width) > 60 && (() => {
+                            const barWidth = parseFloat(width);
+                            const labels = getTaskBarLabels(task, viewState.userSettings, barWidth);
+                            
+                            // Only show fallback if no custom labels are configured or enabled
+                            if (labels.length === 0) {
+                              return (
+                                <div className='absolute inset-0 flex items-center justify-center px-1 pointer-events-none'>
+                                  <span className='text-white text-xs font-medium truncate'>
+                                    {task.name}
+                                  </span>
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
 
                           {/* Float Labels */}
                           {isFloatDisplayEnabled(viewState) &&
@@ -2310,16 +2337,91 @@ const GanttChart = () => {
                       )}
 
                       {/* Baseline Bar Overlay */}
-                      {viewState.showBaseline && (() => {
-                        // Check for active baseline from context
-                        const activeBaseline = viewState.activeBaselineId ? 
-                          getBaselineById(viewState.baselines || [], viewState.activeBaselineId) : null;
-                        
-                        if (activeBaseline) {
-                          const baselineTask = activeBaseline.data.tasks.find(bt => bt.id === task.id);
-                          if (baselineTask) {
-                            const baselineStart = new Date(baselineTask.startDate);
-                            const baselineEnd = new Date(baselineTask.endDate);
+                      {viewState.showBaseline &&
+                        (() => {
+                          // Check for active baseline from context
+                          const activeBaseline = viewState.activeBaselineId
+                            ? getBaselineById(
+                                viewState.baselines || [],
+                                viewState.activeBaselineId
+                              )
+                            : null;
+
+                          if (activeBaseline) {
+                            const baselineTask = activeBaseline.data.tasks.find(
+                              bt => bt.id === task.id
+                            );
+                            if (baselineTask) {
+                              const baselineStart = new Date(
+                                baselineTask.startDate
+                              );
+                              const baselineEnd = new Date(
+                                baselineTask.endDate
+                              );
+                              const actualEnd = new Date(task.endDate);
+                              const variance = Math.ceil(
+                                (actualEnd - baselineEnd) /
+                                  (1000 * 60 * 60 * 24)
+                              );
+
+                              return (
+                                <>
+                                  {/* Baseline bar */}
+                                  <div
+                                    className='h-[6px] bg-gray-300 rounded opacity-50 absolute bottom-0'
+                                    style={{
+                                      left: `${Math.max(
+                                        getDateIndex(baselineStart) *
+                                          scaledDayWidth,
+                                        0
+                                      )}px`,
+                                      width: `${Math.max(
+                                        Math.floor(
+                                          (baselineEnd - baselineStart) /
+                                            (1000 * 60 * 60 * 24)
+                                        ) * scaledDurationWidth,
+                                        40
+                                      )}px`,
+                                    }}
+                                    title={`${activeBaseline.name}: ${formatDate(baselineStart)} - ${formatDate(baselineEnd)}`}
+                                  />
+
+                                  {/* Variance connector line */}
+                                  {Math.abs(variance) > 1 && (
+                                    <div
+                                      className={`h-[2px] absolute bottom-1 ${
+                                        variance > 0
+                                          ? 'bg-red-400'
+                                          : 'bg-green-400'
+                                      } opacity-70`}
+                                      style={{
+                                        left: `${Math.min(
+                                          getDateIndex(baselineEnd) *
+                                            scaledDayWidth,
+                                          getDateIndex(actualEnd) *
+                                            scaledDayWidth
+                                        )}px`,
+                                        width: `${Math.max(
+                                          Math.abs(
+                                            getDateIndex(actualEnd) *
+                                              scaledDayWidth -
+                                              getDateIndex(baselineEnd) *
+                                                scaledDayWidth
+                                          ),
+                                          2
+                                        )}px`,
+                                      }}
+                                      title={`Variance: ${variance > 0 ? '+' : ''}${variance} days`}
+                                    />
+                                  )}
+                                </>
+                              );
+                            }
+                          }
+
+                          // Fallback to original baseline data
+                          if (hasBaselineData(task)) {
+                            const baselineEnd = new Date(task.baselineEnd);
                             const actualEnd = new Date(task.endDate);
                             const variance = Math.ceil(
                               (actualEnd - baselineEnd) / (1000 * 60 * 60 * 24)
@@ -2332,35 +2434,43 @@ const GanttChart = () => {
                                   className='h-[6px] bg-gray-300 rounded opacity-50 absolute bottom-0'
                                   style={{
                                     left: `${Math.max(
-                                      getDateIndex(baselineStart) * scaledDayWidth,
+                                      getDateIndex(
+                                        new Date(task.baselineStart)
+                                      ) * scaledDayWidth,
                                       0
                                     )}px`,
                                     width: `${Math.max(
                                       Math.floor(
-                                        (baselineEnd - baselineStart) /
+                                        (new Date(task.baselineEnd) -
+                                          new Date(task.baselineStart)) /
                                           (1000 * 60 * 60 * 24)
                                       ) * scaledDurationWidth,
                                       40
                                     )}px`,
                                   }}
-                                  title={`${activeBaseline.name}: ${formatDate(baselineStart)} - ${formatDate(baselineEnd)}`}
+                                  title={`Baseline: ${formatDate(new Date(task.baselineStart))} - ${formatDate(new Date(task.baselineEnd))}`}
                                 />
 
                                 {/* Variance connector line */}
                                 {Math.abs(variance) > 1 && (
                                   <div
                                     className={`h-[2px] absolute bottom-1 ${
-                                      variance > 0 ? 'bg-red-400' : 'bg-green-400'
+                                      variance > 0
+                                        ? 'bg-red-400'
+                                        : 'bg-green-400'
                                     } opacity-70`}
                                     style={{
                                       left: `${Math.min(
-                                        getDateIndex(baselineEnd) * scaledDayWidth,
+                                        getDateIndex(baselineEnd) *
+                                          scaledDayWidth,
                                         getDateIndex(actualEnd) * scaledDayWidth
                                       )}px`,
                                       width: `${Math.max(
                                         Math.abs(
-                                          getDateIndex(actualEnd) * scaledDayWidth -
-                                          getDateIndex(baselineEnd) * scaledDayWidth
+                                          getDateIndex(actualEnd) *
+                                            scaledDayWidth -
+                                            getDateIndex(baselineEnd) *
+                                              scaledDayWidth
                                         ),
                                         2
                                       )}px`,
@@ -2371,67 +2481,9 @@ const GanttChart = () => {
                               </>
                             );
                           }
-                        }
-                        
-                        // Fallback to original baseline data
-                        if (hasBaselineData(task)) {
-                          const baselineEnd = new Date(task.baselineEnd);
-                          const actualEnd = new Date(task.endDate);
-                          const variance = Math.ceil(
-                            (actualEnd - baselineEnd) / (1000 * 60 * 60 * 24)
-                          );
 
-                          return (
-                            <>
-                              {/* Baseline bar */}
-                              <div
-                                className='h-[6px] bg-gray-300 rounded opacity-50 absolute bottom-0'
-                                style={{
-                                  left: `${Math.max(
-                                    getDateIndex(new Date(task.baselineStart)) *
-                                      scaledDayWidth,
-                                    0
-                                  )}px`,
-                                  width: `${Math.max(
-                                    Math.floor(
-                                      (new Date(task.baselineEnd) -
-                                        new Date(task.baselineStart)) /
-                                        (1000 * 60 * 60 * 24)
-                                    ) * scaledDurationWidth,
-                                    40
-                                  )}px`,
-                                }}
-                                title={`Baseline: ${formatDate(new Date(task.baselineStart))} - ${formatDate(new Date(task.baselineEnd))}`}
-                              />
-
-                              {/* Variance connector line */}
-                              {Math.abs(variance) > 1 && (
-                                <div
-                                  className={`h-[2px] absolute bottom-1 ${
-                                    variance > 0 ? 'bg-red-400' : 'bg-green-400'
-                                  } opacity-70`}
-                                  style={{
-                                    left: `${Math.min(
-                                      getDateIndex(baselineEnd) * scaledDayWidth,
-                                      getDateIndex(actualEnd) * scaledDayWidth
-                                    )}px`,
-                                    width: `${Math.max(
-                                      Math.abs(
-                                        getDateIndex(actualEnd) * scaledDayWidth -
-                                        getDateIndex(baselineEnd) * scaledDayWidth
-                                      ),
-                                      2
-                                    )}px`,
-                                  }}
-                                  title={`Variance: ${variance > 0 ? '+' : ''}${variance} days`}
-                                />
-                              )}
-                            </>
-                          );
-                        }
-                        
-                        return null;
-                      })()}
+                          return null;
+                        })()}
 
                       {/* Progress Line Indicators */}
                       {viewState.statusDate &&

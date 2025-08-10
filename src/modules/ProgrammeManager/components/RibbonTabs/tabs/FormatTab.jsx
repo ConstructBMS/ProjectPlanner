@@ -1,6 +1,6 @@
 import React from 'react';
 import { RibbonGroup, RibbonButton } from '../../RibbonComponents';
-import { PaintBrushIcon } from '@heroicons/react/24/outline';
+import { PaintBrushIcon, TagIcon } from '@heroicons/react/24/outline';
 
 const FormatTab = ({ tasks, userSettings, onSettingsUpdate }) => {
   return (
@@ -18,10 +18,31 @@ const FormatTab = ({ tasks, userSettings, onSettingsUpdate }) => {
         />
       </RibbonGroup>
 
+      {/* Bar Labels Group */}
+      <RibbonGroup title='Bar Labels'>
+        <RibbonButton
+          icon={TagIcon}
+          label='Bar Labels'
+          description='Configure custom Gantt bar labels'
+          onClick={() => {
+            // This would typically open a modal or panel
+            console.log('Open Bar Label Editor');
+          }}
+        />
+      </RibbonGroup>
+
       {/* Bar Style Editor Panel */}
       <div className='mt-4'>
         <BarStyleEditor
           tasks={tasks}
+          userSettings={userSettings}
+          onSettingsUpdate={onSettingsUpdate}
+        />
+      </div>
+
+      {/* Bar Label Editor Panel */}
+      <div className='mt-4'>
+        <BarLabelEditor
           userSettings={userSettings}
           onSettingsUpdate={onSettingsUpdate}
         />
@@ -32,5 +53,6 @@ const FormatTab = ({ tasks, userSettings, onSettingsUpdate }) => {
 
 // Import the BarStyleEditor component
 import BarStyleEditor from '../../BarStyleEditor';
+import BarLabelEditor from '../../BarLabelEditor';
 
 export default FormatTab;

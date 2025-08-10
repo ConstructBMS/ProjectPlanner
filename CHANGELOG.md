@@ -986,6 +986,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Integration with existing Gantt chart baseline visualization
   - Comprehensive baseline utilities for management and comparison
 
+## [2025-08-09] – Prompt 161
+
+### Added
+
+- **Custom Gantt Bar Labels**
+  - Format Tab with comprehensive bar label configuration interface
+  - Label customization by type (task name, start date, finish date, duration, progress, resource, priority, status, cost)
+  - Flexible label positioning (left, center, right, top, bottom)
+  - Professional color picker integration with real-time preview
+  - Label validation with error handling and warnings
+  - Import/export functionality for label configurations
+  - Global settings for label management (max labels, min bar width, truncation)
+  - Integration with existing Gantt chart rendering system
+  - Comprehensive bar label utilities for management and validation
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
