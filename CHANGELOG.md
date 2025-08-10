@@ -770,6 +770,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Integration with existing task editing and history tracking
   - Proper opacity and border styling for visual hierarchy
 
+## [2025-08-09] – Prompt 149
+
+### Added
+
+- **Baseline Comparison View (Variance Columns & Bars)**
+  - Grid columns for Start Variance, Finish Variance, and Duration Variance
+  - Color-coded variance indicators (green for ahead, red for behind, blue for on-track)
+  - Baseline bars in Gantt chart with slim gray overlay
+  - Variance connector lines showing drift between baseline and actual end dates
+  - Enhanced tooltips with baseline vs actual comparison data
+  - Automatic variance calculations with proper date handling
+  - Integration with existing baseline functionality from Prompt 132
+  - Professional variance formatting (+5d, -2d, 0d)
+  - Visual indicators for tasks with and without baseline data
+  - Comprehensive baseline performance analysis utilities
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

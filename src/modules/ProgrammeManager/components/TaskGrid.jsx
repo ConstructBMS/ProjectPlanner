@@ -7,6 +7,11 @@ import { useLayoutContext } from '../context/LayoutContext';
 import TaskLinkModal from './modals/TaskLinkModal';
 import ContextMenu from './ContextMenu';
 import { calculateWorkingDays } from '../utils/dateUtils';
+import { 
+  calculateBaselinePerformance, 
+  formatVariance, 
+  hasBaselineData 
+} from '../utils/baselineUtils';
 
 // Diamond icon component for milestones
 const DiamondIcon = ({ className = 'w-4 h-4', color = 'text-purple-600' }) => (
@@ -45,8 +50,8 @@ const TaskGrid = React.memo(() => {
   const { isSelected, handleTaskClick, getSelectedCount } =
     useSelectionContext();
 
-    const { applyFilters } = useFilterContext();
-  
+  const { applyFilters } = useFilterContext();
+
   const {
     getColumnWidth,
     isColumnVisible,
@@ -55,7 +60,7 @@ const TaskGrid = React.memo(() => {
   } = useLayoutContext();
 
   // Resource calculation functions
-  const calculateTaskWork = useCallback((task) => {
+  const calculateTaskWork = useCallback(task => {
     if (!task.resourceAssignments || !Array.isArray(task.resourceAssignments)) {
       return 0;
     }
@@ -64,24 +69,31 @@ const TaskGrid = React.memo(() => {
     }, 0);
   }, []);
 
-  const calculateTaskCost = useCallback((task) => {
+  const calculateTaskCost = useCallback(task => {
     if (!task.resourceAssignments || !Array.isArray(task.resourceAssignments)) {
       return 0;
     }
     return task.resourceAssignments.reduce((total, assignment) => {
       const work = assignment.work || 0;
       const rate = assignment.rate || 0;
-      return total + (work * rate);
+      return total + work * rate;
     }, 0);
   }, []);
 
-  const calculateTaskUnits = useCallback((task) => {
-    if (!task.resourceAssignments || !Array.isArray(task.resourceAssignments) || task.resourceAssignments.length === 0) {
+  const calculateTaskUnits = useCallback(task => {
+    if (
+      !task.resourceAssignments ||
+      !Array.isArray(task.resourceAssignments) ||
+      task.resourceAssignments.length === 0
+    ) {
       return 0;
     }
-    const totalAllocation = task.resourceAssignments.reduce((total, assignment) => {
-      return total + (assignment.allocation || 0);
-    }, 0);
+    const totalAllocation = task.resourceAssignments.reduce(
+      (total, assignment) => {
+        return total + (assignment.allocation || 0);
+      },
+      0
+    );
     return totalAllocation / task.resourceAssignments.length;
   }, []);
 
@@ -212,7 +224,11 @@ const TaskGrid = React.memo(() => {
       case 'cost':
         return (
           <div className='text-right'>
-            £{calculateTaskCost(task).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            £
+            {calculateTaskCost(task).toLocaleString('en-GB', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
           </div>
         );
 
@@ -231,6 +247,60 @@ const TaskGrid = React.memo(() => {
 
       case 'notes':
         return <div className='truncate'>{task.notes || '-'}</div>;
+
+      case 'startVariance':
+        return (
+          <div className='text-center'>
+            {hasBaselineData(task) ? (
+              (() => {
+                const performance = calculateBaselinePerformance(task);
+                return (
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${performance.startStatus.bgColor} ${performance.startStatus.color}`}>
+                    {formatVariance(performance.startVariance)}
+                  </span>
+                );
+              })()
+            ) : (
+              <span className='text-gray-400 text-xs'>-</span>
+            )}
+          </div>
+        );
+
+      case 'finishVariance':
+        return (
+          <div className='text-center'>
+            {hasBaselineData(task) ? (
+              (() => {
+                const performance = calculateBaselinePerformance(task);
+                return (
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${performance.finishStatus.bgColor} ${performance.finishStatus.color}`}>
+                    {formatVariance(performance.finishVariance)}
+                  </span>
+                );
+              })()
+            ) : (
+              <span className='text-gray-400 text-xs'>-</span>
+            )}
+          </div>
+        );
+
+      case 'durationVariance':
+        return (
+          <div className='text-center'>
+            {hasBaselineData(task) ? (
+              (() => {
+                const performance = calculateBaselinePerformance(task);
+                return (
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${performance.durationStatus.bgColor} ${performance.durationStatus.color}`}>
+                    {formatVariance(performance.durationVariance)}
+                  </span>
+                );
+              })()
+            ) : (
+              <span className='text-gray-400 text-xs'>-</span>
+            )}
+          </div>
+        );
 
       default:
         return <div className='truncate'>{task[columnKey] || '-'}</div>;

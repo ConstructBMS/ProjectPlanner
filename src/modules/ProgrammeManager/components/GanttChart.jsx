@@ -31,6 +31,12 @@ import {
 import { validateTaskDates, getPredecessors } from '../utils/scheduleUtils';
 import { useCalendarContext } from '../context/CalendarContext';
 import { isWorkday, snapToWorkday } from '../utils/calendarUtils';
+import { 
+  hasBaselineData, 
+  getBaselineTooltip, 
+  calculateBaselinePerformance, 
+  formatVariance 
+} from '../utils/baselineUtils';
 import '../styles/gantt.css';
 
 const GanttChart = () => {
@@ -1601,7 +1607,7 @@ const GanttChart = () => {
       Date.now() - constraintWarning.timestamp < 2000; // Show for 2 seconds
 
     // Get default color based on task type
-    const getDefaultColor = (task) => {
+    const getDefaultColor = task => {
       if (task.type === 'milestone' || task.isMilestone) {
         return '#8B5CF6'; // Purple for milestones
       } else if (task.isGroup) {
@@ -1649,7 +1655,7 @@ const GanttChart = () => {
       style: {
         backgroundColor: isCritical ? undefined : `${taskColor}20`, // 20% opacity
         borderColor: isCritical ? undefined : `${taskColor}60`, // 60% opacity
-      }
+      },
     };
   };
 
@@ -2044,27 +2050,56 @@ const GanttChart = () => {
 
                       {/* Baseline Bar Overlay */}
                       {viewState.showBaseline &&
-                        task.baselineStart &&
-                        task.baselineEnd && (
-                          <div
-                            className='h-[6px] bg-gray-300 rounded opacity-50 absolute bottom-0'
-                            style={{
-                              left: `${Math.max(
-                                getDateIndex(new Date(task.baselineStart)) *
-                                  scaledDayWidth,
-                                0
-                              )}px`,
-                              width: `${Math.max(
-                                Math.floor(
-                                  (new Date(task.baselineEnd) -
-                                    new Date(task.baselineStart)) /
-                                    (1000 * 60 * 60 * 24)
-                                ) * scaledDurationWidth,
-                                40
-                              )}px`,
-                            }}
-                            title={`Baseline: ${formatDate(new Date(task.baselineStart))} - ${formatDate(new Date(task.baselineEnd))}`}
-                          />
+                        hasBaselineData(task) && (
+                          <>
+                            {/* Baseline bar */}
+                            <div
+                              className='h-[6px] bg-gray-300 rounded opacity-50 absolute bottom-0'
+                              style={{
+                                left: `${Math.max(
+                                  getDateIndex(new Date(task.baselineStart)) *
+                                    scaledDayWidth,
+                                  0
+                                )}px`,
+                                width: `${Math.max(
+                                  Math.floor(
+                                    (new Date(task.baselineEnd) -
+                                      new Date(task.baselineStart)) /
+                                      (1000 * 60 * 60 * 24)
+                                  ) * scaledDurationWidth,
+                                  40
+                                )}px`,
+                              }}
+                              title={`Baseline: ${formatDate(new Date(task.baselineStart))} - ${formatDate(new Date(task.baselineEnd))}`}
+                            />
+                            
+                            {/* Variance connector line */}
+                            {(() => {
+                              const baselineEnd = new Date(task.baselineEnd);
+                              const actualEnd = new Date(task.endDate);
+                              const variance = Math.ceil((actualEnd - baselineEnd) / (1000 * 60 * 60 * 24));
+                              
+                              if (Math.abs(variance) > 1) {
+                                const baselineEndX = getDateIndex(baselineEnd) * scaledDayWidth;
+                                const actualEndX = getDateIndex(actualEnd) * scaledDayWidth;
+                                const connectorWidth = Math.abs(actualEndX - baselineEndX);
+                                
+                                return (
+                                  <div
+                                    className={`h-[2px] absolute bottom-1 ${
+                                      variance > 0 ? 'bg-red-400' : 'bg-green-400'
+                                    } opacity-70`}
+                                    style={{
+                                      left: `${Math.min(baselineEndX, actualEndX)}px`,
+                                      width: `${Math.max(connectorWidth, 2)}px`,
+                                    }}
+                                    title={`Variance: ${variance > 0 ? '+' : ''}${variance} days`}
+                                  />
+                                );
+                              }
+                              return null;
+                            })()}
+                          </>
                         )}
 
                       {/* Slack Overlay */}
@@ -2124,7 +2159,7 @@ const GanttChart = () => {
                 days
               </span>
             </div>
-            {tooltip.task.baselineStart && tooltip.task.baselineEnd && (
+            {hasBaselineData(tooltip.task) && (
               <>
                 <div className='text-gray-400 mt-2 pt-1 border-t border-gray-700'>
                   Baseline:
@@ -2147,6 +2182,34 @@ const GanttChart = () => {
                     days
                   </span>
                 </div>
+                <div className='text-gray-400 mt-2 pt-1 border-t border-gray-700'>
+                  Variance:
+                </div>
+                {(() => {
+                  const performance = calculateBaselinePerformance(tooltip.task);
+                  return (
+                    <>
+                      <div className='flex justify-between text-gray-300'>
+                        <span className='text-gray-400'>Start:</span>
+                        <span className={performance.startStatus.color}>
+                          {formatVariance(performance.startVariance)}
+                        </span>
+                      </div>
+                      <div className='flex justify-between text-gray-300'>
+                        <span className='text-gray-400'>Finish:</span>
+                        <span className={performance.finishStatus.color}>
+                          {formatVariance(performance.finishVariance)}
+                        </span>
+                      </div>
+                      <div className='flex justify-between text-gray-300'>
+                        <span className='text-gray-400'>Duration:</span>
+                        <span className={performance.durationStatus.color}>
+                          {formatVariance(performance.durationVariance)}
+                        </span>
+                      </div>
+                    </>
+                  );
+                })()}
               </>
             )}
             {(tooltip.task.type === 'milestone' ||
