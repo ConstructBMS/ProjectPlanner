@@ -1064,6 +1064,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Professional toolbar with save, preview, import, export, and clear actions
   - Comprehensive notes utilities for management, validation, and auto-save handling
 
+## [2025-08-09] – Prompt 166
+
+### Added
+
+- **Task Attachments Support**
+  - Dedicated Attachments tab in Task Properties Pane with comprehensive file management
+  - Drag and drop file upload with visual feedback and progress indicators
+  - Support for multiple file types (images, documents, spreadsheets, archives)
+  - Supabase storage integration for secure file storage and retrieval
+  - Image preview functionality with inline display for supported formats
+  - File download functionality with automatic browser download handling
+  - Comprehensive file validation with size and type restrictions
+  - Search and filter capabilities with category and date range filtering
+  - Sort functionality by name, size, upload date, and other criteria
+  - Import/export functionality for attachment metadata in JSON format
+  - Professional file management interface with statistics and validation
+  - Comprehensive attachments utilities for upload, storage, and preview handling
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

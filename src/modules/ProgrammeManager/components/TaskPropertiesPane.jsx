@@ -4,6 +4,7 @@ import { useCalendarContext } from '../context/CalendarContext';
 import { useUndoRedoContext } from '../context/UndoRedoContext';
 import DeleteTaskModal from './modals/DeleteTaskModal';
 import NotesTab from './TaskPropertiesPane/NotesTab';
+import AttachmentsTab from './TaskPropertiesPane/AttachmentsTab';
 import { SketchPicker } from 'react-color';
 import {
   CalendarIcon,
@@ -408,6 +409,16 @@ const TaskPropertiesPane = () => {
               }`}
             >
               Notes
+            </button>
+            <button
+              onClick={() => setActiveTab('attachments')}
+              className={`px-4 py-2 text-xs font-medium border-b-2 transition-colors ${
+                activeTab === 'attachments'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Attachments
             </button>
           </div>
         </div>
@@ -1271,9 +1282,18 @@ const TaskPropertiesPane = () => {
 
           {/* Notes Tab Content */}
           {activeTab === 'notes' && (
-            <NotesTab 
-              task={selectedTask} 
+            <NotesTab
+              task={selectedTask}
               onTaskUpdate={updateTask}
+            />
+          )}
+
+          {/* Attachments Tab Content */}
+          {activeTab === 'attachments' && (
+            <AttachmentsTab
+              task={selectedTask}
+              onTaskUpdate={updateTask}
+              supabaseClient={null} // TODO: Pass actual Supabase client
             />
           )}
 
