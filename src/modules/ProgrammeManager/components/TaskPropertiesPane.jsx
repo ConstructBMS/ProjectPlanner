@@ -18,6 +18,7 @@ import {
   TrashIcon,
   CogIcon,
   PaintBrushIcon,
+  ClockIcon,
 } from '@heroicons/react/24/outline';
 import {
   CONSTRAINT_TYPES,
@@ -596,7 +597,7 @@ const TaskPropertiesPane = () => {
               {editingTask.calendarId && (() => {
                 const selectedCalendar = getProjectCalendarById(editingTask.calendarId);
                 if (!selectedCalendar) return null;
-                
+
                 return (
                   <div className='p-2 bg-blue-50 border border-blue-200 rounded'>
                     <div className='text-xs font-medium text-blue-700 mb-1'>
@@ -631,6 +632,131 @@ const TaskPropertiesPane = () => {
                     </span>
                   </div>
                 </div>
+              )}
+            </div>
+          </div>
+
+          {/* Deadline Section */}
+          <div className='bg-white border border-gray-200 rounded-lg p-4'>
+            <div className='flex items-center gap-2 mb-3'>
+              <ClockIcon className='w-4 h-4 text-red-600' />
+              <h4 className='text-sm font-semibold text-gray-700'>Deadline</h4>
+            </div>
+
+            <div className='space-y-3'>
+              <div>
+                <label className='block text-xs font-medium text-gray-600 mb-1'>
+                  Deadline Date
+                </label>
+                <input
+                  type='date'
+                  value={editingTask.deadline || ''}
+                  onChange={e => handleFieldChange('deadline', e.target.value || null)}
+                  className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                />
+                <div className='mt-1 text-xs text-gray-500'>
+                  {editingTask.deadline ? (
+                    (() => {
+                      const deadline = new Date(editingTask.deadline);
+                      const endDate = editingTask.endDate ? new Date(editingTask.endDate) : null;
+                      const isOverdue = endDate && endDate > deadline;
+                      const daysUntilDeadline = Math.ceil((deadline.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                      
+                      if (isOverdue) {
+                        const daysOverdue = Math.ceil((endDate.getTime() - deadline.getTime()) / (1000 * 60 * 60 * 24));
+                        return `⚠️ Overdue by ${daysOverdue} day${daysOverdue !== 1 ? 's' : ''}`;
+                      } else if (daysUntilDeadline < 0) {
+                        return `⚠️ Deadline has passed`;
+                      } else if (daysUntilDeadline === 0) {
+                        return `⚠️ Deadline is today`;
+                      } else if (daysUntilDeadline <= 7) {
+                        return `⚠️ Due in ${daysUntilDeadline} day${daysUntilDeadline !== 1 ? 's' : ''}`;
+                      } else {
+                        return `Due in ${daysUntilDeadline} day${daysUntilDeadline !== 1 ? 's' : ''}`;
+                      }
+                    })()
+                  ) : (
+                    'No deadline set'
+                  )}
+                </div>
+              </div>
+
+              {/* Deadline Status Display */}
+              {editingTask.deadline && (() => {
+                const deadline = new Date(editingTask.deadline);
+                const endDate = editingTask.endDate ? new Date(editingTask.endDate) : null;
+                const isOverdue = endDate && endDate > deadline;
+                const daysUntilDeadline = Math.ceil((deadline.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                
+                if (isOverdue) {
+                  const daysOverdue = Math.ceil((endDate.getTime() - deadline.getTime()) / (1000 * 60 * 60 * 24));
+                  return (
+                    <div className='p-2 bg-red-50 border border-red-200 rounded'>
+                      <div className='flex items-center gap-1'>
+                        <ExclamationTriangleIcon className='w-3 h-3 text-red-600' />
+                        <span className='text-xs font-medium text-red-700'>
+                          Deadline Exceeded
+                        </span>
+                      </div>
+                      <div className='text-xs text-red-600 mt-1'>
+                        Task finished {daysOverdue} day{daysOverdue !== 1 ? 's' : ''} after deadline
+                      </div>
+                    </div>
+                  );
+                } else if (daysUntilDeadline < 0) {
+                  return (
+                    <div className='p-2 bg-red-50 border border-red-200 rounded'>
+                      <div className='flex items-center gap-1'>
+                        <ExclamationTriangleIcon className='w-3 h-3 text-red-600' />
+                        <span className='text-xs font-medium text-red-700'>
+                          Deadline Passed
+                        </span>
+                      </div>
+                      <div className='text-xs text-red-600 mt-1'>
+                        Task is overdue and should be completed immediately
+                      </div>
+                    </div>
+                  );
+                } else if (daysUntilDeadline <= 7) {
+                  return (
+                    <div className='p-2 bg-yellow-50 border border-yellow-200 rounded'>
+                      <div className='flex items-center gap-1'>
+                        <ExclamationTriangleIcon className='w-3 h-3 text-yellow-600' />
+                        <span className='text-xs font-medium text-yellow-700'>
+                          Deadline Approaching
+                        </span>
+                      </div>
+                      <div className='text-xs text-yellow-600 mt-1'>
+                        Due in {daysUntilDeadline} day{daysUntilDeadline !== 1 ? 's' : ''}
+                      </div>
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div className='p-2 bg-green-50 border border-green-200 rounded'>
+                      <div className='flex items-center gap-1'>
+                        <CheckIcon className='w-3 h-3 text-green-600' />
+                        <span className='text-xs font-medium text-green-700'>
+                          On Track
+                        </span>
+                      </div>
+                      <div className='text-xs text-green-600 mt-1'>
+                        Due in {daysUntilDeadline} day{daysUntilDeadline !== 1 ? 's' : ''}
+                      </div>
+                    </div>
+                  );
+                }
+              })()}
+
+              {/* Clear Deadline Button */}
+              {editingTask.deadline && (
+                <button
+                  onClick={() => handleFieldChange('deadline', null)}
+                  className='w-full px-3 py-2 text-xs text-gray-600 border border-gray-300 rounded hover:bg-gray-50 transition-colors'
+                  title='Remove deadline'
+                >
+                  Clear Deadline
+                </button>
               )}
             </div>
           </div>

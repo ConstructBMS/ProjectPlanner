@@ -871,6 +871,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Real-time calendar validation and conflict detection
   - Comprehensive calendar utilities for task-specific scheduling
 
+## [2025-08-09] – Prompt 153
+
+### Added
+
+- **Task Deadline Tracking**
+  - Deadline date picker in Task Properties pane with status display
+  - Visual deadline markers in Gantt chart with color-coded status
+  - Deadline warning icons in task grid and Gantt chart
+  - Comprehensive deadline status calculation (overdue, approaching, on-track)
+  - Deadline information in task tooltips with detailed status
+  - Deadline column in task grid with status badges and icons
+  - Professional deadline utilities for status calculation and formatting
+  - Real-time deadline validation and warning system
+  - Integration with existing task management and scheduling systems
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

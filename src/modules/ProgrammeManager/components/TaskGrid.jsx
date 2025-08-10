@@ -17,6 +17,12 @@ import {
   calculateTaskProgressStatus,
   getStatusStyling,
 } from '../utils/progressLineUtils';
+import {
+  calculateDeadlineStatus,
+  getDeadlineStatusStyling,
+  hasDeadlineWarning,
+  getDeadlineTooltip,
+} from '../utils/deadlineUtils';
 
 // Diamond icon component for milestones
 const DiamondIcon = ({ className = 'w-4 h-4', color = 'text-purple-600' }) => (
@@ -337,6 +343,29 @@ const TaskGrid = React.memo(() => {
                 </span>
               );
             })()}
+          </div>
+        );
+
+      case 'deadline':
+        return (
+          <div className='text-center'>
+            {task.deadline ? (
+              (() => {
+                const deadlineStatus = calculateDeadlineStatus(task);
+                const styling = getDeadlineStatusStyling(deadlineStatus.status);
+                
+                return (
+                  <span
+                    className={`px-2 py-1 rounded text-xs font-medium ${styling.bgColor} ${styling.color} border ${styling.borderColor}`}
+                    title={getDeadlineTooltip(task)}
+                  >
+                    {styling.icon} {new Date(task.deadline).toLocaleDateString()}
+                  </span>
+                );
+              })()
+            ) : (
+              <span className='text-gray-400 text-xs'>-</span>
+            )}
           </div>
         );
 

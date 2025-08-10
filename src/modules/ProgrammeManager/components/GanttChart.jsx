@@ -47,6 +47,14 @@ import {
   getConstraintTooltip,
   formatConstraint,
 } from '../utils/constraintUtils';
+import {
+  calculateDeadlineStatus,
+  getDeadlineStatusStyling,
+  calculateDeadlinePosition,
+  getDeadlineTooltip,
+  hasDeadlineWarning,
+  getDeadlineWarningLevel,
+} from '../utils/deadlineUtils';
 import '../styles/gantt.css';
 
 const GanttChart = () => {
@@ -1837,27 +1845,54 @@ const GanttChart = () => {
           </defs>
         </svg>
 
-        {/* Progress Line */}
-        {viewState.statusDate &&
-          (() => {
-            const statusDate = new Date(viewState.statusDate);
-            const projectStart = new Date('2024-01-01'); // Use same start as timeline
-            const progressLinePosition = calculateProgressLinePosition(
-              statusDate,
-              projectStart,
-              getScaledWidth
-            );
+                    {/* Progress Line */}
+            {viewState.statusDate &&
+              (() => {
+                const statusDate = new Date(viewState.statusDate);
+                const projectStart = new Date('2024-01-01'); // Use same start as timeline
+                const progressLinePosition = calculateProgressLinePosition(
+                  statusDate,
+                  projectStart,
+                  getScaledWidth
+                );
 
-            return (
-              <div
-                className='absolute top-0 bottom-0 w-0.5 bg-red-500 z-30 pointer-events-none'
-                style={{
-                  left: `${progressLinePosition}px`,
-                }}
-                title={`Progress Line: ${statusDate.toLocaleDateString()}`}
-              />
-            );
-          })()}
+                return (
+                  <div
+                    className='absolute top-0 bottom-0 w-0.5 bg-red-500 z-30 pointer-events-none'
+                    style={{
+                      left: `${progressLinePosition}px`,
+                    }}
+                    title={`Progress Line: ${statusDate.toLocaleDateString()}`}
+                  />
+                );
+              })()}
+
+            {/* Deadline Markers */}
+            {tasks
+              .filter(task => task.deadline)
+              .map(task => {
+                const deadline = new Date(task.deadline);
+                const projectStart = new Date('2024-01-01'); // Use same start as timeline
+                const deadlinePosition = calculateDeadlinePosition(
+                  deadline,
+                  projectStart,
+                  getScaledWidth
+                );
+                const deadlineStatus = calculateDeadlineStatus(task);
+                const styling = getDeadlineStatusStyling(deadlineStatus.status);
+
+                return (
+                  <div
+                    key={`deadline-${task.id}`}
+                    className='absolute top-0 bottom-0 w-0.5 z-25 pointer-events-none'
+                    style={{
+                      left: `${deadlinePosition}px`,
+                      backgroundColor: deadlineStatus.isOverdue ? '#ef4444' : '#f59e0b',
+                    }}
+                    title={getDeadlineTooltip(task)}
+                  />
+                );
+              })}
 
         {/* Timeline Content */}
         <div className='relative z-20'>
@@ -1953,6 +1988,27 @@ const GanttChart = () => {
                       <span className={getTaskNameStyle(task)}>
                         {task.name}
                       </span>
+                      
+                      {/* Deadline Warning Icon */}
+                      {hasDeadlineWarning(task) && (
+                        <div
+                          className='ml-1 flex items-center'
+                          title={getDeadlineTooltip(task)}
+                        >
+                          {(() => {
+                            const deadlineStatus = calculateDeadlineStatus(task);
+                            const styling = getDeadlineStatusStyling(deadlineStatus.status);
+                            return (
+                              <span
+                                className={`text-xs ${styling.color}`}
+                                title={styling.tooltip}
+                              >
+                                {styling.icon}
+                              </span>
+                            );
+                          })()}
+                        </div>
+                      )}
                     </div>
 
                     {/* Timeline Bar Area */}
@@ -2332,6 +2388,17 @@ const GanttChart = () => {
                 </div>
                 <div className='text-xs text-gray-400 mt-1'>
                   {getConstraintTooltip(tooltip.task.constraints)}
+                </div>
+              </div>
+            )}
+            {tooltip.task.deadline && (
+              <div className='text-red-300 font-medium mt-2 pt-1 border-t border-gray-700'>
+                <div className='flex justify-between'>
+                  <span>Deadline:</span>
+                  <span>{new Date(tooltip.task.deadline).toLocaleDateString()}</span>
+                </div>
+                <div className='text-xs text-gray-400 mt-1'>
+                  {getDeadlineTooltip(tooltip.task)}
                 </div>
               </div>
             )}
