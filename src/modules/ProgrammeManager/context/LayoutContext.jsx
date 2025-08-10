@@ -35,6 +35,8 @@ export const LayoutProvider = ({ children }) => {
       scheduleStatus: 120,
       deadline: 120,
       criticalPath: 100,
+      totalFloat: 100,
+      freeFloat: 100,
     },
     paneSizes: {
       sidebar: 300,
@@ -58,6 +60,8 @@ export const LayoutProvider = ({ children }) => {
       'scheduleStatus',
       'deadline',
       'criticalPath',
+      'totalFloat',
+      'freeFloat',
     ],
   });
 
@@ -241,6 +245,8 @@ export const LayoutProvider = ({ children }) => {
       { key: 'scheduleStatus', label: 'Schedule Status', defaultWidth: 120 },
       { key: 'deadline', label: 'Deadline', defaultWidth: 120 },
       { key: 'criticalPath', label: 'Critical Path', defaultWidth: 100 },
+      { key: 'totalFloat', label: 'Total Float', defaultWidth: 100 },
+      { key: 'freeFloat', label: 'Free Float', defaultWidth: 100 },
       { key: 'priority', label: 'Priority', defaultWidth: 80 },
       { key: 'assignedTo', label: 'Assigned To', defaultWidth: 120 },
       { key: 'notes', label: 'Notes', defaultWidth: 150 },

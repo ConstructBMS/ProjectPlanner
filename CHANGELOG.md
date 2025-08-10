@@ -901,6 +901,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Integration with existing scheduling engine and task management
   - Real-time critical path updates and visual feedback
 
+## [2025-08-09] – Prompt 155
+
+### Added
+
+- **Slack/Float Calculation**
+  - Total float and free float columns in Task Grid with color-coded status
+  - Float values displayed in days with professional formatting
+  - Optional float display in Gantt bars as small labels for low float tasks
+  - Float information in task tooltips with detailed explanations
+  - Professional float utilities for calculation, formatting, and styling
+  - Real-time float updates during schedule calculations
+  - Integration with existing critical path and scheduling systems
+  - Comprehensive float status indicators and visual feedback
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

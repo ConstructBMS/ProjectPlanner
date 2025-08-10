@@ -27,6 +27,11 @@ import {
   getCriticalPathStyling,
   getCriticalPathTooltip,
 } from '../utils/criticalPathUtils';
+import {
+  formatFloat,
+  getFloatStyling,
+  getFloatTooltip,
+} from '../utils/floatUtils';
 
 // Diamond icon component for milestones
 const DiamondIcon = ({ className = 'w-4 h-4', color = 'text-purple-600' }) => (
@@ -350,14 +355,14 @@ const TaskGrid = React.memo(() => {
           </div>
         );
 
-            case 'deadline':
+      case 'deadline':
         return (
           <div className='text-center'>
             {task.deadline ? (
               (() => {
                 const deadlineStatus = calculateDeadlineStatus(task);
                 const styling = getDeadlineStatusStyling(deadlineStatus.status);
-                
+
                 return (
                   <span
                     className={`px-2 py-1 rounded text-xs font-medium ${styling.bgColor} ${styling.color} border ${styling.borderColor}`}
@@ -380,7 +385,7 @@ const TaskGrid = React.memo(() => {
             {task.isCritical ? (
               (() => {
                 const styling = getCriticalPathStyling(true);
-                
+
                 return (
                   <span
                     className={`px-2 py-1 rounded text-xs font-medium ${styling.className} text-white`}
@@ -393,6 +398,42 @@ const TaskGrid = React.memo(() => {
             ) : (
               <span className='text-gray-400 text-xs'>Normal</span>
             )}
+          </div>
+        );
+
+      case 'totalFloat':
+        return (
+          <div className='text-center'>
+            {(() => {
+              const styling = getFloatStyling(task.totalFloat, 'total');
+
+              return (
+                <span
+                  className={`px-2 py-1 rounded text-xs font-medium ${styling.bgColor} ${styling.color} border ${styling.borderColor}`}
+                  title={getFloatTooltip(task, 'total')}
+                >
+                  {styling.icon} {formatFloat(task.totalFloat)}
+                </span>
+              );
+            })()}
+          </div>
+        );
+
+      case 'freeFloat':
+        return (
+          <div className='text-center'>
+            {(() => {
+              const styling = getFloatStyling(task.freeFloat, 'free');
+
+              return (
+                <span
+                  className={`px-2 py-1 rounded text-xs font-medium ${styling.bgColor} ${styling.color} border ${styling.borderColor}`}
+                  title={getFloatTooltip(task, 'free')}
+                >
+                  {styling.icon} {formatFloat(task.freeFloat)}
+                </span>
+              );
+            })()}
           </div>
         );
 

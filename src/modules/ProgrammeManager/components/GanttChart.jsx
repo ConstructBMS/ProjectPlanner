@@ -60,6 +60,13 @@ import {
   getCriticalPathTooltip,
   isCriticalPathHighlightingEnabled,
 } from '../utils/criticalPathUtils';
+import {
+  formatFloat,
+  getFloatStyling,
+  getFloatTooltip,
+  getFloatDisplayPosition,
+  isFloatDisplayEnabled,
+} from '../utils/floatUtils';
 import '../styles/gantt.css';
 
 const GanttChart = () => {
@@ -1617,7 +1624,8 @@ const GanttChart = () => {
     const isTaskSelected = isSelected(task.id);
     const isHovered = hoveredTaskId === task.id;
     const isLinkStart = linkingMode && linkStartTaskId === task.id;
-    const isCritical = task.isCritical && isCriticalPathHighlightingEnabled(viewState);
+    const isCritical =
+      task.isCritical && isCriticalPathHighlightingEnabled(viewState);
     const isDragging = dragging.taskId === task.id;
     const isMilestone =
       task.type === 'milestone' ||
@@ -1646,7 +1654,9 @@ const GanttChart = () => {
     const taskColor = task.color || getDefaultColor(task);
 
     // Get critical path styling if enabled
-    const criticalPathStyling = isCritical ? getCriticalPathStyling(true) : null;
+    const criticalPathStyling = isCritical
+      ? getCriticalPathStyling(true)
+      : null;
 
     let baseClasses =
       'rounded-sm transition-all duration-200 cursor-move border';
@@ -1687,8 +1697,12 @@ const GanttChart = () => {
     return {
       className: baseClasses,
       style: {
-        backgroundColor: isCritical ? criticalPathStyling.backgroundColor : `${taskColor}20`, // 20% opacity
-        borderColor: isCritical ? criticalPathStyling.borderColor : `${taskColor}60`, // 60% opacity
+        backgroundColor: isCritical
+          ? criticalPathStyling.backgroundColor
+          : `${taskColor}20`, // 20% opacity
+        borderColor: isCritical
+          ? criticalPathStyling.borderColor
+          : `${taskColor}60`, // 60% opacity
         color: isCritical ? criticalPathStyling.color : undefined,
       },
     };
@@ -2135,6 +2149,33 @@ const GanttChart = () => {
                             </div>
                           )}
 
+                          {/* Float Labels */}
+                          {isFloatDisplayEnabled(viewState) && (() => {
+                            const floatDisplay = getFloatDisplayPosition(task, parseFloat(width));
+                            if (!floatDisplay) return null;
+                            
+                            return (
+                              <div className='absolute top-0 right-0 pointer-events-none'>
+                                {floatDisplay.showTotalFloat && (
+                                  <div
+                                    className='bg-red-600 text-white text-xs px-1 rounded-sm mb-0.5'
+                                    title={getFloatTooltip(task, 'total')}
+                                  >
+                                    {floatDisplay.totalFloatText}
+                                  </div>
+                                )}
+                                {floatDisplay.showFreeFloat && (
+                                  <div
+                                    className='bg-blue-600 text-white text-xs px-1 rounded-sm'
+                                    title={getFloatTooltip(task, 'free')}
+                                  >
+                                    {floatDisplay.freeFloatText}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
+
                           {/* Resize Handles */}
                           {(selectedTaskId === task.id ||
                             hoveredTaskId === task.id) && (
@@ -2429,6 +2470,21 @@ const GanttChart = () => {
                 </div>
                 <div className='text-xs text-gray-400 mt-1'>
                   {getCriticalPathTooltip(tooltip.task)}
+                </div>
+              </div>
+            )}
+            {(tooltip.task.totalFloat !== undefined || tooltip.task.freeFloat !== undefined) && (
+              <div className='text-blue-300 font-medium mt-2 pt-1 border-t border-gray-700'>
+                <div className='flex justify-between'>
+                  <span>Total Float:</span>
+                  <span>{formatFloat(tooltip.task.totalFloat)}</span>
+                </div>
+                <div className='flex justify-between'>
+                  <span>Free Float:</span>
+                  <span>{formatFloat(tooltip.task.freeFloat)}</span>
+                </div>
+                <div className='text-xs text-gray-400 mt-1'>
+                  {getFloatTooltip(tooltip.task, 'total')}
                 </div>
               </div>
             )}
