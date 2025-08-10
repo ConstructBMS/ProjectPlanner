@@ -6,6 +6,8 @@ import { useUndoRedoContext } from '../../../context/UndoRedoContext';
 import RibbonButton from '../shared/RibbonButton';
 import RibbonGroup from '../shared/RibbonGroup';
 import RibbonDropdown from '../shared/RibbonDropdown';
+import PrintExportDialog from '../../../../PrintExportDialog';
+import { exportProject, printProject } from '../../../../utils/printExportUtils';
 
 import {
   ClipboardDocumentIcon,
@@ -39,10 +41,13 @@ import {
   ArrowUturnLeftIcon,
   ArrowUturnRightIcon,
   TrashIcon,
+  PrinterIcon,
+  DocumentArrowDownIcon,
 } from '@heroicons/react/24/outline';
 
 export default function HomeTab({ onExpandAll, onCollapseAll }) {
   const [isAllExpanded, setIsAllExpanded] = useState(false);
+  const [showPrintExportDialog, setShowPrintExportDialog] = useState(false);
 
   const {
     addMilestone,
@@ -71,7 +76,7 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
   } = useViewContext();
 
   // Get expand milestones function and tasks from task context
-  const { expandMilestones, getVisibleTasks } = useTaskContext();
+  const { expandMilestones, getVisibleTasks, tasks, taskLinks } = useTaskContext();
 
   const handleTaskDetailsClick = () => {
     console.log('Task details clicked');
@@ -131,6 +136,26 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     } else {
       onExpandAll();
       setIsAllExpanded(true);
+    }
+  };
+
+  // Print and Export handlers
+  const handlePrint = async (printSettings) => {
+    try {
+      await printProject(printSettings, tasks, taskLinks, viewState);
+    } catch (error) {
+      console.error('Print error:', error);
+      throw error;
+    }
+  };
+
+  const handleExport = async (exportSettings) => {
+    try {
+      const filename = await exportProject(exportSettings, tasks, taskLinks, viewState);
+      console.log('Export completed:', filename);
+    } catch (error) {
+      console.error('Export error:', error);
+      throw error;
     }
   };
 
@@ -378,6 +403,22 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
         />
       </RibbonGroup>
 
+      {/* Print/Export Group */}
+      <RibbonGroup title='Print/Export'>
+        <RibbonButton
+          icon={<PrinterIcon className='w-4 h-4' />}
+          label='Print'
+          onClick={() => setShowPrintExportDialog(true)}
+          tooltip='Print project schedule with advanced options'
+        />
+        <RibbonButton
+          icon={<DocumentArrowDownIcon className='w-4 h-4' />}
+          label='Export'
+          onClick={() => setShowPrintExportDialog(true)}
+          tooltip='Export to PDF, PNG, or Excel'
+        />
+      </RibbonGroup>
+
       {/* Status Group */}
       <RibbonGroup title='Status'>
         <RibbonButton
@@ -500,6 +541,14 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
           </span>
         </div>
       </RibbonGroup>
+
+      {/* Print/Export Dialog */}
+      <PrintExportDialog
+        isOpen={showPrintExportDialog}
+        onClose={() => setShowPrintExportDialog(false)}
+        onPrint={handlePrint}
+        onExport={handleExport}
+      />
     </div>
   );
 }

@@ -1277,6 +1277,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Immediate scheduling updates after dependency modifications
   - Professional error handling with clear user feedback
 
+## [2025-08-09] – Prompt 178
+
+### Added
+
+- **Advanced Print/Export Tools**
+  - Comprehensive print and export dialog with advanced settings
+  - Professional print layout renderer with custom HTML generation
+  - Multiple export formats: PDF, PNG, and Excel (XLSX)
+  - Advanced print settings: page range, date range, scaling, orientation
+  - Page size options: A4, A3, Letter, Legal with proper dimensions
+  - Content options: include grid, Gantt chart, headers, footers
+  - Quality settings for PNG export with multiple resolution options
+  - Date range filtering for both print and export operations
+  - Professional Excel export with multiple worksheets (Tasks, Dependencies, Summary)
+  - Print layout with proper CSS styling and page break support
+  - Real-time validation of print and export settings
+  - Error handling with user-friendly error messages
+  - Integration with existing task and view contexts
+  - Professional UI with tabbed interface for print and export options
+  - Keyboard shortcuts and accessibility features
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
