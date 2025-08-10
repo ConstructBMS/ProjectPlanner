@@ -929,6 +929,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Integration with existing task management and scheduling systems
   - Professional segment utilities for creation, validation, and styling
 
+## [2025-08-09] – Prompt 157
+
+### Added
+
+- **Recurring Tasks**
+  - Task Properties option to set recurrence patterns (daily, weekly, monthly)
+  - Automatic generation of multiple task instances based on recurrence rules
+  - Linked series editing - changes apply to all instances unless detached
+  - Recurring task indicators in Task Grid with pattern descriptions
+  - Context menu option to detach individual instances from series
+  - Professional recurrence configuration with validation and preview
+  - Support for complex recurrence patterns (specific weekdays, day of month)
+  - Integration with existing task management and scheduling systems
+  - Comprehensive recurrence utilities for rule creation and management
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

@@ -30,6 +30,7 @@ import {
   getConstraintTooltip,
   getAvailableConstraintTypes,
 } from '../utils/constraintUtils';
+import RecurringTaskConfig from './RecurringTaskConfig';
 
 // Task Properties Pane Component
 const TaskPropertiesPane = () => {
@@ -661,7 +662,7 @@ const TaskPropertiesPane = () => {
                       const endDate = editingTask.endDate ? new Date(editingTask.endDate) : null;
                       const isOverdue = endDate && endDate > deadline;
                       const daysUntilDeadline = Math.ceil((deadline.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                      
+
                       if (isOverdue) {
                         const daysOverdue = Math.ceil((endDate.getTime() - deadline.getTime()) / (1000 * 60 * 60 * 24));
                         return `⚠️ Overdue by ${daysOverdue} day${daysOverdue !== 1 ? 's' : ''}`;
@@ -687,7 +688,7 @@ const TaskPropertiesPane = () => {
                 const endDate = editingTask.endDate ? new Date(editingTask.endDate) : null;
                 const isOverdue = endDate && endDate > deadline;
                 const daysUntilDeadline = Math.ceil((deadline.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                
+
                 if (isOverdue) {
                   const daysOverdue = Math.ceil((endDate.getTime() - deadline.getTime()) / (1000 * 60 * 60 * 24));
                   return (
@@ -760,6 +761,14 @@ const TaskPropertiesPane = () => {
               )}
             </div>
           </div>
+
+          {/* Recurring Task Configuration */}
+          <RecurringTaskConfig
+            task={editingTask}
+            onRecurrenceChange={(recurrenceRule) => {
+              handleFieldChange('recurrence', recurrenceRule);
+            }}
+          />
 
           {/* Status & Priority Section */}
           <div className='bg-white border border-gray-200 rounded-lg p-4'>

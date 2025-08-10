@@ -40,6 +40,13 @@ import {
   calculateSegmentGaps,
 } from '../utils/taskSegmentUtils';
 import TaskSplitModal from './modals/TaskSplitModal';
+import {
+  isRecurringTask,
+  isRecurringInstance,
+  formatRecurrenceRule,
+  canDetachInstance,
+  detachRecurringInstance,
+} from '../utils/recurringTaskUtils';
 
 // Diamond icon component for milestones
 const DiamondIcon = ({ className = 'w-4 h-4', color = 'text-purple-600' }) => (
@@ -144,12 +151,21 @@ const TaskGrid = React.memo(() => {
           />
         ) : (
           <div
-            className='truncate cursor-pointer'
+            className='truncate cursor-pointer flex items-center gap-1'
             onDoubleClick={e =>
               handleEditDoubleClick(task.id, 'name', task.name, e)
             }
           >
-            {task.name}
+            <span>{task.name}</span>
+            {/* Recurring Task Icon */}
+            {(isRecurringTask(task) || isRecurringInstance(task)) && (
+              <span
+                className='text-xs text-blue-600'
+                title={task.recurrence ? formatRecurrenceRule(task.recurrence) : 'Recurring task instance'}
+              >
+                🔄
+              </span>
+            )}
           </div>
         );
 
@@ -642,6 +658,12 @@ const TaskGrid = React.memo(() => {
           break;
         case 'splitTask':
           setTaskSplitModal({ isOpen: true, task });
+          break;
+        case 'detachRecurring':
+          if (canDetachInstance(task)) {
+            const detachedTask = detachRecurringInstance(task);
+            updateTask(task.id, detachedTask);
+          }
           break;
         case 'link':
           // TODO: Implement link functionality

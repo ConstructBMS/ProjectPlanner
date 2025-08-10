@@ -8,6 +8,7 @@ import {
   ChevronUpIcon,
   PlusIcon,
   ScissorsIcon,
+  LinkBreakIcon,
 } from '@heroicons/react/24/outline';
 
 const ContextMenu = ({ isOpen, position, onClose, onAction, task = null }) => {
@@ -133,6 +134,17 @@ const ContextMenu = ({ isOpen, position, onClose, onAction, task = null }) => {
         <ScissorsIcon className='w-4 h-4' />
         <span>{task?.isSplit ? 'Edit Segments' : 'Split Task'}</span>
       </button>
+
+      {/* Detach from Recurring Series */}
+      {task?.isRecurringInstance && (
+        <button
+          onClick={() => handleAction('detachRecurring')}
+          className='w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-orange-50 flex items-center gap-2 transition-colors'
+        >
+          <LinkBreakIcon className='w-4 h-4' />
+          <span>Detach from Series</span>
+        </button>
+      )}
 
       {/* Divider */}
       <div className='border-t border-gray-100 my-1' />

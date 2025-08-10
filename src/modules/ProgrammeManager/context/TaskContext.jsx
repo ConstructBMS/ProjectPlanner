@@ -7,14 +7,19 @@ import {
   useEffect,
 } from 'react';
 import { useUndoRedoContext } from './UndoRedoContext';
-import { 
-  updateAllSummaryTasks, 
-  getVisibleTasks, 
+import {
+  updateAllSummaryTasks,
+  getVisibleTasks,
   getHierarchicalTasks,
   getTaskDescendants,
   getTaskAncestors,
-  isTaskVisible
+  isTaskVisible,
 } from '../utils/rollupUtils';
+import {
+  generateRecurringTasks,
+  isRecurringTask,
+  updateRecurringSeries,
+} from '../utils/recurringTaskUtils';
 import { useCalendarContext } from './CalendarContext';
 
 const TaskContext = createContext();
@@ -31,7 +36,7 @@ export const useTaskContext = () => {
 export const TaskProvider = ({ children }) => {
   // Get global calendar for rollup calculations
   const { globalCalendar } = useCalendarContext();
-  
+
   // Task data
   const [tasks, setTasks] = useState([
     {
@@ -206,27 +211,36 @@ export const TaskProvider = ({ children }) => {
       isExpanded: true,
     };
 
+    // Generate recurring tasks if needed
+    let tasksToAdd = [newTask];
+    if (newTask.recurrence && newTask.recurrence.isActive) {
+      const projectStartDate = new Date('2024-01-01');
+      const projectEndDate = new Date('2024-12-31');
+      const recurringInstances = generateRecurringTasks(newTask, projectStartDate, projectEndDate);
+      tasksToAdd = recurringInstances;
+    }
+
     const before = { tasks: [...tasks], nextId };
-    const after = { tasks: [...tasks, newTask], nextId: nextId + 1 };
+    const after = { tasks: [...tasks, ...tasksToAdd], nextId: nextId + 1 };
 
     const action = createUndoAction(
       'ADD_TASK',
       before,
       after,
-      // onUndo: remove the task
+      // onUndo: remove the tasks
       () => {
-        setTasks(prev => prev.filter(task => task.id !== newTask.id));
+        setTasks(prev => prev.filter(task => !tasksToAdd.some(newTask => newTask.id === task.id)));
         setNextId(prev => prev - 1);
       },
-      // onRedo: add the task back
+      // onRedo: add the tasks back
       () => {
-        setTasks(prev => [...prev, newTask]);
+        setTasks(prev => [...prev, ...tasksToAdd]);
         setNextId(prev => prev + 1);
       }
     );
 
     pushUndoAction(action);
-    setTasks(prev => [...prev, newTask]);
+    setTasks(prev => [...prev, ...tasksToAdd]);
     setNextId(prev => prev + 1);
   }, [nextId, tasks, createUndoAction, pushUndoAction]);
 
@@ -621,33 +635,32 @@ export const TaskProvider = ({ children }) => {
 
       const updatedTask = { ...oldTask, ...updates };
 
+      // Handle recurring task updates
+      let updatedTasks = tasks.map(task => (task.id === taskId ? updatedTask : task));
+      if (updatedTask && isRecurringTask(updatedTask)) {
+        // Update all instances in the series
+        updatedTasks = updateRecurringSeries(updatedTasks, updatedTask.recurrence.id, updates);
+      }
+
       const before = { tasks: [...tasks] };
-      const after = {
-        tasks: tasks.map(task => (task.id === taskId ? updatedTask : task)),
-      };
+      const after = { tasks: updatedTasks };
 
       const action = createUndoAction(
         'UPDATE_TASK',
         before,
         after,
-        // onUndo: restore old task
+        // onUndo: restore old tasks
         () => {
-          setTasks(prev =>
-            prev.map(task => (task.id === taskId ? oldTask : task))
-          );
+          setTasks(prev => [...tasks]);
         },
         // onRedo: apply updates again
         () => {
-          setTasks(prev =>
-            prev.map(task => (task.id === taskId ? updatedTask : task))
-          );
+          setTasks(prev => updatedTasks);
         }
       );
 
       pushUndoAction(action);
-      setTasks(prev =>
-        prev.map(task => (task.id === taskId ? updatedTask : task))
-      );
+      setTasks(prev => updatedTasks);
     },
     [tasks, createUndoAction, pushUndoAction]
   );
