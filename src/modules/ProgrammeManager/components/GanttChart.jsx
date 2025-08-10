@@ -42,6 +42,11 @@ import {
   calculateTaskProgressStatus,
   calculateProgressIndicator,
 } from '../utils/progressLineUtils';
+import {
+  getConstraintStyling,
+  getConstraintTooltip,
+  formatConstraint,
+} from '../utils/constraintUtils';
 import '../styles/gantt.css';
 
 const GanttChart = () => {
@@ -1610,6 +1615,7 @@ const GanttChart = () => {
     const isConstrained =
       constraintWarning.taskId === task.id &&
       Date.now() - constraintWarning.timestamp < 2000; // Show for 2 seconds
+    const hasConstraint = task.constraints && task.constraints.type && task.constraints.type !== 'ASAP';
 
     // Get default color based on task type
     const getDefaultColor = task => {
@@ -1653,6 +1659,12 @@ const GanttChart = () => {
     // Add constraint warning styling
     if (isConstrained) {
       baseClasses += ' animate-pulse border-red-500 ring-2 ring-red-400';
+    }
+
+    // Add constraint styling
+    if (hasConstraint) {
+      const constraintStyling = getConstraintStyling(task.constraints.type);
+      baseClasses += ` border-2 ${constraintStyling.borderColor}`;
     }
 
     return {
@@ -1826,21 +1838,26 @@ const GanttChart = () => {
         </svg>
 
         {/* Progress Line */}
-        {viewState.statusDate && (() => {
-          const statusDate = new Date(viewState.statusDate);
-          const projectStart = new Date('2024-01-01'); // Use same start as timeline
-          const progressLinePosition = calculateProgressLinePosition(statusDate, projectStart, getScaledWidth);
-          
-          return (
-            <div
-              className='absolute top-0 bottom-0 w-0.5 bg-red-500 z-30 pointer-events-none'
-              style={{
-                left: `${progressLinePosition}px`,
-              }}
-              title={`Progress Line: ${statusDate.toLocaleDateString()}`}
-            />
-          );
-        })()}
+        {viewState.statusDate &&
+          (() => {
+            const statusDate = new Date(viewState.statusDate);
+            const projectStart = new Date('2024-01-01'); // Use same start as timeline
+            const progressLinePosition = calculateProgressLinePosition(
+              statusDate,
+              projectStart,
+              getScaledWidth
+            );
+
+            return (
+              <div
+                className='absolute top-0 bottom-0 w-0.5 bg-red-500 z-30 pointer-events-none'
+                style={{
+                  left: `${progressLinePosition}px`,
+                }}
+                title={`Progress Line: ${statusDate.toLocaleDateString()}`}
+              />
+            );
+          })()}
 
         {/* Timeline Content */}
         <div className='relative z-20'>
@@ -2130,47 +2147,57 @@ const GanttChart = () => {
                       )}
 
                       {/* Progress Line Indicators */}
-                      {viewState.statusDate && (() => {
-                        const statusDate = new Date(viewState.statusDate);
-                        const progressStatus = calculateTaskProgressStatus(task, statusDate, globalCalendar);
-                        const indicator = calculateProgressIndicator(task, progressStatus, statusDate, getScaledWidth);
-                        
-                        if (indicator.type === 'behind') {
-                          return (
-                            <div
-                              className='h-full bg-red-500 opacity-60 absolute top-0'
-                              style={{
-                                left: `${Math.max(daysFromStart * getScaledWidth + indicator.position, 0)}px`,
-                                width: `${Math.max(indicator.width, 2)}px`,
-                              }}
-                              title={`Behind schedule: ${progressStatus.status}`}
-                            />
+                      {viewState.statusDate &&
+                        (() => {
+                          const statusDate = new Date(viewState.statusDate);
+                          const progressStatus = calculateTaskProgressStatus(
+                            task,
+                            statusDate,
+                            globalCalendar
                           );
-                        } else if (indicator.type === 'ahead') {
-                          return (
-                            <div
-                              className='h-full bg-green-500 opacity-80 absolute top-0'
-                              style={{
-                                left: `${Math.max(daysFromStart * getScaledWidth + indicator.position, 0)}px`,
-                                width: `${Math.max(indicator.width, 2)}px`,
-                              }}
-                              title={`Ahead of schedule: ${progressStatus.status}`}
-                            />
+                          const indicator = calculateProgressIndicator(
+                            task,
+                            progressStatus,
+                            statusDate,
+                            getScaledWidth
                           );
-                        } else if (indicator.type === 'on-track') {
-                          return (
-                            <div
-                              className='h-full bg-blue-500 opacity-60 absolute top-0'
-                              style={{
-                                left: `${Math.max(daysFromStart * getScaledWidth + indicator.position, 0)}px`,
-                                width: `${Math.max(indicator.width, 2)}px`,
-                              }}
-                              title={`On track: ${progressStatus.status}`}
-                            />
-                          );
-                        }
-                        return null;
-                      })()}
+
+                          if (indicator.type === 'behind') {
+                            return (
+                              <div
+                                className='h-full bg-red-500 opacity-60 absolute top-0'
+                                style={{
+                                  left: `${Math.max(daysFromStart * getScaledWidth + indicator.position, 0)}px`,
+                                  width: `${Math.max(indicator.width, 2)}px`,
+                                }}
+                                title={`Behind schedule: ${progressStatus.status}`}
+                              />
+                            );
+                          } else if (indicator.type === 'ahead') {
+                            return (
+                              <div
+                                className='h-full bg-green-500 opacity-80 absolute top-0'
+                                style={{
+                                  left: `${Math.max(daysFromStart * getScaledWidth + indicator.position, 0)}px`,
+                                  width: `${Math.max(indicator.width, 2)}px`,
+                                }}
+                                title={`Ahead of schedule: ${progressStatus.status}`}
+                              />
+                            );
+                          } else if (indicator.type === 'on-track') {
+                            return (
+                              <div
+                                className='h-full bg-blue-500 opacity-60 absolute top-0'
+                                style={{
+                                  left: `${Math.max(daysFromStart * getScaledWidth + indicator.position, 0)}px`,
+                                  width: `${Math.max(indicator.width, 2)}px`,
+                                }}
+                                title={`On track: ${progressStatus.status}`}
+                              />
+                            );
+                          }
+                          return null;
+                        })()}
 
                       {/* Slack Overlay */}
                       {viewState.showSlack && taskFloats[task.id] > 0 && (
@@ -2295,6 +2322,17 @@ const GanttChart = () => {
                 criticalPathTasks.includes(tooltip.task.id))) && (
               <div className='text-red-300 font-medium mt-2 pt-1 border-t border-gray-700'>
                 Critical Task
+              </div>
+            )}
+            {tooltip.task.constraints && tooltip.task.constraints.type && tooltip.task.constraints.type !== 'ASAP' && (
+              <div className='text-blue-300 font-medium mt-2 pt-1 border-t border-gray-700'>
+                <div className='flex justify-between'>
+                  <span>Constraint:</span>
+                  <span>{formatConstraint(tooltip.task.constraints)}</span>
+                </div>
+                <div className='text-xs text-gray-400 mt-1'>
+                  {getConstraintTooltip(tooltip.task.constraints)}
+                </div>
               </div>
             )}
           </div>

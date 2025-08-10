@@ -840,6 +840,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Professional status styling with icons and tooltips
   - Real-time status updates based on task progress vs expected progress
 
+## [2025-08-09] – Prompt 151
+
+### Added
+
+- **Advanced Constraint Handling**
+  - Complete constraint engine supporting all Asta-style constraints
+  - Constraint types: ASAP, ALAP, Must Start On, Must Finish On, Start No Earlier Than, Finish No Later Than
+  - Constraint configuration in Task Properties pane with date picker
+  - Real-time constraint validation with error and warning display
+  - Visual constraint indicators in Gantt chart with colored borders
+  - Constraint information in task tooltips with detailed descriptions
+  - Constraint conflict detection for dependencies and calendars
+  - Professional constraint styling with icons and color coding
+  - Integration with existing scheduling and calendar systems
+  - Comprehensive constraint utilities for validation and formatting
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
