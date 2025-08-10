@@ -4,6 +4,7 @@ import { useTaskContext } from '../../../context/TaskContext';
 import { useFilterContext } from '../../../context/FilterContext';
 import { useLayoutContext } from '../../../context/LayoutContext';
 import PrintExportDialog from '../../PrintExportDialog';
+import ResourceHistogram from '../../ResourceHistogram';
 import RibbonButton from '../shared/RibbonButton';
 import RibbonGroup from '../shared/RibbonGroup';
 import {
@@ -18,6 +19,8 @@ import {
   FunnelIcon,
   PaintBrushIcon,
   CalendarDaysIcon,
+  ChartBarIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 
 const TimelineZoomDropdown = () => {
@@ -1003,6 +1006,8 @@ const TodayButton = () => {
 };
 
 const ViewTab = ({ contentRef }) => {
+  const [showResourceHistogram, setShowResourceHistogram] = useState(false);
+
   return (
     <div className='flex flex-nowrap gap-0 p-2 bg-white w-full min-w-0'>
       {/* Timeline Zoom Group */}
@@ -1066,6 +1071,12 @@ const ViewTab = ({ contentRef }) => {
           onClick={() => console.log('Resource Calendar clicked')}
           tooltip='View resource availability and workload calendar'
         />
+        <RibbonButton
+          icon={<ChartBarIcon className='w-4 h-4 text-green-600' />}
+          label='Resource Histogram'
+          onClick={() => setShowResourceHistogram(!showResourceHistogram)}
+          tooltip='View resource allocation histogram over time'
+        />
       </RibbonGroup>
 
       {/* Clipboard Group (Disabled) */}
@@ -1112,6 +1123,29 @@ const ViewTab = ({ contentRef }) => {
         />
       </RibbonGroup>
     </div>
+
+    {/* Resource Histogram Modal */}
+    {showResourceHistogram && (
+      <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+        <div className='bg-white rounded-lg shadow-xl w-11/12 h-5/6 max-w-7xl flex flex-col'>
+          <div className='flex items-center justify-between p-4 border-b border-gray-200'>
+            <h2 className='text-lg font-semibold text-gray-800'>
+              Resource Histogram
+            </h2>
+            <button
+              onClick={() => setShowResourceHistogram(false)}
+              className='text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100'
+            >
+              <XMarkIcon className='w-5 h-5' />
+            </button>
+          </div>
+          <div className='flex-1 p-4 overflow-hidden'>
+            <ResourceHistogram />
+          </div>
+        </div>
+      </div>
+    )}
+  </>
   );
 };
 

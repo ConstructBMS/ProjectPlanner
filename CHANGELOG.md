@@ -717,6 +717,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - User attribution for all changes (placeholder for future user system)
   - History persistence in task.history[] array
 
+## [2025-08-09] – Prompt 143
+
+### Added
+
+- **Resource Histogram View with Stacked Allocation Chart**
+  - Interactive histogram chart showing resource allocation over time
+  - Chart.js integration with stacked bar chart visualization
+  - X-axis timeline with day/week/month scale options
+  - Y-axis percentage allocation (0-100%)
+  - Stacked bars by resource with unique color coding
+  - Hover tooltips showing resource name and allocation percentage
+  - Automatic data updates on schedule and resource changes
+  - Modal view accessible from View tab Resource group
+  - Responsive design with professional styling
+  - Summary statistics (peak and average allocation)
+  - Empty state with helpful messaging
+  - Click interaction for future navigation integration
+  - Integration with existing view scale system
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
