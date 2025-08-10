@@ -144,23 +144,29 @@ export const TaskProvider = ({ children }) => {
   }, [tasks]);
 
   // Helper function to create undo/redo actions
-  const createUndoAction = useCallback((type, before, after, onUndo, onRedo) => {
-    return {
-      type,
-      before,
-      after,
-      onUndo,
-      onRedo,
-      timestamp: Date.now(),
-    };
-  }, []);
+  const createUndoAction = useCallback(
+    (type, before, after, onUndo, onRedo) => {
+      return {
+        type,
+        before,
+        after,
+        onUndo,
+        onRedo,
+        timestamp: Date.now(),
+      };
+    },
+    []
+  );
 
   // Helper function to push action to undo stack
-  const pushUndoAction = useCallback((action) => {
-    if (!isUndoRedoAction) {
-      pushAction(action);
-    }
-  }, [pushAction, isUndoRedoAction]);
+  const pushUndoAction = useCallback(
+    action => {
+      if (!isUndoRedoAction) {
+        pushAction(action);
+      }
+    },
+    [pushAction, isUndoRedoAction]
+  );
 
   // Task operations
   const addTask = useCallback(() => {
@@ -444,20 +450,22 @@ export const TaskProvider = ({ children }) => {
       const tasksToRemove = [taskId, ...descendants];
 
       // Get the tasks and links that will be removed
-      const tasksToDelete = tasks.filter(task => tasksToRemove.includes(task.id));
+      const tasksToDelete = tasks.filter(task =>
+        tasksToRemove.includes(task.id)
+      );
       const linksToDelete = taskLinks.filter(
         link =>
           tasksToRemove.includes(link.fromId) ||
           tasksToRemove.includes(link.toId)
       );
 
-      const before = { 
-        tasks: [...tasks], 
+      const before = {
+        tasks: [...tasks],
         taskLinks: [...taskLinks],
         selectedTaskId,
-        selectedTaskIds: [...selectedTaskIds]
+        selectedTaskIds: [...selectedTaskIds],
       };
-      const after = { 
+      const after = {
         tasks: tasks.filter(task => !tasksToRemove.includes(task.id)),
         taskLinks: taskLinks.filter(
           link =>
@@ -465,7 +473,9 @@ export const TaskProvider = ({ children }) => {
             !tasksToRemove.includes(link.toId)
         ),
         selectedTaskId: selectedTaskId === taskId ? null : selectedTaskId,
-        selectedTaskIds: selectedTaskIds.filter(id => !tasksToRemove.includes(id))
+        selectedTaskIds: selectedTaskIds.filter(
+          id => !tasksToRemove.includes(id)
+        ),
       };
 
       const action = createUndoAction(
@@ -481,7 +491,9 @@ export const TaskProvider = ({ children }) => {
         },
         // onRedo: delete tasks and links again
         () => {
-          setTasks(prev => prev.filter(task => !tasksToRemove.includes(task.id)));
+          setTasks(prev =>
+            prev.filter(task => !tasksToRemove.includes(task.id))
+          );
           setTaskLinks(prev =>
             prev.filter(
               link =>
@@ -512,7 +524,15 @@ export const TaskProvider = ({ children }) => {
         prev.filter(id => !tasksToRemove.includes(id))
       );
     },
-    [tasks, taskLinks, selectedTaskId, selectedTaskIds, getTaskDescendants, createUndoAction, pushUndoAction]
+    [
+      tasks,
+      taskLinks,
+      selectedTaskId,
+      selectedTaskIds,
+      getTaskDescendants,
+      createUndoAction,
+      pushUndoAction,
+    ]
   );
 
   // Enhanced delete function with cascade option
@@ -589,7 +609,9 @@ export const TaskProvider = ({ children }) => {
       const updatedTask = { ...oldTask, ...updates };
 
       const before = { tasks: [...tasks] };
-      const after = { tasks: tasks.map(task => (task.id === taskId ? updatedTask : task)) };
+      const after = {
+        tasks: tasks.map(task => (task.id === taskId ? updatedTask : task)),
+      };
 
       const action = createUndoAction(
         'UPDATE_TASK',
@@ -899,6 +921,43 @@ export const TaskProvider = ({ children }) => {
 
       pushUndoAction(action);
       setTaskLinks(prev => [...prev, newLink]);
+      
+      // Add history entries for both tasks
+      const fromTask = tasks.find(t => t.id === fromId);
+      const toTask = tasks.find(t => t.id === toId);
+      
+      if (fromTask) {
+        const fromHistoryEntry = {
+          id: `history-${Date.now()}-from`,
+          timestamp: new Date().toISOString(),
+          action: 'Added Dependency',
+          field: 'successors',
+          oldValue: 'None',
+          newValue: toTask?.name || toId,
+          user: 'Current User',
+        };
+        const updatedFromHistory = [...(fromTask.history || []), fromHistoryEntry];
+        setTasks(prev => prev.map(task => 
+          task.id === fromId ? { ...task, history: updatedFromHistory } : task
+        ));
+      }
+      
+      if (toTask) {
+        const toHistoryEntry = {
+          id: `history-${Date.now()}-to`,
+          timestamp: new Date().toISOString(),
+          action: 'Added Dependency',
+          field: 'predecessors',
+          oldValue: 'None',
+          newValue: fromTask?.name || fromId,
+          user: 'Current User',
+        };
+        const updatedToHistory = [...(toTask.history || []), toHistoryEntry];
+        setTasks(prev => prev.map(task => 
+          task.id === toId ? { ...task, history: updatedToHistory } : task
+        ));
+      }
+      
       console.log('Created task link:', newLink);
     },
     [taskLinks, createUndoAction, pushUndoAction]
@@ -909,14 +968,16 @@ export const TaskProvider = ({ children }) => {
       const linkToRemove = taskLinks.find(
         link => link.fromId === fromId && link.toId === toId
       );
-      
+
       if (!linkToRemove) {
         console.warn('Link not found between tasks');
         return;
       }
 
       const before = { taskLinks: [...taskLinks] };
-      const after = { taskLinks: taskLinks.filter(link => link.id !== linkToRemove.id) };
+      const after = {
+        taskLinks: taskLinks.filter(link => link.id !== linkToRemove.id),
+      };
 
       const action = createUndoAction(
         'UNLINK_TASKS',
@@ -928,7 +989,9 @@ export const TaskProvider = ({ children }) => {
         },
         // onRedo: remove the link again
         () => {
-          setTaskLinks(prev => prev.filter(link => link.id !== linkToRemove.id));
+          setTaskLinks(prev =>
+            prev.filter(link => link.id !== linkToRemove.id)
+          );
         }
       );
 
@@ -936,6 +999,43 @@ export const TaskProvider = ({ children }) => {
       setTaskLinks(prev =>
         prev.filter(link => !(link.fromId === fromId && link.toId === toId))
       );
+      
+      // Add history entries for both tasks
+      const fromTask = tasks.find(t => t.id === fromId);
+      const toTask = tasks.find(t => t.id === toId);
+      
+      if (fromTask) {
+        const fromHistoryEntry = {
+          id: `history-${Date.now()}-from`,
+          timestamp: new Date().toISOString(),
+          action: 'Removed Dependency',
+          field: 'successors',
+          oldValue: toTask?.name || toId,
+          newValue: 'None',
+          user: 'Current User',
+        };
+        const updatedFromHistory = [...(fromTask.history || []), fromHistoryEntry];
+        setTasks(prev => prev.map(task => 
+          task.id === fromId ? { ...task, history: updatedFromHistory } : task
+        ));
+      }
+      
+      if (toTask) {
+        const toHistoryEntry = {
+          id: `history-${Date.now()}-to`,
+          timestamp: new Date().toISOString(),
+          action: 'Removed Dependency',
+          field: 'predecessors',
+          oldValue: fromTask?.name || fromId,
+          newValue: 'None',
+          user: 'Current User',
+        };
+        const updatedToHistory = [...(toTask.history || []), toHistoryEntry];
+        setTasks(prev => prev.map(task => 
+          task.id === toId ? { ...task, history: updatedToHistory } : task
+        ));
+      }
+      
       console.log('Removed task link:', { fromId, toId });
     },
     [taskLinks, createUndoAction, pushUndoAction]

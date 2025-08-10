@@ -699,6 +699,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Action-based undo system with before/after state snapshots
   - Automatic redo stack clearing when new actions are performed
 
+## [2025-08-09] – Prompt 142
+
+### Added
+
+- **Task History Panel with Timestamped Change Logs**
+  - New "History" tab in Task Properties Pane for tracking all changes
+  - Comprehensive change logging with timestamps and user attribution
+  - Automatic history entry creation for task property modifications
+  - Dependency link creation and removal tracking with task relationships
+  - Formatted display of before/after values for all field changes
+  - Reverse chronological order display (newest changes first)
+  - Integration with Undo/Redo system to prevent duplicate entries
+  - Professional UI with scrollable history list and empty state
+  - Date/time formatting using locale-specific display
+  - Field-specific value formatting (dates, booleans, text)
+  - User attribution for all changes (placeholder for future user system)
+  - History persistence in task.history[] array
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
