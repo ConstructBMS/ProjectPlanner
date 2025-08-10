@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useViewContext } from '../../context/ViewContext';
+import { useUserContext } from '../../context/UserContext';
 import HomeTab from './tabs/HomeTab';
 import ViewTab from './tabs/ViewTab';
 import ProjectTab from './tabs/ProjectTab';
@@ -7,18 +8,25 @@ import AllocationTab from './tabs/AllocationTab';
 import FourDTab from './tabs/FourDTab';
 import FormatTab from './tabs/FormatTab';
 
-const tabs = ['Home', 'View', 'Project', 'Allocation', '4D', 'Format'];
+const allTabs = ['Home', 'View', 'Project', 'Allocation', '4D', 'Format'];
 
 export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
   const [activeTab, setActiveTab] = useState('Home');
   const { viewState, updateViewState } = useViewContext();
+  const { canAccessTab, getAvailableTabs } = useUserContext();
 
-  // Load saved active tab on mount
+  // Filter tabs based on user permissions
+  const tabs = allTabs.filter(tab => canAccessTab(tab));
+
+  // Load saved active tab on mount and ensure it's accessible
   useEffect(() => {
-    if (viewState.activeTab) {
+    if (viewState.activeTab && canAccessTab(viewState.activeTab)) {
       setActiveTab(viewState.activeTab);
+    } else if (tabs.length > 0) {
+      // Set to first available tab if saved tab is not accessible
+      setActiveTab(tabs[0]);
     }
-  }, [viewState.activeTab]);
+  }, [viewState.activeTab, canAccessTab, tabs]);
 
   const handleTabChange = tab => {
     setActiveTab(tab);

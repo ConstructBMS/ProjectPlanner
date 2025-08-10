@@ -1215,6 +1215,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Responsive design with mobile-friendly search interface
   - Search result highlighting and selection with visual feedback
 
+## [2025-08-09] – Prompt 175
+
+### Added
+
+- **User Role-Based Ribbon Customisation**
+  - Comprehensive role-based permission system for ribbon buttons and tabs
+  - Five user roles: Admin, Manager, Planner, Viewer, and Guest with hierarchical permissions
+  - Centralized permissions configuration with granular control over features
+  - Role-based tab visibility with automatic filtering of inaccessible tabs
+  - Button-level permission checking with visual feedback for restricted features
+  - Enhanced RibbonButton component with permission-aware rendering and tooltips
+  - RibbonGroup component with role-based visibility and restriction indicators
+  - User context integration with Supabase authentication and role management
+  - Real-time permission checking with fallback to mock user for development
+  - Professional role indicators in application header with color-coded badges
+  - Permission groups for easier management of related features
+  - Comprehensive permission validation and role hierarchy management
+  - Configurable permission system with easy extension for new features
+  - Visual feedback for restricted features with helpful tooltips
+  - Automatic tab switching when saved tab becomes inaccessible
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

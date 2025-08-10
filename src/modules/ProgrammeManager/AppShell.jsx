@@ -8,6 +8,7 @@ import { LayoutProvider } from './context/LayoutContext';
 import { UndoRedoProvider } from './context/UndoRedoContext';
 import { GanttProvider } from './context/GanttContext';
 import { SearchProvider } from './context/SearchContext';
+import { UserProvider } from './context/UserContext';
 import RibbonTabs from './components/RibbonTabs/RibbonTabs';
 import SidebarTree from './components/SidebarTree';
 import TaskGrid from './components/TaskGrid';
@@ -19,6 +20,7 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
   const sidebarRef = useRef();
   const contentRef = useRef();
   const { getPaneSize } = useLayoutContext();
+  const { user, userRole, getRoleDescription } = useUserContext();
 
   const handleExpandAll = () => {
     sidebarRef.current?.expandAll?.();
@@ -42,12 +44,23 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
             >
               ← Back to Portfolio
             </button>
-            
+
             {/* Global Search */}
             <GlobalSearch />
-            
-            <div className='text-sm text-gray-500'>
-              {projectId ? `Project ID: ${projectId}` : 'Current Project'}
+
+            <div className='flex items-center space-x-4 text-sm text-gray-500'>
+              <div>
+                {projectId ? `Project ID: ${projectId}` : 'Current Project'}
+              </div>
+              {user && (
+                <div className='flex items-center space-x-2'>
+                  <span>•</span>
+                  <span className='font-medium'>{user.name}</span>
+                  <span className={`px-2 py-1 text-xs rounded-full ${getRoleDescription().bgColor} ${getRoleDescription().color}`}>
+                    {getRoleDescription().name}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
           <RibbonTabs
@@ -114,10 +127,12 @@ export default function AppShell({ projectId, onBackToPortfolio }) {
               <ViewProvider>
                 <GanttProvider>
                   <SearchProvider>
-                    <AppShellContent
-                      projectId={projectId}
-                      onBackToPortfolio={onBackToPortfolio}
-                    />
+                    <UserProvider>
+                      <AppShellContent
+                        projectId={projectId}
+                        onBackToPortfolio={onBackToPortfolio}
+                      />
+                    </UserProvider>
                   </SearchProvider>
                 </GanttProvider>
               </ViewProvider>
