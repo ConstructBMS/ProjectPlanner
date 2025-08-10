@@ -805,6 +805,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Debounced scheduling to prevent excessive recalculations
   - Professional scheduling statistics and reporting
 
+## [2025-08-09] – Prompt 148
+
+### Added
+
+- **Resource Leveling (Simple Heuristic)**
+  - Basic resource leveling engine that detects over-allocations by day
+  - Shifts non-critical tasks within their float to resolve resource conflicts
+  - Preserves critical path by only shifting tasks with available float
+  - Calendar-aware leveling respecting working days and dependencies
+  - Preview functionality showing proposed task shifts before applying
+  - Integration with auto-scheduling to recalculate dates after leveling
+  - Resource conflict detection with capacity vs allocation comparison
+  - Professional leveling statistics and conflict reporting
+  - Allocation tab in ribbon with leveling controls and preview panel
+  - Comprehensive error handling and validation
+  - Support for multiple resource types with different capacities
+  - Automatic conflict resolution prioritization (highest over-allocation first)
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

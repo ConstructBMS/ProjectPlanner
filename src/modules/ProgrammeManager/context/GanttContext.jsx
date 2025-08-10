@@ -1,10 +1,21 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { 
-  performScheduling, 
-  detectCircularDependencies, 
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+} from 'react';
+import {
+  performScheduling,
+  detectCircularDependencies,
   validateTaskLinks,
-  LINK_TYPES 
+  LINK_TYPES,
 } from '../utils/scheduleEngine';
+import {
+  generateLevelingPreview,
+  applyResourceLeveling,
+  getLevelingStats,
+} from '../utils/levelingEngine';
 import { useTaskContext } from './TaskContext';
 import { useCalendarContext } from './CalendarContext';
 
@@ -41,6 +52,13 @@ export const GanttProvider = ({ children }) => {
     calculateFloat: true,
   });
 
+  // Resource leveling state
+  const [levelingState, setLevelingState] = useState({
+    isLeveling: false,
+    lastLeveledAt: null,
+    levelingErrors: [],
+  });
+
   /**
    * Perform auto-scheduling with current tasks and links
    */
@@ -58,7 +76,7 @@ export const GanttProvider = ({ children }) => {
     try {
       // Validate task links first
       const validationErrors = validateTaskLinks(taskLinks, tasks);
-      
+
       // Check for circular dependencies
       const circularDeps = detectCircularDependencies(taskLinks);
 
@@ -81,9 +99,10 @@ export const GanttProvider = ({ children }) => {
           const originalTask = tasks.find(t => t.id === updatedTask.id);
           if (originalTask) {
             // Only update if dates have actually changed
-            const startChanged = originalTask.startDate !== updatedTask.startDate;
+            const startChanged =
+              originalTask.startDate !== updatedTask.startDate;
             const endChanged = originalTask.endDate !== updatedTask.endDate;
-            
+
             if (startChanged || endChanged) {
               updateTask(updatedTask.id, {
                 startDate: updatedTask.startDate,
@@ -120,39 +139,48 @@ export const GanttProvider = ({ children }) => {
         schedulingErrors: [error.message],
       }));
     }
-  }, [tasks, taskLinks, globalCalendar, autoScheduleSettings.enabled, updateTask]);
+  }, [
+    tasks,
+    taskLinks,
+    globalCalendar,
+    autoScheduleSettings.enabled,
+    updateTask,
+  ]);
 
   /**
    * Trigger auto-scheduling based on settings
    */
-  const triggerAutoScheduling = useCallback((triggerType) => {
-    if (!autoScheduleSettings.enabled) return;
+  const triggerAutoScheduling = useCallback(
+    triggerType => {
+      if (!autoScheduleSettings.enabled) return;
 
-    switch (triggerType) {
-      case 'taskChange':
-        if (autoScheduleSettings.triggerOnTaskChange) {
+      switch (triggerType) {
+        case 'taskChange':
+          if (autoScheduleSettings.triggerOnTaskChange) {
+            performAutoScheduling();
+          }
+          break;
+        case 'linkChange':
+          if (autoScheduleSettings.triggerOnLinkChange) {
+            performAutoScheduling();
+          }
+          break;
+        case 'calendarChange':
+          if (autoScheduleSettings.triggerOnCalendarChange) {
+            performAutoScheduling();
+          }
+          break;
+        default:
           performAutoScheduling();
-        }
-        break;
-      case 'linkChange':
-        if (autoScheduleSettings.triggerOnLinkChange) {
-          performAutoScheduling();
-        }
-        break;
-      case 'calendarChange':
-        if (autoScheduleSettings.triggerOnCalendarChange) {
-          performAutoScheduling();
-        }
-        break;
-      default:
-        performAutoScheduling();
-    }
-  }, [autoScheduleSettings, performAutoScheduling]);
+      }
+    },
+    [autoScheduleSettings, performAutoScheduling]
+  );
 
   /**
    * Update auto-scheduling settings
    */
-  const updateAutoScheduleSettings = useCallback((newSettings) => {
+  const updateAutoScheduleSettings = useCallback(newSettings => {
     setAutoScheduleSettings(prev => ({
       ...prev,
       ...newSettings,
@@ -172,16 +200,85 @@ export const GanttProvider = ({ children }) => {
   const getSchedulingStats = useCallback(() => {
     const criticalTasks = tasks.filter(task => task.isCritical);
     const tasksWithFloat = tasks.filter(task => task.totalFloat > 0);
-    const totalFloat = tasks.reduce((sum, task) => sum + (task.totalFloat || 0), 0);
+    const totalFloat = tasks.reduce(
+      (sum, task) => sum + (task.totalFloat || 0),
+      0
+    );
 
     return {
       totalTasks: tasks.length,
       criticalTasks: criticalTasks.length,
       tasksWithFloat: tasksWithFloat.length,
       averageFloat: tasks.length > 0 ? totalFloat / tasks.length : 0,
-      projectDuration: tasks.length > 0 ? Math.max(...tasks.map(t => new Date(t.endDate))) - Math.min(...tasks.map(t => new Date(t.startDate))) : 0,
+      projectDuration:
+        tasks.length > 0
+          ? Math.max(...tasks.map(t => new Date(t.endDate))) -
+            Math.min(...tasks.map(t => new Date(t.startDate)))
+          : 0,
     };
   }, [tasks]);
+
+  /**
+   * Perform resource leveling
+   */
+  const performResourceLeveling = useCallback(async (resources) => {
+    setLevelingState(prev => ({
+      ...prev,
+      isLeveling: true,
+      levelingErrors: [],
+    }));
+
+    try {
+      const preview = generateLevelingPreview(tasks, taskLinks, resources, globalCalendar);
+      
+      if (preview.proposedShifts.length === 0) {
+        setLevelingState(prev => ({
+          ...prev,
+          isLeveling: false,
+        }));
+        return {
+          success: true,
+          message: 'No leveling actions required',
+          appliedShifts: [],
+        };
+      }
+
+      const result = applyResourceLeveling(preview.proposedShifts, tasks, updateTask);
+
+      if (result.success) {
+        // Trigger auto-scheduling to recalculate dates and float
+        setTimeout(() => {
+          performAutoScheduling();
+        }, 100);
+      }
+
+      setLevelingState(prev => ({
+        ...prev,
+        isLeveling: false,
+        lastLeveledAt: new Date().toISOString(),
+      }));
+
+      return result;
+    } catch (error) {
+      setLevelingState(prev => ({
+        ...prev,
+        isLeveling: false,
+        levelingErrors: [error.message],
+      }));
+      return {
+        success: false,
+        errors: [error.message],
+        message: `Leveling failed: ${error.message}`,
+      };
+    }
+  }, [tasks, taskLinks, globalCalendar, updateTask, performAutoScheduling]);
+
+  /**
+   * Get resource leveling statistics
+   */
+  const getResourceLevelingStats = useCallback((resources) => {
+    return getLevelingStats(tasks, resources, globalCalendar);
+  }, [tasks, globalCalendar]);
 
   /**
    * Clear scheduling errors
@@ -233,6 +330,7 @@ export const GanttProvider = ({ children }) => {
     // State
     schedulingState,
     autoScheduleSettings,
+    levelingState,
 
     // Actions
     performAutoScheduling,
@@ -240,15 +338,15 @@ export const GanttProvider = ({ children }) => {
     manualSchedule,
     updateAutoScheduleSettings,
     clearSchedulingErrors,
+    performResourceLeveling,
 
     // Utilities
     getSchedulingStats,
+    getResourceLevelingStats,
     LINK_TYPES,
   };
 
   return (
-    <GanttContext.Provider value={value}>
-      {children}
-    </GanttContext.Provider>
+    <GanttContext.Provider value={value}>{children}</GanttContext.Provider>
   );
 };

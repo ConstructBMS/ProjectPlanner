@@ -1,38 +1,274 @@
+import React, { useState, useCallback } from 'react';
 import RibbonButton from '../shared/RibbonButton';
 import RibbonGroup from '../shared/RibbonGroup';
+import { useTaskContext } from '../../context/TaskContext';
+import { useCalendarContext } from '../../context/CalendarContext';
+import { useGanttContext } from '../../context/GanttContext';
 import {
-  UserGroupIcon,
-  UserIcon,
-  WrenchScrewdriverIcon,
-  TruckIcon,
+  generateLevelingPreview,
+  applyResourceLeveling,
+  getLevelingStats,
+} from '../../utils/levelingEngine';
+import {
+  ChartBarIcon,
+  ArrowPathIcon,
+  EyeIcon,
+  CheckIcon,
+  XMarkIcon,
+  ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 
 const AllocationTab = () => {
+  const { tasks, taskLinks, updateTask } = useTaskContext();
+  const { globalCalendar } = useCalendarContext();
+  const { performAutoScheduling } = useGanttContext();
+
+  // Leveling state
+  const [levelingState, setLevelingState] = useState({
+    isAnalyzing: false,
+    preview: null,
+    isApplying: false,
+    result: null,
+  });
+
+  // Mock resources for demonstration (in a real app, this would come from a resource context)
+  const mockResources = [
+    { id: 'resource-1', name: 'Crane Operator', capacity: 100 },
+    { id: 'resource-2', name: 'Concrete Worker', capacity: 150 },
+    { id: 'resource-3', name: 'Steel Worker', capacity: 120 },
+    { id: 'resource-4', name: 'Electrician', capacity: 100 },
+    { id: 'resource-5', name: 'Plumber', capacity: 100 },
+  ];
+
+  /**
+   * Analyze resource conflicts and generate preview
+   */
+  const analyzeResources = useCallback(async () => {
+    setLevelingState(prev => ({
+      ...prev,
+      isAnalyzing: true,
+      preview: null,
+      result: null,
+    }));
+
+    try {
+      const preview = generateLevelingPreview(tasks, taskLinks, mockResources, globalCalendar);
+      
+      setLevelingState(prev => ({
+        ...prev,
+        isAnalyzing: false,
+        preview,
+      }));
+    } catch (error) {
+      setLevelingState(prev => ({
+        ...prev,
+        isAnalyzing: false,
+        preview: {
+          hasConflicts: false,
+          message: `Error analyzing resources: ${error.message}`,
+          proposedShifts: [],
+          conflicts: [],
+        },
+      }));
+    }
+  }, [tasks, taskLinks, mockResources, globalCalendar]);
+
+  /**
+   * Apply resource leveling changes
+   */
+  const applyLeveling = useCallback(async () => {
+    if (!levelingState.preview || levelingState.preview.proposedShifts.length === 0) {
+      return;
+    }
+
+    setLevelingState(prev => ({
+      ...prev,
+      isApplying: true,
+    }));
+
+    try {
+      const result = applyResourceLeveling(
+        levelingState.preview.proposedShifts,
+        tasks,
+        updateTask
+      );
+
+      setLevelingState(prev => ({
+        ...prev,
+        isApplying: false,
+        result,
+      }));
+
+      // Trigger auto-scheduling to recalculate dates and float
+      if (result.success && result.appliedShifts.length > 0) {
+        setTimeout(() => {
+          performAutoScheduling();
+        }, 100);
+      }
+    } catch (error) {
+      setLevelingState(prev => ({
+        ...prev,
+        isApplying: false,
+        result: {
+          success: false,
+          appliedShifts: [],
+          errors: [error.message],
+          message: `Failed to apply leveling: ${error.message}`,
+        },
+      }));
+    }
+  }, [levelingState.preview, tasks, updateTask, performAutoScheduling]);
+
+  /**
+   * Clear leveling results
+   */
+  const clearResults = useCallback(() => {
+    setLevelingState({
+      isAnalyzing: false,
+      preview: null,
+      isApplying: false,
+      result: null,
+    });
+  }, []);
+
+  /**
+   * Get current leveling statistics
+   */
+  const getCurrentStats = useCallback(() => {
+    return getLevelingStats(tasks, mockResources, globalCalendar);
+  }, [tasks, mockResources, globalCalendar]);
+
+  const stats = getCurrentStats();
+
   return (
     <div className='flex flex-nowrap gap-0 p-2 bg-white w-full min-w-0'>
-      {/* Resource Allocation Group */}
-      <RibbonGroup title='Resource Allocation'>
+      {/* Resource Analysis Group */}
+      <RibbonGroup title='Resource Analysis'>
         <RibbonButton
-          icon={<UserGroupIcon className='w-4 h-4 text-gray-700' />}
-          label='Assign Resources'
+          icon={<ChartBarIcon className='w-4 h-4 text-gray-700' />}
+          label='Analyze Resources'
+          onClick={analyzeResources}
+          disabled={levelingState.isAnalyzing}
+          tooltip='Analyze resource conflicts and generate leveling preview'
         />
         <RibbonButton
-          icon={<UserIcon className='w-4 h-4 text-gray-700' />}
-          label='Resource Details'
-        />
-        <RibbonButton
-          icon={<WrenchScrewdriverIcon className='w-4 h-4 text-gray-700' />}
-          label='Equipment'
+          icon={<EyeIcon className='w-4 h-4 text-gray-700' />}
+          label='Show Conflicts'
+          onClick={analyzeResources}
+          disabled={levelingState.isAnalyzing}
+          tooltip={`Show current resource conflicts (${stats.totalConflicts} detected)`}
         />
       </RibbonGroup>
 
-      {/* Resource Management Group */}
-      <RibbonGroup title='Resource Management'>
+      {/* Resource Leveling Group */}
+      <RibbonGroup title='Resource Leveling'>
         <RibbonButton
-          icon={<TruckIcon className='w-4 h-4 text-gray-700' />}
-          label='Resource Reports'
+          icon={<ArrowPathIcon className='w-4 h-4 text-gray-700' />}
+          label='Level Resources'
+          onClick={applyLeveling}
+          disabled={
+            !levelingState.preview ||
+            levelingState.preview.proposedShifts.length === 0 ||
+            levelingState.isApplying
+          }
+          tooltip={
+            levelingState.preview?.proposedShifts.length > 0
+              ? `Apply ${levelingState.preview.proposedShifts.length} task shifts to resolve conflicts`
+              : 'No leveling actions available'
+          }
         />
+        {levelingState.preview?.hasConflicts && (
+          <RibbonButton
+            icon={<ExclamationTriangleIcon className='w-4 h-4 text-orange-600' />}
+            label={`${stats.totalConflicts} Conflicts`}
+            onClick={() => {}} // Read-only display
+            disabled={true}
+            tooltip={`${stats.totalConflicts} resource conflicts detected`}
+          />
+        )}
       </RibbonGroup>
+
+      {/* Results Group */}
+      {(levelingState.result || levelingState.preview) && (
+        <RibbonGroup title='Results'>
+          {levelingState.result?.success && (
+            <RibbonButton
+              icon={<CheckIcon className='w-4 h-4 text-green-600' />}
+              label={`${levelingState.result.appliedShifts.length} Applied`}
+              onClick={() => {}} // Read-only display
+              disabled={true}
+              tooltip={`Successfully applied ${levelingState.result.appliedShifts.length} shifts`}
+            />
+          )}
+          {levelingState.result?.errors?.length > 0 && (
+            <RibbonButton
+              icon={<XMarkIcon className='w-4 h-4 text-red-600' />}
+              label={`${levelingState.result.errors.length} Errors`}
+              onClick={() => {}} // Read-only display
+              disabled={true}
+              tooltip={`${levelingState.result.errors.length} errors occurred during leveling`}
+            />
+          )}
+          <RibbonButton
+            icon={<XMarkIcon className='w-4 h-4 text-gray-700' />}
+            label='Clear Results'
+            onClick={clearResults}
+            tooltip='Clear leveling results and preview'
+          />
+        </RibbonGroup>
+      )}
+
+      {/* Statistics Group */}
+      <RibbonGroup title='Statistics'>
+        <div className='px-3 py-2 text-xs text-gray-600 space-y-1'>
+          <div className='flex justify-between'>
+            <span>Conflicts:</span>
+            <span className='font-medium'>{stats.totalConflicts}</span>
+          </div>
+          <div className='flex justify-between'>
+            <span>Non-Critical:</span>
+            <span className='font-medium'>{stats.nonCriticalTasks}</span>
+          </div>
+          <div className='flex justify-between'>
+            <span>Shiftable:</span>
+            <span className='font-medium'>{stats.shiftableTasks}</span>
+          </div>
+          <div className='flex justify-between'>
+            <span>Avg Float:</span>
+            <span className='font-medium'>{stats.averageFloat.toFixed(1)}d</span>
+          </div>
+        </div>
+      </RibbonGroup>
+
+      {/* Preview Panel (if available) */}
+      {levelingState.preview && (
+        <div className='ml-4 p-3 bg-gray-50 rounded border border-gray-200 min-w-80'>
+          <h4 className='text-sm font-medium text-gray-900 mb-2'>Leveling Preview</h4>
+          <p className='text-xs text-gray-600 mb-3'>{levelingState.preview.message}</p>
+          
+          {levelingState.preview.proposedShifts.length > 0 && (
+            <div className='space-y-2'>
+              <h5 className='text-xs font-medium text-gray-700'>Proposed Shifts:</h5>
+              {levelingState.preview.proposedShifts.slice(0, 3).map((shift, index) => (
+                <div key={index} className='text-xs bg-white p-2 rounded border'>
+                  <div className='font-medium text-gray-800'>{shift.taskName}</div>
+                  <div className='text-gray-600'>
+                    Shift: {shift.maxShift}d • Float: {shift.totalFloat}d
+                  </div>
+                  <div className='text-gray-500'>
+                    {shift.conflictResource} conflict on {new Date(shift.conflictDate).toLocaleDateString()}
+                  </div>
+                </div>
+              ))}
+              {levelingState.preview.proposedShifts.length > 3 && (
+                <div className='text-xs text-gray-500'>
+                  +{levelingState.preview.proposedShifts.length - 3} more shifts...
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
