@@ -7,11 +7,13 @@ import { FilterProvider } from './context/FilterContext';
 import { LayoutProvider } from './context/LayoutContext';
 import { UndoRedoProvider } from './context/UndoRedoContext';
 import { GanttProvider } from './context/GanttContext';
+import { SearchProvider } from './context/SearchContext';
 import RibbonTabs from './components/RibbonTabs/RibbonTabs';
 import SidebarTree from './components/SidebarTree';
 import TaskGrid from './components/TaskGrid';
 import GanttChart from './components/GanttChart';
 import TaskPropertiesPane from './components/TaskPropertiesPane';
+import GlobalSearch from '../../components/GlobalSearch';
 
 function AppShellContent({ projectId, onBackToPortfolio }) {
   const sidebarRef = useRef();
@@ -31,7 +33,7 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
         ref={contentRef}
         className='h-screen w-screen flex flex-col overflow-hidden bg-gray-100'
       >
-        {/* Header with Back to Portfolio Button */}
+        {/* Header with Back to Portfolio Button and Global Search */}
         <div className='z-10 bg-white border-b border-gray-200'>
           <div className='flex items-center justify-between px-4 py-2'>
             <button
@@ -40,6 +42,10 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
             >
               ← Back to Portfolio
             </button>
+            
+            {/* Global Search */}
+            <GlobalSearch />
+            
             <div className='text-sm text-gray-500'>
               {projectId ? `Project ID: ${projectId}` : 'Current Project'}
             </div>
@@ -107,7 +113,12 @@ export default function AppShell({ projectId, onBackToPortfolio }) {
             <CalendarProvider>
               <ViewProvider>
                 <GanttProvider>
-                  <AppShellContent projectId={projectId} onBackToPortfolio={onBackToPortfolio} />
+                  <SearchProvider>
+                    <AppShellContent
+                      projectId={projectId}
+                      onBackToPortfolio={onBackToPortfolio}
+                    />
+                  </SearchProvider>
                 </GanttProvider>
               </ViewProvider>
             </CalendarProvider>

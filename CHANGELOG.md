@@ -1194,6 +1194,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Real-time metrics calculation and caching for performance
   - Project selection and navigation to detailed project views
 
+## [2025-08-09] – Prompt 174
+
+### Added
+
+- **Global Search Tool**
+  - Comprehensive global search functionality across all modules
+  - Search bar integrated in application header with professional styling
+  - Real-time search across tasks, resources, and projects with instant results
+  - Advanced search capabilities: task names/descriptions, resource names, project titles
+  - Debounced search input with 300ms delay for optimal performance
+  - Interactive search results dropdown with click-to-navigate functionality
+  - Keyboard navigation support (arrow keys, Enter, Escape)
+  - Global keyboard shortcut (Ctrl/Cmd + K) for quick search access
+  - Professional search result display with type badges, progress bars, and metadata
+  - Search result categorization by type (project, task, resource) with color coding
+  - Priority badges for tasks and progress indicators for projects
+  - Comprehensive search context with centralized state management
+  - Supabase integration for full-text search capabilities
+  - Responsive design with mobile-friendly search interface
+  - Search result highlighting and selection with visual feedback
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

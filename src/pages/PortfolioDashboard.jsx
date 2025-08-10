@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useProjectsContext } from '../modules/ProgrammeManager/context/ProjectsContext';
+import { SearchProvider } from '../modules/ProgrammeManager/context/SearchContext';
+import GlobalSearch from '../components/GlobalSearch';
 import {
   ChartBarIcon,
   ClockIcon,
@@ -148,7 +150,7 @@ const PortfolioDashboard = ({ onProjectSelect }) => {
   const formatDuration = (days) => {
     const months = Math.floor(days / 30);
     const remainingDays = days % 30;
-    
+
     if (months > 0) {
       return `${months} month${months > 1 ? 's' : ''}${remainingDays > 0 ? ` ${remainingDays} day${remainingDays > 1 ? 's' : ''}` : ''}`;
     }
@@ -195,6 +197,14 @@ const PortfolioDashboard = ({ onProjectSelect }) => {
               <ChartBarIcon className="w-8 h-8 text-blue-600 mr-3" />
               <h1 className="text-2xl font-bold text-gray-900">Portfolio Dashboard</h1>
             </div>
+            
+            {/* Global Search */}
+            <div className="flex-1 max-w-2xl mx-8">
+              <SearchProvider>
+                <GlobalSearch />
+              </SearchProvider>
+            </div>
+            
             <button
               onClick={() => onProjectSelect && onProjectSelect('new')}
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
