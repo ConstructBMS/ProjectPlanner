@@ -753,6 +753,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Professional UI with active state indication
   - Automatic updates to task positioning and sizing
 
+## [2025-08-09] – Prompt 145
+
+### Added
+
+- **Custom Bar Colors by Task Type**
+  - Color picker in Task Properties Pane for setting custom bar colors
+  - Default colors per task type (blue for tasks, green for groups, purple for milestones)
+  - React-color SketchPicker integration with preset color palette
+  - Custom colors stored in task object as color property
+  - Gantt chart renders tasks with stored custom colors
+  - Automatic fallback to default colors when no custom color is set
+  - Reset button to restore default color for task type
+  - Color preview in properties pane with visual indicator
+  - Professional color picker UI with click-outside-to-close functionality
+  - Integration with existing task editing and history tracking
+  - Proper opacity and border styling for visual hierarchy
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

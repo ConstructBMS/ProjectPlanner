@@ -64,7 +64,7 @@ const GanttChart = () => {
   const getScaledWidth = useMemo(() => {
     const baseZoom = viewState.timelineZoom;
     const timeUnit = viewState.timeUnit || 'day';
-    
+
     switch (timeUnit) {
       case 'day':
         return baseZoom; // Pixels per day
@@ -80,7 +80,7 @@ const GanttChart = () => {
   // Get date increment based on time unit
   const getDateIncrement = useMemo(() => {
     const timeUnit = viewState.timeUnit || 'day';
-    
+
     switch (timeUnit) {
       case 'day':
         return 1; // 1 day
@@ -241,7 +241,7 @@ const GanttChart = () => {
 
     // Generate grid lines based on time unit
     const timeUnit = viewState.timeUnit || 'day';
-    
+
     switch (timeUnit) {
       case 'day':
         // Daily grid lines
@@ -535,12 +535,7 @@ const GanttChart = () => {
     }
 
     return blocks;
-  }, [
-    dateRange,
-    viewState.showWeekends,
-    getScaledWidth,
-    globalCalendar,
-  ]);
+  }, [dateRange, viewState.showWeekends, getScaledWidth, globalCalendar]);
 
   // Update task refs when tasks change or view settings change
   useEffect(() => {
@@ -1420,7 +1415,7 @@ const GanttChart = () => {
 
     // Generate headers based on time unit
     const timeUnit = viewState.timeUnit || 'day';
-    
+
     switch (timeUnit) {
       case 'day':
         // Daily headers - show each day
@@ -1605,17 +1600,30 @@ const GanttChart = () => {
       constraintWarning.taskId === task.id &&
       Date.now() - constraintWarning.timestamp < 2000; // Show for 2 seconds
 
+    // Get default color based on task type
+    const getDefaultColor = (task) => {
+      if (task.type === 'milestone' || task.isMilestone) {
+        return '#8B5CF6'; // Purple for milestones
+      } else if (task.isGroup) {
+        return '#10B981'; // Green for groups
+      } else {
+        return '#3B82F6'; // Blue for regular tasks
+      }
+    };
+
+    // Use custom color if available, otherwise use default
+    const taskColor = task.color || getDefaultColor(task);
+
     let baseClasses =
       'rounded-sm transition-all duration-200 cursor-move border';
 
     if (isMilestone) {
       baseClasses = 'transition-all duration-200 cursor-move'; // Remove border and rounded for diamond
-    } else if (task.isGroup) {
-      baseClasses += ' bg-green-100 border-green-400 text-green-800';
     } else if (isCritical) {
       baseClasses += ' bg-red-600 opacity-70 border-red-600 text-white';
     } else {
-      baseClasses += ' bg-blue-100 border-blue-400 text-blue-800';
+      // Use custom color for background and border
+      baseClasses += ` bg-opacity-20 border-opacity-60`;
     }
 
     if (isDragging) {
@@ -1636,7 +1644,13 @@ const GanttChart = () => {
       baseClasses += ' animate-pulse border-red-500 ring-2 ring-red-400';
     }
 
-    return baseClasses;
+    return {
+      className: baseClasses,
+      style: {
+        backgroundColor: isCritical ? undefined : `${taskColor}20`, // 20% opacity
+        borderColor: isCritical ? undefined : `${taskColor}60`, // 60% opacity
+      }
+    };
   };
 
   const getTaskNameStyle = task => {
@@ -1900,13 +1914,14 @@ const GanttChart = () => {
                     <div className='flex-1 relative h-full'>
                       {isMilestone ? (
                         <div
-                          className={`${getTaskBarStyle(task)} flex items-center justify-center`}
+                          className={`${getTaskBarStyle(task).className} flex items-center justify-center`}
                           style={{
                             left: `${Math.max(daysFromStart * scaledDayWidth - 8, 0)}px`, // center diamond
                             width: '16px',
                             position: 'absolute',
                             top: '4px',
                             height: '16px',
+                            ...getTaskBarStyle(task).style,
                           }}
                           data-task-id={task.id}
                           onMouseDown={e => handleTaskMouseDown(e, task)}
@@ -1948,13 +1963,14 @@ const GanttChart = () => {
                         </div>
                       ) : (
                         <div
-                          className={getTaskBarStyle(task)}
+                          className={getTaskBarStyle(task).className}
                           style={{
                             left,
                             width,
                             position: 'absolute',
                             top: '2px',
                             height: 'calc(100% - 4px)',
+                            ...getTaskBarStyle(task).style,
                           }}
                           data-task-id={task.id}
                           onMouseDown={e => handleTaskMouseDown(e, task)}

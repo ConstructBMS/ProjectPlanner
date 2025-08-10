@@ -3,6 +3,7 @@ import { useTaskContext } from '../context/TaskContext';
 import { useCalendarContext } from '../context/CalendarContext';
 import { useUndoRedoContext } from '../context/UndoRedoContext';
 import DeleteTaskModal from './modals/DeleteTaskModal';
+import { SketchPicker } from 'react-color';
 import {
   CalendarIcon,
   UserIcon,
@@ -16,6 +17,7 @@ import {
   PlusIcon,
   TrashIcon,
   CogIcon,
+  PaintBrushIcon,
 } from '@heroicons/react/24/outline';
 
 // Task Properties Pane Component
@@ -47,9 +49,36 @@ const TaskPropertiesPane = () => {
   const [modalLinkType, setModalLinkType] = useState('FS');
   const [modalLag, setModalLag] = useState(0);
   const [activeTab, setActiveTab] = useState('properties');
+  const [showColorPicker, setShowColorPicker] = useState(false);
 
   // Get the currently selected task
   const selectedTask = tasks.find(task => task.id === selectedTaskId);
+
+  // Default colors for different task types
+  const getDefaultColor = (task) => {
+    if (task.type === 'milestone' || task.isMilestone) {
+      return '#8B5CF6'; // Purple for milestones
+    } else if (task.isGroup) {
+      return '#10B981'; // Green for groups
+    } else {
+      return '#3B82F6'; // Blue for regular tasks
+    }
+  };
+
+  // Get current task color or default
+  const getCurrentColor = (task) => {
+    return task.color || getDefaultColor(task);
+  };
+
+  // Handle color change
+  const handleColorChange = (color) => {
+    handleFieldChange('color', color.hex);
+  };
+
+  // Reset to default color
+  const handleResetColor = () => {
+    handleFieldChange('color', null);
+  };
 
   // Initialize editing task when selection changes
   useEffect(() => {
@@ -78,7 +107,7 @@ const TaskPropertiesPane = () => {
       if (editingTask[field] !== selectedTask[field] && field !== 'history') {
         const oldValue = selectedTask[field];
         const newValue = editingTask[field];
-        
+
         // Format values for display
         const formatValue = (value) => {
           if (value === null || value === undefined) return 'None';
@@ -635,6 +664,71 @@ const TaskPropertiesPane = () => {
                   <option value='Task'>Task</option>
                   <option value='Milestone'>Milestone</option>
                 </select>
+              </div>
+
+              {/* Bar Color Section */}
+              <div className='col-span-2'>
+                <label className='block text-xs font-medium text-gray-600 mb-1'>
+                  Bar Color
+                </label>
+                <div className='flex items-center gap-2'>
+                  <div className='relative'>
+                    <button
+                      type='button'
+                      onClick={() => setShowColorPicker(!showColorPicker)}
+                      className='flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                    >
+                      <div
+                        className='w-4 h-4 rounded border border-gray-300'
+                        style={{ backgroundColor: getCurrentColor(editingTask) }}
+                      />
+                      <span className='text-gray-700'>
+                        {editingTask.color ? 'Custom' : 'Default'}
+                      </span>
+                      <PaintBrushIcon className='w-4 h-4 text-gray-500' />
+                    </button>
+                    
+                    {showColorPicker && (
+                      <div className='absolute z-50 mt-2'>
+                        <div
+                          className='fixed inset-0'
+                          onClick={() => setShowColorPicker(false)}
+                        />
+                        <SketchPicker
+                          color={getCurrentColor(editingTask)}
+                          onChange={handleColorChange}
+                          presetColors={[
+                            '#3B82F6', // Blue (default task)
+                            '#10B981', // Green (default group)
+                            '#8B5CF6', // Purple (default milestone)
+                            '#F59E0B', // Orange
+                            '#EF4444', // Red
+                            '#06B6D4', // Cyan
+                            '#84CC16', // Lime
+                            '#F97316', // Orange
+                            '#EC4899', // Pink
+                            '#6366F1', // Indigo
+                          ]}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  
+                  {editingTask.color && (
+                    <button
+                      type='button'
+                      onClick={handleResetColor}
+                      className='px-3 py-2 text-xs text-gray-600 border border-gray-300 rounded hover:bg-gray-50 transition-colors'
+                      title='Reset to default color'
+                    >
+                      Reset
+                    </button>
+                  )}
+                </div>
+                
+                <div className='mt-1 text-xs text-gray-500'>
+                  Default: {getDefaultColor(editingTask)}
+                </div>
               </div>
             </div>
           </div>
