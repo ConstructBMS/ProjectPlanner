@@ -31,7 +31,7 @@ export const useGanttContext = () => {
 
 export const GanttProvider = ({ children }) => {
   const { tasks, taskLinks, updateTask, updateTaskLinks } = useTaskContext();
-  const { globalCalendar } = useCalendarContext();
+  const { globalCalendar, getCalendarForTask } = useCalendarContext();
 
   // Scheduling state
   const [schedulingState, setSchedulingState] = useState({
@@ -91,7 +91,7 @@ export const GanttProvider = ({ children }) => {
       }
 
       // Perform scheduling
-      const result = performScheduling(tasks, taskLinks, globalCalendar);
+      const result = performScheduling(tasks, taskLinks, getCalendarForTask);
 
       if (result.success) {
         // Update tasks with new dates
@@ -221,64 +221,79 @@ export const GanttProvider = ({ children }) => {
   /**
    * Perform resource leveling
    */
-  const performResourceLeveling = useCallback(async (resources) => {
-    setLevelingState(prev => ({
-      ...prev,
-      isLeveling: true,
-      levelingErrors: [],
-    }));
+  const performResourceLeveling = useCallback(
+    async resources => {
+      setLevelingState(prev => ({
+        ...prev,
+        isLeveling: true,
+        levelingErrors: [],
+      }));
 
-    try {
-      const preview = generateLevelingPreview(tasks, taskLinks, resources, globalCalendar);
-      
-      if (preview.proposedShifts.length === 0) {
+      try {
+        const preview = generateLevelingPreview(
+          tasks,
+          taskLinks,
+          resources,
+          globalCalendar
+        );
+
+        if (preview.proposedShifts.length === 0) {
+          setLevelingState(prev => ({
+            ...prev,
+            isLeveling: false,
+          }));
+          return {
+            success: true,
+            message: 'No leveling actions required',
+            appliedShifts: [],
+          };
+        }
+
+        const result = applyResourceLeveling(
+          preview.proposedShifts,
+          tasks,
+          updateTask
+        );
+
+        if (result.success) {
+          // Trigger auto-scheduling to recalculate dates and float
+          setTimeout(() => {
+            performAutoScheduling();
+          }, 100);
+        }
+
         setLevelingState(prev => ({
           ...prev,
           isLeveling: false,
+          lastLeveledAt: new Date().toISOString(),
+        }));
+
+        return result;
+      } catch (error) {
+        setLevelingState(prev => ({
+          ...prev,
+          isLeveling: false,
+          levelingErrors: [error.message],
         }));
         return {
-          success: true,
-          message: 'No leveling actions required',
-          appliedShifts: [],
+          success: false,
+          errors: [error.message],
+          message: `Leveling failed: ${error.message}`,
         };
       }
-
-      const result = applyResourceLeveling(preview.proposedShifts, tasks, updateTask);
-
-      if (result.success) {
-        // Trigger auto-scheduling to recalculate dates and float
-        setTimeout(() => {
-          performAutoScheduling();
-        }, 100);
-      }
-
-      setLevelingState(prev => ({
-        ...prev,
-        isLeveling: false,
-        lastLeveledAt: new Date().toISOString(),
-      }));
-
-      return result;
-    } catch (error) {
-      setLevelingState(prev => ({
-        ...prev,
-        isLeveling: false,
-        levelingErrors: [error.message],
-      }));
-      return {
-        success: false,
-        errors: [error.message],
-        message: `Leveling failed: ${error.message}`,
-      };
-    }
-  }, [tasks, taskLinks, globalCalendar, updateTask, performAutoScheduling]);
+    },
+    [tasks, taskLinks, globalCalendar, updateTask, performAutoScheduling]
+  );
 
   /**
    * Get resource leveling statistics
    */
-  const getResourceLevelingStats = useCallback((resources) => {
-    return getLevelingStats(tasks, resources, globalCalendar);
-  }, [tasks, globalCalendar]);
+  const getResourceLevelingStats = useCallback(
+    resources => {
+      return getLevelingStats(tasks, resources, globalCalendar);
+    },
+    [tasks, globalCalendar]
+  );
 
   /**
    * Clear scheduling errors

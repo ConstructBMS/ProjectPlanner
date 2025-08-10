@@ -856,6 +856,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Integration with existing scheduling and calendar systems
   - Comprehensive constraint utilities for validation and formatting
 
+## [2025-08-09] – Prompt 152
+
+### Added
+
+- **Per-Task Calendar Overrides**
+  - Task calendar dropdown in Task Properties pane with project calendar list
+  - Support for assigning unique calendars to individual tasks
+  - Automatic duration recalculation based on selected calendar
+  - Enhanced scheduling engine with task-specific calendar support
+  - Visual calendar information display with working days and holidays
+  - Integration with existing constraint and scheduling systems
+  - Professional calendar management with predefined calendar types
+  - Real-time calendar validation and conflict detection
+  - Comprehensive calendar utilities for task-specific scheduling
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

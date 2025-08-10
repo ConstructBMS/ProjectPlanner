@@ -48,6 +48,8 @@ const TaskPropertiesPane = () => {
     removeTaskCalendar,
     hasTaskCalendar,
     globalCalendar,
+    projectCalendars,
+    getProjectCalendarById,
   } = useCalendarContext();
 
   const { isUndoRedoAction } = useUndoRedoContext();
@@ -96,7 +98,7 @@ const TaskPropertiesPane = () => {
     if (!editingTask) return;
 
     let newConstraint = null;
-    
+
     if (constraintType === CONSTRAINT_TYPES.ASAP) {
       // Remove constraint for ASAP
       newConstraint = null;
@@ -145,7 +147,7 @@ const TaskPropertiesPane = () => {
     if (selectedTask) {
       setEditingTask({ ...selectedTask });
       setHasChanges(false);
-      
+
       // Validate constraints
       if (selectedTask.constraints) {
         const validation = validateConstraint(selectedTask.constraints);
@@ -544,121 +546,89 @@ const TaskPropertiesPane = () => {
             </div>
           </div>
 
-          {/* Calendar Section */}
+          {/* Task Calendar Section */}
           <div className='bg-white border border-gray-200 rounded-lg p-4'>
             <div className='flex items-center gap-2 mb-3'>
-              <CogIcon className='w-4 h-4 text-purple-600' />
-              <h4 className='text-sm font-semibold text-gray-700'>Calendar</h4>
+              <CalendarIcon className='w-4 h-4 text-green-600' />
+              <h4 className='text-sm font-semibold text-gray-700'>Task Calendar</h4>
             </div>
 
             <div className='space-y-3'>
-              <div className='flex items-center justify-between'>
-                <label className='flex items-center space-x-2 cursor-pointer'>
-                  <input
-                    type='checkbox'
-                    checked={editingTask.useTaskCalendar || false}
-                    onChange={e =>
-                      handleFieldChange('useTaskCalendar', e.target.checked)
-                    }
-                    className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2'
-                  />
-                  <span className='text-sm font-medium text-gray-700'>
-                    Use Task-Specific Calendar
-                  </span>
+              <div>
+                <label className='block text-xs font-medium text-gray-600 mb-1'>
+                  Calendar Override
                 </label>
+                <select
+                  value={editingTask.calendarId || 'global'}
+                  onChange={e => {
+                    const calendarId = e.target.value === 'global' ? null : e.target.value;
+                    handleFieldChange('calendarId', calendarId);
+                  }}
+                  className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                >
+                  <option value='global'>Use Global Calendar</option>
+                  {projectCalendars.map(calendar => (
+                    <option key={calendar.id} value={calendar.id}>
+                      {calendar.name}
+                    </option>
+                  ))}
+                </select>
+                <div className='mt-1 text-xs text-gray-500'>
+                  {editingTask.calendarId ? (
+                    (() => {
+                      const selectedCalendar = getProjectCalendarById(editingTask.calendarId);
+                      if (selectedCalendar) {
+                        const workingDays = Object.entries(selectedCalendar.workingDays)
+                          .filter(([_, isWorking]) => isWorking)
+                          .map(([day, _]) => day.charAt(0).toUpperCase() + day.slice(1))
+                          .join(', ');
+                        return `${workingDays} • ${selectedCalendar.holidays.length} holidays`;
+                      }
+                      return 'Calendar not found';
+                    })()
+                  ) : (
+                    'Uses the project\'s global working calendar'
+                  )}
+                </div>
               </div>
 
-              {editingTask.useTaskCalendar && (
-                <div className='pl-6 space-y-3 border-l-2 border-purple-200'>
-                  <div>
-                    <label className='block text-xs font-medium text-gray-600 mb-1'>
-                      Calendar Name
-                    </label>
-                    <input
-                      type='text'
-                      value={editingTask.taskCalendar?.name || 'Task Calendar'}
-                      onChange={e => {
-                        const updatedCalendar = {
-                          ...editingTask.taskCalendar,
-                          name: e.target.value,
-                        };
-                        handleFieldChange('taskCalendar', updatedCalendar);
-                      }}
-                      className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                      placeholder='Enter calendar name'
-                    />
-                  </div>
-
-                  <div>
-                    <label className='block text-xs font-medium text-gray-600 mb-1'>
-                      Working Days
-                    </label>
-                    <div className='grid grid-cols-2 gap-2'>
-                      {[
-                        { key: 'monday', label: 'Mon' },
-                        { key: 'tuesday', label: 'Tue' },
-                        { key: 'wednesday', label: 'Wed' },
-                        { key: 'thursday', label: 'Thu' },
-                        { key: 'friday', label: 'Fri' },
-                        { key: 'saturday', label: 'Sat' },
-                        { key: 'sunday', label: 'Sun' },
-                      ].map(({ key, label }) => (
-                        <label
-                          key={key}
-                          className='flex items-center space-x-2'
-                        >
-                          <input
-                            type='checkbox'
-                            checked={
-                              editingTask.taskCalendar?.workingDays?.[key] ??
-                              globalCalendar.workingDays[key]
-                            }
-                            onChange={e => {
-                              const updatedCalendar = {
-                                ...editingTask.taskCalendar,
-                                workingDays: {
-                                  ...editingTask.taskCalendar?.workingDays,
-                                  ...globalCalendar.workingDays,
-                                  [key]: e.target.checked,
-                                },
-                              };
-                              handleFieldChange(
-                                'taskCalendar',
-                                updatedCalendar
-                              );
-                            }}
-                            className='w-3 h-3 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2'
-                          />
-                          <span className='text-xs text-gray-700'>{label}</span>
-                        </label>
-                      ))}
+              {/* Current Calendar Info */}
+              {editingTask.calendarId && (() => {
+                const selectedCalendar = getProjectCalendarById(editingTask.calendarId);
+                if (!selectedCalendar) return null;
+                
+                return (
+                  <div className='p-2 bg-blue-50 border border-blue-200 rounded'>
+                    <div className='text-xs font-medium text-blue-700 mb-1'>
+                      {selectedCalendar.name}
+                    </div>
+                    <div className='text-xs text-blue-600 space-y-1'>
+                      <div>
+                        <span className='font-medium'>Working Days:</span>{' '}
+                        {Object.entries(selectedCalendar.workingDays)
+                          .filter(([_, isWorking]) => isWorking)
+                          .map(([day, _]) => day.charAt(0).toUpperCase() + day.slice(1))
+                          .join(', ')}
+                      </div>
+                      {selectedCalendar.holidays.length > 0 && (
+                        <div>
+                          <span className='font-medium'>Holidays:</span>{' '}
+                          {selectedCalendar.holidays.length} date(s)
+                        </div>
+                      )}
                     </div>
                   </div>
+                );
+              })()}
 
-                  <div>
-                    <label className='block text-xs font-medium text-gray-600 mb-1'>
-                      Task Holidays (YYYY-MM-DD)
-                    </label>
-                    <textarea
-                      value={
-                        editingTask.taskCalendar?.holidays?.join('\n') || ''
-                      }
-                      onChange={e => {
-                        const holidays = e.target.value
-                          .split('\n')
-                          .map(line => line.trim())
-                          .filter(line => /^\d{4}-\d{2}-\d{2}$/.test(line));
-
-                        const updatedCalendar = {
-                          ...editingTask.taskCalendar,
-                          holidays,
-                        };
-                        handleFieldChange('taskCalendar', updatedCalendar);
-                      }}
-                      className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                      rows={3}
-                      placeholder='2024-12-25&#10;2024-12-26&#10;2025-01-01'
-                    />
+              {/* Duration Recalculation Notice */}
+              {editingTask.calendarId && (
+                <div className='p-2 bg-yellow-50 border border-yellow-200 rounded'>
+                  <div className='flex items-center gap-1'>
+                    <ExclamationTriangleIcon className='w-3 h-3 text-yellow-600' />
+                    <span className='text-xs font-medium text-yellow-700'>
+                      Duration will be recalculated based on selected calendar
+                    </span>
                   </div>
                 </div>
               )}
