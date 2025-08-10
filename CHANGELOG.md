@@ -1236,6 +1236,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Visual feedback for restricted features with helpful tooltips
   - Automatic tab switching when saved tab becomes inaccessible
 
+## [2025-08-09] – Prompt 176
+
+### Added
+
+- **Persistent Ribbon State**
+  - Comprehensive ribbon collapse/expand state persistence system
+  - User-specific ribbon state storage in Supabase user_settings table
+  - Automatic state restoration on application load without flashing
+  - Smooth transition animations for expand/collapse operations
+  - Professional toggle button with visual feedback and keyboard shortcuts
+  - Global keyboard shortcut (Ctrl/Cmd + F1) for quick ribbon toggle
+  - Loading state management to prevent UI flashing during state restoration
+  - Error handling with fallback to default expanded state
+  - Real-time state synchronization with Supabase backend
+  - User preference persistence across browser sessions and devices
+  - Professional UI with toggle button, keyboard shortcut indicator, and error display
+  - Seamless integration with existing ribbon functionality and user context
+  - Optimized performance with efficient state loading and saving
+  - Responsive design that works across different screen sizes
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
