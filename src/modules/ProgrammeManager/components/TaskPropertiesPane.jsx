@@ -31,6 +31,11 @@ import {
   getAvailableConstraintTypes,
 } from '../utils/constraintUtils';
 import RecurringTaskConfig from './RecurringTaskConfig';
+import {
+  calculateTaskCost,
+  formatCost,
+  getCostVariance,
+} from '../utils/costUtils';
 
 // Task Properties Pane Component
 const TaskPropertiesPane = () => {
@@ -769,6 +774,73 @@ const TaskPropertiesPane = () => {
               handleFieldChange('recurrence', recurrenceRule);
             }}
           />
+
+          {/* Cost Information Section */}
+          <div className='bg-white border border-gray-200 rounded-lg p-4 mb-4'>
+            <div className='flex items-center gap-2 mb-3'>
+              <CurrencyPoundIcon className='w-4 h-4 text-green-600' />
+              <h4 className='text-sm font-semibold text-gray-700'>Cost Information</h4>
+            </div>
+
+            <div className='space-y-3'>
+              {/* Resource Assignment */}
+              <div>
+                <label className='block text-xs font-medium text-gray-600 mb-1'>
+                  Assigned Resource
+                </label>
+                <input
+                  type='text'
+                  value={editingTask.resource || editingTask.assignedTo || ''}
+                  onChange={e => handleFieldChange('resource', e.target.value)}
+                  className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                  placeholder='Enter resource name'
+                />
+              </div>
+
+              {/* Cost Calculation */}
+              {(() => {
+                const resource = { name: editingTask.resource || editingTask.assignedTo, costRate: 0 };
+                const taskCost = calculateTaskCost(editingTask, resource);
+                const costVariance = getCostVariance(editingTask, resource);
+                
+                return (
+                  <div className='p-3 bg-gray-50 border border-gray-200 rounded'>
+                    <div className='grid grid-cols-2 gap-4 text-sm'>
+                      <div>
+                        <span className='text-gray-600'>Task Cost:</span>
+                        <div className='font-semibold text-green-600'>
+                          {formatCost(taskCost.cost)}
+                        </div>
+                      </div>
+                      <div>
+                        <span className='text-gray-600'>Duration:</span>
+                        <div className='font-semibold text-gray-900'>
+                          {editingTask.duration || 0} days
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {taskCost.cost > 0 && (
+                      <div className='mt-2 text-xs text-gray-600'>
+                        {taskCost.breakdown.calculation}
+                      </div>
+                    )}
+                    
+                    {costVariance.isOverBudget && (
+                      <div className='mt-2 p-2 bg-red-50 border border-red-200 rounded'>
+                        <div className='flex items-center gap-2'>
+                          <ExclamationTriangleIcon className='w-3 h-3 text-red-600' />
+                          <span className='text-xs text-red-700'>
+                            Over budget by {formatCost(costVariance.variance)} ({costVariance.variancePercentage.toFixed(1)}%)
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
 
           {/* Status & Priority Section */}
           <div className='bg-white border border-gray-200 rounded-lg p-4'>

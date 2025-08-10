@@ -944,6 +944,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Integration with existing task management and scheduling systems
   - Comprehensive recurrence utilities for rule creation and management
 
+## [2025-08-09] – Prompt 158
+
+### Added
+
+- **Resource Cost Rate Management**
+  - Resource Properties pane with cost rate configuration (hourly/daily/weekly/monthly)
+  - Automatic task cost calculation based on duration × rate × resource units
+  - Project cost summary with comprehensive breakdowns and analytics
+  - Cost variance tracking between baseline and actual costs
+  - Cost efficiency metrics and trend analysis with recommendations
+  - Professional cost formatting and validation throughout the application
+  - Integration with existing task management and resource allocation systems
+  - Comprehensive cost utilities for calculations, formatting, and analysis
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

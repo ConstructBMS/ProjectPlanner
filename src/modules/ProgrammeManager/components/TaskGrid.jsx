@@ -47,6 +47,11 @@ import {
   canDetachInstance,
   detachRecurringInstance,
 } from '../utils/recurringTaskUtils';
+import {
+  calculateTaskCost,
+  formatCost,
+  getCostVariance,
+} from '../utils/costUtils';
 
 // Diamond icon component for milestones
 const DiamondIcon = ({ className = 'w-4 h-4', color = 'text-purple-600' }) => (
@@ -256,6 +261,26 @@ const TaskGrid = React.memo(() => {
             <span className='text-xs text-gray-600 w-8'>
               {task.progress || 0}%
             </span>
+          </div>
+        );
+
+      case 'cost':
+        // Find the resource for this task
+        const resource = tasks.find(t => t.id === task.resourceId) || 
+                        { name: task.resource || task.assignedTo, costRate: 0 };
+        const taskCost = calculateTaskCost(task, resource);
+        const costVariance = getCostVariance(task, resource);
+        
+        return (
+          <div className='text-right'>
+            <div className='font-medium text-green-600'>
+              {formatCost(taskCost.cost)}
+            </div>
+            {costVariance.isOverBudget && (
+              <div className='text-xs text-red-600'>
+                +{formatCost(costVariance.variance)}
+              </div>
+            )}
           </div>
         );
 
