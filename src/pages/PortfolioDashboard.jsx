@@ -16,9 +16,10 @@ import {
   PlusIcon,
   FunnelIcon,
   MagnifyingGlassIcon,
+  DocumentDuplicateIcon,
 } from '@heroicons/react/24/outline';
 
-const PortfolioDashboard = ({ onProjectSelect }) => {
+const PortfolioDashboard = ({ onProjectSelect, onShowTemplates }) => {
   const {
     projects,
     loading,
@@ -197,21 +198,30 @@ const PortfolioDashboard = ({ onProjectSelect }) => {
               <ChartBarIcon className="w-8 h-8 text-blue-600 mr-3" />
               <h1 className="text-2xl font-bold text-gray-900">Portfolio Dashboard</h1>
             </div>
-            
+
             {/* Global Search */}
             <div className="flex-1 max-w-2xl mx-8">
               <SearchProvider>
                 <GlobalSearch />
               </SearchProvider>
             </div>
-            
-            <button
-              onClick={() => onProjectSelect && onProjectSelect('new')}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <PlusIcon className="w-4 h-4 mr-2" />
-              New Project
-            </button>
+
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => onShowTemplates && onShowTemplates()}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <DocumentDuplicateIcon className="w-4 h-4 mr-2" />
+                Templates
+              </button>
+              <button
+                onClick={() => onProjectSelect && onProjectSelect('new')}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <PlusIcon className="w-4 h-4 mr-2" />
+                New Project
+              </button>
+            </div>
           </div>
         </div>
       </div>

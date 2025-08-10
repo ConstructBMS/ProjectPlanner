@@ -7,9 +7,8 @@ const ProgrammeManager = lazy(
   () => import('./modules/ProgrammeManager/AppShell')
 );
 
-const PortfolioDashboard = lazy(
-  () => import('./pages/PortfolioDashboard')
-);
+const PortfolioDashboard = lazy(() => import('./pages/PortfolioDashboard'));
+const ProjectTemplates = lazy(() => import('./pages/ProjectTemplates'));
 
 // Loading component
 const LoadingSpinner = () => (
@@ -22,10 +21,11 @@ const LoadingSpinner = () => (
 );
 
 function App() {
-  const [currentView, setCurrentView] = useState('portfolio'); // 'portfolio' or 'project'
+  const [currentView, setCurrentView] = useState('portfolio'); // 'portfolio', 'project', or 'templates'
   const [selectedProjectId, setSelectedProjectId] = useState(null);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
 
-  const handleProjectSelect = (projectId) => {
+  const handleProjectSelect = projectId => {
     setSelectedProjectId(projectId);
     setCurrentView('project');
   };
@@ -35,14 +35,31 @@ function App() {
     setSelectedProjectId(null);
   };
 
+  const handleTemplateSelect = (template) => {
+    setSelectedTemplate(template);
+    setCurrentView('project');
+  };
+
+  const handleShowTemplates = () => {
+    setCurrentView('templates');
+  };
+
   return (
     <ErrorBoundary>
       <ProjectsProvider>
         <Suspense fallback={<LoadingSpinner />}>
           {currentView === 'portfolio' ? (
-            <PortfolioDashboard onProjectSelect={handleProjectSelect} />
+            <PortfolioDashboard 
+              onProjectSelect={handleProjectSelect}
+              onShowTemplates={handleShowTemplates}
+            />
+          ) : currentView === 'templates' ? (
+            <ProjectTemplates
+              onTemplateSelect={handleTemplateSelect}
+              onBackToPortfolio={handleBackToPortfolio}
+            />
           ) : (
-            <ProgrammeManager 
+            <ProgrammeManager
               projectId={selectedProjectId}
               onBackToPortfolio={handleBackToPortfolio}
             />
