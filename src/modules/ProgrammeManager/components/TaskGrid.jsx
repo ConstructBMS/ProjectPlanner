@@ -23,6 +23,10 @@ import {
   hasDeadlineWarning,
   getDeadlineTooltip,
 } from '../utils/deadlineUtils';
+import {
+  getCriticalPathStyling,
+  getCriticalPathTooltip,
+} from '../utils/criticalPathUtils';
 
 // Diamond icon component for milestones
 const DiamondIcon = ({ className = 'w-4 h-4', color = 'text-purple-600' }) => (
@@ -346,7 +350,7 @@ const TaskGrid = React.memo(() => {
           </div>
         );
 
-      case 'deadline':
+            case 'deadline':
         return (
           <div className='text-center'>
             {task.deadline ? (
@@ -359,12 +363,35 @@ const TaskGrid = React.memo(() => {
                     className={`px-2 py-1 rounded text-xs font-medium ${styling.bgColor} ${styling.color} border ${styling.borderColor}`}
                     title={getDeadlineTooltip(task)}
                   >
-                    {styling.icon} {new Date(task.deadline).toLocaleDateString()}
+                    {styling.icon}{' '}
+                    {new Date(task.deadline).toLocaleDateString()}
                   </span>
                 );
               })()
             ) : (
               <span className='text-gray-400 text-xs'>-</span>
+            )}
+          </div>
+        );
+
+      case 'criticalPath':
+        return (
+          <div className='text-center'>
+            {task.isCritical ? (
+              (() => {
+                const styling = getCriticalPathStyling(true);
+                
+                return (
+                  <span
+                    className={`px-2 py-1 rounded text-xs font-medium ${styling.className} text-white`}
+                    title={getCriticalPathTooltip(task)}
+                  >
+                    🔴 Critical
+                  </span>
+                );
+              })()
+            ) : (
+              <span className='text-gray-400 text-xs'>Normal</span>
             )}
           </div>
         );

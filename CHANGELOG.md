@@ -886,6 +886,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Real-time deadline validation and warning system
   - Integration with existing task management and scheduling systems
 
+## [2025-08-09] – Prompt 154
+
+### Added
+
+- **Critical Path Highlighting**
+  - Critical path calculation using CPM (Critical Path Method) algorithm
+  - Toggle in View tab to highlight critical path tasks
+  - Red bar styling for critical path tasks in Gantt chart
+  - Automatic critical path recalculation after schedule changes
+  - Critical path column in task grid with status indicators
+  - Critical path information in task tooltips with float details
+  - Professional critical path utilities for calculation and styling
+  - Integration with existing scheduling engine and task management
+  - Real-time critical path updates and visual feedback
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

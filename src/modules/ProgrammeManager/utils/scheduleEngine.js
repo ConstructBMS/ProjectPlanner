@@ -4,6 +4,7 @@
  */
 
 import { addDays, isWorkday, snapToWorkday } from './calendarUtils';
+import { calculateCriticalPath } from './criticalPathUtils';
 
 /**
  * Link types supported by the scheduling engine
@@ -336,7 +337,11 @@ export const performForwardPass = (allTasks, taskLinks, getCalendarForTask) => {
  * @param {Function} getCalendarForTask - Function to get calendar for a task
  * @returns {Array} Updated tasks with latest dates and float
  */
-export const performBackwardPass = (allTasks, taskLinks, getCalendarForTask) => {
+export const performBackwardPass = (
+  allTasks,
+  taskLinks,
+  getCalendarForTask
+) => {
   const updatedTasks = [...allTasks];
   const visited = new Set();
   const processing = new Set();
@@ -406,10 +411,21 @@ export const performBackwardPass = (allTasks, taskLinks, getCalendarForTask) => 
 export const performScheduling = (allTasks, taskLinks, getCalendarForTask) => {
   try {
     // Forward pass to calculate earliest dates
-    let updatedTasks = performForwardPass(allTasks, taskLinks, getCalendarForTask);
+    let updatedTasks = performForwardPass(
+      allTasks,
+      taskLinks,
+      getCalendarForTask
+    );
 
     // Backward pass to calculate latest dates and float
-    updatedTasks = performBackwardPass(updatedTasks, taskLinks, getCalendarForTask);
+    updatedTasks = performBackwardPass(
+      updatedTasks,
+      taskLinks,
+      getCalendarForTask
+    );
+
+    // Calculate critical path
+    updatedTasks = calculateCriticalPath(updatedTasks, taskLinks, getCalendarForTask);
 
     return {
       tasks: updatedTasks,
