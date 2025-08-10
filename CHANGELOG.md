@@ -1100,6 +1100,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Comprehensive leveling reports with recommendations and performance metrics
   - Professional UI with validation, warnings, and detailed results display
 
+## [2025-08-09] – Prompt 169
+
+### Added
+
+- **Calendar Exception Support**
+  - Comprehensive calendar exception utilities for managing one-off non-working days
+  - Professional Calendar Exception Manager with single and date range exception creation
+  - Support for multiple exception types: holidays, site shutdowns, maintenance, weather, and custom
+  - Advanced validation system with conflict detection and business rule enforcement
+  - Integration with Calendar Editor providing "Add Exception" and "Manage Exceptions" buttons
+  - Exception-aware scheduling algorithms that respect calendar exceptions
+  - Import/export functionality for exceptions in JSON, CSV, and ICS formats
+  - Bulk operations for managing multiple exceptions with search and filter capabilities
+  - Real-time exception statistics and calendar impact analysis
+  - Professional UI with validation, warnings, and detailed exception management
+  - Enhanced calendar utilities supporting working hours and exception handling
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
