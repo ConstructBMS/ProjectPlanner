@@ -81,6 +81,18 @@ import {
   getBaselineComparisonMode,
 } from '../utils/baselineManagerUtils';
 import { getTaskBarLabels, getLabelTooltip } from '../utils/barLabelUtils';
+import {
+  createProgressEditState,
+  updateProgressEditState,
+  getProgressEditStyles,
+  getProgressBarStyles,
+  getDragHandleStyles,
+  getTooltipStyles,
+  getProgressEditHandlers,
+  createProgressUpdateHandler,
+  formatProgress,
+  DEFAULT_PROGRESS_EDIT_CONFIG,
+} from '../utils/progressEditUtils';
 import TaskSplitModal from './modals/TaskSplitModal';
 import '../styles/gantt.css';
 
@@ -209,8 +221,47 @@ const GanttChart = () => {
     currentY: 0,
   });
 
+  // Progress edit state
+  const [progressEditState, setProgressEditState] = useState(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
   const allTasks = getVisibleTasks(viewState.taskFilter);
   const tasks = applyFilters(allTasks);
+
+  // Progress update handler
+  const progressUpdateHandler = useMemo(() => {
+    return createProgressUpdateHandler(updateTask, DEFAULT_PROGRESS_EDIT_CONFIG);
+  }, [updateTask]);
+
+  // Handle progress change
+  const handleProgressChange = useCallback((taskId, newProgress) => {
+    progressUpdateHandler(taskId, newProgress);
+  }, [progressUpdateHandler]);
+
+  // Global mouse event handlers for progress editing
+  useEffect(() => {
+    const handleGlobalMouseMove = (e) => {
+      if (progressEditState && progressEditState.isEditing) {
+        setMousePosition({ x: e.clientX, y: e.clientY });
+      }
+    };
+
+    const handleGlobalMouseUp = () => {
+      if (progressEditState && progressEditState.isEditing) {
+        setProgressEditState(null);
+      }
+    };
+
+    if (progressEditState && progressEditState.isEditing) {
+      document.addEventListener('mousemove', handleGlobalMouseMove);
+      document.addEventListener('mouseup', handleGlobalMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove);
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, [progressEditState]);
 
   // Calculate critical path when tasks or links change
   const criticalPathTasks = useMemo(() => {
@@ -2234,24 +2285,98 @@ const GanttChart = () => {
                             });
                           }}
                         >
-                          {/* Progress indicator */}
-                          {task.progress > 0 && (
-                            <div
-                              className={`h-full rounded-l transition-all duration-300 ${
-                                task.isCritical ||
-                                criticalPathTasks.includes(task.id)
-                                  ? 'bg-red-400'
-                                  : 'bg-green-400'
-                              }`}
-                              style={{ width: `${task.progress}%` }}
-                            />
-                          )}
+                          {/* Progress indicator with inline editing */}
+                          {(() => {
+                            const isEditing = progressEditState && progressEditState.taskId === task.id;
+                            const currentProgress = isEditing ? progressEditState.currentProgress : (task.progress || 0);
+                            
+                            return (
+                              <div
+                                className='h-full rounded-l relative'
+                                style={getProgressEditStyles(
+                                  isEditing ? progressEditState : { isEditing: false, isDragging: false },
+                                  DEFAULT_PROGRESS_EDIT_CONFIG
+                                )}
+                                onMouseDown={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  
+                                  const rect = e.currentTarget.getBoundingClientRect();
+                                  const startX = e.clientX - rect.left;
+                                  const newState = createProgressEditState(task, DEFAULT_PROGRESS_EDIT_CONFIG);
+                                  
+                                  setProgressEditState({
+                                    ...newState,
+                                    isEditing: true,
+                                    isDragging: false,
+                                    startX,
+                                    currentX: startX,
+                                    barWidth: rect.width,
+                                  });
+                                }}
+                                onMouseMove={(e) => {
+                                  if (!isEditing) return;
+                                  
+                                  const rect = e.currentTarget.getBoundingClientRect();
+                                  const currentX = e.clientX - rect.left;
+                                  
+                                  if (!progressEditState.isDragging && Math.abs(currentX - progressEditState.startX) >= 3) {
+                                    setProgressEditState(prev => ({ ...prev, isDragging: true }));
+                                  }
+                                  
+                                  if (progressEditState.isDragging) {
+                                    const newProgress = Math.max(0, Math.min(100, (currentX / rect.width) * 100));
+                                    setProgressEditState(prev => ({
+                                      ...prev,
+                                      currentX,
+                                      currentProgress: newProgress,
+                                    }));
+                                    handleProgressChange(task.id, newProgress);
+                                  }
+                                }}
+                              >
+                                {/* Progress bar */}
+                                <div
+                                  style={getProgressBarStyles(
+                                    currentProgress,
+                                    task.isCritical || criticalPathTasks.includes(task.id),
+                                    DEFAULT_PROGRESS_EDIT_CONFIG
+                                  )}
+                                />
+                                
+                                {/* Drag handle */}
+                                {currentProgress > 0 && (
+                                  <div
+                                    style={{
+                                      position: 'absolute',
+                                      left: `${(currentProgress / 100) * 100}%`,
+                                      top: '0',
+                                      width: '4px',
+                                      height: '100%',
+                                      backgroundColor: isEditing ? '#3B82F6' : '#6B7280',
+                                      cursor: 'col-resize',
+                                      borderRadius: '2px',
+                                      transform: 'translateX(-50%)',
+                                      zIndex: 10,
+                                      transition: isEditing ? 'none' : 'left 0.1s ease-out',
+                                      boxShadow: isEditing ? '0 0 0 2px rgba(59, 130, 246, 0.3)' : 'none',
+                                    }}
+                                    className='progress-drag-handle'
+                                  />
+                                )}
+                              </div>
+                            );
+                          })()}
 
                           {/* Custom Bar Labels */}
                           {(() => {
                             const barWidth = parseFloat(width);
-                            const labels = getTaskBarLabels(task, viewState.userSettings, barWidth);
-                            
+                            const labels = getTaskBarLabels(
+                              task,
+                              viewState.userSettings,
+                              barWidth
+                            );
+
                             return labels.map((label, index) => (
                               <div
                                 key={label.id}
@@ -2265,22 +2390,28 @@ const GanttChart = () => {
                           })()}
 
                           {/* Fallback Task Name Label */}
-                          {width !== '0px' && parseFloat(width) > 60 && (() => {
-                            const barWidth = parseFloat(width);
-                            const labels = getTaskBarLabels(task, viewState.userSettings, barWidth);
-                            
-                            // Only show fallback if no custom labels are configured or enabled
-                            if (labels.length === 0) {
-                              return (
-                                <div className='absolute inset-0 flex items-center justify-center px-1 pointer-events-none'>
-                                  <span className='text-white text-xs font-medium truncate'>
-                                    {task.name}
-                                  </span>
-                                </div>
+                          {width !== '0px' &&
+                            parseFloat(width) > 60 &&
+                            (() => {
+                              const barWidth = parseFloat(width);
+                              const labels = getTaskBarLabels(
+                                task,
+                                viewState.userSettings,
+                                barWidth
                               );
-                            }
-                            return null;
-                          })()}
+
+                              // Only show fallback if no custom labels are configured or enabled
+                              if (labels.length === 0) {
+                                return (
+                                  <div className='absolute inset-0 flex items-center justify-center px-1 pointer-events-none'>
+                                    <span className='text-white text-xs font-medium truncate'>
+                                      {task.name}
+                                    </span>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            })()}
 
                           {/* Float Labels */}
                           {isFloatDisplayEnabled(viewState) &&
@@ -2562,6 +2693,30 @@ const GanttChart = () => {
           )}
         </div>
       </div>
+
+      {/* Progress Edit Tooltip */}
+      {progressEditState && progressEditState.isDragging && (
+        <div
+          className='fixed bg-blue-600 text-white text-xs px-2 py-1 rounded shadow-lg z-[10000] pointer-events-none progress-tooltip'
+          style={{
+            position: 'fixed',
+            left: `${mousePosition.x + 10}px`,
+            top: `${mousePosition.y - 30}px`,
+            backgroundColor: '#1F2937',
+            color: 'white',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            fontSize: '12px',
+            fontWeight: '500',
+            zIndex: 1000,
+            pointerEvents: 'none',
+            whiteSpace: 'nowrap',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          }}
+        >
+          {formatProgress(progressEditState.currentProgress)}
+        </div>
+      )}
 
       {/* Task Tooltip */}
       {tooltip.visible && tooltip.task && (
