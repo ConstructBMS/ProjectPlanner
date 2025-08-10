@@ -5,6 +5,7 @@ import {
   useCallback,
   useMemo,
 } from 'react';
+import { useUndoRedoContext } from './UndoRedoContext';
 
 const TaskContext = createContext();
 
@@ -87,9 +88,8 @@ export const TaskProvider = ({ children }) => {
 
   const [nextId, setNextId] = useState(4);
 
-  // Undo/Redo history stacks
-  const [undoStack, setUndoStack] = useState([]);
-  const [redoStack, setRedoStack] = useState([]);
+  // Undo/Redo context
+  const { pushAction, isUndoRedoAction } = useUndoRedoContext();
 
   // Selection and hover state for bidirectional sync
   const [selectedTaskId, setSelectedTaskId] = useState(null);
@@ -143,65 +143,27 @@ export const TaskProvider = ({ children }) => {
     return buildHierarchy();
   }, [tasks]);
 
-  // Helper function to save current state to undo stack
-  const saveToUndoStack = useCallback(() => {
-    const currentState = {
-      tasks: [...tasks],
-      taskLinks: [...taskLinks],
-      nextId,
+  // Helper function to create undo/redo actions
+  const createUndoAction = useCallback((type, before, after, onUndo, onRedo) => {
+    return {
+      type,
+      before,
+      after,
+      onUndo,
+      onRedo,
       timestamp: Date.now(),
     };
-    setUndoStack(prev => [...prev, currentState]);
-    // Clear redo stack when new action is performed
-    setRedoStack([]);
-  }, [tasks, taskLinks, nextId]);
+  }, []);
 
-  // Undo function
-  const undo = useCallback(() => {
-    if (undoStack.length === 0) return;
-
-    const currentState = {
-      tasks: [...tasks],
-      taskLinks: [...taskLinks],
-      nextId,
-      timestamp: Date.now(),
-    };
-
-    const previousState = undoStack[undoStack.length - 1];
-
-    setTasks(previousState.tasks);
-    setTaskLinks(previousState.taskLinks);
-    setNextId(previousState.nextId);
-
-    setUndoStack(prev => prev.slice(0, -1));
-    setRedoStack(prev => [...prev, currentState]);
-  }, [undoStack, tasks, taskLinks, nextId]);
-
-  // Redo function
-  const redo = useCallback(() => {
-    if (redoStack.length === 0) return;
-
-    const currentState = {
-      tasks: [...tasks],
-      taskLinks: [...taskLinks],
-      nextId,
-      timestamp: Date.now(),
-    };
-
-    const nextState = redoStack[redoStack.length - 1];
-
-    setTasks(nextState.tasks);
-    setTaskLinks(nextState.taskLinks);
-    setNextId(nextState.nextId);
-
-    setRedoStack(prev => prev.slice(0, -1));
-    setUndoStack(prev => [...prev, currentState]);
-  }, [redoStack, tasks, taskLinks, nextId]);
+  // Helper function to push action to undo stack
+  const pushUndoAction = useCallback((action) => {
+    if (!isUndoRedoAction) {
+      pushAction(action);
+    }
+  }, [pushAction, isUndoRedoAction]);
 
   // Task operations
   const addTask = useCallback(() => {
-    saveToUndoStack();
-
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
@@ -225,13 +187,31 @@ export const TaskProvider = ({ children }) => {
       isExpanded: true,
     };
 
+    const before = { tasks: [...tasks], nextId };
+    const after = { tasks: [...tasks, newTask], nextId: nextId + 1 };
+
+    const action = createUndoAction(
+      'ADD_TASK',
+      before,
+      after,
+      // onUndo: remove the task
+      () => {
+        setTasks(prev => prev.filter(task => task.id !== newTask.id));
+        setNextId(prev => prev - 1);
+      },
+      // onRedo: add the task back
+      () => {
+        setTasks(prev => [...prev, newTask]);
+        setNextId(prev => prev + 1);
+      }
+    );
+
+    pushUndoAction(action);
     setTasks(prev => [...prev, newTask]);
     setNextId(prev => prev + 1);
-  }, [nextId, saveToUndoStack]);
+  }, [nextId, tasks, createUndoAction, pushUndoAction]);
 
   const addMilestone = useCallback(() => {
-    saveToUndoStack();
-
     const today = new Date();
 
     const newMilestone = {
@@ -253,14 +233,32 @@ export const TaskProvider = ({ children }) => {
       isExpanded: true,
     };
 
+    const before = { tasks: [...tasks], nextId };
+    const after = { tasks: [...tasks, newMilestone], nextId: nextId + 1 };
+
+    const action = createUndoAction(
+      'ADD_MILESTONE',
+      before,
+      after,
+      // onUndo: remove the milestone
+      () => {
+        setTasks(prev => prev.filter(task => task.id !== newMilestone.id));
+        setNextId(prev => prev - 1);
+      },
+      // onRedo: add the milestone back
+      () => {
+        setTasks(prev => [...prev, newMilestone]);
+        setNextId(prev => prev + 1);
+      }
+    );
+
+    pushUndoAction(action);
     setTasks(prev => [...prev, newMilestone]);
     setNextId(prev => prev + 1);
-  }, [nextId, saveToUndoStack]);
+  }, [nextId, tasks, createUndoAction, pushUndoAction]);
 
   const insertTaskBelow = useCallback(
     (selectedId = null) => {
-      saveToUndoStack();
-
       const today = new Date();
       const tomorrow = new Date(today);
       tomorrow.setDate(today.getDate() + 1);
@@ -284,25 +282,56 @@ export const TaskProvider = ({ children }) => {
         isExpanded: true,
       };
 
+      let newTasks;
+      let selectedIndex = -1;
+
       if (selectedId) {
         // Find the selected task's position
-        const selectedIndex = tasks.findIndex(task => task.id === selectedId);
+        selectedIndex = tasks.findIndex(task => task.id === selectedId);
         if (selectedIndex !== -1) {
           // Insert the new task after the selected one
-          setTasks(prev => {
-            const updated = [...prev];
-            updated.splice(selectedIndex + 1, 0, newTask);
-            return updated;
-          });
+          newTasks = [...tasks];
+          newTasks.splice(selectedIndex + 1, 0, newTask);
         } else {
           // If selected task not found, append at the end
-          setTasks(prev => [...prev, newTask]);
+          newTasks = [...tasks, newTask];
         }
       } else {
         // No selection, append at the end
-        setTasks(prev => [...prev, newTask]);
+        newTasks = [...tasks, newTask];
       }
 
+      const before = { tasks: [...tasks], nextId };
+      const after = { tasks: newTasks, nextId: nextId + 1 };
+
+      const action = createUndoAction(
+        'INSERT_TASK',
+        before,
+        after,
+        // onUndo: remove the task
+        () => {
+          setTasks(prev => prev.filter(task => task.id !== newTask.id));
+          setNextId(prev => prev - 1);
+          setSelectedTaskId(null);
+          setSelectedTaskIds([]);
+        },
+        // onRedo: add the task back at the same position
+        () => {
+          if (selectedIndex !== -1) {
+            const currentTasks = [...tasks];
+            currentTasks.splice(selectedIndex + 1, 0, newTask);
+            setTasks(currentTasks);
+          } else {
+            setTasks(prev => [...prev, newTask]);
+          }
+          setNextId(prev => prev + 1);
+          setSelectedTaskId(newTask.id);
+          setSelectedTaskIds([newTask.id]);
+        }
+      );
+
+      pushUndoAction(action);
+      setTasks(newTasks);
       setNextId(prev => prev + 1);
       // Select the newly created task
       setSelectedTaskId(newTask.id);
@@ -315,7 +344,7 @@ export const TaskProvider = ({ children }) => {
         newTask.id
       );
     },
-    [nextId, saveToUndoStack, tasks]
+    [nextId, tasks, createUndoAction, pushUndoAction]
   );
 
   const insertSummaryTask = useCallback(
@@ -410,15 +439,63 @@ export const TaskProvider = ({ children }) => {
 
   const deleteTask = useCallback(
     taskId => {
-      saveToUndoStack();
-
       // Remove the task and all its descendants
       const descendants = getTaskDescendants(taskId);
       const tasksToRemove = [taskId, ...descendants];
 
-      setTasks(prev => prev.filter(task => !tasksToRemove.includes(task.id)));
+      // Get the tasks and links that will be removed
+      const tasksToDelete = tasks.filter(task => tasksToRemove.includes(task.id));
+      const linksToDelete = taskLinks.filter(
+        link =>
+          tasksToRemove.includes(link.fromId) ||
+          tasksToRemove.includes(link.toId)
+      );
 
-      // Remove any links involving the deleted tasks
+      const before = { 
+        tasks: [...tasks], 
+        taskLinks: [...taskLinks],
+        selectedTaskId,
+        selectedTaskIds: [...selectedTaskIds]
+      };
+      const after = { 
+        tasks: tasks.filter(task => !tasksToRemove.includes(task.id)),
+        taskLinks: taskLinks.filter(
+          link =>
+            !tasksToRemove.includes(link.fromId) &&
+            !tasksToRemove.includes(link.toId)
+        ),
+        selectedTaskId: selectedTaskId === taskId ? null : selectedTaskId,
+        selectedTaskIds: selectedTaskIds.filter(id => !tasksToRemove.includes(id))
+      };
+
+      const action = createUndoAction(
+        'DELETE_TASK',
+        before,
+        after,
+        // onUndo: restore tasks and links
+        () => {
+          setTasks(prev => [...prev, ...tasksToDelete]);
+          setTaskLinks(prev => [...prev, ...linksToDelete]);
+          setSelectedTaskId(before.selectedTaskId);
+          setSelectedTaskIds(before.selectedTaskIds);
+        },
+        // onRedo: delete tasks and links again
+        () => {
+          setTasks(prev => prev.filter(task => !tasksToRemove.includes(task.id)));
+          setTaskLinks(prev =>
+            prev.filter(
+              link =>
+                !tasksToRemove.includes(link.fromId) &&
+                !tasksToRemove.includes(link.toId)
+            )
+          );
+          setSelectedTaskId(after.selectedTaskId);
+          setSelectedTaskIds(after.selectedTaskIds);
+        }
+      );
+
+      pushUndoAction(action);
+      setTasks(prev => prev.filter(task => !tasksToRemove.includes(task.id)));
       setTaskLinks(prev =>
         prev.filter(
           link =>
@@ -435,7 +512,7 @@ export const TaskProvider = ({ children }) => {
         prev.filter(id => !tasksToRemove.includes(id))
       );
     },
-    [saveToUndoStack, selectedTaskId, getTaskDescendants]
+    [tasks, taskLinks, selectedTaskId, selectedTaskIds, getTaskDescendants, createUndoAction, pushUndoAction]
   );
 
   // Enhanced delete function with cascade option
@@ -506,12 +583,38 @@ export const TaskProvider = ({ children }) => {
 
   const updateTask = useCallback(
     (taskId, updates) => {
-      saveToUndoStack();
+      const oldTask = tasks.find(task => task.id === taskId);
+      if (!oldTask) return;
+
+      const updatedTask = { ...oldTask, ...updates };
+
+      const before = { tasks: [...tasks] };
+      const after = { tasks: tasks.map(task => (task.id === taskId ? updatedTask : task)) };
+
+      const action = createUndoAction(
+        'UPDATE_TASK',
+        before,
+        after,
+        // onUndo: restore old task
+        () => {
+          setTasks(prev =>
+            prev.map(task => (task.id === taskId ? oldTask : task))
+          );
+        },
+        // onRedo: apply updates again
+        () => {
+          setTasks(prev =>
+            prev.map(task => (task.id === taskId ? updatedTask : task))
+          );
+        }
+      );
+
+      pushUndoAction(action);
       setTasks(prev =>
-        prev.map(task => (task.id === taskId ? { ...task, ...updates } : task))
+        prev.map(task => (task.id === taskId ? updatedTask : task))
       );
     },
-    [saveToUndoStack]
+    [tasks, createUndoAction, pushUndoAction]
   );
 
   // Selection operations
@@ -777,22 +880,65 @@ export const TaskProvider = ({ children }) => {
         lag,
       };
 
-      saveToUndoStack();
+      const before = { taskLinks: [...taskLinks] };
+      const after = { taskLinks: [...taskLinks, newLink] };
+
+      const action = createUndoAction(
+        'LINK_TASKS',
+        before,
+        after,
+        // onUndo: remove the link
+        () => {
+          setTaskLinks(prev => prev.filter(link => link.id !== newLink.id));
+        },
+        // onRedo: add the link back
+        () => {
+          setTaskLinks(prev => [...prev, newLink]);
+        }
+      );
+
+      pushUndoAction(action);
       setTaskLinks(prev => [...prev, newLink]);
       console.log('Created task link:', newLink);
     },
-    [taskLinks, saveToUndoStack]
+    [taskLinks, createUndoAction, pushUndoAction]
   );
 
   const unlinkTasks = useCallback(
     (fromId, toId) => {
-      saveToUndoStack();
+      const linkToRemove = taskLinks.find(
+        link => link.fromId === fromId && link.toId === toId
+      );
+      
+      if (!linkToRemove) {
+        console.warn('Link not found between tasks');
+        return;
+      }
+
+      const before = { taskLinks: [...taskLinks] };
+      const after = { taskLinks: taskLinks.filter(link => link.id !== linkToRemove.id) };
+
+      const action = createUndoAction(
+        'UNLINK_TASKS',
+        before,
+        after,
+        // onUndo: restore the link
+        () => {
+          setTaskLinks(prev => [...prev, linkToRemove]);
+        },
+        // onRedo: remove the link again
+        () => {
+          setTaskLinks(prev => prev.filter(link => link.id !== linkToRemove.id));
+        }
+      );
+
+      pushUndoAction(action);
       setTaskLinks(prev =>
         prev.filter(link => !(link.fromId === fromId && link.toId === toId))
       );
       console.log('Removed task link:', { fromId, toId });
     },
-    [saveToUndoStack]
+    [taskLinks, createUndoAction, pushUndoAction]
   );
 
   const updateLink = useCallback(
@@ -877,11 +1023,7 @@ export const TaskProvider = ({ children }) => {
       nextId,
       taskLinks,
 
-      // Undo/Redo
-      undo,
-      redo,
-      undoStack,
-      redoStack,
+      // Undo/Redo - now handled by UndoRedoContext
 
       // Selection state
       selectedTaskId,
@@ -944,10 +1086,7 @@ export const TaskProvider = ({ children }) => {
       tasks,
       nextId,
       taskLinks,
-      undo,
-      redo,
-      undoStack,
-      redoStack,
+
       selectedTaskId,
       selectedTaskIds,
       hoveredTaskId,

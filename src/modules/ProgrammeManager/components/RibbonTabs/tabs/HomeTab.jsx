@@ -2,6 +2,7 @@ import { useState } from 'react';
 import useTaskManager from '../../../hooks/useTaskManager';
 import { useTaskContext } from '../../../context/TaskContext';
 import { useViewContext } from '../../../context/ViewContext';
+import { useUndoRedoContext } from '../../../context/UndoRedoContext';
 import RibbonButton from '../shared/RibbonButton';
 import RibbonGroup from '../shared/RibbonGroup';
 import RibbonDropdown from '../shared/RibbonDropdown';
@@ -51,11 +52,10 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     linkTasks,
     openTaskNotes,
     addCode,
-    undo,
-    redo,
-    undoStack,
-    redoStack,
   } = useTaskManager();
+
+  // Get undo/redo functions from UndoRedoContext
+  const { undo, redo, canUndo, canRedo } = useUndoRedoContext();
 
   // Get the current task context for selection state
   const { selectedTaskId, selectedTaskIds } = useTaskContext();
@@ -165,14 +165,14 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
           label='Undo'
           onClick={undo}
           tooltip='Undo (Ctrl+Z)'
-          disabled={undoStack.length === 0}
+          disabled={!canUndo}
         />
         <RibbonButton
           icon={<ArrowUturnRightIcon className='w-4 h-4' />}
           label='Redo'
           onClick={redo}
           tooltip='Redo (Ctrl+Y)'
-          disabled={redoStack.length === 0}
+          disabled={!canRedo}
         />
       </RibbonGroup>
 

@@ -680,6 +680,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - High z-index overlay to ensure visibility above other elements
   - Responsive selection box that adapts to drag direction
 
+## [2025-08-09] – Prompt 141
+
+### Added
+
+- **Global Undo/Redo System for Task & Resource Modifications**
+  - Comprehensive undo/redo stack for all task and resource changes
+  - Support for task add/edit/delete operations with full state restoration
+  - Resource assignment changes with proper undo/redo functionality
+  - Dependency link creation and removal with state management
+  - Baseline operations (set/clear baseline) with undo support
+  - Task grouping and ungrouping with hierarchical state preservation
+  - Stack size limit of 50 actions to prevent memory issues
+  - Keyboard shortcuts: Ctrl+Z for undo, Ctrl+Y or Ctrl+Shift+Z for redo
+  - Visual feedback in Home tab with disabled state for unavailable actions
+  - Integration with existing task management system
+  - Proper state isolation to prevent undo/redo loops
+  - Action-based undo system with before/after state snapshots
+  - Automatic redo stack clearing when new actions are performed
+
 ## [2025-08-08] – Prompt 094
 
 ### Added
