@@ -32,6 +32,7 @@ export const LayoutProvider = ({ children }) => {
       startVariance: 100,
       finishVariance: 100,
       durationVariance: 100,
+      scheduleStatus: 120,
     },
     paneSizes: {
       sidebar: 300,
@@ -52,6 +53,7 @@ export const LayoutProvider = ({ children }) => {
       'startVariance',
       'finishVariance',
       'durationVariance',
+      'scheduleStatus',
     ],
   });
 
@@ -227,7 +229,12 @@ export const LayoutProvider = ({ children }) => {
       { key: 'units', label: 'Units (%)', defaultWidth: 80 },
       { key: 'startVariance', label: 'Start Variance', defaultWidth: 100 },
       { key: 'finishVariance', label: 'Finish Variance', defaultWidth: 100 },
-      { key: 'durationVariance', label: 'Duration Variance', defaultWidth: 100 },
+      {
+        key: 'durationVariance',
+        label: 'Duration Variance',
+        defaultWidth: 100,
+      },
+      { key: 'scheduleStatus', label: 'Schedule Status', defaultWidth: 120 },
       { key: 'priority', label: 'Priority', defaultWidth: 80 },
       { key: 'assignedTo', label: 'Assigned To', defaultWidth: 120 },
       { key: 'notes', label: 'Notes', defaultWidth: 150 },

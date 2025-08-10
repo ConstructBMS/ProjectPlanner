@@ -31,12 +31,17 @@ import {
 import { validateTaskDates, getPredecessors } from '../utils/scheduleUtils';
 import { useCalendarContext } from '../context/CalendarContext';
 import { isWorkday, snapToWorkday } from '../utils/calendarUtils';
-import { 
-  hasBaselineData, 
-  getBaselineTooltip, 
-  calculateBaselinePerformance, 
-  formatVariance 
+import {
+  hasBaselineData,
+  getBaselineTooltip,
+  calculateBaselinePerformance,
+  formatVariance,
 } from '../utils/baselineUtils';
+import {
+  calculateProgressLinePosition,
+  calculateTaskProgressStatus,
+  calculateProgressIndicator,
+} from '../utils/progressLineUtils';
 import '../styles/gantt.css';
 
 const GanttChart = () => {
@@ -56,7 +61,7 @@ const GanttChart = () => {
   } = useTaskContext();
 
   const { viewState, updateViewState } = useViewContext();
-  const { getCalendarForTask } = useCalendarContext();
+  const { getCalendarForTask, globalCalendar } = useCalendarContext();
   const {
     isSelected,
     handleTaskClick,
@@ -1820,6 +1825,23 @@ const GanttChart = () => {
           </defs>
         </svg>
 
+        {/* Progress Line */}
+        {viewState.statusDate && (() => {
+          const statusDate = new Date(viewState.statusDate);
+          const projectStart = new Date('2024-01-01'); // Use same start as timeline
+          const progressLinePosition = calculateProgressLinePosition(statusDate, projectStart, getScaledWidth);
+          
+          return (
+            <div
+              className='absolute top-0 bottom-0 w-0.5 bg-red-500 z-30 pointer-events-none'
+              style={{
+                left: `${progressLinePosition}px`,
+              }}
+              title={`Progress Line: ${statusDate.toLocaleDateString()}`}
+            />
+          );
+        })()}
+
         {/* Timeline Content */}
         <div className='relative z-20'>
           {tasks.length === 0 ? (
@@ -2049,58 +2071,106 @@ const GanttChart = () => {
                       )}
 
                       {/* Baseline Bar Overlay */}
-                      {viewState.showBaseline &&
-                        hasBaselineData(task) && (
-                          <>
-                            {/* Baseline bar */}
+                      {viewState.showBaseline && hasBaselineData(task) && (
+                        <>
+                          {/* Baseline bar */}
+                          <div
+                            className='h-[6px] bg-gray-300 rounded opacity-50 absolute bottom-0'
+                            style={{
+                              left: `${Math.max(
+                                getDateIndex(new Date(task.baselineStart)) *
+                                  scaledDayWidth,
+                                0
+                              )}px`,
+                              width: `${Math.max(
+                                Math.floor(
+                                  (new Date(task.baselineEnd) -
+                                    new Date(task.baselineStart)) /
+                                    (1000 * 60 * 60 * 24)
+                                ) * scaledDurationWidth,
+                                40
+                              )}px`,
+                            }}
+                            title={`Baseline: ${formatDate(new Date(task.baselineStart))} - ${formatDate(new Date(task.baselineEnd))}`}
+                          />
+
+                          {/* Variance connector line */}
+                          {(() => {
+                            const baselineEnd = new Date(task.baselineEnd);
+                            const actualEnd = new Date(task.endDate);
+                            const variance = Math.ceil(
+                              (actualEnd - baselineEnd) / (1000 * 60 * 60 * 24)
+                            );
+
+                            if (Math.abs(variance) > 1) {
+                              const baselineEndX =
+                                getDateIndex(baselineEnd) * scaledDayWidth;
+                              const actualEndX =
+                                getDateIndex(actualEnd) * scaledDayWidth;
+                              const connectorWidth = Math.abs(
+                                actualEndX - baselineEndX
+                              );
+
+                              return (
+                                <div
+                                  className={`h-[2px] absolute bottom-1 ${
+                                    variance > 0 ? 'bg-red-400' : 'bg-green-400'
+                                  } opacity-70`}
+                                  style={{
+                                    left: `${Math.min(baselineEndX, actualEndX)}px`,
+                                    width: `${Math.max(connectorWidth, 2)}px`,
+                                  }}
+                                  title={`Variance: ${variance > 0 ? '+' : ''}${variance} days`}
+                                />
+                              );
+                            }
+                            return null;
+                          })()}
+                        </>
+                      )}
+
+                      {/* Progress Line Indicators */}
+                      {viewState.statusDate && (() => {
+                        const statusDate = new Date(viewState.statusDate);
+                        const progressStatus = calculateTaskProgressStatus(task, statusDate, globalCalendar);
+                        const indicator = calculateProgressIndicator(task, progressStatus, statusDate, getScaledWidth);
+                        
+                        if (indicator.type === 'behind') {
+                          return (
                             <div
-                              className='h-[6px] bg-gray-300 rounded opacity-50 absolute bottom-0'
+                              className='h-full bg-red-500 opacity-60 absolute top-0'
                               style={{
-                                left: `${Math.max(
-                                  getDateIndex(new Date(task.baselineStart)) *
-                                    scaledDayWidth,
-                                  0
-                                )}px`,
-                                width: `${Math.max(
-                                  Math.floor(
-                                    (new Date(task.baselineEnd) -
-                                      new Date(task.baselineStart)) /
-                                      (1000 * 60 * 60 * 24)
-                                  ) * scaledDurationWidth,
-                                  40
-                                )}px`,
+                                left: `${Math.max(daysFromStart * getScaledWidth + indicator.position, 0)}px`,
+                                width: `${Math.max(indicator.width, 2)}px`,
                               }}
-                              title={`Baseline: ${formatDate(new Date(task.baselineStart))} - ${formatDate(new Date(task.baselineEnd))}`}
+                              title={`Behind schedule: ${progressStatus.status}`}
                             />
-                            
-                            {/* Variance connector line */}
-                            {(() => {
-                              const baselineEnd = new Date(task.baselineEnd);
-                              const actualEnd = new Date(task.endDate);
-                              const variance = Math.ceil((actualEnd - baselineEnd) / (1000 * 60 * 60 * 24));
-                              
-                              if (Math.abs(variance) > 1) {
-                                const baselineEndX = getDateIndex(baselineEnd) * scaledDayWidth;
-                                const actualEndX = getDateIndex(actualEnd) * scaledDayWidth;
-                                const connectorWidth = Math.abs(actualEndX - baselineEndX);
-                                
-                                return (
-                                  <div
-                                    className={`h-[2px] absolute bottom-1 ${
-                                      variance > 0 ? 'bg-red-400' : 'bg-green-400'
-                                    } opacity-70`}
-                                    style={{
-                                      left: `${Math.min(baselineEndX, actualEndX)}px`,
-                                      width: `${Math.max(connectorWidth, 2)}px`,
-                                    }}
-                                    title={`Variance: ${variance > 0 ? '+' : ''}${variance} days`}
-                                  />
-                                );
-                              }
-                              return null;
-                            })()}
-                          </>
-                        )}
+                          );
+                        } else if (indicator.type === 'ahead') {
+                          return (
+                            <div
+                              className='h-full bg-green-500 opacity-80 absolute top-0'
+                              style={{
+                                left: `${Math.max(daysFromStart * getScaledWidth + indicator.position, 0)}px`,
+                                width: `${Math.max(indicator.width, 2)}px`,
+                              }}
+                              title={`Ahead of schedule: ${progressStatus.status}`}
+                            />
+                          );
+                        } else if (indicator.type === 'on-track') {
+                          return (
+                            <div
+                              className='h-full bg-blue-500 opacity-60 absolute top-0'
+                              style={{
+                                left: `${Math.max(daysFromStart * getScaledWidth + indicator.position, 0)}px`,
+                                width: `${Math.max(indicator.width, 2)}px`,
+                              }}
+                              title={`On track: ${progressStatus.status}`}
+                            />
+                          );
+                        }
+                        return null;
+                      })()}
 
                       {/* Slack Overlay */}
                       {viewState.showSlack && taskFloats[task.id] > 0 && (
@@ -2186,7 +2256,9 @@ const GanttChart = () => {
                   Variance:
                 </div>
                 {(() => {
-                  const performance = calculateBaselinePerformance(tooltip.task);
+                  const performance = calculateBaselinePerformance(
+                    tooltip.task
+                  );
                   return (
                     <>
                       <div className='flex justify-between text-gray-300'>

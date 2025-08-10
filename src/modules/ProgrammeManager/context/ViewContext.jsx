@@ -42,6 +42,9 @@ export const ViewProvider = ({ children }) => {
     // Baseline overlay
     showBaseline: false,
 
+    // Progress line
+    statusDate: null, // Status date for progress line (defaults to today)
+
     // Timestamp
     savedAt: null,
   });

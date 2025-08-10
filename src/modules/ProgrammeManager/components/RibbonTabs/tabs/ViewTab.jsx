@@ -21,6 +21,7 @@ import {
   CalendarDaysIcon,
   ChartBarIcon,
   XMarkIcon,
+  ClockIcon,
 } from '@heroicons/react/24/outline';
 
 const TimelineZoomDropdown = () => {
@@ -1007,6 +1008,94 @@ const TimeUnitToggle = () => {
   );
 };
 
+const StatusDatePicker = () => {
+  const { viewState, updateViewState } = useViewContext();
+  const [isOpen, setIsOpen] = useState(false);
+  const [tempDate, setTempDate] = useState(
+    viewState.statusDate || new Date().toISOString().split('T')[0]
+  );
+
+  const handleDateChange = (e) => {
+    setTempDate(e.target.value);
+  };
+
+  const handleApply = () => {
+    updateViewState({ statusDate: tempDate });
+    setIsOpen(false);
+  };
+
+  const handleResetToToday = () => {
+    const today = new Date().toISOString().split('T')[0];
+    setTempDate(today);
+    updateViewState({ statusDate: today });
+    setIsOpen(false);
+  };
+
+  const formatDisplayDate = (dateString) => {
+    if (!dateString) return 'Today';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  };
+
+  return (
+    <div className='relative'>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className='flex items-center space-x-2 px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+        title='Set progress line status date'
+      >
+        <ClockIcon className='w-4 h-4 text-gray-500' />
+        <span className='text-gray-700'>
+          {formatDisplayDate(viewState.statusDate)}
+        </span>
+      </button>
+
+      {isOpen && (
+        <div className='absolute top-full left-0 mt-1 z-50 bg-white border border-gray-300 rounded-md shadow-lg p-3 min-w-64'>
+          <div className='space-y-3'>
+            <div>
+              <label className='block text-xs font-medium text-gray-700 mb-1'>
+                Status Date
+              </label>
+              <input
+                type='date'
+                value={tempDate}
+                onChange={handleDateChange}
+                className='w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+              />
+            </div>
+
+            <div className='flex space-x-2'>
+              <button
+                onClick={handleApply}
+                className='flex-1 px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors'
+              >
+                Apply
+              </button>
+              <button
+                onClick={handleResetToToday}
+                className='flex-1 px-3 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors'
+              >
+                Today
+              </button>
+              <button
+                onClick={() => setIsOpen(false)}
+                className='flex-1 px-3 py-1 text-xs bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors'
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const ZoomToFitButton = () => {
   const { zoomToFit } = useViewContext();
   const { tasks } = useTaskContext();
@@ -1105,6 +1194,7 @@ const ViewTab = ({ contentRef }) => {
         <ShowSlackToggle />
         <ShowBaselineToggle />
         <TimeUnitToggle />
+        <StatusDatePicker />
       </RibbonGroup>
 
       {/* Resource Group */}

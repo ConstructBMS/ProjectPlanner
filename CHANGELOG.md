@@ -823,6 +823,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Support for multiple resource types with different capacities
   - Automatic conflict resolution prioritization (highest over-allocation first)
 
+## [2025-08-09] – Prompt 150
+
+### Added
+
+- **Progress Line (Status Date)**
+  - Status date picker in View tab with default to today
+  - Vertical progress line at status date across Gantt chart
+  - Task progress indicators showing ahead/behind schedule status
+  - Schedule Status column in grid with color-coded status badges
+  - Ahead schedule indicators (green ticks/segments)
+  - Behind schedule indicators (red segments to planned location)
+  - On-track indicators (blue dots at expected position)
+  - Progress line utilities for status calculation and positioning
+  - Integration with existing calendar and task systems
+  - Professional status styling with icons and tooltips
+  - Real-time status updates based on task progress vs expected progress
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

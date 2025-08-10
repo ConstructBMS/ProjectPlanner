@@ -4,14 +4,19 @@ import { useViewContext } from '../context/ViewContext';
 import { useSelectionContext } from '../context/SelectionContext';
 import { useFilterContext } from '../context/FilterContext';
 import { useLayoutContext } from '../context/LayoutContext';
+import { useCalendarContext } from '../context/CalendarContext';
 import TaskLinkModal from './modals/TaskLinkModal';
 import ContextMenu from './ContextMenu';
 import { calculateWorkingDays } from '../utils/dateUtils';
-import { 
-  calculateBaselinePerformance, 
-  formatVariance, 
-  hasBaselineData 
+import {
+  calculateBaselinePerformance,
+  formatVariance,
+  hasBaselineData,
 } from '../utils/baselineUtils';
+import {
+  calculateTaskProgressStatus,
+  getStatusStyling,
+} from '../utils/progressLineUtils';
 
 // Diamond icon component for milestones
 const DiamondIcon = ({ className = 'w-4 h-4', color = 'text-purple-600' }) => (
@@ -46,6 +51,7 @@ const TaskGrid = React.memo(() => {
   } = useTaskContext();
 
   const { viewState } = useViewContext();
+  const { globalCalendar } = useCalendarContext();
 
   const { isSelected, handleTaskClick, getSelectedCount } =
     useSelectionContext();
@@ -255,7 +261,9 @@ const TaskGrid = React.memo(() => {
               (() => {
                 const performance = calculateBaselinePerformance(task);
                 return (
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${performance.startStatus.bgColor} ${performance.startStatus.color}`}>
+                  <span
+                    className={`px-2 py-1 rounded text-xs font-medium ${performance.startStatus.bgColor} ${performance.startStatus.color}`}
+                  >
                     {formatVariance(performance.startVariance)}
                   </span>
                 );
@@ -273,7 +281,9 @@ const TaskGrid = React.memo(() => {
               (() => {
                 const performance = calculateBaselinePerformance(task);
                 return (
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${performance.finishStatus.bgColor} ${performance.finishStatus.color}`}>
+                  <span
+                    className={`px-2 py-1 rounded text-xs font-medium ${performance.finishStatus.bgColor} ${performance.finishStatus.color}`}
+                  >
                     {formatVariance(performance.finishVariance)}
                   </span>
                 );
@@ -291,7 +301,9 @@ const TaskGrid = React.memo(() => {
               (() => {
                 const performance = calculateBaselinePerformance(task);
                 return (
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${performance.durationStatus.bgColor} ${performance.durationStatus.color}`}>
+                  <span
+                    className={`px-2 py-1 rounded text-xs font-medium ${performance.durationStatus.bgColor} ${performance.durationStatus.color}`}
+                  >
                     {formatVariance(performance.durationVariance)}
                   </span>
                 );
@@ -299,6 +311,32 @@ const TaskGrid = React.memo(() => {
             ) : (
               <span className='text-gray-400 text-xs'>-</span>
             )}
+          </div>
+        );
+
+      case 'scheduleStatus':
+        return (
+          <div className='text-center'>
+            {(() => {
+              const statusDate = viewState.statusDate
+                ? new Date(viewState.statusDate)
+                : new Date();
+              const progressStatus = calculateTaskProgressStatus(
+                task,
+                statusDate,
+                globalCalendar
+              );
+              const styling = getStatusStyling(progressStatus.status);
+
+              return (
+                <span
+                  className={`px-2 py-1 rounded text-xs font-medium ${styling.bgColor} ${styling.color} border ${styling.borderColor}`}
+                  title={styling.tooltip}
+                >
+                  {styling.icon} {progressStatus.status}
+                </span>
+              );
+            })()}
           </div>
         );
 
