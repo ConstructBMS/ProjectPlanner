@@ -27,6 +27,7 @@ export const ViewProvider = ({ children }) => {
     zoomLevel: 'Week',
     calendarView: 'Workweek',
     viewScale: 'Day', // View scale: Day, Week, Month
+    timeUnit: 'day', // Time unit: day, week, month
     timelineZoom: 20, // Pixels per day (10-100 range)
     taskFilter: 'Show All', // Task filter setting
     statusHighlighting: false, // Toggle for status-based row highlighting
@@ -116,6 +117,17 @@ export const ViewProvider = ({ children }) => {
         setViewState(prev => ({ ...prev, showSlack }));
       } catch (error) {
         console.error('Error loading saved showSlack preference:', error);
+      }
+    }
+
+    // Load saved time unit preference
+    const savedTimeUnit = window.localStorage.getItem('gantt.timeUnit');
+    if (savedTimeUnit !== null) {
+      try {
+        const timeUnit = JSON.parse(savedTimeUnit);
+        setViewState(prev => ({ ...prev, timeUnit }));
+      } catch (error) {
+        console.error('Error loading saved time unit preference:', error);
       }
     }
   }, []);
@@ -213,7 +225,10 @@ export const ViewProvider = ({ children }) => {
       const newZoom = Math.min(prev.timelineZoom + 10, 100);
       return { ...prev, timelineZoom: newZoom };
     });
-    console.log('Zoom In triggered - New zoom:', Math.min(viewState.timelineZoom + 10, 100));
+    console.log(
+      'Zoom In triggered - New zoom:',
+      Math.min(viewState.timelineZoom + 10, 100)
+    );
   };
 
   const zoomOut = () => {
@@ -221,12 +236,24 @@ export const ViewProvider = ({ children }) => {
       const newZoom = Math.max(prev.timelineZoom - 10, 10);
       return { ...prev, timelineZoom: newZoom };
     });
-    console.log('Zoom Out triggered - New zoom:', Math.max(viewState.timelineZoom - 10, 10));
+    console.log(
+      'Zoom Out triggered - New zoom:',
+      Math.max(viewState.timelineZoom - 10, 10)
+    );
   };
 
   const updateViewScale = scale => {
     setViewState(prev => ({ ...prev, viewScale: scale }));
     console.log('View scale updated to:', scale);
+  };
+
+  const updateTimeUnit = timeUnit => {
+    setViewState(prev => {
+      const newState = { ...prev, timeUnit };
+      window.localStorage.setItem('gantt.timeUnit', JSON.stringify(timeUnit));
+      return newState;
+    });
+    console.log('Time unit updated to:', timeUnit);
   };
 
   const value = {
@@ -243,6 +270,7 @@ export const ViewProvider = ({ children }) => {
     zoomIn,
     zoomOut,
     updateViewScale,
+    updateTimeUnit,
   };
 
   return <ViewContext.Provider value={value}>{children}</ViewContext.Provider>;

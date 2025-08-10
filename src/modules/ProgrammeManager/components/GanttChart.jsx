@@ -51,14 +51,47 @@ const GanttChart = () => {
 
   const { viewState, updateViewState } = useViewContext();
   const { getCalendarForTask } = useCalendarContext();
-  const { 
-    isSelected, 
-    handleTaskClick, 
-    clearSelection, 
-    addToSelection, 
-    selectAll 
+  const {
+    isSelected,
+    handleTaskClick,
+    clearSelection,
+    addToSelection,
+    selectAll,
   } = useSelectionContext();
   const { applyFilters } = useFilterContext();
+
+  // Calculate scaled width based on time unit
+  const getScaledWidth = useMemo(() => {
+    const baseZoom = viewState.timelineZoom;
+    const timeUnit = viewState.timeUnit || 'day';
+    
+    switch (timeUnit) {
+      case 'day':
+        return baseZoom; // Pixels per day
+      case 'week':
+        return baseZoom * 7; // Pixels per week
+      case 'month':
+        return baseZoom * 30; // Pixels per month (approximate)
+      default:
+        return baseZoom;
+    }
+  }, [viewState.timelineZoom, viewState.timeUnit]);
+
+  // Get date increment based on time unit
+  const getDateIncrement = useMemo(() => {
+    const timeUnit = viewState.timeUnit || 'day';
+    
+    switch (timeUnit) {
+      case 'day':
+        return 1; // 1 day
+      case 'week':
+        return 7; // 1 week
+      case 'month':
+        return 30; // 1 month (approximate)
+      default:
+        return 1;
+    }
+  }, [viewState.timeUnit]);
 
   const taskRefs = useRef({});
   const svgContainerRef = useRef(null);
@@ -177,7 +210,7 @@ const GanttChart = () => {
     const lines = [];
     const start = new Date(dateRange.start);
     const end = new Date(dateRange.end);
-    const scaledDayWidth = viewState.timelineZoom; // Direct pixels per day
+    const scaledDayWidth = getScaledWidth; // Use time unit-based scaling
 
     // Calculate start position offset
     const startOfYear = new Date('2024-01-01');
@@ -206,8 +239,11 @@ const GanttChart = () => {
       }
     };
 
-    switch (viewState.viewScale) {
-      case 'Day':
+    // Generate grid lines based on time unit
+    const timeUnit = viewState.timeUnit || 'day';
+    
+    switch (timeUnit) {
+      case 'day':
         // Daily grid lines
         for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
           if (!viewState.showWeekends) {
@@ -238,7 +274,7 @@ const GanttChart = () => {
         }
         break;
 
-      case 'Week':
+      case 'week':
         // Weekly grid lines
         for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 7)) {
           const left = getDateIndex(d) * scaledDayWidth;
@@ -257,7 +293,7 @@ const GanttChart = () => {
         }
         break;
 
-      case 'Month':
+      case 'month':
         // Monthly grid lines
         for (let d = new Date(start); d <= end; d.setMonth(d.getMonth() + 1)) {
           const left = getDateIndex(d) * scaledDayWidth;
@@ -322,7 +358,7 @@ const GanttChart = () => {
 
     const today = new Date();
     const startOfYear = new Date('2024-01-01');
-    const scaledDayWidth = viewState.timelineZoom; // Direct pixels per day
+    const scaledDayWidth = getScaledWidth; // Use time unit-based scaling
 
     // Calculate days from start of year
     const daysFromStart = Math.floor(
@@ -370,14 +406,14 @@ const GanttChart = () => {
     dateRange,
     viewState.showGridlines,
     viewState.showWeekends,
-    viewState.timelineZoom,
+    getScaledWidth,
   ]);
 
   // Generate today line indicator
   const todayLineIndicator = useMemo(() => {
     const today = new Date();
     const startOfYear = new Date('2024-01-01');
-    const scaledDayWidth = viewState.timelineZoom; // Direct pixels per day
+    const scaledDayWidth = getScaledWidth; // Use time unit-based scaling
 
     // Calculate days from start of year
     const daysFromStart = Math.floor(
@@ -419,7 +455,7 @@ const GanttChart = () => {
         }}
       />
     );
-  }, [dateRange, viewState.showWeekends, viewState.timelineZoom]);
+  }, [dateRange, viewState.showWeekends, getScaledWidth]);
 
   // Generate horizontal row grid lines
   const rowLines = useMemo(() => {
@@ -451,7 +487,7 @@ const GanttChart = () => {
     const blocks = [];
     const start = new Date(dateRange.start);
     const end = new Date(dateRange.end);
-    const scaledDayWidth = viewState.timelineZoom; // Direct pixels per day
+    const scaledDayWidth = getScaledWidth; // Use time unit-based scaling
 
     // Calculate start position offset
     const startOfYear = new Date('2024-01-01');
@@ -502,7 +538,7 @@ const GanttChart = () => {
   }, [
     dateRange,
     viewState.showWeekends,
-    viewState.timelineZoom,
+    getScaledWidth,
     globalCalendar,
   ]);
 
@@ -833,14 +869,14 @@ const GanttChart = () => {
 
   // Grid snapping helper functions
   const snapToGrid = x => {
-    const scaledDayWidth = viewState.timelineZoom; // Direct pixels per day
+    const scaledDayWidth = getScaledWidth; // Use time unit-based scaling
     const index = Math.round(x / scaledDayWidth);
     return index * scaledDayWidth;
   };
 
   // Enhanced day-based snapping for task dragging
   const snapToDayGrid = deltaX => {
-    const scaledDayWidth = viewState.timelineZoom; // Direct pixels per day
+    const scaledDayWidth = getScaledWidth; // Use time unit-based scaling
     const dayOffset = Math.round(deltaX / scaledDayWidth);
     return {
       dayOffset,
@@ -851,7 +887,7 @@ const GanttChart = () => {
   // Helper functions for date conversion
   const getDateFromX = x => {
     const startOfYear = new Date('2024-01-01');
-    const scaledDayWidth = viewState.timelineZoom;
+    const scaledDayWidth = getScaledWidth;
     const dayIndex = Math.round(x / scaledDayWidth);
 
     if (viewState.showWeekends) {
@@ -875,7 +911,7 @@ const GanttChart = () => {
 
   const getXFromDate = date => {
     const startOfYear = new Date('2024-01-01');
-    const scaledDayWidth = viewState.timelineZoom;
+    const scaledDayWidth = getScaledWidth;
 
     if (viewState.showWeekends) {
       const daysFromStart = Math.floor(
@@ -1267,9 +1303,12 @@ const GanttChart = () => {
   };
 
   // Marquee selection handlers
-  const handleMarqueeStart = (e) => {
+  const handleMarqueeStart = e => {
     // Only start marquee if clicking on empty space (not on a task)
-    if (e.target === timelineContainerRef.current || e.target.closest('.task-row') === null) {
+    if (
+      e.target === timelineContainerRef.current ||
+      e.target.closest('.task-row') === null
+    ) {
       const rect = timelineContainerRef.current.getBoundingClientRect();
       const startX = e.clientX - rect.left;
       const startY = e.clientY - rect.top;
@@ -1289,7 +1328,7 @@ const GanttChart = () => {
     }
   };
 
-  const handleMarqueeMove = (e) => {
+  const handleMarqueeMove = e => {
     if (marquee.isActive) {
       const rect = timelineContainerRef.current.getBoundingClientRect();
       const currentX = e.clientX - rect.left;
@@ -1303,7 +1342,7 @@ const GanttChart = () => {
     }
   };
 
-  const handleMarqueeEnd = (e) => {
+  const handleMarqueeEnd = e => {
     if (marquee.isActive) {
       const rect = timelineContainerRef.current.getBoundingClientRect();
       const endX = e.clientX - rect.left;
@@ -1327,10 +1366,12 @@ const GanttChart = () => {
         const taskBottom = taskTop + taskRect.height;
 
         // Check if task intersects with marquee
-        return !(taskLeft > left + width || 
-                taskRight < left || 
-                taskTop > top + height || 
-                taskBottom < top);
+        return !(
+          taskLeft > left + width ||
+          taskRight < left ||
+          taskTop > top + height ||
+          taskBottom < top
+        );
       });
 
       // Update selection based on modifier keys
@@ -1375,10 +1416,13 @@ const GanttChart = () => {
     const headers = [];
     const startDate = new Date(dateRange.start);
     const endDate = new Date(dateRange.end);
-    const scaledDayWidth = viewState.timelineZoom; // Direct pixels per day
+    const scaledDayWidth = getScaledWidth; // Use time unit-based scaling
 
-    switch (viewState.viewScale) {
-      case 'Day':
+    // Generate headers based on time unit
+    const timeUnit = viewState.timeUnit || 'day';
+    
+    switch (timeUnit) {
+      case 'day':
         // Daily headers - show each day
         for (
           let d = new Date(startDate);
@@ -1401,7 +1445,7 @@ const GanttChart = () => {
         }
         break;
 
-      case 'Week':
+      case 'week':
         // Weekly headers - show week numbers
         for (
           let d = new Date(startDate);
@@ -1413,7 +1457,7 @@ const GanttChart = () => {
             <div
               key={`week-${d.toISOString()}`}
               className='text-xs text-gray-600 bg-gray-100 py-1 border-r border-gray-200 flex items-center justify-center font-medium'
-              style={{ width: `${7 * scaledDayWidth}px` }}
+              style={{ width: `${scaledDayWidth}px` }}
             >
               W{weekNumber}
             </div>
@@ -1421,7 +1465,7 @@ const GanttChart = () => {
         }
         break;
 
-      case 'Month':
+      case 'month':
         // Monthly headers - show month names
         for (
           let d = new Date(startDate);
@@ -1434,7 +1478,7 @@ const GanttChart = () => {
             <div
               key={`month-${d.toISOString()}`}
               className='text-xs text-gray-600 bg-gray-100 py-1 border-r border-gray-200 flex items-center justify-center font-medium'
-              style={{ width: `${30 * scaledDayWidth}px` }}
+              style={{ width: `${scaledDayWidth}px` }}
             >
               {monthName} {year}
             </div>
@@ -1797,16 +1841,16 @@ const GanttChart = () => {
                 };
 
                 const daysFromStart = getDateIndex(startDate);
-                const scaledDayWidth = viewState.timelineZoom; // Direct pixels per day
-                const scaledDurationWidth = viewState.timelineZoom; // Direct pixels per day
+                const scaledDayWidth = getScaledWidth; // Use time unit-based scaling
+                const scaledDurationWidth = getScaledWidth; // Use time unit-based scaling
 
                 const left = `${Math.max(daysFromStart * scaledDayWidth, 0)}px`;
                 const width =
                   task.type === 'milestone' ||
                   task.isMilestone ||
                   duration === 0
-                    ? `${20 * viewState.timelineZoom}px`
-                    : `${Math.max(duration * scaledDurationWidth, 40 * viewState.timelineZoom)}px`;
+                    ? `${20 * getScaledWidth}px`
+                    : `${Math.max(duration * scaledDurationWidth, 40 * getScaledWidth)}px`;
 
                 // Check if task is a milestone (zero duration or isMilestone flag)
                 const isMilestone =

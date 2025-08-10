@@ -736,6 +736,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Click interaction for future navigation integration
   - Integration with existing view scale system
 
+## [2025-08-09] – Prompt 144
+
+### Added
+
+- **Gantt Time Units Toggle (Days, Weeks, Months)**
+  - Time unit toggle buttons in View tab for switching between days, weeks, and months
+  - Dynamic X-axis scaling based on selected time unit
+  - Automatic recalculation of gridlines and date labels
+  - Persistent time unit setting stored in localStorage
+  - Integration with existing view context and state management
+  - Proper scaling calculations for different time units (day=1x, week=7x, month=30x)
+  - Updated timeline headers with appropriate date formatting
+  - Responsive grid line generation based on time unit
+  - Maintained compatibility with existing zoom and weekend settings
+  - Professional UI with active state indication
+  - Automatic updates to task positioning and sizing
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

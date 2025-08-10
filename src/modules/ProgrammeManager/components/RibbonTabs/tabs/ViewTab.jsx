@@ -964,6 +964,49 @@ const ShowBaselineToggle = () => {
   );
 };
 
+const TimeUnitToggle = () => {
+  const { viewState, updateTimeUnit } = useViewContext();
+
+  const handleTimeUnitChange = (timeUnit) => {
+    updateTimeUnit(timeUnit);
+  };
+
+  const getTimeUnitLabel = (timeUnit) => {
+    switch (timeUnit) {
+      case 'day':
+        return 'Days';
+      case 'week':
+        return 'Weeks';
+      case 'month':
+        return 'Months';
+      default:
+        return 'Days';
+    }
+  };
+
+  return (
+    <div className='flex items-center space-x-2 px-2 py-1'>
+      <span className='text-xs text-gray-700 font-medium'>Time Unit:</span>
+      <div className='flex space-x-1'>
+        {['day', 'week', 'month'].map((unit) => (
+          <button
+            key={unit}
+            onClick={() => handleTimeUnitChange(unit)}
+            className={`px-2 py-1 text-xs rounded transition-colors ${
+              viewState.timeUnit === unit
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+            title={`Switch to ${getTimeUnitLabel(unit)} view`}
+          >
+            {getTimeUnitLabel(unit)}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const ZoomToFitButton = () => {
   const { zoomToFit } = useViewContext();
   const { tasks } = useTaskContext();
@@ -1061,6 +1104,7 @@ const ViewTab = ({ contentRef }) => {
         <ShowCriticalPathToggle />
         <ShowSlackToggle />
         <ShowBaselineToggle />
+        <TimeUnitToggle />
       </RibbonGroup>
 
       {/* Resource Group */}
