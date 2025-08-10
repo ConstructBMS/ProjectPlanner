@@ -1,19 +1,20 @@
 import React, { useState, useCallback } from 'react';
 import RibbonButton from '../shared/RibbonButton';
 import RibbonGroup from '../shared/RibbonGroup';
-import { useTaskContext } from '../../context/TaskContext';
-import { useCalendarContext } from '../../context/CalendarContext';
-import { useGanttContext } from '../../context/GanttContext';
+import { useTaskContext } from '../../../context/TaskContext';
+import { useCalendarContext } from '../../../context/CalendarContext';
+import { useGanttContext } from '../../../context/GanttContext';
 import {
   generateLevelingPreview,
   applyResourceLeveling,
   getLevelingStats,
-} from '../../utils/levelingEngine';
+} from '../../../utils/levelingEngine';
 import {
   detectOverallocations,
   calculateDailyAllocations,
-} from '../../utils/resourceLevelingUtils';
+} from '../../../utils/resourceLevelingUtils';
 import ResourceLevelingDialog from '../../modals/ResourceLevelingDialog';
+import ResourceFilter from '../../ResourceFilter';
 import {
   ChartBarIcon,
   ArrowPathIcon,
@@ -171,21 +172,24 @@ const AllocationTab = () => {
   /**
    * Handle tasks update from leveling dialog
    */
-  const handleTasksUpdate = useCallback(async (updatedTasks) => {
-    try {
-      // Update each task
-      for (const task of updatedTasks) {
-        await updateTask(task.id, task);
+  const handleTasksUpdate = useCallback(
+    async updatedTasks => {
+      try {
+        // Update each task
+        for (const task of updatedTasks) {
+          await updateTask(task.id, task);
+        }
+
+        // Trigger auto-scheduling to recalculate dates and float
+        setTimeout(() => {
+          performAutoScheduling();
+        }, 100);
+      } catch (error) {
+        console.error('Failed to update tasks:', error);
       }
-      
-      // Trigger auto-scheduling to recalculate dates and float
-      setTimeout(() => {
-        performAutoScheduling();
-      }, 100);
-    } catch (error) {
-      console.error('Failed to update tasks:', error);
-    }
-  }, [updateTask, performAutoScheduling]);
+    },
+    [updateTask, performAutoScheduling]
+  );
 
   const stats = getCurrentStats();
   const currentConflicts = getCurrentConflicts();
@@ -208,6 +212,11 @@ const AllocationTab = () => {
           disabled={levelingState.isAnalyzing}
           tooltip={`Show current resource conflicts (${stats.totalConflicts} detected)`}
         />
+      </RibbonGroup>
+
+      {/* Resource Filter Group */}
+      <RibbonGroup title='Resource Filter'>
+        <ResourceFilter />
       </RibbonGroup>
 
       {/* Resource Leveling Group */}

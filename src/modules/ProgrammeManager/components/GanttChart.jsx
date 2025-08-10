@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useMemo, useState } from 'react';
+import React, { useRef, useEffect, useMemo, useState, useCallback } from 'react';
 import {
   ChevronRightIcon,
   ChevronDownIcon,
@@ -10,9 +10,11 @@ import {
   getTaskMilestoneShape,
   getMilestoneColor,
   createMilestoneShapeComponent,
-} from '../utils/milestoneShapeUtils';
+} from '../utils/milestoneShapeUtils.jsx';
 import { useTaskContext } from '../context/TaskContext';
 import { useViewContext } from '../context/ViewContext';
+import { useSelectionContext } from '../context/SelectionContext';
+import { useFilterContext } from '../context/FilterContext';
 import DateMarkersOverlay from './DateMarkersOverlay';
 import GanttHeader from './GanttHeader';
 import { calculateCriticalPath } from '../utils/criticalPath';
@@ -882,17 +884,17 @@ const GanttChart = () => {
         arrow.appendChild(title);
 
         // Add click handler to edit link
-        arrow.addEventListener('click', (event) => {
+        arrow.addEventListener('click', event => {
           event.preventDefault();
           event.stopPropagation();
-          
+
           // Calculate modal position
           const rect = event.target.getBoundingClientRect();
           const position = {
             x: rect.left + rect.width / 2,
             y: rect.top,
           };
-          
+
           setSelectedLink(link);
           setModalPosition(position);
           setShowDependencyModal(true);
@@ -1010,7 +1012,7 @@ const GanttChart = () => {
       return addDays(startOfYear, dayIndex);
     } else {
       // Count only weekdays
-      let currentDate = new Date(startOfYear);
+      const currentDate = new Date(startOfYear);
       let weekdayCount = 0;
 
       while (weekdayCount < dayIndex) {
@@ -1085,8 +1087,8 @@ const GanttChart = () => {
       if (!task) return;
 
       // Calculate new dates using snapped values
-      let newStartDate = addDays(dragging.originalStartDate, dayOffset);
-      let newEndDate = addDays(dragging.originalEndDate, dayOffset);
+      const newStartDate = addDays(dragging.originalStartDate, dayOffset);
+      const newEndDate = addDays(dragging.originalEndDate, dayOffset);
 
       // Get predecessor constraints
       const predecessors = getPredecessors(task.id, taskLinks, tasks);
@@ -1259,7 +1261,7 @@ const GanttChart = () => {
 
     setResizing({
       taskId: task.id,
-      handle: handle, // 'start' or 'end'
+      handle, // 'start' or 'end'
       startX: e.clientX,
       originalStartDate: new Date(task.startDate),
       originalEndDate: new Date(task.endDate),
@@ -1534,6 +1536,11 @@ const GanttChart = () => {
     const endDate = new Date(dateRange.end);
     const scaledDayWidth = getScaledWidth; // Use time unit-based scaling
 
+    // Check if dual scale is enabled
+    if (viewState.timeScale === 'dual') {
+      return generateDualScaleHeaders();
+    }
+
     // Generate headers based on time unit
     const timeUnit = viewState.timeUnit || 'day';
 
@@ -1626,6 +1633,164 @@ const GanttChart = () => {
     }
 
     return headers;
+  };
+
+  const generateDualScaleHeaders = () => {
+    const startDate = new Date(dateRange.start);
+    const endDate = new Date(dateRange.end);
+    const scaledDayWidth = getScaledWidth;
+    const primaryTimeUnit = viewState.primaryTimeUnit || 'day';
+    const secondaryTimeUnit = viewState.secondaryTimeUnit || 'week';
+
+    // Generate primary scale headers (top row)
+    const primaryHeaders = [];
+    const secondaryHeaders = [];
+
+    // Generate headers based on primary time unit
+    switch (primaryTimeUnit) {
+      case 'month':
+        // Monthly headers - show month names
+        for (
+          let d = new Date(startDate);
+          d <= endDate;
+          d.setMonth(d.getMonth() + 1)
+        ) {
+          const monthName = d.toLocaleDateString('en-US', { month: 'short' });
+          const year = d.getFullYear();
+          primaryHeaders.push(
+            <div
+              key={`primary-month-${d.toISOString()}`}
+              className='text-xs text-gray-800 bg-blue-50 py-1 border-r border-gray-200 flex items-center justify-center font-semibold'
+              style={{ width: `${scaledDayWidth * 30}px` }}
+            >
+              {monthName} {year}
+            </div>
+          );
+        }
+        break;
+
+      case 'week':
+        // Weekly headers - show week numbers
+        for (
+          let d = new Date(startDate);
+          d <= endDate;
+          d.setDate(d.getDate() + 7)
+        ) {
+          const weekNumber = getWeek(d);
+          primaryHeaders.push(
+            <div
+              key={`primary-week-${d.toISOString()}`}
+              className='text-xs text-gray-800 bg-blue-50 py-1 border-r border-gray-200 flex items-center justify-center font-semibold'
+              style={{ width: `${scaledDayWidth * 7}px` }}
+            >
+              W{weekNumber}
+            </div>
+          );
+        }
+        break;
+
+      case 'day':
+      default:
+        // Daily headers - show each day
+        for (
+          let d = new Date(startDate);
+          d <= endDate;
+          d.setDate(d.getDate() + 1)
+        ) {
+          const dayOfWeek = d.getDay();
+          if (!viewState.showWeekends && (dayOfWeek === 0 || dayOfWeek === 6)) {
+            continue;
+          }
+          primaryHeaders.push(
+            <div
+              key={`primary-day-${d.toISOString()}`}
+              className='text-xs text-gray-800 bg-blue-50 py-1 border-r border-gray-200 flex items-center justify-center font-semibold'
+              style={{ width: `${scaledDayWidth}px` }}
+            >
+              {formatDate(d)}
+            </div>
+          );
+        }
+        break;
+    }
+
+    // Generate secondary scale headers (bottom row)
+    switch (secondaryTimeUnit) {
+      case 'month':
+        // Monthly headers - show month names
+        for (
+          let d = new Date(startDate);
+          d <= endDate;
+          d.setMonth(d.getMonth() + 1)
+        ) {
+          const monthName = d.toLocaleDateString('en-US', { month: 'short' });
+          const year = d.getFullYear();
+          secondaryHeaders.push(
+            <div
+              key={`secondary-month-${d.toISOString()}`}
+              className='text-xs text-gray-600 bg-gray-100 py-1 border-r border-gray-200 flex items-center justify-center font-medium'
+              style={{ width: `${scaledDayWidth * 30}px` }}
+            >
+              {monthName} {year}
+            </div>
+          );
+        }
+        break;
+
+      case 'week':
+        // Weekly headers - show week numbers
+        for (
+          let d = new Date(startDate);
+          d <= endDate;
+          d.setDate(d.getDate() + 7)
+        ) {
+          const weekNumber = getWeek(d);
+          secondaryHeaders.push(
+            <div
+              key={`secondary-week-${d.toISOString()}`}
+              className='text-xs text-gray-600 bg-gray-100 py-1 border-r border-gray-200 flex items-center justify-center font-medium'
+              style={{ width: `${scaledDayWidth * 7}px` }}
+            >
+              W{weekNumber}
+            </div>
+          );
+        }
+        break;
+
+      case 'day':
+      default:
+        // Daily headers - show each day
+        for (
+          let d = new Date(startDate);
+          d <= endDate;
+          d.setDate(d.getDate() + 1)
+        ) {
+          const dayOfWeek = d.getDay();
+          if (!viewState.showWeekends && (dayOfWeek === 0 || dayOfWeek === 6)) {
+            continue;
+          }
+          secondaryHeaders.push(
+            <div
+              key={`secondary-day-${d.toISOString()}`}
+              className='text-xs text-gray-600 bg-gray-100 py-1 border-r border-gray-200 flex items-center justify-center font-medium'
+              style={{ width: `${scaledDayWidth}px` }}
+            >
+              {formatDate(d)}
+            </div>
+          );
+        }
+        break;
+    }
+
+    // Return dual-scale header structure
+    return (
+      <div className='flex flex-col'>
+        {/* Primary scale row */}
+        <div className='flex border-b border-gray-300'>{primaryHeaders}</div>
+        {/* Secondary scale row */}
+        <div className='flex'>{secondaryHeaders}</div>
+      </div>
+    );
   };
 
   const generateWeekHeaders = () => {
@@ -1855,6 +2020,9 @@ const GanttChart = () => {
         zoomScale={viewState.timelineZoom}
         showWeekends={viewState.showWeekends}
         viewScale={viewState.viewScale}
+        timeScale={viewState.timeScale}
+        primaryTimeUnit={viewState.primaryTimeUnit}
+        secondaryTimeUnit={viewState.secondaryTimeUnit}
         scrollLeft={scrollLeft}
       />
 
@@ -2964,7 +3132,7 @@ const GanttChart = () => {
             setSelectedLink(null);
             setModalPosition({ x: 0, y: 0 });
           }}
-          onSave={(updatedLink) => {
+          onSave={updatedLink => {
             console.log('Dependency updated:', updatedLink);
             setShowDependencyModal(false);
             setSelectedLink(null);

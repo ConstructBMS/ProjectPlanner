@@ -2422,3 +2422,14 @@ projectplanner/
 ### 2025-08-08 14:27:03
 
 - auto: Pre-commit hook update
+
+### 2025-08-09 15:30:00
+
+- **Prompt 181**: Added resource-based task filtering to Gantt view
+  - Created ResourceFilter component for filtering tasks by assigned resource
+  - Integrated resource filter into Allocation Tab with dropdown selection
+  - Added "Show All" option to clear resource filter
+  - Implemented filter state persistence in FilterContext
+  - Added visual filter badge and status indicators
+  - Filter dropdown shows all available resources from task assignments
+  - Real-time filtering updates Gantt chart display immediately
