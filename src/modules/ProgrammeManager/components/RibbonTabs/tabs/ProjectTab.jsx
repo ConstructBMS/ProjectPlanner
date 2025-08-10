@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import RibbonButton from '../shared/RibbonButton';
 import RibbonGroup from '../shared/RibbonGroup';
 import { useTaskContext } from '../../context/TaskContext';
@@ -33,13 +34,34 @@ const ProjectTab = () => {
   const [baselines, setBaselines] = useState([]);
   const [activeBaselineId, setActiveBaselineId] = useState(null);
 
+  // Load baselines from localStorage on mount
+  useEffect(() => {
+    const savedBaselines = localStorage.getItem('project.baselines');
+    if (savedBaselines) {
+      try {
+        const baselines = JSON.parse(savedBaselines);
+        setBaselines(baselines);
+      } catch (error) {
+        console.error('Error loading baselines from localStorage:', error);
+      }
+    }
+  }, []);
+
   // Baseline Manager handlers
   const handleSaveBaseline = (baseline) => {
-    setBaselines(prev => [...prev, baseline]);
+    setBaselines(prev => {
+      const newBaselines = [...prev, baseline];
+      localStorage.setItem('project.baselines', JSON.stringify(newBaselines));
+      return newBaselines;
+    });
   };
 
   const handleDeleteBaseline = (baselineId) => {
-    setBaselines(prev => prev.filter(b => b.id !== baselineId));
+    setBaselines(prev => {
+      const newBaselines = prev.filter(b => b.id !== baselineId);
+      localStorage.setItem('project.baselines', JSON.stringify(newBaselines));
+      return newBaselines;
+    });
     if (activeBaselineId === baselineId) {
       setActiveBaselineId(null);
     }
@@ -50,7 +72,11 @@ const ProjectTab = () => {
   };
 
   const handleImportBaseline = (baseline) => {
-    setBaselines(prev => [...prev, baseline]);
+    setBaselines(prev => {
+      const newBaselines = [...prev, baseline];
+      localStorage.setItem('project.baselines', JSON.stringify(newBaselines));
+      return newBaselines;
+    });
   };
 
   return (

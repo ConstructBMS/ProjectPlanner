@@ -230,17 +230,23 @@ const GanttChart = () => {
 
   // Progress update handler
   const progressUpdateHandler = useMemo(() => {
-    return createProgressUpdateHandler(updateTask, DEFAULT_PROGRESS_EDIT_CONFIG);
+    return createProgressUpdateHandler(
+      updateTask,
+      DEFAULT_PROGRESS_EDIT_CONFIG
+    );
   }, [updateTask]);
 
   // Handle progress change
-  const handleProgressChange = useCallback((taskId, newProgress) => {
-    progressUpdateHandler(taskId, newProgress);
-  }, [progressUpdateHandler]);
+  const handleProgressChange = useCallback(
+    (taskId, newProgress) => {
+      progressUpdateHandler(taskId, newProgress);
+    },
+    [progressUpdateHandler]
+  );
 
   // Global mouse event handlers for progress editing
   useEffect(() => {
-    const handleGlobalMouseMove = (e) => {
+    const handleGlobalMouseMove = e => {
       if (progressEditState && progressEditState.isEditing) {
         setMousePosition({ x: e.clientX, y: e.clientY });
       }
@@ -2287,24 +2293,34 @@ const GanttChart = () => {
                         >
                           {/* Progress indicator with inline editing */}
                           {(() => {
-                            const isEditing = progressEditState && progressEditState.taskId === task.id;
-                            const currentProgress = isEditing ? progressEditState.currentProgress : (task.progress || 0);
-                            
+                            const isEditing =
+                              progressEditState &&
+                              progressEditState.taskId === task.id;
+                            const currentProgress = isEditing
+                              ? progressEditState.currentProgress
+                              : task.progress || 0;
+
                             return (
                               <div
                                 className='h-full rounded-l relative'
                                 style={getProgressEditStyles(
-                                  isEditing ? progressEditState : { isEditing: false, isDragging: false },
+                                  isEditing
+                                    ? progressEditState
+                                    : { isEditing: false, isDragging: false },
                                   DEFAULT_PROGRESS_EDIT_CONFIG
                                 )}
-                                onMouseDown={(e) => {
+                                onMouseDown={e => {
                                   e.preventDefault();
                                   e.stopPropagation();
-                                  
-                                  const rect = e.currentTarget.getBoundingClientRect();
+
+                                  const rect =
+                                    e.currentTarget.getBoundingClientRect();
                                   const startX = e.clientX - rect.left;
-                                  const newState = createProgressEditState(task, DEFAULT_PROGRESS_EDIT_CONFIG);
-                                  
+                                  const newState = createProgressEditState(
+                                    task,
+                                    DEFAULT_PROGRESS_EDIT_CONFIG
+                                  );
+
                                   setProgressEditState({
                                     ...newState,
                                     isEditing: true,
@@ -2314,18 +2330,33 @@ const GanttChart = () => {
                                     barWidth: rect.width,
                                   });
                                 }}
-                                onMouseMove={(e) => {
+                                onMouseMove={e => {
                                   if (!isEditing) return;
-                                  
-                                  const rect = e.currentTarget.getBoundingClientRect();
+
+                                  const rect =
+                                    e.currentTarget.getBoundingClientRect();
                                   const currentX = e.clientX - rect.left;
-                                  
-                                  if (!progressEditState.isDragging && Math.abs(currentX - progressEditState.startX) >= 3) {
-                                    setProgressEditState(prev => ({ ...prev, isDragging: true }));
+
+                                  if (
+                                    !progressEditState.isDragging &&
+                                    Math.abs(
+                                      currentX - progressEditState.startX
+                                    ) >= 3
+                                  ) {
+                                    setProgressEditState(prev => ({
+                                      ...prev,
+                                      isDragging: true,
+                                    }));
                                   }
-                                  
+
                                   if (progressEditState.isDragging) {
-                                    const newProgress = Math.max(0, Math.min(100, (currentX / rect.width) * 100));
+                                    const newProgress = Math.max(
+                                      0,
+                                      Math.min(
+                                        100,
+                                        (currentX / rect.width) * 100
+                                      )
+                                    );
                                     setProgressEditState(prev => ({
                                       ...prev,
                                       currentX,
@@ -2339,11 +2370,12 @@ const GanttChart = () => {
                                 <div
                                   style={getProgressBarStyles(
                                     currentProgress,
-                                    task.isCritical || criticalPathTasks.includes(task.id),
+                                    task.isCritical ||
+                                      criticalPathTasks.includes(task.id),
                                     DEFAULT_PROGRESS_EDIT_CONFIG
                                   )}
                                 />
-                                
+
                                 {/* Drag handle */}
                                 {currentProgress > 0 && (
                                   <div
@@ -2353,13 +2385,19 @@ const GanttChart = () => {
                                       top: '0',
                                       width: '4px',
                                       height: '100%',
-                                      backgroundColor: isEditing ? '#3B82F6' : '#6B7280',
+                                      backgroundColor: isEditing
+                                        ? '#3B82F6'
+                                        : '#6B7280',
                                       cursor: 'col-resize',
                                       borderRadius: '2px',
                                       transform: 'translateX(-50%)',
                                       zIndex: 10,
-                                      transition: isEditing ? 'none' : 'left 0.1s ease-out',
-                                      boxShadow: isEditing ? '0 0 0 2px rgba(59, 130, 246, 0.3)' : 'none',
+                                      transition: isEditing
+                                        ? 'none'
+                                        : 'left 0.1s ease-out',
+                                      boxShadow: isEditing
+                                        ? '0 0 0 2px rgba(59, 130, 246, 0.3)'
+                                        : 'none',
                                     }}
                                     className='progress-drag-handle'
                                   />
@@ -2497,9 +2535,9 @@ const GanttChart = () => {
 
                               return (
                                 <>
-                                  {/* Baseline bar */}
+                                  {/* Baseline bar - rendered underneath current task */}
                                   <div
-                                    className='h-[6px] bg-gray-300 rounded opacity-50 absolute bottom-0'
+                                    className='h-[8px] bg-blue-200 rounded opacity-60 absolute bottom-0 border border-blue-300'
                                     style={{
                                       left: `${Math.max(
                                         getDateIndex(baselineStart) *
@@ -2517,14 +2555,14 @@ const GanttChart = () => {
                                     title={`${activeBaseline.name}: ${formatDate(baselineStart)} - ${formatDate(baselineEnd)}`}
                                   />
 
-                                  {/* Variance connector line */}
-                                  {Math.abs(variance) > 1 && (
+                                  {/* Variance indicator */}
+                                  {Math.abs(variance) > 0 && (
                                     <div
-                                      className={`h-[2px] absolute bottom-1 ${
+                                      className={`h-[3px] absolute bottom-1 ${
                                         variance > 0
-                                          ? 'bg-red-400'
-                                          : 'bg-green-400'
-                                      } opacity-70`}
+                                          ? 'bg-red-500'
+                                          : 'bg-green-500'
+                                      } opacity-80`}
                                       style={{
                                         left: `${Math.min(
                                           getDateIndex(baselineEnd) *
@@ -2539,7 +2577,7 @@ const GanttChart = () => {
                                               getDateIndex(baselineEnd) *
                                                 scaledDayWidth
                                           ),
-                                          2
+                                          3
                                         )}px`,
                                       }}
                                       title={`Variance: ${variance > 0 ? '+' : ''}${variance} days`}
@@ -2562,7 +2600,7 @@ const GanttChart = () => {
                               <>
                                 {/* Baseline bar */}
                                 <div
-                                  className='h-[6px] bg-gray-300 rounded opacity-50 absolute bottom-0'
+                                  className='h-[8px] bg-blue-200 rounded opacity-60 absolute bottom-0 border border-blue-300'
                                   style={{
                                     left: `${Math.max(
                                       getDateIndex(
@@ -2582,14 +2620,14 @@ const GanttChart = () => {
                                   title={`Baseline: ${formatDate(new Date(task.baselineStart))} - ${formatDate(new Date(task.baselineEnd))}`}
                                 />
 
-                                {/* Variance connector line */}
-                                {Math.abs(variance) > 1 && (
+                                {/* Variance indicator */}
+                                {Math.abs(variance) > 0 && (
                                   <div
-                                    className={`h-[2px] absolute bottom-1 ${
+                                    className={`h-[3px] absolute bottom-1 ${
                                       variance > 0
-                                        ? 'bg-red-400'
-                                        : 'bg-green-400'
-                                    } opacity-70`}
+                                        ? 'bg-red-500'
+                                        : 'bg-green-500'
+                                    } opacity-80`}
                                     style={{
                                       left: `${Math.min(
                                         getDateIndex(baselineEnd) *
@@ -2603,7 +2641,7 @@ const GanttChart = () => {
                                             getDateIndex(baselineEnd) *
                                               scaledDayWidth
                                         ),
-                                        2
+                                        3
                                       )}px`,
                                     }}
                                     title={`Variance: ${variance > 0 ? '+' : ''}${variance} days`}

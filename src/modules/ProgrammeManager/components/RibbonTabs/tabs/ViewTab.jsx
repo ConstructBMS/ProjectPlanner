@@ -24,6 +24,7 @@ import {
   XMarkIcon,
   ClockIcon,
   TableCellsIcon,
+  ChartBarSquareIcon,
 } from '@heroicons/react/24/outline';
 
 const TimelineZoomDropdown = () => {
@@ -967,6 +968,121 @@ const ShowBaselineToggle = () => {
   );
 };
 
+const BaselineDropdown = () => {
+  const { viewState, setActiveBaseline, updateBaselines } = useViewContext();
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef();
+
+  // Load baselines from localStorage and sync with ProjectTab
+  useEffect(() => {
+    const loadBaselines = () => {
+      const savedBaselines = localStorage.getItem('project.baselines');
+      if (savedBaselines) {
+        try {
+          const baselines = JSON.parse(savedBaselines);
+          updateBaselines(baselines);
+        } catch (error) {
+          console.error('Error loading baselines:', error);
+        }
+      }
+    };
+
+    // Load initially
+    loadBaselines();
+
+    // Listen for changes from ProjectTab
+    const handleStorageChange = (e) => {
+      if (e.key === 'project.baselines') {
+        loadBaselines();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [updateBaselines]);
+
+  useEffect(() => {
+    const handleClickOutside = event => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleBaselineSelect = (baselineId) => {
+    setActiveBaseline(baselineId);
+    setIsOpen(false);
+  };
+
+  const handleClearBaseline = () => {
+    setActiveBaseline(null);
+    setIsOpen(false);
+  };
+
+  const getSelectedBaselineName = () => {
+    if (!viewState.activeBaselineId) return 'Select Baseline';
+    const baseline = viewState.baselines.find(b => b.id === viewState.activeBaselineId);
+    return baseline ? baseline.name : 'Select Baseline';
+  };
+
+  return (
+    <div className='relative' ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className='flex items-center space-x-2 px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+        title='Select baseline for comparison'
+      >
+        <ChartBarSquareIcon className='w-4 h-4 text-gray-500' />
+        <span className='text-gray-700'>
+          {getSelectedBaselineName()}
+        </span>
+        <ChevronDownIcon className='w-3 h-3 text-gray-500' />
+      </button>
+
+      {isOpen && (
+        <div className='absolute top-full left-0 mt-1 z-50 bg-white border border-gray-300 rounded-md shadow-lg min-w-48'>
+          <div className='py-1'>
+            {viewState.baselines.length === 0 ? (
+              <div className='px-3 py-2 text-sm text-gray-500'>
+                No baselines available
+              </div>
+            ) : (
+              <>
+                {viewState.baselines.map((baseline) => (
+                  <button
+                    key={baseline.id}
+                    onClick={() => handleBaselineSelect(baseline.id)}
+                    className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 transition-colors ${
+                      viewState.activeBaselineId === baseline.id
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'text-gray-700'
+                    }`}
+                  >
+                    <div className='font-medium'>{baseline.name}</div>
+                    <div className='text-xs text-gray-500'>
+                      {new Date(baseline.createdAt).toLocaleDateString()}
+                    </div>
+                  </button>
+                ))}
+                <div className='border-t border-gray-200 mt-1'>
+                  <button
+                    onClick={handleClearBaseline}
+                    className='w-full text-left px-3 py-2 text-sm text-gray-500 hover:bg-gray-100 transition-colors'
+                  >
+                    Clear Selection
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const TimeUnitToggle = () => {
   const { viewState, updateTimeUnit } = useViewContext();
 
@@ -1232,6 +1348,7 @@ const ViewTab = ({ contentRef }) => {
         <ShowCriticalPathToggle />
         <ShowSlackToggle />
         <ShowBaselineToggle />
+        <BaselineDropdown />
         <TimeUnitToggle />
         <StatusDatePicker />
       </RibbonGroup>

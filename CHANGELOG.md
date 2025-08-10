@@ -1139,6 +1139,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Robust validation system for column configurations and grid layouts
   - Integration with ViewTab ribbon providing "Customize Columns" button
 
+## [2025-08-09] – Prompt 171
+
+### Added
+
+- **Gantt Baseline Overlay**
+  - Visual baseline comparison overlay on Gantt chart for planned vs actual schedule analysis
+  - Professional baseline dropdown selector in ViewTab with multiple baseline support
+  - Enhanced baseline bar rendering with improved visual styling and opacity
+  - Real-time variance indicators showing schedule deviations with color-coded feedback
+  - Integration with existing baseline management system from ProjectTab
+  - Automatic baseline synchronization between ProjectTab and ViewTab via localStorage
+  - Enhanced baseline bar styling with blue background and border for clear distinction
+  - Variance indicators showing red (delayed) or green (ahead) schedule deviations
+  - Support for multiple stored baselines with easy selection and switching
+  - Baseline overlay automatically shows when a baseline is selected
+  - Improved tooltips showing baseline name, dates, and variance information
+  - Seamless integration with existing baseline toggle functionality
+
 ## [2025-08-08] – Prompt 094
 
 ### Added

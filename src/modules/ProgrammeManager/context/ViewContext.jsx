@@ -41,6 +41,8 @@ export const ViewProvider = ({ children }) => {
 
     // Baseline overlay
     showBaseline: false,
+    activeBaselineId: null, // ID of the currently selected baseline for overlay
+    baselines: [], // Array of available baselines
 
     // Progress line
     statusDate: null, // Status date for progress line (defaults to today)
@@ -133,6 +135,19 @@ export const ViewProvider = ({ children }) => {
         console.error('Error loading saved time unit preference:', error);
       }
     }
+
+    // Load saved activeBaselineId preference
+    const savedActiveBaselineId = window.localStorage.getItem(
+      'gantt.activeBaselineId'
+    );
+    if (savedActiveBaselineId !== null) {
+      try {
+        const activeBaselineId = JSON.parse(savedActiveBaselineId);
+        setViewState(prev => ({ ...prev, activeBaselineId }));
+      } catch (error) {
+        console.error('Error loading saved activeBaselineId preference:', error);
+      }
+    }
   }, []);
 
   const updateViewState = updates => {
@@ -213,6 +228,27 @@ export const ViewProvider = ({ children }) => {
     console.log('Show Baseline toggled');
   };
 
+  const setActiveBaseline = (baselineId) => {
+    setViewState(prev => {
+      const next = {
+        ...prev,
+        activeBaselineId: baselineId,
+        showBaseline: baselineId !== null, // Auto-show baseline when one is selected
+      };
+      window.localStorage.setItem('gantt.activeBaselineId', JSON.stringify(baselineId));
+      return next;
+    });
+    console.log('Active baseline set to:', baselineId);
+  };
+
+  const updateBaselines = (baselines) => {
+    setViewState(prev => ({
+      ...prev,
+      baselines,
+    }));
+    console.log('Baselines updated:', baselines.length);
+  };
+
   const zoomToFit = () => {
     // This will trigger the Gantt chart to zoom to fit all tasks
     const zoomToFitAction = {
@@ -269,6 +305,8 @@ export const ViewProvider = ({ children }) => {
     toggleCriticalPath,
     toggleSlack,
     toggleBaseline,
+    setActiveBaseline,
+    updateBaselines,
     zoomToFit,
     zoomIn,
     zoomOut,
