@@ -51,29 +51,45 @@
   font-family: var(--rbn-font-sans);
 }
 
+/* Tab strip container */
+.pm-ribbon .flex.border-b {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--rbn-border);
+  background: var(--rbn-bg);
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
 /* Tab styling */
 .pm-ribbon .project-ribbon-tab {
   font: var(--rbn-tab-weight) var(--rbn-tab-size)/1 var(--rbn-font-sans);
   color: var(--rbn-text-2);
-  min-height: 40px;
-  background: var(--rbn-bg);
+  height: 40px;
+  background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
-  padding: var(--rbn-pad-y) var(--rbn-pad-x);
+  padding: 0 var(--rbn-pad-x);
   transition: all 0.2s ease;
   white-space: nowrap;
   min-width: fit-content;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
 }
 
 .pm-ribbon .project-ribbon-tab:hover {
   background: var(--rbn-hover);
-  color: var(--rbn-text);
+  color: color-mix(in oklab, var(--rbn-text-2), black 10%);
 }
 
 .pm-ribbon .project-ribbon-tab.active {
   color: var(--rbn-text);
   border-bottom: 2px solid var(--rbn-accent);
-  background: var(--rbn-bg-elev);
+  background: transparent;
 }
 
 /* Tab content area */
@@ -505,8 +521,10 @@
   border-radius: 6px;
   padding: 4px 8px;
   margin: 4px 8px;
-  min-height: 32px;
+  height: 32px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  flex-wrap: nowrap;
+  overflow: hidden;
 }
 
 .quick-access-toolbar.above {
@@ -514,6 +532,8 @@
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
   margin-bottom: 0;
+  align-self: flex-start;
+  margin-top: 4px;
 }
 
 .quick-access-toolbar.below {
@@ -521,6 +541,8 @@
   border-top-left-radius: 0;
   border-top-right-radius: 0;
   margin-top: 0;
+  align-self: flex-end;
+  margin-bottom: 4px;
 }
 
 .qat-buttons {
@@ -663,9 +685,7 @@
 
 /* Ribbon Minimise/Restore Styles */
 .ribbon-minimise-button {
-  position: absolute;
-  top: 8px;
-  right: 8px;
+  position: relative;
   width: 24px;
   height: 24px;
   background: transparent;
@@ -677,7 +697,8 @@
   justify-content: center;
   color: var(--rbn-text-muted);
   transition: all 0.15s ease;
-  z-index: 10;
+  margin-left: auto;
+  margin-right: 8px;
 }
 
 .ribbon-minimise-button:hover {
@@ -982,3 +1003,19 @@
 .ribbon-accent-swatch.green { background: #10b981; }
 .ribbon-accent-swatch.orange { background: #f59e0b; }
 .ribbon-accent-swatch.magenta { background: #ec4899; }
+
+/* QAT Responsive - prevent wrapping */
+@media (max-width: 1280px) {
+  .quick-access-toolbar {
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+  
+  .qat-buttons {
+    flex-shrink: 0;
+  }
+  
+  .qat-position-toggle {
+    flex-shrink: 0;
+  }
+}
