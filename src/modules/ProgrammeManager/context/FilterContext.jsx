@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+} from 'react';
 
 const FilterContext = createContext();
 
@@ -43,7 +49,7 @@ export const FilterProvider = ({ children }) => {
   }, [filters]);
 
   // Set status filter
-  const setStatusFilter = useCallback((status) => {
+  const setStatusFilter = useCallback(status => {
     setFilters(prev => ({
       ...prev,
       status,
@@ -51,7 +57,7 @@ export const FilterProvider = ({ children }) => {
   }, []);
 
   // Set resource filter
-  const setResourceFilter = useCallback((resource) => {
+  const setResourceFilter = useCallback(resource => {
     setFilters(prev => ({
       ...prev,
       resource,
@@ -82,10 +88,11 @@ export const FilterProvider = ({ children }) => {
   }, []);
 
   // Clear specific filter
-  const clearFilter = useCallback((filterType) => {
+  const clearFilter = useCallback(filterType => {
     setFilters(prev => ({
       ...prev,
-      [filterType]: filterType === 'dateRange' ? { start: null, end: null } : 'All',
+      [filterType]:
+        filterType === 'dateRange' ? { start: null, end: null } : 'All',
     }));
   }, []);
 
@@ -104,55 +111,59 @@ export const FilterProvider = ({ children }) => {
     let count = 0;
     if (filters.status !== 'All') count++;
     if (filters.resource !== 'All') count++;
-    if (filters.dateRange.start !== null || filters.dateRange.end !== null) count++;
+    if (filters.dateRange.start !== null || filters.dateRange.end !== null)
+      count++;
     return count;
   }, [filters]);
 
   // Apply filters to tasks
-  const applyFilters = useCallback((tasks) => {
-    return tasks.filter(task => {
-      // Status filter
-      if (filters.status !== 'All') {
-        const taskStatus = task.status || 'Not Started';
-        if (taskStatus !== filters.status) {
-          return false;
-        }
-      }
-
-      // Resource filter
-      if (filters.resource !== 'All') {
-        const taskResource = task.resource || task.assignedTo || '';
-        if (taskResource !== filters.resource) {
-          return false;
-        }
-      }
-
-      // Date range filter
-      if (filters.dateRange.start || filters.dateRange.end) {
-        const taskStart = new Date(task.startDate);
-        const taskEnd = new Date(task.endDate);
-        
-        if (filters.dateRange.start) {
-          const filterStart = new Date(filters.dateRange.start);
-          if (taskEnd < filterStart) {
+  const applyFilters = useCallback(
+    tasks => {
+      return tasks.filter(task => {
+        // Status filter
+        if (filters.status !== 'All') {
+          const taskStatus = task.status || 'Not Started';
+          if (taskStatus !== filters.status) {
             return false;
           }
         }
-        
-        if (filters.dateRange.end) {
-          const filterEnd = new Date(filters.dateRange.end);
-          if (taskStart > filterEnd) {
+
+        // Resource filter
+        if (filters.resource !== 'All') {
+          const taskResource = task.resource || task.assignedTo || '';
+          if (taskResource !== filters.resource) {
             return false;
           }
         }
-      }
 
-      return true;
-    });
-  }, [filters]);
+        // Date range filter
+        if (filters.dateRange.start || filters.dateRange.end) {
+          const taskStart = new Date(task.startDate);
+          const taskEnd = new Date(task.endDate);
+
+          if (filters.dateRange.start) {
+            const filterStart = new Date(filters.dateRange.start);
+            if (taskEnd < filterStart) {
+              return false;
+            }
+          }
+
+          if (filters.dateRange.end) {
+            const filterEnd = new Date(filters.dateRange.end);
+            if (taskStart > filterEnd) {
+              return false;
+            }
+          }
+        }
+
+        return true;
+      });
+    },
+    [filters]
+  );
 
   // Get available resources from tasks
-  const getAvailableResources = useCallback((tasks) => {
+  const getAvailableResources = useCallback(tasks => {
     const resources = new Set();
     tasks.forEach(task => {
       const resource = task.resource || task.assignedTo;
@@ -179,29 +190,27 @@ export const FilterProvider = ({ children }) => {
   const value = {
     // State
     filters,
-    
+
     // Filter setters
     setStatusFilter,
     setResourceFilter,
     setDateRangeFilter,
-    
+
     // Filter management
     clearAllFilters,
     clearFilter,
-    
+
     // Filter utilities
     hasActiveFilters,
     getActiveFilterCount,
     applyFilters,
-    
+
     // Available options
     getAvailableResources,
     getAvailableStatuses,
   };
 
   return (
-    <FilterContext.Provider value={value}>
-      {children}
-    </FilterContext.Provider>
+    <FilterContext.Provider value={value}>{children}</FilterContext.Provider>
   );
 };

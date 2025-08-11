@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Asta PowerProject-inspired styling */
+/* ProjectPlanner-inspired styling */
 :root {
   --asta-blue: #2e5aa0;
   --asta-light-blue: #e3f2fd;
@@ -42,8 +42,8 @@ body {
   user-select: none;
 }
 
-/* Asta PowerProject Ribbon Styling */
-.asta-ribbon {
+/* ProjectPlanner Ribbon Styling */
+.project-ribbon {
   background: #ffffff !important;
   border-bottom: 1px solid var(--asta-border);
   width: 100%;
@@ -51,7 +51,7 @@ body {
   overflow: hidden;
 }
 
-.asta-ribbon-tab {
+.project-ribbon-tab {
   background: #ffffff !important;
   border: 1px solid var(--asta-border);
   border-bottom: none;
@@ -63,18 +63,18 @@ body {
   min-width: fit-content;
 }
 
-.asta-ribbon-tab:hover {
+.project-ribbon-tab:hover {
   background: #f8f9fa;
 }
 
-.asta-ribbon-tab.active {
+.project-ribbon-tab.active {
   background: #f8f9fa !important;
   border-bottom: 2px solid var(--asta-blue);
   color: var(--asta-blue);
   font-weight: 600;
 }
 
-.asta-ribbon-content {
+.project-ribbon-content {
   background: #ffffff !important;
   border: 1px solid var(--asta-border);
   border-top: none;
@@ -87,25 +87,25 @@ body {
   scrollbar-color: #cbd5e0 #f7fafc;
 }
 
-.asta-ribbon-content::-webkit-scrollbar {
+.project-ribbon-content::-webkit-scrollbar {
   height: 6px;
 }
 
-.asta-ribbon-content::-webkit-scrollbar-track {
+.project-ribbon-content::-webkit-scrollbar-track {
   background: #f7fafc;
 }
 
-.asta-ribbon-content::-webkit-scrollbar-thumb {
+.project-ribbon-content::-webkit-scrollbar-thumb {
   background: #cbd5e0;
   border-radius: 3px;
 }
 
-.asta-ribbon-content::-webkit-scrollbar-thumb:hover {
+.project-ribbon-content::-webkit-scrollbar-thumb:hover {
   background: #a0aec0;
 }
 
-/* Asta PowerProject Button Styling */
-.asta-button {
+/* ProjectPlanner Button Styling */
+.project-button {
   background: transparent;
   border: 1px solid transparent;
   color: var(--asta-text);
@@ -120,22 +120,22 @@ body {
   margin: 0.5px;
 }
 
-.asta-button:hover {
+.project-button:hover {
   background: #e3f2fd;
   border-color: #2196f3;
 }
 
-.asta-button:active {
+.project-button:active {
   background: #bbdefb;
 }
 
-.asta-button:disabled {
+.project-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-/* Asta PowerProject Group Styling */
-.asta-group {
+/* ProjectPlanner Group Styling */
+.project-group {
   display: flex;
   flex-direction: column;
   padding: 1px 2px;
@@ -145,11 +145,11 @@ body {
   min-height: 50px;
 }
 
-.asta-group:last-child {
+.project-group:last-child {
   border-right: none;
 }
 
-.asta-group-title {
+.project-group-title {
   color: var(--asta-text-secondary);
   font-size: 6px;
   font-weight: 600;
@@ -162,14 +162,14 @@ body {
   width: 100%;
 }
 
-/* Asta PowerProject Tree Styling */
-.asta-tree {
+/* ProjectPlanner Tree Styling */
+.project-tree {
   background: #ffffff;
   border: 1px solid var(--asta-border);
   font-size: 13px;
 }
 
-.asta-tree-node {
+.project-tree-node {
   padding: 4px 8px;
   border-bottom: 1px solid #f0f0f0;
   display: flex;
@@ -177,22 +177,22 @@ body {
   gap: 6px;
 }
 
-.asta-tree-node:hover {
+.project-tree-node:hover {
   background: #f8f9fa;
 }
 
-.asta-tree-node.selected {
+.project-tree-node.selected {
   background: #e3f2fd;
   color: var(--asta-blue);
 }
 
-/* Asta PowerProject Grid Styling */
-.asta-grid {
+/* ProjectPlanner Grid Styling */
+.project-grid {
   background: #ffffff;
   border: 1px solid var(--asta-border);
 }
 
-.asta-grid-header {
+.project-grid-header {
   background: #f8f9fa;
   border-bottom: 2px solid var(--asta-border);
   font-weight: 600;
@@ -200,26 +200,26 @@ body {
   color: var(--asta-text);
 }
 
-.asta-grid-row {
+.project-grid-row {
   border-bottom: 1px solid #f0f0f0;
   font-size: 13px;
 }
 
-.asta-grid-row:hover {
+.project-grid-row:hover {
   background: #f8f9fa;
 }
 
-.asta-grid-row.selected {
+.project-grid-row.selected {
   background: #e3f2fd;
 }
 
-/* Asta PowerProject Properties Pane */
-.asta-properties {
+/* ProjectPlanner Properties Pane */
+.project-properties {
   background: #ffffff;
   border-top: 2px solid var(--asta-border);
 }
 
-.asta-properties-tab {
+.project-properties-tab {
   background: #f8f9fa;
   border: 1px solid var(--asta-border);
   border-bottom: none;
@@ -228,31 +228,31 @@ body {
   font-weight: 500;
 }
 
-.asta-properties-tab.active {
+.project-properties-tab.active {
   background: #ffffff;
   border-bottom: 2px solid var(--asta-blue);
   color: var(--asta-blue);
 }
 
-/* Asta PowerProject Resize Handles */
-.asta-resize-handle {
+/* ProjectPlanner Resize Handles */
+.project-resize-handle {
   background: #e9ecef;
   border: 1px solid var(--asta-border);
   transition: background-color 0.2s ease;
 }
 
-.asta-resize-handle:hover {
+.project-resize-handle:hover {
   background: var(--asta-blue);
   border-color: var(--asta-blue);
 }
 
-/* Asta PowerProject Timeline Styling */
-.asta-timeline {
+/* ProjectPlanner Timeline Styling */
+.project-timeline {
   background: #ffffff;
   border: 1px solid var(--asta-border);
 }
 
-.asta-timeline-header {
+.project-timeline-header {
   background: #f8f9fa;
   border-bottom: 1px solid var(--asta-border);
   font-size: 11px;
@@ -260,7 +260,7 @@ body {
   color: var(--asta-text);
 }
 
-.asta-timeline-grid {
+.project-timeline-grid {
   background-image:
     linear-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0, 0, 0, 0.1) 1px, transparent 1px);

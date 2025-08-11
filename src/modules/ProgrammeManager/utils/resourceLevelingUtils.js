@@ -42,7 +42,11 @@ export const createResourceAllocation = (resourceId, date, hours) => {
  * @param {Object} config - Configuration
  * @returns {Object} Daily allocations by resource and date
  */
-export const calculateDailyAllocations = (tasks, resources, config = DEFAULT_LEVELING_CONFIG) => {
+export const calculateDailyAllocations = (
+  tasks,
+  resources,
+  config = DEFAULT_LEVELING_CONFIG
+) => {
   const allocations = {};
 
   // Initialize allocations for all resources
@@ -56,7 +60,8 @@ export const calculateDailyAllocations = (tasks, resources, config = DEFAULT_LEV
 
     const startDate = new Date(task.startDate);
     const endDate = new Date(task.endDate);
-    const duration = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+    const duration =
+      Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
     const hoursPerDay = task.effort / duration;
 
     task.resources.forEach(resourceId => {
@@ -72,7 +77,11 @@ export const calculateDailyAllocations = (tasks, resources, config = DEFAULT_LEV
         const dateKey = currentDate.toISOString().split('T')[0];
 
         if (!allocations[resourceId][dateKey]) {
-          allocations[resourceId][dateKey] = createResourceAllocation(resourceId, dateKey, 0);
+          allocations[resourceId][dateKey] = createResourceAllocation(
+            resourceId,
+            dateKey,
+            0
+          );
         }
 
         allocations[resourceId][dateKey].hours += allocation;
@@ -114,7 +123,11 @@ export const calculateDailyAllocations = (tasks, resources, config = DEFAULT_LEV
  * @param {Object} config - Configuration
  * @returns {Array} Array of overallocation conflicts
  */
-export const detectOverallocations = (allocations, resources, config = DEFAULT_LEVELING_CONFIG) => {
+export const detectOverallocations = (
+  allocations,
+  resources,
+  config = DEFAULT_LEVELING_CONFIG
+) => {
   const conflicts = [];
 
   Object.keys(allocations).forEach(resourceId => {
@@ -150,7 +163,10 @@ export const detectOverallocations = (allocations, resources, config = DEFAULT_L
  * @param {Object} config - Configuration
  * @returns {number} Priority score (higher = more critical)
  */
-export const calculateTaskPriority = (task, config = DEFAULT_LEVELING_CONFIG) => {
+export const calculateTaskPriority = (
+  task,
+  config = DEFAULT_LEVELING_CONFIG
+) => {
   let priority = 0;
 
   // Critical path priority
@@ -182,12 +198,16 @@ export const calculateTaskPriority = (task, config = DEFAULT_LEVELING_CONFIG) =>
  * @param {Object} config - Configuration
  * @returns {Array} Array of shiftable tasks
  */
-export const findShiftableTasks = (tasks, conflicts, config = DEFAULT_LEVELING_CONFIG) => {
+export const findShiftableTasks = (
+  tasks,
+  conflicts,
+  config = DEFAULT_LEVELING_CONFIG
+) => {
   const shiftableTasks = [];
 
   conflicts.forEach(conflict => {
     const conflictTasks = conflict.tasks.map(t => t.taskId);
-    
+
     conflictTasks.forEach(taskId => {
       const task = tasks.find(t => t.id === taskId);
       if (!task) return;
@@ -217,7 +237,11 @@ export const findShiftableTasks = (tasks, conflicts, config = DEFAULT_LEVELING_C
  * @param {Object} config - Configuration
  * @returns {boolean} Whether task can be shifted
  */
-export const canTaskBeShifted = (task, tasks, config = DEFAULT_LEVELING_CONFIG) => {
+export const canTaskBeShifted = (
+  task,
+  tasks,
+  config = DEFAULT_LEVELING_CONFIG
+) => {
   // Critical tasks with no float cannot be shifted
   if (task.isCritical && (task.totalFloat || 0) <= 0) {
     return false;
@@ -237,7 +261,10 @@ export const canTaskBeShifted = (task, tasks, config = DEFAULT_LEVELING_CONFIG) 
 
   // Check constraints
   if (config.respectConstraints) {
-    if (task.constraintType === 'MUST_START_ON' || task.constraintType === 'MUST_FINISH_ON') {
+    if (
+      task.constraintType === 'MUST_START_ON' ||
+      task.constraintType === 'MUST_FINISH_ON'
+    ) {
       return false;
     }
   }
@@ -252,8 +279,8 @@ export const canTaskBeShifted = (task, tasks, config = DEFAULT_LEVELING_CONFIG) 
  * @returns {Array} Array of successor tasks
  */
 export const getTaskSuccessors = (task, tasks) => {
-  return tasks.filter(t => 
-    t.predecessors && t.predecessors.some(p => p.taskId === task.id)
+  return tasks.filter(
+    t => t.predecessors && t.predecessors.some(p => p.taskId === task.id)
   );
 };
 
@@ -263,7 +290,10 @@ export const getTaskSuccessors = (task, tasks) => {
  * @param {Object} config - Configuration
  * @returns {number} Maximum shift days
  */
-export const calculateMaxShiftDays = (task, config = DEFAULT_LEVELING_CONFIG) => {
+export const calculateMaxShiftDays = (
+  task,
+  config = DEFAULT_LEVELING_CONFIG
+) => {
   const float = task.totalFloat || 0;
   return Math.min(config.maxShiftDays, float);
 };
@@ -275,7 +305,11 @@ export const calculateMaxShiftDays = (task, config = DEFAULT_LEVELING_CONFIG) =>
  * @param {Object} config - Configuration
  * @returns {Object} Leveling result
  */
-export const performResourceLeveling = (tasks, resources, config = DEFAULT_LEVELING_CONFIG) => {
+export const performResourceLeveling = (
+  tasks,
+  resources,
+  config = DEFAULT_LEVELING_CONFIG
+) => {
   const originalTasks = JSON.parse(JSON.stringify(tasks));
   const levelingHistory = [];
   let iterations = 0;
@@ -323,7 +357,11 @@ export const performResourceLeveling = (tasks, resources, config = DEFAULT_LEVEL
 
   // Calculate final allocations
   const finalAllocations = calculateDailyAllocations(tasks, resources, config);
-  const remainingConflicts = detectOverallocations(finalAllocations, resources, config);
+  const remainingConflicts = detectOverallocations(
+    finalAllocations,
+    resources,
+    config
+  );
 
   return {
     success: remainingConflicts.length === 0,
@@ -363,7 +401,7 @@ export const shiftTask = (task, tasks, config = DEFAULT_LEVELING_CONFIG) => {
     for (let i = 1; i <= config.maxShiftDays; i++) {
       const testDate = new Date(originalStartDate);
       testDate.setDate(testDate.getDate() + i);
-      
+
       if (isSlotAvailable(task, testDate, tasks, config)) {
         newStartDate = testDate;
         shiftDays = i;
@@ -375,7 +413,7 @@ export const shiftTask = (task, tasks, config = DEFAULT_LEVELING_CONFIG) => {
     for (let i = 1; i <= config.maxShiftDays; i++) {
       const testDate = new Date(originalStartDate);
       testDate.setDate(testDate.getDate() - i);
-      
+
       if (isSlotAvailable(task, testDate, tasks, config)) {
         newStartDate = testDate;
         shiftDays = -i;
@@ -414,7 +452,12 @@ export const shiftTask = (task, tasks, config = DEFAULT_LEVELING_CONFIG) => {
  * @param {Object} config - Configuration
  * @returns {boolean} Whether slot is available
  */
-export const isSlotAvailable = (task, startDate, tasks, config = DEFAULT_LEVELING_CONFIG) => {
+export const isSlotAvailable = (
+  task,
+  startDate,
+  tasks,
+  config = DEFAULT_LEVELING_CONFIG
+) => {
   const duration = task.duration || 1;
   const endDate = new Date(startDate);
   endDate.setDate(startDate.getDate() + duration - 1);
@@ -474,9 +517,11 @@ export const undoResourceLeveling = (levelingHistory, tasks, steps = 1) => {
   for (let i = 0; i < undoSteps; i++) {
     const historyEntry = levelingHistory[levelingHistory.length - 1 - i];
     const task = tasks.find(t => t.id === historyEntry.taskId);
-    
+
     if (task) {
-      task.startDate = historyEntry.originalStartDate.toISOString().split('T')[0];
+      task.startDate = historyEntry.originalStartDate
+        .toISOString()
+        .split('T')[0];
       task.endDate = historyEntry.originalEndDate.toISOString().split('T')[0];
       undoneSteps.push(historyEntry);
     }
@@ -485,7 +530,10 @@ export const undoResourceLeveling = (levelingHistory, tasks, steps = 1) => {
   return {
     success: undoneSteps.length > 0,
     undoneSteps,
-    remainingHistory: levelingHistory.slice(0, levelingHistory.length - undoSteps),
+    remainingHistory: levelingHistory.slice(
+      0,
+      levelingHistory.length - undoSteps
+    ),
   };
 };
 
@@ -505,10 +553,16 @@ export const generateLevelingReport = (levelingResult, resources) => {
         originalDates: `${entry.originalStartDate.toLocaleDateString()} - ${entry.originalEndDate.toLocaleDateString()}`,
         newDates: `${entry.newStartDate.toLocaleDateString()} - ${entry.newEndDate.toLocaleDateString()}`,
       })),
-      conflictsResolved: levelingResult.remainingConflicts.length === 0 ? 'All conflicts resolved' : `${levelingResult.remainingConflicts.length} conflicts remain`,
+      conflictsResolved:
+        levelingResult.remainingConflicts.length === 0
+          ? 'All conflicts resolved'
+          : `${levelingResult.remainingConflicts.length} conflicts remain`,
       performance: {
         iterations: levelingResult.iterations,
-        efficiency: levelingResult.totalShifts > 0 ? levelingResult.iterations / levelingResult.totalShifts : 0,
+        efficiency:
+          levelingResult.totalShifts > 0
+            ? levelingResult.iterations / levelingResult.totalShifts
+            : 0,
       },
     },
     recommendations: [],
@@ -516,15 +570,21 @@ export const generateLevelingReport = (levelingResult, resources) => {
 
   // Add recommendations
   if (levelingResult.remainingConflicts.length > 0) {
-    report.recommendations.push('Consider adding more resources or extending project timeline');
+    report.recommendations.push(
+      'Consider adding more resources or extending project timeline'
+    );
   }
 
   if (levelingResult.summary.tasksShifted > 10) {
-    report.recommendations.push('Many tasks were shifted - consider reviewing resource allocation strategy');
+    report.recommendations.push(
+      'Many tasks were shifted - consider reviewing resource allocation strategy'
+    );
   }
 
   if (levelingResult.iterations > 50) {
-    report.recommendations.push('Leveling took many iterations - consider adjusting leveling parameters');
+    report.recommendations.push(
+      'Leveling took many iterations - consider adjusting leveling parameters'
+    );
   }
 
   return report;
@@ -535,7 +595,7 @@ export const generateLevelingReport = (levelingResult, resources) => {
  * @param {Object} config - Configuration to validate
  * @returns {Object} Validation result
  */
-export const validateLevelingConfig = (config) => {
+export const validateLevelingConfig = config => {
   const errors = [];
   const warnings = [];
 

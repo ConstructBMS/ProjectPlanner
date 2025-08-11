@@ -9,17 +9,34 @@
 export const DEFAULT_NOTES_CONFIG = {
   autoSaveDelay: 2000, // 2 seconds
   maxLength: 10000,
-  allowedTags: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote', 'a'],
+  allowedTags: [
+    'p',
+    'br',
+    'strong',
+    'em',
+    'u',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'ul',
+    'ol',
+    'li',
+    'blockquote',
+    'a',
+  ],
   allowedAttributes: {
     a: ['href', 'target', 'title'],
   },
   placeholder: 'Add notes for this task...',
   toolbarOptions: [
     ['bold', 'italic', 'underline'],
-    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+    [{ list: 'ordered' }, { list: 'bullet' }],
+    [{ header: [1, 2, 3, 4, 5, 6, false] }],
     ['link', 'blockquote'],
-    ['clean']
+    ['clean'],
   ],
 };
 
@@ -45,15 +62,18 @@ export const createNotes = (content = '', config = DEFAULT_NOTES_CONFIG) => {
  * @param {string} htmlContent - HTML content
  * @returns {number} Word count
  */
-export const calculateWordCount = (htmlContent) => {
+export const calculateWordCount = htmlContent => {
   if (!htmlContent) return 0;
-  
+
   // Remove HTML tags and get text content
-  const textContent = htmlContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-  
+  const textContent = htmlContent
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
   // Split by whitespace and filter out empty strings
   const words = textContent.split(/\s+/).filter(word => word.length > 0);
-  
+
   return words.length;
 };
 
@@ -62,12 +82,12 @@ export const calculateWordCount = (htmlContent) => {
  * @param {string} htmlContent - HTML content
  * @returns {number} Character count
  */
-export const calculateCharacterCount = (htmlContent) => {
+export const calculateCharacterCount = htmlContent => {
   if (!htmlContent) return 0;
-  
+
   // Remove HTML tags and get text content
   const textContent = htmlContent.replace(/<[^>]*>/g, '').trim();
-  
+
   return textContent.length;
 };
 
@@ -78,10 +98,14 @@ export const calculateCharacterCount = (htmlContent) => {
  * @param {Object} config - Configuration
  * @returns {Object} Updated notes object
  */
-export const updateNotes = (notes, newContent, config = DEFAULT_NOTES_CONFIG) => {
+export const updateNotes = (
+  notes,
+  newContent,
+  config = DEFAULT_NOTES_CONFIG
+) => {
   const wordCount = calculateWordCount(newContent);
   const characterCount = calculateCharacterCount(newContent);
-  
+
   return {
     ...notes,
     content: newContent,
@@ -104,7 +128,9 @@ export const validateNotes = (content, config = DEFAULT_NOTES_CONFIG) => {
   const warnings = [];
 
   if (content.length > config.maxLength) {
-    errors.push(`Notes exceed maximum length of ${config.maxLength} characters`);
+    errors.push(
+      `Notes exceed maximum length of ${config.maxLength} characters`
+    );
   }
 
   if (content.length > config.maxLength * 0.8) {
@@ -130,7 +156,10 @@ export const validateNotes = (content, config = DEFAULT_NOTES_CONFIG) => {
  * @param {Object} config - Configuration
  * @returns {string} Sanitized HTML content
  */
-export const sanitizeNotesContent = (content, config = DEFAULT_NOTES_CONFIG) => {
+export const sanitizeNotesContent = (
+  content,
+  config = DEFAULT_NOTES_CONFIG
+) => {
   if (!content) return '';
 
   let sanitized = content;
@@ -141,7 +170,10 @@ export const sanitizeNotesContent = (content, config = DEFAULT_NOTES_CONFIG) => 
   sanitized = sanitized.replace(/on\w+\s*=\s*["'][^"']*["']/gi, '');
 
   // Only allow specified tags
-  const allowedTagsRegex = new RegExp(`<(?!\/?(?:${config.allowedTags.join('|')})\b)[^>]+>`, 'gi');
+  const allowedTagsRegex = new RegExp(
+    `<(?!\/?(?:${config.allowedTags.join('|')})\b)[^>]+>`,
+    'gi'
+  );
   sanitized = sanitized.replace(allowedTagsRegex, '');
 
   return sanitized;
@@ -152,7 +184,7 @@ export const sanitizeNotesContent = (content, config = DEFAULT_NOTES_CONFIG) => 
  * @param {Object} notes - Notes object
  * @returns {Object} Statistics
  */
-export const getNotesStatistics = (notes) => {
+export const getNotesStatistics = notes => {
   if (!notes || !notes.content) {
     return {
       wordCount: 0,
@@ -183,7 +215,7 @@ export const getNotesStatistics = (notes) => {
  * @param {Object} notes - Notes object
  * @returns {Object} Formatted notes
  */
-export const formatNotes = (notes) => {
+export const formatNotes = notes => {
   if (!notes) {
     return {
       content: '',
@@ -196,7 +228,9 @@ export const formatNotes = (notes) => {
 
   return {
     content: notes.content || '',
-    lastModified: notes.lastModified ? new Date(notes.lastModified) : new Date(),
+    lastModified: notes.lastModified
+      ? new Date(notes.lastModified)
+      : new Date(),
     version: notes.version || 1,
     statistics: getNotesStatistics(notes),
     isEmpty: notes.isEmpty || false,
@@ -243,7 +277,10 @@ export const importNotes = (importData, config = DEFAULT_NOTES_CONFIG) => {
     warnings.push(...validation.warnings);
 
     // Sanitize content
-    importData.notes.content = sanitizeNotesContent(importData.notes.content, config);
+    importData.notes.content = sanitizeNotesContent(
+      importData.notes.content,
+      config
+    );
   }
 
   return {
@@ -260,7 +297,10 @@ export const importNotes = (importData, config = DEFAULT_NOTES_CONFIG) => {
  * @param {Object} config - Configuration
  * @returns {Object} Auto-save handler
  */
-export const createAutoSaveHandler = (saveFunction, config = DEFAULT_NOTES_CONFIG) => {
+export const createAutoSaveHandler = (
+  saveFunction,
+  config = DEFAULT_NOTES_CONFIG
+) => {
   let timeoutId = null;
   let lastContent = '';
   let isSaving = false;
@@ -286,7 +326,7 @@ export const createAutoSaveHandler = (saveFunction, config = DEFAULT_NOTES_CONFI
         if (content !== lastContent) {
           isSaving = true;
           lastContent = content;
-          
+
           try {
             await saveFunction(content, task);
           } catch (error) {
@@ -312,7 +352,7 @@ export const createAutoSaveHandler = (saveFunction, config = DEFAULT_NOTES_CONFI
       if (content !== lastContent) {
         isSaving = true;
         lastContent = content;
-        
+
         try {
           await saveFunction(content, task);
         } catch (error) {
@@ -366,10 +406,14 @@ export const getQuillConfig = (config = DEFAULT_NOTES_CONFIG) => {
       },
     },
     formats: [
-      'bold', 'italic', 'underline',
-      'list', 'bullet',
+      'bold',
+      'italic',
+      'underline',
+      'list',
+      'bullet',
       'header',
-      'link', 'blockquote',
+      'link',
+      'blockquote',
     ],
   };
 };
@@ -386,19 +430,22 @@ export const getNotesPreview = (notes, maxWords = 20) => {
   }
 
   // Remove HTML tags and get text content
-  const textContent = notes.content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-  
+  const textContent = notes.content
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
   if (textContent.length === 0) {
     return 'No notes';
   }
 
   const words = textContent.split(/\s+/);
-  
+
   if (words.length <= maxWords) {
     return textContent;
   }
 
-  return words.slice(0, maxWords).join(' ') + '...';
+  return `${words.slice(0, maxWords).join(' ')}...`;
 };
 
 /**
@@ -409,7 +456,7 @@ export const getNotesPreview = (notes, maxWords = 20) => {
  */
 export const hasUnsavedChanges = (notes, currentContent) => {
   if (!notes) return currentContent && currentContent.trim().length > 0;
-  
+
   const notesContent = notes.content || '';
   return notesContent !== currentContent;
 };
@@ -419,15 +466,17 @@ export const hasUnsavedChanges = (notes, currentContent) => {
  * @param {Object} notes - Notes object
  * @returns {Array} History entries
  */
-export const getNotesHistory = (notes) => {
+export const getNotesHistory = notes => {
   if (!notes || !notes.history) {
     return [];
   }
 
-  return notes.history.map(entry => ({
-    ...entry,
-    timestamp: new Date(entry.timestamp),
-  })).sort((a, b) => b.timestamp - a.timestamp);
+  return notes.history
+    .map(entry => ({
+      ...entry,
+      timestamp: new Date(entry.timestamp),
+    }))
+    .sort((a, b) => b.timestamp - a.timestamp);
 };
 
 /**
@@ -439,15 +488,15 @@ export const getNotesHistory = (notes) => {
  */
 export const addNotesHistoryEntry = (notes, content, action = 'modified') => {
   const history = notes.history || [];
-  
+
   return {
     ...notes,
     history: [
       ...history,
       {
         timestamp: new Date().toISOString(),
-        content: content,
-        action: action,
+        content,
+        action,
         version: (notes.version || 1) + 1,
       },
     ].slice(-10), // Keep only last 10 entries

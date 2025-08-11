@@ -24,7 +24,8 @@ import {
   XMarkIcon,
   ClockIcon,
   TableCellsIcon,
-  ChartBarSquareIcon,
+  DocumentArrowDownIcon,
+  ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 
 const TimelineZoomDropdown = () => {
@@ -991,7 +992,7 @@ const BaselineDropdown = () => {
     loadBaselines();
 
     // Listen for changes from ProjectTab
-    const handleStorageChange = (e) => {
+    const handleStorageChange = e => {
       if (e.key === 'project.baselines') {
         loadBaselines();
       }
@@ -1011,7 +1012,7 @@ const BaselineDropdown = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleBaselineSelect = (baselineId) => {
+  const handleBaselineSelect = baselineId => {
     setActiveBaseline(baselineId);
     setIsOpen(false);
   };
@@ -1023,7 +1024,9 @@ const BaselineDropdown = () => {
 
   const getSelectedBaselineName = () => {
     if (!viewState.activeBaselineId) return 'Select Baseline';
-    const baseline = viewState.baselines.find(b => b.id === viewState.activeBaselineId);
+    const baseline = viewState.baselines.find(
+      b => b.id === viewState.activeBaselineId
+    );
     return baseline ? baseline.name : 'Select Baseline';
   };
 
@@ -1034,10 +1037,8 @@ const BaselineDropdown = () => {
         className='flex items-center space-x-2 px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
         title='Select baseline for comparison'
       >
-        <ChartBarSquareIcon className='w-4 h-4 text-gray-500' />
-        <span className='text-gray-700'>
-          {getSelectedBaselineName()}
-        </span>
+        <ChartBarIcon className='w-4 h-4 text-gray-500' />
+        <span className='text-gray-700'>{getSelectedBaselineName()}</span>
         <ChevronDownIcon className='w-3 h-3 text-gray-500' />
       </button>
 
@@ -1050,7 +1051,7 @@ const BaselineDropdown = () => {
               </div>
             ) : (
               <>
-                {viewState.baselines.map((baseline) => (
+                {viewState.baselines.map(baseline => (
                   <button
                     key={baseline.id}
                     onClick={() => handleBaselineSelect(baseline.id)}
@@ -1086,11 +1087,11 @@ const BaselineDropdown = () => {
 const TimeUnitToggle = () => {
   const { viewState, updateTimeUnit } = useViewContext();
 
-  const handleTimeUnitChange = (timeUnit) => {
+  const handleTimeUnitChange = timeUnit => {
     updateTimeUnit(timeUnit);
   };
 
-  const getTimeUnitLabel = (timeUnit) => {
+  const getTimeUnitLabel = timeUnit => {
     switch (timeUnit) {
       case 'day':
         return 'Days';
@@ -1107,7 +1108,7 @@ const TimeUnitToggle = () => {
     <div className='flex items-center space-x-2 px-2 py-1'>
       <span className='text-xs text-gray-700 font-medium'>Time Unit:</span>
       <div className='flex space-x-1'>
-        {['day', 'week', 'month'].map((unit) => (
+        {['day', 'week', 'month'].map(unit => (
           <button
             key={unit}
             onClick={() => handleTimeUnitChange(unit)}
@@ -1126,6 +1127,175 @@ const TimeUnitToggle = () => {
   );
 };
 
+const TimeScaleDropdown = () => {
+  const {
+    viewState,
+    updateTimeScale,
+    updatePrimaryTimeUnit,
+    updateSecondaryTimeUnit,
+  } = useViewContext();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const timeScaleOptions = [
+    {
+      value: 'single',
+      label: 'Single Scale',
+      description: 'Show one time unit',
+    },
+    { value: 'dual', label: 'Dual Scale', description: 'Show two time units' },
+  ];
+
+  const timeUnitOptions = [
+    { value: 'day', label: 'Days' },
+    { value: 'week', label: 'Weeks' },
+    { value: 'month', label: 'Months' },
+  ];
+
+  const presetCombinations = [
+    { primary: 'month', secondary: 'week', label: 'Month/Week' },
+    { primary: 'week', secondary: 'day', label: 'Week/Day' },
+    { primary: 'day', secondary: 'hour', label: 'Day/Hour' },
+  ];
+
+  const handleTimeScaleChange = timeScale => {
+    updateTimeScale(timeScale);
+    setIsOpen(false);
+  };
+
+  const handlePresetSelect = (primary, secondary) => {
+    updateTimeScale('dual');
+    updatePrimaryTimeUnit(primary);
+    updateSecondaryTimeUnit(secondary);
+    setIsOpen(false);
+  };
+
+  const getCurrentLabel = () => {
+    if (viewState.timeScale === 'single') {
+      return 'Single Scale';
+    } else {
+      const primary =
+        timeUnitOptions.find(u => u.value === viewState.primaryTimeUnit)
+          ?.label || 'Days';
+      const secondary =
+        timeUnitOptions.find(u => u.value === viewState.secondaryTimeUnit)
+          ?.label || 'Weeks';
+      return `${primary}/${secondary}`;
+    }
+  };
+
+  return (
+    <div className='relative'>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className='flex items-center space-x-2 px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+        title='Select time scale configuration'
+      >
+        <CalendarDaysIcon className='w-4 h-4 text-gray-500' />
+        <span className='text-gray-700'>{getCurrentLabel()}</span>
+        <ChevronDownIcon className='w-4 h-4 text-gray-400' />
+      </button>
+
+      {isOpen && (
+        <div className='absolute top-full left-0 mt-1 z-50 bg-white border border-gray-300 rounded-md shadow-lg p-3 min-w-64'>
+          <div className='space-y-3'>
+            <div>
+              <label className='block text-xs font-medium text-gray-700 mb-2'>
+                Scale Type
+              </label>
+              <div className='space-y-1'>
+                {timeScaleOptions.map(option => (
+                  <button
+                    key={option.value}
+                    onClick={() => handleTimeScaleChange(option.value)}
+                    className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${
+                      viewState.timeScale === option.value
+                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className='font-medium'>{option.label}</div>
+                    <div className='text-xs text-gray-500'>
+                      {option.description}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {viewState.timeScale === 'dual' && (
+              <>
+                <div className='border-t border-gray-200 pt-3'>
+                  <label className='block text-xs font-medium text-gray-700 mb-2'>
+                    Preset Combinations
+                  </label>
+                  <div className='space-y-1'>
+                    {presetCombinations.map(preset => (
+                      <button
+                        key={preset.label}
+                        onClick={() =>
+                          handlePresetSelect(preset.primary, preset.secondary)
+                        }
+                        className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${
+                          viewState.primaryTimeUnit === preset.primary &&
+                          viewState.secondaryTimeUnit === preset.secondary
+                            ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                            : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className='border-t border-gray-200 pt-3'>
+                  <label className='block text-xs font-medium text-gray-700 mb-2'>
+                    Custom Configuration
+                  </label>
+                  <div className='grid grid-cols-2 gap-2'>
+                    <div>
+                      <label className='block text-xs text-gray-600 mb-1'>
+                        Primary
+                      </label>
+                      <select
+                        value={viewState.primaryTimeUnit}
+                        onChange={e => updatePrimaryTimeUnit(e.target.value)}
+                        className='w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500'
+                      >
+                        {timeUnitOptions.map(option => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className='block text-xs text-gray-600 mb-1'>
+                        Secondary
+                      </label>
+                      <select
+                        value={viewState.secondaryTimeUnit}
+                        onChange={e => updateSecondaryTimeUnit(e.target.value)}
+                        className='w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500'
+                      >
+                        {timeUnitOptions.map(option => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const StatusDatePicker = () => {
   const { viewState, updateViewState } = useViewContext();
   const [isOpen, setIsOpen] = useState(false);
@@ -1133,7 +1303,7 @@ const StatusDatePicker = () => {
     viewState.statusDate || new Date().toISOString().split('T')[0]
   );
 
-  const handleDateChange = (e) => {
+  const handleDateChange = e => {
     setTempDate(e.target.value);
   };
 
@@ -1149,13 +1319,13 @@ const StatusDatePicker = () => {
     setIsOpen(false);
   };
 
-  const formatDisplayDate = (dateString) => {
+  const formatDisplayDate = dateString => {
     if (!dateString) return 'Today';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-GB', {
       day: '2-digit',
       month: 'short',
-      year: 'numeric'
+      year: 'numeric',
     });
   };
 
@@ -1262,189 +1432,191 @@ const ViewTab = ({ contentRef }) => {
   const { tasks } = useTaskContext();
 
   return (
-    <div className='flex flex-nowrap gap-0 p-2 bg-white w-full min-w-0'>
-      {/* Timeline Zoom Group */}
-      <RibbonGroup title='Timeline Zoom'>
-        <TimelineZoomDropdown />
-        <ViewScaleDropdown />
-      </RibbonGroup>
+    <>
+      <div className='flex flex-nowrap gap-0 p-2 bg-white w-full min-w-0'>
+        {/* Timeline Zoom Group */}
+        <RibbonGroup title='Timeline Zoom'>
+          <TimelineZoomDropdown />
+          <ViewScaleDropdown />
+        </RibbonGroup>
 
-      {/* Zoom Group */}
-      <RibbonGroup title='Zoom'>
-        <ZoomGroup />
-        <ZoomToFitButton />
-        <TodayButton />
-      </RibbonGroup>
+        {/* Zoom Group */}
+        <RibbonGroup title='Zoom'>
+          <ZoomGroup />
+          <ZoomToFitButton />
+          <TodayButton />
+        </RibbonGroup>
 
-      {/* Histogram Zoom Group */}
-      <RibbonGroup title='Histogram Zoom'>
-        <RibbonButton
-          icon={<MagnifyingGlassPlusIcon className='w-4 h-4' />}
-          label='Zoom In'
-          onClick={() => console.log('Histogram Zoom In')}
-          tooltip='Zoom into the resource histogram'
-        />
-        <RibbonButton
-          icon={<MagnifyingGlassMinusIcon className='w-4 h-4' />}
-          label='Zoom Out'
-          onClick={() => console.log('Histogram Zoom Out')}
-          tooltip='Zoom out of the resource histogram'
-        />
-        <RibbonButton
-          icon={<ArrowsPointingOutIcon className='w-4 h-4' />}
-          label='Fit to Data'
-          onClick={() => console.log('Histogram Fit to Data')}
-          tooltip='Fit histogram to show all data'
-        />
-        <RibbonButton
-          icon={<ArrowPathIcon className='w-4 h-4' />}
-          label='Reset Zoom'
-          onClick={() => console.log('Histogram Reset Zoom')}
-          tooltip='Reset histogram zoom to default'
-        />
-      </RibbonGroup>
+        {/* Histogram Zoom Group */}
+        <RibbonGroup title='Histogram Zoom'>
+          <RibbonButton
+            icon={<MagnifyingGlassPlusIcon className='w-4 h-4' />}
+            label='Zoom In'
+            onClick={() => console.log('Histogram Zoom In')}
+            tooltip='Zoom into the resource histogram'
+          />
+          <RibbonButton
+            icon={<MagnifyingGlassMinusIcon className='w-4 h-4' />}
+            label='Zoom Out'
+            onClick={() => console.log('Histogram Zoom Out')}
+            tooltip='Zoom out of the resource histogram'
+          />
+          <RibbonButton
+            icon={<ArrowsPointingOutIcon className='w-4 h-4' />}
+            label='Fit to Data'
+            onClick={() => console.log('Histogram Fit to Data')}
+            tooltip='Fit histogram to show all data'
+          />
+          <RibbonButton
+            icon={<ArrowPathIcon className='w-4 h-4' />}
+            label='Reset Zoom'
+            onClick={() => console.log('Histogram Reset Zoom')}
+            tooltip='Reset histogram zoom to default'
+          />
+        </RibbonGroup>
 
-      {/* Calendar View Group */}
-      <RibbonGroup title='Calendar View'>
-        <CalendarViewGroup />
-      </RibbonGroup>
+        {/* Calendar View Group */}
+        <RibbonGroup title='Calendar View'>
+          <CalendarViewGroup />
+        </RibbonGroup>
 
-      {/* Critical Path Style Group */}
-      <RibbonGroup title='Critical Path Style'>
-        <CriticalPathStyleDropdown />
-      </RibbonGroup>
+        {/* Critical Path Style Group */}
+        <RibbonGroup title='Critical Path Style'>
+          <CriticalPathStyleDropdown />
+        </RibbonGroup>
 
-      {/* Task Filters Group */}
-      <RibbonGroup title='Task Filters'>
-        <QuickFiltersDropdown />
-      </RibbonGroup>
+        {/* Task Filters Group */}
+        <RibbonGroup title='Task Filters'>
+          <QuickFiltersDropdown />
+        </RibbonGroup>
 
-      {/* Layout Presets Group */}
-      <RibbonGroup title='Layout Presets'>
-        <SaveLayoutPresetButton />
-        <LoadLayoutPresetDropdown />
-      </RibbonGroup>
+        {/* Layout Presets Group */}
+        <RibbonGroup title='Layout Presets'>
+          <SaveLayoutPresetButton />
+          <LoadLayoutPresetDropdown />
+        </RibbonGroup>
 
-      {/* Print & Export Group */}
-      <RibbonGroup title='Print & Export'>
-        <PrintExportButton contentRef={contentRef} />
-      </RibbonGroup>
+        {/* Print & Export Group */}
+        <RibbonGroup title='Print & Export'>
+          <PrintExportButton contentRef={contentRef} />
+        </RibbonGroup>
 
-      {/* View Group */}
-      <RibbonGroup title='View'>
-        <RibbonButton
-          icon={<EyeIcon className='w-4 h-4 text-gray-700' />}
-          label='View Options'
-        />
-        <RibbonButton
-          icon={<TableCellIcon className='w-4 h-4 text-blue-600' />}
-          label='Customize Columns'
-          onClick={() => setShowColumnChooser(true)}
-          tooltip='Add, remove, and reorder grid columns'
-        />
-        <StatusHighlightingToggle />
-        <ShowWeekendsToggle />
-        <ShowGridlinesToggle />
-        <ShowCriticalPathToggle />
-        <ShowSlackToggle />
-        <ShowBaselineToggle />
-        <BaselineDropdown />
-        <TimeUnitToggle />
-        <StatusDatePicker />
-      </RibbonGroup>
+        {/* View Group */}
+        <RibbonGroup title='View'>
+          <RibbonButton
+            icon={<EyeIcon className='w-4 h-4 text-gray-700' />}
+            label='View Options'
+          />
+          <RibbonButton
+            icon={<TableCellsIcon className='w-4 h-4 text-blue-600' />}
+            label='Customize Columns'
+            onClick={() => setShowColumnChooser(true)}
+            tooltip='Add, remove, and reorder grid columns'
+          />
+          <StatusHighlightingToggle />
+          <ShowWeekendsToggle />
+          <ShowGridlinesToggle />
+          <ShowCriticalPathToggle />
+          <ShowSlackToggle />
+          <ShowBaselineToggle />
+          <BaselineDropdown />
+          <TimeUnitToggle />
+          <TimeScaleDropdown />
+          <StatusDatePicker />
+        </RibbonGroup>
 
-      {/* Resource Group */}
-      <RibbonGroup title='Resource'>
-        <RibbonButton
-          icon={<CalendarDaysIcon className='w-4 h-4 text-blue-600' />}
-          label='Resource Calendar'
-          onClick={() => console.log('Resource Calendar clicked')}
-          tooltip='View resource availability and workload calendar'
-        />
-        <RibbonButton
-          icon={<ChartBarIcon className='w-4 h-4 text-green-600' />}
-          label='Resource Histogram'
-          onClick={() => setShowResourceHistogram(!showResourceHistogram)}
-          tooltip='View resource allocation histogram over time'
-        />
-      </RibbonGroup>
+        {/* Resource Group */}
+        <RibbonGroup title='Resource'>
+          <RibbonButton
+            icon={<CalendarDaysIcon className='w-4 h-4 text-blue-600' />}
+            label='Resource Calendar'
+            onClick={() => console.log('Resource Calendar clicked')}
+            tooltip='View resource availability and workload calendar'
+          />
+          <RibbonButton
+            icon={<ChartBarIcon className='w-4 h-4 text-green-600' />}
+            label='Resource Histogram'
+            onClick={() => setShowResourceHistogram(!showResourceHistogram)}
+            tooltip='View resource allocation histogram over time'
+          />
+        </RibbonGroup>
 
-      {/* Clipboard Group (Disabled) */}
-      <RibbonGroup title='Clipboard' disabled={true}>
-        <RibbonButton
-          icon={<ScissorsIcon className='w-4 h-4 text-gray-700' />}
-          label='Cut'
-          disabled={true}
-        />
-        <RibbonButton
-          icon={<DocumentDuplicateIcon className='w-4 h-4 text-gray-700' />}
-          label='Copy'
-          disabled={true}
-        />
-        <RibbonButton
-          icon={<PaperClipIcon className='w-4 h-4 text-gray-700' />}
-          label='Paste'
-          disabled={true}
-        />
-      </RibbonGroup>
+        {/* Clipboard Group (Disabled) */}
+        <RibbonGroup title='Clipboard' disabled={true}>
+          <RibbonButton
+            icon={<ScissorsIcon className='w-4 h-4 text-gray-700' />}
+            label='Cut'
+            disabled={true}
+          />
+          <RibbonButton
+            icon={<DocumentDuplicateIcon className='w-4 h-4 text-gray-700' />}
+            label='Copy'
+            disabled={true}
+          />
+          <RibbonButton
+            icon={<PaperClipIcon className='w-4 h-4 text-gray-700' />}
+            label='Paste'
+            disabled={true}
+          />
+        </RibbonGroup>
 
-      {/* Font Group (Disabled) */}
-      <RibbonGroup title='Font' disabled={true}>
-        <RibbonButton
-          icon='B'
-          label='Bold'
-          disabled={true}
-          iconType='text'
-          className='font-bold'
-        />
-        <RibbonButton
-          icon='I'
-          label='Italic'
-          disabled={true}
-          iconType='text'
-          className='italic'
-        />
-        <RibbonButton
-          icon='U'
-          label='Underline'
-          disabled={true}
-          iconType='text'
-          className='underline'
-        />
-      </RibbonGroup>
-    </div>
+        {/* Font Group (Disabled) */}
+        <RibbonGroup title='Font' disabled={true}>
+          <RibbonButton
+            icon='B'
+            label='Bold'
+            disabled={true}
+            iconType='text'
+            className='font-bold'
+          />
+          <RibbonButton
+            icon='I'
+            label='Italic'
+            disabled={true}
+            iconType='text'
+            className='italic'
+          />
+          <RibbonButton
+            icon='U'
+            label='Underline'
+            disabled={true}
+            iconType='text'
+            className='underline'
+          />
+        </RibbonGroup>
+      </div>
 
-    {/* Resource Histogram Modal */}
-    {showResourceHistogram && (
-      <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
-        <div className='bg-white rounded-lg shadow-xl w-11/12 h-5/6 max-w-7xl flex flex-col'>
-          <div className='flex items-center justify-between p-4 border-b border-gray-200'>
-            <h2 className='text-lg font-semibold text-gray-800'>
-              Resource Histogram
-            </h2>
-            <button
-              onClick={() => setShowResourceHistogram(false)}
-              className='text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100'
-            >
-              <XMarkIcon className='w-5 h-5' />
-            </button>
-          </div>
-          <div className='flex-1 p-4 overflow-hidden'>
-            <ResourceHistogram />
+      {/* Resource Histogram Modal */}
+      {showResourceHistogram && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+          <div className='bg-white rounded-lg shadow-xl w-11/12 h-5/6 max-w-7xl flex flex-col'>
+            <div className='flex items-center justify-between p-4 border-b border-gray-200'>
+              <h2 className='text-lg font-semibold text-gray-800'>
+                Resource Histogram
+              </h2>
+              <button
+                onClick={() => setShowResourceHistogram(false)}
+                className='text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100'
+              >
+                <XMarkIcon className='w-5 h-5' />
+              </button>
+            </div>
+            <div className='flex-1 p-4 overflow-hidden'>
+              <ResourceHistogram />
+            </div>
           </div>
         </div>
-      </div>
-    )}
+      )}
 
-    {/* Column Chooser Dialog */}
-    <ColumnChooserDialog
-      isOpen={showColumnChooser}
-      onClose={() => setShowColumnChooser(false)}
-      gridConfig={gridConfig}
-      onConfigChange={updateGridConfig}
-      tasks={tasks}
-    />
-  </>
+      {/* Column Chooser Dialog */}
+      <ColumnChooserDialog
+        isOpen={showColumnChooser}
+        onClose={() => setShowColumnChooser(false)}
+        gridConfig={gridConfig}
+        onConfigChange={updateGridConfig}
+        tasks={tasks}
+      />
+    </>
   );
 };
 

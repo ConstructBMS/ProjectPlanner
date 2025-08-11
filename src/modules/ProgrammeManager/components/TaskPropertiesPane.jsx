@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTaskContext } from '../context/TaskContext';
 import { useCalendarContext } from '../context/CalendarContext';
 import { useUndoRedoContext } from '../context/UndoRedoContext';
+import { supabase } from '../../../supabase/client';
 import DeleteTaskModal from './modals/DeleteTaskModal';
 import NotesTab from './TaskPropertiesPane/NotesTab';
 import AttachmentsTab from './TaskPropertiesPane/AttachmentsTab';
@@ -21,6 +22,7 @@ import {
   CogIcon,
   PaintBrushIcon,
   ClockIcon,
+  CurrencyDollarIcon,
 } from '@heroicons/react/24/outline';
 import {
   CONSTRAINT_TYPES,
@@ -71,13 +73,17 @@ const TaskPropertiesPane = () => {
   const [modalLag, setModalLag] = useState(0);
   const [activeTab, setActiveTab] = useState('properties');
   const [showColorPicker, setShowColorPicker] = useState(false);
-  const [constraintValidation, setConstraintValidation] = useState({ isValid: true, errors: [], warnings: [] });
+  const [constraintValidation, setConstraintValidation] = useState({
+    isValid: true,
+    errors: [],
+    warnings: [],
+  });
 
   // Get the currently selected task
   const selectedTask = tasks.find(task => task.id === selectedTaskId);
 
   // Default colors for different task types
-  const getDefaultColor = (task) => {
+  const getDefaultColor = task => {
     if (task.type === 'milestone' || task.isMilestone) {
       return '#8B5CF6'; // Purple for milestones
     } else if (task.isGroup) {
@@ -88,12 +94,12 @@ const TaskPropertiesPane = () => {
   };
 
   // Get current task color or default
-  const getCurrentColor = (task) => {
+  const getCurrentColor = task => {
     return task.color || getDefaultColor(task);
   };
 
   // Handle color change
-  const handleColorChange = (color) => {
+  const handleColorChange = color => {
     handleFieldChange('color', color.hex);
   };
 
@@ -103,7 +109,7 @@ const TaskPropertiesPane = () => {
   };
 
   // Constraint handling functions
-  const handleConstraintChange = (constraintType) => {
+  const handleConstraintChange = constraintType => {
     if (!editingTask) return;
 
     let newConstraint = null;
@@ -113,10 +119,18 @@ const TaskPropertiesPane = () => {
       newConstraint = null;
     } else {
       // Set constraint type, keep existing date if applicable
-      const currentDate = editingTask.constraints?.date || new Date().toISOString().split('T')[0];
+      const currentDate =
+        editingTask.constraints?.date || new Date().toISOString().split('T')[0];
       newConstraint = {
         type: constraintType,
-        date: [CONSTRAINT_TYPES.MSO, CONSTRAINT_TYPES.MFO, CONSTRAINT_TYPES.SNET, CONSTRAINT_TYPES.FNLT].includes(constraintType) ? currentDate : null,
+        date: [
+          CONSTRAINT_TYPES.MSO,
+          CONSTRAINT_TYPES.MFO,
+          CONSTRAINT_TYPES.SNET,
+          CONSTRAINT_TYPES.FNLT,
+        ].includes(constraintType)
+          ? currentDate
+          : null,
       };
     }
 
@@ -129,7 +143,7 @@ const TaskPropertiesPane = () => {
     setConstraintValidation(validation);
   };
 
-  const handleConstraintDateChange = (date) => {
+  const handleConstraintDateChange = date => {
     if (!editingTask || !editingTask.constraints) return;
 
     const updatedConstraint = { ...editingTask.constraints, date };
@@ -189,7 +203,7 @@ const TaskPropertiesPane = () => {
         const newValue = editingTask[field];
 
         // Format values for display
-        const formatValue = (value) => {
+        const formatValue = value => {
           if (value === null || value === undefined) return 'None';
           if (typeof value === 'boolean') return value ? 'Yes' : 'No';
           if (field === 'startDate' || field === 'endDate') {
@@ -426,866 +440,959 @@ const TaskPropertiesPane = () => {
         {/* Properties Content */}
         <div className='flex-1 overflow-auto p-4 space-y-4'>
           {activeTab === 'properties' && (
-          {/* Task Information Section */}
-          <div className='bg-white border border-gray-200 rounded-lg p-4'>
-            <div className='flex items-center gap-2 mb-3'>
-              <DocumentTextIcon className='w-4 h-4 text-blue-600' />
-              <h4 className='text-sm font-semibold text-gray-700'>
-                Task Information
-              </h4>
-            </div>
+            <>
+              {/* Task Information Section */}
+              <div className='bg-white border border-gray-200 rounded-lg p-4'>
+                <div className='flex items-center gap-2 mb-3'>
+                  <DocumentTextIcon className='w-4 h-4 text-blue-600' />
+                  <h4 className='text-sm font-semibold text-gray-700'>
+                    Task Information
+                  </h4>
+                </div>
 
-            <div className='space-y-3'>
-              <div>
-                <label className='block text-xs font-medium text-gray-600 mb-1'>
-                  Task Name
-                </label>
-                <input
-                  type='text'
-                  value={editingTask.name}
-                  onChange={e => handleFieldChange('name', e.target.value)}
-                  className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                  placeholder='Enter task name'
-                />
+                <div className='space-y-3'>
+                  <div>
+                    <label className='block text-xs font-medium text-gray-600 mb-1'>
+                      Task Name
+                    </label>
+                    <input
+                      type='text'
+                      value={editingTask.name}
+                      onChange={e => handleFieldChange('name', e.target.value)}
+                      className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                      placeholder='Enter task name'
+                    />
+                  </div>
+
+                  <div>
+                    <label className='block text-xs font-medium text-gray-600 mb-1'>
+                      Description
+                    </label>
+                    <textarea
+                      value={editingTask.description || ''}
+                      onChange={e =>
+                        handleFieldChange('description', e.target.value)
+                      }
+                      className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                      rows={3}
+                      placeholder='Enter task description'
+                    />
+                  </div>
+
+                  <div>
+                    <label className='block text-xs font-medium text-gray-600 mb-1'>
+                      Notes
+                    </label>
+                    <textarea
+                      value={editingTask.notes || ''}
+                      onChange={e => handleFieldChange('notes', e.target.value)}
+                      className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                      rows={2}
+                      placeholder='Additional notes'
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label className='block text-xs font-medium text-gray-600 mb-1'>
-                  Description
-                </label>
-                <textarea
-                  value={editingTask.description || ''}
-                  onChange={e =>
-                    handleFieldChange('description', e.target.value)
-                  }
-                  className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                  rows={3}
-                  placeholder='Enter task description'
-                />
-              </div>
+              {/* Schedule Section */}
+              <div className='bg-white border border-gray-200 rounded-lg p-4'>
+                <div className='flex items-center gap-2 mb-3'>
+                  <CalendarIcon className='w-4 h-4 text-green-600' />
+                  <h4 className='text-sm font-semibold text-gray-700'>
+                    Schedule
+                  </h4>
+                </div>
 
-              <div>
-                <label className='block text-xs font-medium text-gray-600 mb-1'>
-                  Notes
-                </label>
-                <textarea
-                  value={editingTask.notes || ''}
-                  onChange={e => handleFieldChange('notes', e.target.value)}
-                  className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                  rows={2}
-                  placeholder='Additional notes'
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Schedule Section */}
-          <div className='bg-white border border-gray-200 rounded-lg p-4'>
-            <div className='flex items-center gap-2 mb-3'>
-              <CalendarIcon className='w-4 h-4 text-green-600' />
-              <h4 className='text-sm font-semibold text-gray-700'>Schedule</h4>
-            </div>
-
-            <div className='grid grid-cols-2 gap-3'>
-              <div>
-                <label className='block text-xs font-medium text-gray-600 mb-1'>
-                  Start Date
-                </label>
-                <input
-                  type='date'
-                  value={
-                    editingTask.startDate
-                      ? new Date(editingTask.startDate)
-                          .toISOString()
-                          .split('T')[0]
-                      : ''
-                  }
-                  onChange={e =>
-                    handleFieldChange(
-                      'startDate',
-                      new Date(e.target.value).toISOString()
-                    )
-                  }
-                  className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                />
-              </div>
-
-              <div>
-                <label className='block text-xs font-medium text-gray-600 mb-1'>
-                  End Date
-                </label>
-                <input
-                  type='date'
-                  value={
-                    editingTask.endDate
-                      ? new Date(editingTask.endDate)
-                          .toISOString()
-                          .split('T')[0]
-                      : ''
-                  }
-                  onChange={e =>
-                    handleFieldChange(
-                      'endDate',
-                      new Date(e.target.value).toISOString()
-                    )
-                  }
-                  className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                />
-              </div>
-
-              <div>
-                <label className='block text-xs font-medium text-gray-600 mb-1'>
-                  Duration (days)
-                </label>
-                <input
-                  type='number'
-                  value={editingTask.duration || 0}
-                  onChange={e =>
-                    handleFieldChange('duration', parseInt(e.target.value) || 0)
-                  }
-                  className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                  min='0'
-                />
-              </div>
-
-              <div>
-                <label className='block text-xs font-medium text-gray-600 mb-1'>
-                  % Complete
-                </label>
-                <div className='flex items-center gap-2'>
-                  <input
-                    type='number'
-                    value={editingTask.progress || 0}
-                    onChange={e =>
-                      handleFieldChange(
-                        'progress',
-                        Math.min(
-                          100,
-                          Math.max(0, parseInt(e.target.value) || 0)
+                <div className='grid grid-cols-2 gap-3'>
+                  <div>
+                    <label className='block text-xs font-medium text-gray-600 mb-1'>
+                      Start Date
+                    </label>
+                    <input
+                      type='date'
+                      value={
+                        editingTask.startDate
+                          ? new Date(editingTask.startDate)
+                              .toISOString()
+                              .split('T')[0]
+                          : ''
+                      }
+                      onChange={e =>
+                        handleFieldChange(
+                          'startDate',
+                          new Date(e.target.value).toISOString()
                         )
-                      )
-                    }
-                    className='flex-1 px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                    min='0'
-                    max='100'
-                  />
-                  <span className='text-xs text-gray-500'>%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Task Calendar Section */}
-          <div className='bg-white border border-gray-200 rounded-lg p-4'>
-            <div className='flex items-center gap-2 mb-3'>
-              <CalendarIcon className='w-4 h-4 text-green-600' />
-              <h4 className='text-sm font-semibold text-gray-700'>Task Calendar</h4>
-            </div>
-
-            <div className='space-y-3'>
-              <div>
-                <label className='block text-xs font-medium text-gray-600 mb-1'>
-                  Calendar Override
-                </label>
-                <select
-                  value={editingTask.calendarId || 'global'}
-                  onChange={e => {
-                    const calendarId = e.target.value === 'global' ? null : e.target.value;
-                    handleFieldChange('calendarId', calendarId);
-                  }}
-                  className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                >
-                  <option value='global'>Use Global Calendar</option>
-                  {projectCalendars.map(calendar => (
-                    <option key={calendar.id} value={calendar.id}>
-                      {calendar.name}
-                    </option>
-                  ))}
-                </select>
-                <div className='mt-1 text-xs text-gray-500'>
-                  {editingTask.calendarId ? (
-                    (() => {
-                      const selectedCalendar = getProjectCalendarById(editingTask.calendarId);
-                      if (selectedCalendar) {
-                        const workingDays = Object.entries(selectedCalendar.workingDays)
-                          .filter(([_, isWorking]) => isWorking)
-                          .map(([day, _]) => day.charAt(0).toUpperCase() + day.slice(1))
-                          .join(', ');
-                        return `${workingDays} • ${selectedCalendar.holidays.length} holidays`;
                       }
-                      return 'Calendar not found';
-                    })()
-                  ) : (
-                    'Uses the project\'s global working calendar'
-                  )}
+                      className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                    />
+                  </div>
+
+                  <div>
+                    <label className='block text-xs font-medium text-gray-600 mb-1'>
+                      End Date
+                    </label>
+                    <input
+                      type='date'
+                      value={
+                        editingTask.endDate
+                          ? new Date(editingTask.endDate)
+                              .toISOString()
+                              .split('T')[0]
+                          : ''
+                      }
+                      onChange={e =>
+                        handleFieldChange(
+                          'endDate',
+                          new Date(e.target.value).toISOString()
+                        )
+                      }
+                      className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                    />
+                  </div>
+
+                  <div>
+                    <label className='block text-xs font-medium text-gray-600 mb-1'>
+                      Duration (days)
+                    </label>
+                    <input
+                      type='number'
+                      value={editingTask.duration || 0}
+                      onChange={e =>
+                        handleFieldChange(
+                          'duration',
+                          parseInt(e.target.value) || 0
+                        )
+                      }
+                      className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                      min='0'
+                    />
+                  </div>
+
+                  <div>
+                    <label className='block text-xs font-medium text-gray-600 mb-1'>
+                      % Complete
+                    </label>
+                    <div className='flex items-center gap-2'>
+                      <input
+                        type='number'
+                        value={editingTask.progress || 0}
+                        onChange={e =>
+                          handleFieldChange(
+                            'progress',
+                            Math.min(
+                              100,
+                              Math.max(0, parseInt(e.target.value) || 0)
+                            )
+                          )
+                        }
+                        className='flex-1 px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                        min='0'
+                        max='100'
+                      />
+                      <span className='text-xs text-gray-500'>%</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Current Calendar Info */}
-              {editingTask.calendarId && (() => {
-                const selectedCalendar = getProjectCalendarById(editingTask.calendarId);
-                if (!selectedCalendar) return null;
+              {/* Task Calendar Section */}
+              <div className='bg-white border border-gray-200 rounded-lg p-4'>
+                <div className='flex items-center gap-2 mb-3'>
+                  <CalendarIcon className='w-4 h-4 text-green-600' />
+                  <h4 className='text-sm font-semibold text-gray-700'>
+                    Task Calendar
+                  </h4>
+                </div>
 
-                return (
-                  <div className='p-2 bg-blue-50 border border-blue-200 rounded'>
-                    <div className='text-xs font-medium text-blue-700 mb-1'>
-                      {selectedCalendar.name}
+                <div className='space-y-3'>
+                  <div>
+                    <label className='block text-xs font-medium text-gray-600 mb-1'>
+                      Calendar Override
+                    </label>
+                    <select
+                      value={editingTask.calendarId || 'global'}
+                      onChange={e => {
+                        const calendarId =
+                          e.target.value === 'global' ? null : e.target.value;
+                        handleFieldChange('calendarId', calendarId);
+                      }}
+                      className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                    >
+                      <option value='global'>Use Global Calendar</option>
+                      {projectCalendars.map(calendar => (
+                        <option key={calendar.id} value={calendar.id}>
+                          {calendar.name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className='mt-1 text-xs text-gray-500'>
+                      {editingTask.calendarId
+                        ? (() => {
+                            const selectedCalendar = getProjectCalendarById(
+                              editingTask.calendarId
+                            );
+                            if (selectedCalendar) {
+                              const workingDays = Object.entries(
+                                selectedCalendar.workingDays
+                              )
+                                .filter(([_, isWorking]) => isWorking)
+                                .map(
+                                  ([day, _]) =>
+                                    day.charAt(0).toUpperCase() + day.slice(1)
+                                )
+                                .join(', ');
+                              return `${workingDays} • ${selectedCalendar.holidays.length} holidays`;
+                            }
+                            return 'Calendar not found';
+                          })()
+                        : "Uses the project's global working calendar"}
                     </div>
-                    <div className='text-xs text-blue-600 space-y-1'>
-                      <div>
-                        <span className='font-medium'>Working Days:</span>{' '}
-                        {Object.entries(selectedCalendar.workingDays)
-                          .filter(([_, isWorking]) => isWorking)
-                          .map(([day, _]) => day.charAt(0).toUpperCase() + day.slice(1))
-                          .join(', ')}
-                      </div>
-                      {selectedCalendar.holidays.length > 0 && (
-                        <div>
-                          <span className='font-medium'>Holidays:</span>{' '}
-                          {selectedCalendar.holidays.length} date(s)
+                  </div>
+
+                  {/* Current Calendar Info */}
+                  {editingTask.calendarId &&
+                    (() => {
+                      const selectedCalendar = getProjectCalendarById(
+                        editingTask.calendarId
+                      );
+                      if (!selectedCalendar) return null;
+
+                      return (
+                        <div className='p-2 bg-blue-50 border border-blue-200 rounded'>
+                          <div className='text-xs font-medium text-blue-700 mb-1'>
+                            {selectedCalendar.name}
+                          </div>
+                          <div className='text-xs text-blue-600 space-y-1'>
+                            <div>
+                              <span className='font-medium'>Working Days:</span>{' '}
+                              {Object.entries(selectedCalendar.workingDays)
+                                .filter(([_, isWorking]) => isWorking)
+                                .map(
+                                  ([day, _]) =>
+                                    day.charAt(0).toUpperCase() + day.slice(1)
+                                )
+                                .join(', ')}
+                            </div>
+                            {selectedCalendar.holidays.length > 0 && (
+                              <div>
+                                <span className='font-medium'>Holidays:</span>{' '}
+                                {selectedCalendar.holidays.length} date(s)
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })()}
+                      );
+                    })()}
 
-              {/* Duration Recalculation Notice */}
-              {editingTask.calendarId && (
-                <div className='p-2 bg-yellow-50 border border-yellow-200 rounded'>
-                  <div className='flex items-center gap-1'>
-                    <ExclamationTriangleIcon className='w-3 h-3 text-yellow-600' />
-                    <span className='text-xs font-medium text-yellow-700'>
-                      Duration will be recalculated based on selected calendar
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Deadline Section */}
-          <div className='bg-white border border-gray-200 rounded-lg p-4'>
-            <div className='flex items-center gap-2 mb-3'>
-              <ClockIcon className='w-4 h-4 text-red-600' />
-              <h4 className='text-sm font-semibold text-gray-700'>Deadline</h4>
-            </div>
-
-            <div className='space-y-3'>
-              <div>
-                <label className='block text-xs font-medium text-gray-600 mb-1'>
-                  Deadline Date
-                </label>
-                <input
-                  type='date'
-                  value={editingTask.deadline || ''}
-                  onChange={e => handleFieldChange('deadline', e.target.value || null)}
-                  className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                />
-                <div className='mt-1 text-xs text-gray-500'>
-                  {editingTask.deadline ? (
-                    (() => {
-                      const deadline = new Date(editingTask.deadline);
-                      const endDate = editingTask.endDate ? new Date(editingTask.endDate) : null;
-                      const isOverdue = endDate && endDate > deadline;
-                      const daysUntilDeadline = Math.ceil((deadline.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-
-                      if (isOverdue) {
-                        const daysOverdue = Math.ceil((endDate.getTime() - deadline.getTime()) / (1000 * 60 * 60 * 24));
-                        return `⚠️ Overdue by ${daysOverdue} day${daysOverdue !== 1 ? 's' : ''}`;
-                      } else if (daysUntilDeadline < 0) {
-                        return `⚠️ Deadline has passed`;
-                      } else if (daysUntilDeadline === 0) {
-                        return `⚠️ Deadline is today`;
-                      } else if (daysUntilDeadline <= 7) {
-                        return `⚠️ Due in ${daysUntilDeadline} day${daysUntilDeadline !== 1 ? 's' : ''}`;
-                      } else {
-                        return `Due in ${daysUntilDeadline} day${daysUntilDeadline !== 1 ? 's' : ''}`;
-                      }
-                    })()
-                  ) : (
-                    'No deadline set'
-                  )}
-                </div>
-              </div>
-
-              {/* Deadline Status Display */}
-              {editingTask.deadline && (() => {
-                const deadline = new Date(editingTask.deadline);
-                const endDate = editingTask.endDate ? new Date(editingTask.endDate) : null;
-                const isOverdue = endDate && endDate > deadline;
-                const daysUntilDeadline = Math.ceil((deadline.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-
-                if (isOverdue) {
-                  const daysOverdue = Math.ceil((endDate.getTime() - deadline.getTime()) / (1000 * 60 * 60 * 24));
-                  return (
-                    <div className='p-2 bg-red-50 border border-red-200 rounded'>
-                      <div className='flex items-center gap-1'>
-                        <ExclamationTriangleIcon className='w-3 h-3 text-red-600' />
-                        <span className='text-xs font-medium text-red-700'>
-                          Deadline Exceeded
-                        </span>
-                      </div>
-                      <div className='text-xs text-red-600 mt-1'>
-                        Task finished {daysOverdue} day{daysOverdue !== 1 ? 's' : ''} after deadline
-                      </div>
-                    </div>
-                  );
-                } else if (daysUntilDeadline < 0) {
-                  return (
-                    <div className='p-2 bg-red-50 border border-red-200 rounded'>
-                      <div className='flex items-center gap-1'>
-                        <ExclamationTriangleIcon className='w-3 h-3 text-red-600' />
-                        <span className='text-xs font-medium text-red-700'>
-                          Deadline Passed
-                        </span>
-                      </div>
-                      <div className='text-xs text-red-600 mt-1'>
-                        Task is overdue and should be completed immediately
-                      </div>
-                    </div>
-                  );
-                } else if (daysUntilDeadline <= 7) {
-                  return (
+                  {/* Duration Recalculation Notice */}
+                  {editingTask.calendarId && (
                     <div className='p-2 bg-yellow-50 border border-yellow-200 rounded'>
                       <div className='flex items-center gap-1'>
                         <ExclamationTriangleIcon className='w-3 h-3 text-yellow-600' />
                         <span className='text-xs font-medium text-yellow-700'>
-                          Deadline Approaching
+                          Duration will be recalculated based on selected
+                          calendar
                         </span>
                       </div>
-                      <div className='text-xs text-yellow-600 mt-1'>
-                        Due in {daysUntilDeadline} day{daysUntilDeadline !== 1 ? 's' : ''}
-                      </div>
                     </div>
-                  );
-                } else {
-                  return (
-                    <div className='p-2 bg-green-50 border border-green-200 rounded'>
-                      <div className='flex items-center gap-1'>
-                        <CheckIcon className='w-3 h-3 text-green-600' />
-                        <span className='text-xs font-medium text-green-700'>
-                          On Track
-                        </span>
-                      </div>
-                      <div className='text-xs text-green-600 mt-1'>
-                        Due in {daysUntilDeadline} day{daysUntilDeadline !== 1 ? 's' : ''}
-                      </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Deadline Section */}
+              <div className='bg-white border border-gray-200 rounded-lg p-4'>
+                <div className='flex items-center gap-2 mb-3'>
+                  <ClockIcon className='w-4 h-4 text-red-600' />
+                  <h4 className='text-sm font-semibold text-gray-700'>
+                    Deadline
+                  </h4>
+                </div>
+
+                <div className='space-y-3'>
+                  <div>
+                    <label className='block text-xs font-medium text-gray-600 mb-1'>
+                      Deadline Date
+                    </label>
+                    <input
+                      type='date'
+                      value={editingTask.deadline || ''}
+                      onChange={e =>
+                        handleFieldChange('deadline', e.target.value || null)
+                      }
+                      className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                    />
+                    <div className='mt-1 text-xs text-gray-500'>
+                      {editingTask.deadline
+                        ? (() => {
+                            const deadline = new Date(editingTask.deadline);
+                            const endDate = editingTask.endDate
+                              ? new Date(editingTask.endDate)
+                              : null;
+                            const isOverdue = endDate && endDate > deadline;
+                            const daysUntilDeadline = Math.ceil(
+                              (deadline.getTime() - new Date().getTime()) /
+                                (1000 * 60 * 60 * 24)
+                            );
+
+                            if (isOverdue) {
+                              const daysOverdue = Math.ceil(
+                                (endDate.getTime() - deadline.getTime()) /
+                                  (1000 * 60 * 60 * 24)
+                              );
+                              return `⚠️ Overdue by ${daysOverdue} day${daysOverdue !== 1 ? 's' : ''}`;
+                            } else if (daysUntilDeadline < 0) {
+                              return `⚠️ Deadline has passed`;
+                            } else if (daysUntilDeadline === 0) {
+                              return `⚠️ Deadline is today`;
+                            } else if (daysUntilDeadline <= 7) {
+                              return `⚠️ Due in ${daysUntilDeadline} day${daysUntilDeadline !== 1 ? 's' : ''}`;
+                            } else {
+                              return `Due in ${daysUntilDeadline} day${daysUntilDeadline !== 1 ? 's' : ''}`;
+                            }
+                          })()
+                        : 'No deadline set'}
                     </div>
-                  );
-                }
-              })()}
-
-              {/* Clear Deadline Button */}
-              {editingTask.deadline && (
-                <button
-                  onClick={() => handleFieldChange('deadline', null)}
-                  className='w-full px-3 py-2 text-xs text-gray-600 border border-gray-300 rounded hover:bg-gray-50 transition-colors'
-                  title='Remove deadline'
-                >
-                  Clear Deadline
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Recurring Task Configuration */}
-          <RecurringTaskConfig
-            task={editingTask}
-            onRecurrenceChange={(recurrenceRule) => {
-              handleFieldChange('recurrence', recurrenceRule);
-            }}
-          />
-
-          {/* Cost Information Section */}
-          <div className='bg-white border border-gray-200 rounded-lg p-4 mb-4'>
-            <div className='flex items-center gap-2 mb-3'>
-              <CurrencyPoundIcon className='w-4 h-4 text-green-600' />
-              <h4 className='text-sm font-semibold text-gray-700'>Cost Information</h4>
-            </div>
-
-            <div className='space-y-3'>
-              {/* Resource Assignment */}
-              <div>
-                <label className='block text-xs font-medium text-gray-600 mb-1'>
-                  Assigned Resource
-                </label>
-                <input
-                  type='text'
-                  value={editingTask.resource || editingTask.assignedTo || ''}
-                  onChange={e => handleFieldChange('resource', e.target.value)}
-                  className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                  placeholder='Enter resource name'
-                />
-              </div>
-
-              {/* Cost Calculation */}
-              {(() => {
-                const resource = { name: editingTask.resource || editingTask.assignedTo, costRate: 0 };
-                const taskCost = calculateTaskCost(editingTask, resource);
-                const costVariance = getCostVariance(editingTask, resource);
-
-                return (
-                  <div className='p-3 bg-gray-50 border border-gray-200 rounded'>
-                    <div className='grid grid-cols-2 gap-4 text-sm'>
-                      <div>
-                        <span className='text-gray-600'>Task Cost:</span>
-                        <div className='font-semibold text-green-600'>
-                          {formatCost(taskCost.cost)}
-                        </div>
-                      </div>
-                      <div>
-                        <span className='text-gray-600'>Duration:</span>
-                        <div className='font-semibold text-gray-900'>
-                          {editingTask.duration || 0} days
-                        </div>
-                      </div>
-                    </div>
-
-                    {taskCost.cost > 0 && (
-                      <div className='mt-2 text-xs text-gray-600'>
-                        {taskCost.breakdown.calculation}
-                      </div>
-                    )}
-
-                    {costVariance.isOverBudget && (
-                      <div className='mt-2 p-2 bg-red-50 border border-red-200 rounded'>
-                        <div className='flex items-center gap-2'>
-                          <ExclamationTriangleIcon className='w-3 h-3 text-red-600' />
-                          <span className='text-xs text-red-700'>
-                            Over budget by {formatCost(costVariance.variance)} ({costVariance.variancePercentage.toFixed(1)}%)
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
-            </div>
-          </div>
-
-          {/* Status & Priority Section */}
-          <div className='bg-white border border-gray-200 rounded-lg p-4'>
-            <div className='flex items-center gap-2 mb-3'>
-              <FlagIcon className='w-4 h-4 text-orange-600' />
-              <h4 className='text-sm font-semibold text-gray-700'>
-                Status & Priority
-              </h4>
-            </div>
-
-            <div className='grid grid-cols-2 gap-3'>
-              <div>
-                <label className='block text-xs font-medium text-gray-600 mb-1'>
-                  Status
-                </label>
-                <select
-                  value={editingTask.status || 'Planned'}
-                  onChange={e => handleFieldChange('status', e.target.value)}
-                  className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                >
-                  <option value='Planned'>Planned</option>
-                  <option value='In Progress'>In Progress</option>
-                  <option value='Complete'>Complete</option>
-                  <option value='Delayed'>Delayed</option>
-                  <option value='On Hold'>On Hold</option>
-                  <option value='Cancelled'>Cancelled</option>
-                </select>
-              </div>
-
-              <div>
-                <label className='block text-xs font-medium text-gray-600 mb-1'>
-                  Priority
-                </label>
-                <select
-                  value={editingTask.priority || 'Medium'}
-                  onChange={e => handleFieldChange('priority', e.target.value)}
-                  className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                >
-                  <option value='Low'>Low</option>
-                  <option value='Medium'>Medium</option>
-                  <option value='High'>High</option>
-                  <option value='Critical'>Critical</option>
-                </select>
-              </div>
-
-              <div className='col-span-2'>
-                <label className='block text-xs font-medium text-gray-600 mb-1'>
-                  Task Type
-                </label>
-                <select
-                  value={
-                    editingTask.type === 'milestone' || editingTask.isMilestone
-                      ? 'Milestone'
-                      : 'Task'
-                  }
-                  onChange={e => {
-                    const isMilestone = e.target.value === 'Milestone';
-                    // Update both the new type field and the legacy isMilestone field
-                    handleFieldChange(
-                      'type',
-                      isMilestone ? 'milestone' : 'task'
-                    );
-                    handleFieldChange('isMilestone', isMilestone);
-                  }}
-                  className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                >
-                  <option value='Task'>Task</option>
-                  <option value='Milestone'>Milestone</option>
-                </select>
-              </div>
-
-              {/* Bar Color Section */}
-              <div className='col-span-2'>
-                <label className='block text-xs font-medium text-gray-600 mb-1'>
-                  Bar Color
-                </label>
-                <div className='flex items-center gap-2'>
-                  <div className='relative'>
-                    <button
-                      type='button'
-                      onClick={() => setShowColorPicker(!showColorPicker)}
-                      className='flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                    >
-                      <div
-                        className='w-4 h-4 rounded border border-gray-300'
-                        style={{ backgroundColor: getCurrentColor(editingTask) }}
-                      />
-                      <span className='text-gray-700'>
-                        {editingTask.color ? 'Custom' : 'Default'}
-                      </span>
-                      <PaintBrushIcon className='w-4 h-4 text-gray-500' />
-                    </button>
-
-                    {showColorPicker && (
-                      <div className='absolute z-50 mt-2'>
-                        <div
-                          className='fixed inset-0'
-                          onClick={() => setShowColorPicker(false)}
-                        />
-                        <SketchPicker
-                          color={getCurrentColor(editingTask)}
-                          onChange={handleColorChange}
-                          presetColors={[
-                            '#3B82F6', // Blue (default task)
-                            '#10B981', // Green (default group)
-                            '#8B5CF6', // Purple (default milestone)
-                            '#F59E0B', // Orange
-                            '#EF4444', // Red
-                            '#06B6D4', // Cyan
-                            '#84CC16', // Lime
-                            '#F97316', // Orange
-                            '#EC4899', // Pink
-                            '#6366F1', // Indigo
-                          ]}
-                        />
-                      </div>
-                    )}
                   </div>
 
-                  {editingTask.color && (
+                  {/* Deadline Status Display */}
+                  {editingTask.deadline &&
+                    (() => {
+                      const deadline = new Date(editingTask.deadline);
+                      const endDate = editingTask.endDate
+                        ? new Date(editingTask.endDate)
+                        : null;
+                      const isOverdue = endDate && endDate > deadline;
+                      const daysUntilDeadline = Math.ceil(
+                        (deadline.getTime() - new Date().getTime()) /
+                          (1000 * 60 * 60 * 24)
+                      );
+
+                      if (isOverdue) {
+                        const daysOverdue = Math.ceil(
+                          (endDate.getTime() - deadline.getTime()) /
+                            (1000 * 60 * 60 * 24)
+                        );
+                        return (
+                          <div className='p-2 bg-red-50 border border-red-200 rounded'>
+                            <div className='flex items-center gap-1'>
+                              <ExclamationTriangleIcon className='w-3 h-3 text-red-600' />
+                              <span className='text-xs font-medium text-red-700'>
+                                Deadline Exceeded
+                              </span>
+                            </div>
+                            <div className='text-xs text-red-600 mt-1'>
+                              Task finished {daysOverdue} day
+                              {daysOverdue !== 1 ? 's' : ''} after deadline
+                            </div>
+                          </div>
+                        );
+                      } else if (daysUntilDeadline < 0) {
+                        return (
+                          <div className='p-2 bg-red-50 border border-red-200 rounded'>
+                            <div className='flex items-center gap-1'>
+                              <ExclamationTriangleIcon className='w-3 h-3 text-red-600' />
+                              <span className='text-xs font-medium text-red-700'>
+                                Deadline Passed
+                              </span>
+                            </div>
+                            <div className='text-xs text-red-600 mt-1'>
+                              Task is overdue and should be completed
+                              immediately
+                            </div>
+                          </div>
+                        );
+                      } else if (daysUntilDeadline <= 7) {
+                        return (
+                          <div className='p-2 bg-yellow-50 border border-yellow-200 rounded'>
+                            <div className='flex items-center gap-1'>
+                              <ExclamationTriangleIcon className='w-3 h-3 text-yellow-600' />
+                              <span className='text-xs font-medium text-yellow-700'>
+                                Deadline Approaching
+                              </span>
+                            </div>
+                            <div className='text-xs text-yellow-600 mt-1'>
+                              Due in {daysUntilDeadline} day
+                              {daysUntilDeadline !== 1 ? 's' : ''}
+                            </div>
+                          </div>
+                        );
+                      } else {
+                        return (
+                          <div className='p-2 bg-green-50 border border-green-200 rounded'>
+                            <div className='flex items-center gap-1'>
+                              <CheckIcon className='w-3 h-3 text-green-600' />
+                              <span className='text-xs font-medium text-green-700'>
+                                On Track
+                              </span>
+                            </div>
+                            <div className='text-xs text-green-600 mt-1'>
+                              Due in {daysUntilDeadline} day
+                              {daysUntilDeadline !== 1 ? 's' : ''}
+                            </div>
+                          </div>
+                        );
+                      }
+                    })()}
+
+                  {/* Clear Deadline Button */}
+                  {editingTask.deadline && (
                     <button
-                      type='button'
-                      onClick={handleResetColor}
-                      className='px-3 py-2 text-xs text-gray-600 border border-gray-300 rounded hover:bg-gray-50 transition-colors'
-                      title='Reset to default color'
+                      onClick={() => handleFieldChange('deadline', null)}
+                      className='w-full px-3 py-2 text-xs text-gray-600 border border-gray-300 rounded hover:bg-gray-50 transition-colors'
+                      title='Remove deadline'
                     >
-                      Reset
+                      Clear Deadline
                     </button>
                   )}
                 </div>
-
-                <div className='mt-1 text-xs text-gray-500'>
-                  Default: {getDefaultColor(editingTask)}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Constraints Section */}
-          <div className='bg-white border border-gray-200 rounded-lg p-4'>
-            <div className='flex items-center gap-2 mb-3'>
-              <CogIcon className='w-4 h-4 text-blue-600' />
-              <h4 className='text-sm font-semibold text-gray-700'>
-                Scheduling Constraints
-              </h4>
-            </div>
-
-            <div className='space-y-3'>
-              {/* Constraint Type */}
-              <div>
-                <label className='block text-xs font-medium text-gray-600 mb-1'>
-                  Constraint Type
-                </label>
-                <select
-                  value={editingTask.constraints?.type || CONSTRAINT_TYPES.ASAP}
-                  onChange={e => handleConstraintChange(e.target.value)}
-                  className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                >
-                  {getAvailableConstraintTypes().map(constraintType => (
-                    <option key={constraintType.value} value={constraintType.value}>
-                      {constraintType.icon} {constraintType.label}
-                    </option>
-                  ))}
-                </select>
-                <div className='mt-1 text-xs text-gray-500'>
-                  {getConstraintDescription(editingTask.constraints?.type || CONSTRAINT_TYPES.ASAP)}
-                </div>
               </div>
 
-              {/* Constraint Date */}
-              {editingTask.constraints && [CONSTRAINT_TYPES.MSO, CONSTRAINT_TYPES.MFO, CONSTRAINT_TYPES.SNET, CONSTRAINT_TYPES.FNLT].includes(editingTask.constraints.type) && (
-                <div>
-                  <label className='block text-xs font-medium text-gray-600 mb-1'>
-                    Constraint Date
-                  </label>
-                  <input
-                    type='date'
-                    value={editingTask.constraints.date || ''}
-                    onChange={e => handleConstraintDateChange(e.target.value)}
-                    className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                  />
-                </div>
-              )}
+              {/* Recurring Task Configuration */}
+              <RecurringTaskConfig
+                task={editingTask}
+                onRecurrenceChange={recurrenceRule => {
+                  handleFieldChange('recurrence', recurrenceRule);
+                }}
+              />
 
-              {/* Constraint Validation */}
-              {!constraintValidation.isValid && (
-                <div className='p-2 bg-red-50 border border-red-200 rounded'>
-                  <div className='flex items-center gap-1 mb-1'>
-                    <ExclamationTriangleIcon className='w-3 h-3 text-red-600' />
-                    <span className='text-xs font-medium text-red-700'>Validation Errors</span>
+              {/* Cost Information Section */}
+              <div className='bg-white border border-gray-200 rounded-lg p-4 mb-4'>
+                <div className='flex items-center gap-2 mb-3'>
+                  <CurrencyDollarIcon className='w-4 h-4 text-green-600' />
+                  <h4 className='text-sm font-semibold text-gray-700'>
+                    Cost Information
+                  </h4>
+                </div>
+
+                <div className='space-y-3'>
+                  {/* Resource Assignment */}
+                  <div>
+                    <label className='block text-xs font-medium text-gray-600 mb-1'>
+                      Assigned Resource
+                    </label>
+                    <input
+                      type='text'
+                      value={
+                        editingTask.resource || editingTask.assignedTo || ''
+                      }
+                      onChange={e =>
+                        handleFieldChange('resource', e.target.value)
+                      }
+                      className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                      placeholder='Enter resource name'
+                    />
                   </div>
-                  <ul className='text-xs text-red-600 space-y-1'>
-                    {constraintValidation.errors.map((error, index) => (
-                      <li key={index}>• {error}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
 
-              {constraintValidation.warnings.length > 0 && (
-                <div className='p-2 bg-yellow-50 border border-yellow-200 rounded'>
-                  <div className='flex items-center gap-1 mb-1'>
-                    <ExclamationTriangleIcon className='w-3 h-3 text-yellow-600' />
-                    <span className='text-xs font-medium text-yellow-700'>Warnings</span>
+                  {/* Cost Calculation */}
+                  {(() => {
+                    const resource = {
+                      name: editingTask.resource || editingTask.assignedTo,
+                      costRate: 0,
+                    };
+                    const taskCost = calculateTaskCost(editingTask, resource);
+                    const costVariance = getCostVariance(editingTask, resource);
+
+                    return (
+                      <div className='p-3 bg-gray-50 border border-gray-200 rounded'>
+                        <div className='grid grid-cols-2 gap-4 text-sm'>
+                          <div>
+                            <span className='text-gray-600'>Task Cost:</span>
+                            <div className='font-semibold text-green-600'>
+                              {formatCost(taskCost.cost)}
+                            </div>
+                          </div>
+                          <div>
+                            <span className='text-gray-600'>Duration:</span>
+                            <div className='font-semibold text-gray-900'>
+                              {editingTask.duration || 0} days
+                            </div>
+                          </div>
+                        </div>
+
+                        {taskCost.cost > 0 && (
+                          <div className='mt-2 text-xs text-gray-600'>
+                            {taskCost.breakdown.calculation}
+                          </div>
+                        )}
+
+                        {costVariance.isOverBudget && (
+                          <div className='mt-2 p-2 bg-red-50 border border-red-200 rounded'>
+                            <div className='flex items-center gap-2'>
+                              <ExclamationTriangleIcon className='w-3 h-3 text-red-600' />
+                              <span className='text-xs text-red-700'>
+                                Over budget by{' '}
+                                {formatCost(costVariance.variance)} (
+                                {costVariance.variancePercentage.toFixed(1)}%)
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* Status & Priority Section */}
+              <div className='bg-white border border-gray-200 rounded-lg p-4'>
+                <div className='flex items-center gap-2 mb-3'>
+                  <FlagIcon className='w-4 h-4 text-orange-600' />
+                  <h4 className='text-sm font-semibold text-gray-700'>
+                    Status & Priority
+                  </h4>
+                </div>
+
+                <div className='grid grid-cols-2 gap-3'>
+                  <div>
+                    <label className='block text-xs font-medium text-gray-600 mb-1'>
+                      Status
+                    </label>
+                    <select
+                      value={editingTask.status || 'Planned'}
+                      onChange={e =>
+                        handleFieldChange('status', e.target.value)
+                      }
+                      className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                    >
+                      <option value='Planned'>Planned</option>
+                      <option value='In Progress'>In Progress</option>
+                      <option value='Complete'>Complete</option>
+                      <option value='Delayed'>Delayed</option>
+                      <option value='On Hold'>On Hold</option>
+                      <option value='Cancelled'>Cancelled</option>
+                    </select>
                   </div>
-                  <ul className='text-xs text-yellow-600 space-y-1'>
-                    {constraintValidation.warnings.map((warning, index) => (
-                      <li key={index}>• {warning}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
 
-              {/* Current Constraint Display */}
-              {editingTask.constraints && editingTask.constraints.type !== CONSTRAINT_TYPES.ASAP && (
-                <div className='p-2 bg-blue-50 border border-blue-200 rounded'>
-                  <div className='flex items-center justify-between'>
+                  <div>
+                    <label className='block text-xs font-medium text-gray-600 mb-1'>
+                      Priority
+                    </label>
+                    <select
+                      value={editingTask.priority || 'Medium'}
+                      onChange={e =>
+                        handleFieldChange('priority', e.target.value)
+                      }
+                      className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                    >
+                      <option value='Low'>Low</option>
+                      <option value='Medium'>Medium</option>
+                      <option value='High'>High</option>
+                      <option value='Critical'>Critical</option>
+                    </select>
+                  </div>
+
+                  <div className='col-span-2'>
+                    <label className='block text-xs font-medium text-gray-600 mb-1'>
+                      Task Type
+                    </label>
+                    <select
+                      value={
+                        editingTask.type === 'milestone' ||
+                        editingTask.isMilestone
+                          ? 'Milestone'
+                          : 'Task'
+                      }
+                      onChange={e => {
+                        const isMilestone = e.target.value === 'Milestone';
+                        // Update both the new type field and the legacy isMilestone field
+                        handleFieldChange(
+                          'type',
+                          isMilestone ? 'milestone' : 'task'
+                        );
+                        handleFieldChange('isMilestone', isMilestone);
+                      }}
+                      className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                    >
+                      <option value='Task'>Task</option>
+                      <option value='Milestone'>Milestone</option>
+                    </select>
+                  </div>
+
+                  {/* Bar Color Section */}
+                  <div className='col-span-2'>
+                    <label className='block text-xs font-medium text-gray-600 mb-1'>
+                      Bar Color
+                    </label>
                     <div className='flex items-center gap-2'>
-                      <span className='text-xs font-medium text-blue-700'>
-                        {getConstraintLabel(editingTask.constraints.type)}
-                      </span>
-                      {editingTask.constraints.date && (
-                        <span className='text-xs text-blue-600'>
-                          {new Date(editingTask.constraints.date).toLocaleDateString()}
-                        </span>
+                      <div className='relative'>
+                        <button
+                          type='button'
+                          onClick={() => setShowColorPicker(!showColorPicker)}
+                          className='flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                        >
+                          <div
+                            className='w-4 h-4 rounded border border-gray-300'
+                            style={{
+                              backgroundColor: getCurrentColor(editingTask),
+                            }}
+                          />
+                          <span className='text-gray-700'>
+                            {editingTask.color ? 'Custom' : 'Default'}
+                          </span>
+                          <PaintBrushIcon className='w-4 h-4 text-gray-500' />
+                        </button>
+
+                        {showColorPicker && (
+                          <div className='absolute z-50 mt-2'>
+                            <div
+                              className='fixed inset-0'
+                              onClick={() => setShowColorPicker(false)}
+                            />
+                            <SketchPicker
+                              color={getCurrentColor(editingTask)}
+                              onChange={handleColorChange}
+                              presetColors={[
+                                '#3B82F6', // Blue (default task)
+                                '#10B981', // Green (default group)
+                                '#8B5CF6', // Purple (default milestone)
+                                '#F59E0B', // Orange
+                                '#EF4444', // Red
+                                '#06B6D4', // Cyan
+                                '#84CC16', // Lime
+                                '#F97316', // Orange
+                                '#EC4899', // Pink
+                                '#6366F1', // Indigo
+                              ]}
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {editingTask.color && (
+                        <button
+                          type='button'
+                          onClick={handleResetColor}
+                          className='px-3 py-2 text-xs text-gray-600 border border-gray-300 rounded hover:bg-gray-50 transition-colors'
+                          title='Reset to default color'
+                        >
+                          Reset
+                        </button>
                       )}
                     </div>
-                    <button
-                      onClick={clearConstraint}
-                      className='text-xs text-blue-600 hover:text-blue-700 underline'
-                      title='Clear constraint'
+
+                    <div className='mt-1 text-xs text-gray-500'>
+                      Default: {getDefaultColor(editingTask)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Constraints Section */}
+              <div className='bg-white border border-gray-200 rounded-lg p-4'>
+                <div className='flex items-center gap-2 mb-3'>
+                  <CogIcon className='w-4 h-4 text-blue-600' />
+                  <h4 className='text-sm font-semibold text-gray-700'>
+                    Scheduling Constraints
+                  </h4>
+                </div>
+
+                <div className='space-y-3'>
+                  {/* Constraint Type */}
+                  <div>
+                    <label className='block text-xs font-medium text-gray-600 mb-1'>
+                      Constraint Type
+                    </label>
+                    <select
+                      value={
+                        editingTask.constraints?.type || CONSTRAINT_TYPES.ASAP
+                      }
+                      onChange={e => handleConstraintChange(e.target.value)}
+                      className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
                     >
-                      Clear
-                    </button>
+                      {getAvailableConstraintTypes().map(constraintType => (
+                        <option
+                          key={constraintType.value}
+                          value={constraintType.value}
+                        >
+                          {constraintType.icon} {constraintType.label}
+                        </option>
+                      ))}
+                    </select>
+                    <div className='mt-1 text-xs text-gray-500'>
+                      {getConstraintDescription(
+                        editingTask.constraints?.type || CONSTRAINT_TYPES.ASAP
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Constraint Date */}
+                  {editingTask.constraints &&
+                    [
+                      CONSTRAINT_TYPES.MSO,
+                      CONSTRAINT_TYPES.MFO,
+                      CONSTRAINT_TYPES.SNET,
+                      CONSTRAINT_TYPES.FNLT,
+                    ].includes(editingTask.constraints.type) && (
+                      <div>
+                        <label className='block text-xs font-medium text-gray-600 mb-1'>
+                          Constraint Date
+                        </label>
+                        <input
+                          type='date'
+                          value={editingTask.constraints.date || ''}
+                          onChange={e =>
+                            handleConstraintDateChange(e.target.value)
+                          }
+                          className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                        />
+                      </div>
+                    )}
+
+                  {/* Constraint Validation */}
+                  {!constraintValidation.isValid && (
+                    <div className='p-2 bg-red-50 border border-red-200 rounded'>
+                      <div className='flex items-center gap-1 mb-1'>
+                        <ExclamationTriangleIcon className='w-3 h-3 text-red-600' />
+                        <span className='text-xs font-medium text-red-700'>
+                          Validation Errors
+                        </span>
+                      </div>
+                      <ul className='text-xs text-red-600 space-y-1'>
+                        {constraintValidation.errors.map((error, index) => (
+                          <li key={index}>• {error}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {constraintValidation.warnings.length > 0 && (
+                    <div className='p-2 bg-yellow-50 border border-yellow-200 rounded'>
+                      <div className='flex items-center gap-1 mb-1'>
+                        <ExclamationTriangleIcon className='w-3 h-3 text-yellow-600' />
+                        <span className='text-xs font-medium text-yellow-700'>
+                          Warnings
+                        </span>
+                      </div>
+                      <ul className='text-xs text-yellow-600 space-y-1'>
+                        {constraintValidation.warnings.map((warning, index) => (
+                          <li key={index}>• {warning}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Current Constraint Display */}
+                  {editingTask.constraints &&
+                    editingTask.constraints.type !== CONSTRAINT_TYPES.ASAP && (
+                      <div className='p-2 bg-blue-50 border border-blue-200 rounded'>
+                        <div className='flex items-center justify-between'>
+                          <div className='flex items-center gap-2'>
+                            <span className='text-xs font-medium text-blue-700'>
+                              {getConstraintLabel(editingTask.constraints.type)}
+                            </span>
+                            {editingTask.constraints.date && (
+                              <span className='text-xs text-blue-600'>
+                                {new Date(
+                                  editingTask.constraints.date
+                                ).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+                          <button
+                            onClick={clearConstraint}
+                            className='text-xs text-blue-600 hover:text-blue-700 underline'
+                            title='Clear constraint'
+                          >
+                            Clear
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                </div>
+              </div>
+
+              {/* Resource Assignment Section */}
+              <div className='bg-white border border-gray-200 rounded-lg p-4'>
+                <div className='flex items-center gap-2 mb-3'>
+                  <UserIcon className='w-4 h-4 text-purple-600' />
+                  <h4 className='text-sm font-semibold text-gray-700'>
+                    Resource Assignment
+                  </h4>
+                </div>
+
+                <div>
+                  <label className='block text-xs font-medium text-gray-600 mb-1'>
+                    Assignee
+                  </label>
+                  <input
+                    type='text'
+                    value={editingTask.assignee || ''}
+                    onChange={e =>
+                      handleFieldChange('assignee', e.target.value)
+                    }
+                    className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                    placeholder='Enter assignee name'
+                  />
+                </div>
+              </div>
+
+              {/* Dependencies Section */}
+              <div className='bg-white border border-gray-200 rounded-lg p-4'>
+                <div className='flex items-center justify-between mb-3'>
+                  <div className='flex items-center gap-2'>
+                    <LinkIcon className='w-4 h-4 text-indigo-600' />
+                    <h4 className='text-sm font-semibold text-gray-700'>
+                      Dependencies
+                    </h4>
+                  </div>
+                  <button
+                    onClick={() => setShowAddDependencyModal(true)}
+                    className='px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center gap-1'
+                  >
+                    <PlusIcon className='w-3 h-3' />
+                    Add Dependency
+                  </button>
+                </div>
+
+                <div className='space-y-4'>
+                  {/* Predecessors */}
+                  <div>
+                    <label className='block text-xs font-medium text-gray-600 mb-2'>
+                      Predecessors ({predecessors.length})
+                    </label>
+                    {predecessors.length > 0 ? (
+                      <div className='space-y-2'>
+                        {predecessors.map(task => (
+                          <div
+                            key={task.id}
+                            className='text-xs bg-gray-50 px-3 py-2 rounded border border-gray-200 flex items-center justify-between hover:bg-gray-100 transition-colors'
+                          >
+                            <div className='flex-1 min-w-0'>
+                              <div className='font-medium text-gray-700 truncate'>
+                                {task.name}
+                              </div>
+                              <div className='text-gray-500 text-xs'>
+                                {task.linkType} •{' '}
+                                {task.lag >= 0
+                                  ? `${task.lag} days lag`
+                                  : `${Math.abs(task.lag)} days lead`}
+                              </div>
+                            </div>
+                            <div className='flex items-center gap-2 ml-2'>
+                              <div className='flex items-center gap-1'>
+                                <input
+                                  type='number'
+                                  value={task.lag}
+                                  onChange={e =>
+                                    handleUpdateLag(
+                                      task.linkId,
+                                      parseInt(e.target.value) || 0
+                                    )
+                                  }
+                                  className='w-16 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500'
+                                  title='Lag in days (negative for lead)'
+                                  min='-365'
+                                  max='365'
+                                />
+                                <span className='text-xs text-gray-400'>
+                                  days
+                                </span>
+                              </div>
+                              <button
+                                onClick={() =>
+                                  handleRemoveDependency(task.linkId)
+                                }
+                                className='text-red-600 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors'
+                                title='Remove dependency'
+                              >
+                                <TrashIcon className='w-3 h-3' />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className='text-xs text-gray-400 italic bg-gray-50 px-3 py-2 rounded border border-gray-200'>
+                        No predecessors
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Successors */}
+                  <div>
+                    <label className='block text-xs font-medium text-gray-600 mb-2'>
+                      Successors ({successors.length})
+                    </label>
+                    {successors.length > 0 ? (
+                      <div className='space-y-2'>
+                        {successors.map(task => (
+                          <div
+                            key={task.id}
+                            className='text-xs bg-gray-50 px-3 py-2 rounded border border-gray-200 flex items-center justify-between hover:bg-gray-100 transition-colors'
+                          >
+                            <div className='flex-1 min-w-0'>
+                              <div className='font-medium text-gray-700 truncate'>
+                                {task.name}
+                              </div>
+                              <div className='text-gray-500 text-xs'>
+                                {task.linkType} •{' '}
+                                {task.lag >= 0
+                                  ? `${task.lag} days lag`
+                                  : `${Math.abs(task.lag)} days lead`}
+                              </div>
+                            </div>
+                            <div className='flex items-center gap-2 ml-2'>
+                              <div className='flex items-center gap-1'>
+                                <input
+                                  type='number'
+                                  value={task.lag}
+                                  onChange={e =>
+                                    handleUpdateLag(
+                                      task.linkId,
+                                      parseInt(e.target.value) || 0
+                                    )
+                                  }
+                                  className='w-16 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500'
+                                  title='Lag in days (negative for lead)'
+                                  min='-365'
+                                  max='365'
+                                />
+                                <span className='text-xs text-gray-400'>
+                                  days
+                                </span>
+                              </div>
+                              <button
+                                onClick={() =>
+                                  handleRemoveDependency(task.linkId)
+                                }
+                                className='text-red-600 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors'
+                                title='Remove dependency'
+                              >
+                                <TrashIcon className='w-3 h-3' />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className='text-xs text-gray-400 italic bg-gray-50 px-3 py-2 rounded border border-gray-200'>
+                        No successors
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Validation Messages */}
+              {hasChanges && (
+                <div className='bg-amber-50 border border-amber-200 rounded-lg p-3'>
+                  <div className='flex items-center gap-2'>
+                    <ExclamationTriangleIcon className='w-4 h-4 text-amber-600' />
+                    <span className='text-xs font-medium text-amber-800'>
+                      You have unsaved changes
+                    </span>
+                  </div>
+                  <div className='text-xs text-amber-700 mt-1'>
+                    Click Save to apply changes or Cancel to discard them.
                   </div>
                 </div>
               )}
-            </div>
-          </div>
-
-          {/* Resource Assignment Section */}
-          <div className='bg-white border border-gray-200 rounded-lg p-4'>
-            <div className='flex items-center gap-2 mb-3'>
-              <UserIcon className='w-4 h-4 text-purple-600' />
-              <h4 className='text-sm font-semibold text-gray-700'>
-                Resource Assignment
-              </h4>
-            </div>
-
-            <div>
-              <label className='block text-xs font-medium text-gray-600 mb-1'>
-                Assignee
-              </label>
-              <input
-                type='text'
-                value={editingTask.assignee || ''}
-                onChange={e => handleFieldChange('assignee', e.target.value)}
-                className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                placeholder='Enter assignee name'
-              />
-            </div>
-          </div>
-
-          {/* Dependencies Section */}
-          <div className='bg-white border border-gray-200 rounded-lg p-4'>
-            <div className='flex items-center justify-between mb-3'>
-              <div className='flex items-center gap-2'>
-                <LinkIcon className='w-4 h-4 text-indigo-600' />
-                <h4 className='text-sm font-semibold text-gray-700'>
-                  Dependencies
-                </h4>
-              </div>
-              <button
-                onClick={() => setShowAddDependencyModal(true)}
-                className='px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center gap-1'
-              >
-                <PlusIcon className='w-3 h-3' />
-                Add Dependency
-              </button>
-            </div>
-
-            <div className='space-y-4'>
-              {/* Predecessors */}
-              <div>
-                <label className='block text-xs font-medium text-gray-600 mb-2'>
-                  Predecessors ({predecessors.length})
-                </label>
-                {predecessors.length > 0 ? (
-                  <div className='space-y-2'>
-                    {predecessors.map(task => (
-                      <div
-                        key={task.id}
-                        className='text-xs bg-gray-50 px-3 py-2 rounded border border-gray-200 flex items-center justify-between hover:bg-gray-100 transition-colors'
-                      >
-                        <div className='flex-1 min-w-0'>
-                          <div className='font-medium text-gray-700 truncate'>
-                            {task.name}
-                          </div>
-                          <div className='text-gray-500 text-xs'>
-                            {task.linkType} •{' '}
-                            {task.lag >= 0
-                              ? `${task.lag} days lag`
-                              : `${Math.abs(task.lag)} days lead`}
-                          </div>
-                        </div>
-                        <div className='flex items-center gap-2 ml-2'>
-                          <div className='flex items-center gap-1'>
-                            <input
-                              type='number'
-                              value={task.lag}
-                              onChange={e =>
-                                handleUpdateLag(
-                                  task.linkId,
-                                  parseInt(e.target.value) || 0
-                                )
-                              }
-                              className='w-16 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500'
-                              title='Lag in days (negative for lead)'
-                              min='-365'
-                              max='365'
-                            />
-                            <span className='text-xs text-gray-400'>days</span>
-                          </div>
-                          <button
-                            onClick={() => handleRemoveDependency(task.linkId)}
-                            className='text-red-600 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors'
-                            title='Remove dependency'
-                          >
-                            <TrashIcon className='w-3 h-3' />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className='text-xs text-gray-400 italic bg-gray-50 px-3 py-2 rounded border border-gray-200'>
-                    No predecessors
-                  </div>
-                )}
-              </div>
-
-              {/* Successors */}
-              <div>
-                <label className='block text-xs font-medium text-gray-600 mb-2'>
-                  Successors ({successors.length})
-                </label>
-                {successors.length > 0 ? (
-                  <div className='space-y-2'>
-                    {successors.map(task => (
-                      <div
-                        key={task.id}
-                        className='text-xs bg-gray-50 px-3 py-2 rounded border border-gray-200 flex items-center justify-between hover:bg-gray-100 transition-colors'
-                      >
-                        <div className='flex-1 min-w-0'>
-                          <div className='font-medium text-gray-700 truncate'>
-                            {task.name}
-                          </div>
-                          <div className='text-gray-500 text-xs'>
-                            {task.linkType} •{' '}
-                            {task.lag >= 0
-                              ? `${task.lag} days lag`
-                              : `${Math.abs(task.lag)} days lead`}
-                          </div>
-                        </div>
-                        <div className='flex items-center gap-2 ml-2'>
-                          <div className='flex items-center gap-1'>
-                            <input
-                              type='number'
-                              value={task.lag}
-                              onChange={e =>
-                                handleUpdateLag(
-                                  task.linkId,
-                                  parseInt(e.target.value) || 0
-                                )
-                              }
-                              className='w-16 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500'
-                              title='Lag in days (negative for lead)'
-                              min='-365'
-                              max='365'
-                            />
-                            <span className='text-xs text-gray-400'>days</span>
-                          </div>
-                          <button
-                            onClick={() => handleRemoveDependency(task.linkId)}
-                            className='text-red-600 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors'
-                            title='Remove dependency'
-                          >
-                            <TrashIcon className='w-3 h-3' />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className='text-xs text-gray-400 italic bg-gray-50 px-3 py-2 rounded border border-gray-200'>
-                    No successors
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Validation Messages */}
-          {hasChanges && (
-            <div className='bg-amber-50 border border-amber-200 rounded-lg p-3'>
-              <div className='flex items-center gap-2'>
-                <ExclamationTriangleIcon className='w-4 h-4 text-amber-600' />
-                <span className='text-xs font-medium text-amber-800'>
-                  You have unsaved changes
-                </span>
-              </div>
-              <div className='text-xs text-amber-700 mt-1'>
-                Click Save to apply changes or Cancel to discard them.
-              </div>
-            </div>
+            </>
           )}
 
           {/* Notes Tab Content */}
           {activeTab === 'notes' && (
-            <NotesTab
-              task={selectedTask}
-              onTaskUpdate={updateTask}
-            />
+            <NotesTab task={selectedTask} onTaskUpdate={updateTask} />
           )}
 
           {/* Attachments Tab Content */}
@@ -1293,7 +1400,7 @@ const TaskPropertiesPane = () => {
             <AttachmentsTab
               task={selectedTask}
               onTaskUpdate={updateTask}
-              supabaseClient={null} // TODO: Pass actual Supabase client
+              supabaseClient={supabase}
             />
           )}
 
@@ -1341,7 +1448,9 @@ const TaskPropertiesPane = () => {
                 ) : (
                   <div className='text-center py-8'>
                     <DocumentTextIcon className='w-8 h-8 text-gray-300 mx-auto mb-2' />
-                    <p className='text-sm text-gray-500'>No history available</p>
+                    <p className='text-sm text-gray-500'>
+                      No history available
+                    </p>
                     <p className='text-xs text-gray-400 mt-1'>
                       Changes will appear here when you modify the task
                     </p>

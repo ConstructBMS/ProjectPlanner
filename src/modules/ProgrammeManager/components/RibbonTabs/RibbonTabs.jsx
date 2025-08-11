@@ -7,11 +7,17 @@ import ProjectTab from './tabs/ProjectTab';
 import AllocationTab from './tabs/AllocationTab';
 import FourDTab from './tabs/FourDTab';
 import FormatTab from './tabs/FormatTab';
+import QuickAccessToolbar from './QuickAccessToolbar';
+import GroupDialog from './GroupDialog';
+import './Ribbon.css';
 
 const allTabs = ['Home', 'View', 'Project', 'Allocation', '4D', 'Format'];
 
 export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
   const [activeTab, setActiveTab] = useState('Home');
+  const [qatPosition, setQatPosition] = useState('above');
+  const [groupDialog, setGroupDialog] = useState({ isOpen: false, title: '', content: null });
+  const [isMinimised, setIsMinimised] = useState(false);
   const { viewState, updateViewState } = useViewContext();
   const { canAccessTab, getAvailableTabs } = useUserContext();
 
@@ -28,9 +34,54 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
     }
   }, [viewState.activeTab, canAccessTab, tabs]);
 
+  // Load minimised state from localStorage on mount
+  useEffect(() => {
+    const savedMinimised = localStorage.getItem('pm.ribbon.minimised');
+    if (savedMinimised === 'true') {
+      setIsMinimised(true);
+    }
+  }, []);
+
   const handleTabChange = tab => {
     setActiveTab(tab);
     updateViewState({ activeTab: tab });
+  };
+
+  const handleQatPositionChange = (position) => {
+    setQatPosition(position);
+  };
+
+  // QAT action handlers
+  const handleUndo = () => {
+    console.info('Undo action triggered');
+  };
+
+  const handleRedo = () => {
+    console.info('Redo action triggered');
+  };
+
+  const handleSave = () => {
+    console.info('Save action triggered');
+  };
+
+  // Group dialog handlers
+  const openGroupDialog = (title, content) => {
+    setGroupDialog({ isOpen: true, title, content });
+  };
+
+  const closeGroupDialog = () => {
+    setGroupDialog({ isOpen: false, title: '', content: null });
+  };
+
+  // Minimise/restore ribbon handlers
+  const toggleMinimise = () => {
+    const newMinimised = !isMinimised;
+    setIsMinimised(newMinimised);
+    localStorage.setItem('pm.ribbon.minimised', newMinimised.toString());
+  };
+
+  const handleTabDoubleClick = () => {
+    toggleMinimise();
   };
 
   const renderTabContent = () => {
@@ -48,31 +99,89 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
       case '4D':
         return <FourDTab />;
       case 'Format':
-        return <FormatTab />;
+        return <FormatTab onOpenGroupDialog={openGroupDialog} />;
       default:
         return <div className='text-sm p-4 text-gray-500'>Coming soon</div>;
     }
   };
 
   return (
-    <div className='asta-ribbon'>
+    <div className='pm-ribbon'>
+      {/* Quick Access Toolbar - Above */}
+      {qatPosition === 'above' && (
+        <QuickAccessToolbar
+          position="above"
+          onPositionChange={handleQatPositionChange}
+          onUndo={handleUndo}
+          onRedo={handleRedo}
+          onSave={handleSave}
+        />
+      )}
+
       {/* Tab Buttons */}
-      <div className='flex border-b border-gray-300 overflow-x-auto'>
-        {tabs.map(tab => (
+      <div className='flex border-b border-gray-300 overflow-x-auto relative'>
+        {tabs.map((tab, index) => (
           <button
             key={tab}
             onClick={() => handleTabChange(tab)}
-            className={`asta-ribbon-tab ${activeTab === tab ? 'active' : ''}`}
+            onDoubleClick={handleTabDoubleClick}
+            className={`project-ribbon-tab ribbon-tab ${activeTab === tab ? 'active' : ''}`}
+            tabIndex={0}
+            title={tab}
           >
             {tab}
           </button>
         ))}
+        
+        {/* Minimise/Restore Chevron */}
+        <button
+          onClick={toggleMinimise}
+          className="ribbon-minimise-button"
+          aria-label={isMinimised ? "Restore the Ribbon" : "Minimise the Ribbon"}
+          title={isMinimised ? "Restore the Ribbon" : "Minimise the Ribbon"}
+          tabIndex={0}
+        >
+          <svg 
+            className={`w-4 h-4 transition-transform duration-200 ${isMinimised ? 'rotate-180' : ''}`}
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M19 9l-7 7-7-7" 
+            />
+          </svg>
+        </button>
       </div>
 
       {/* Active Tab Tools */}
-      <div className='asta-ribbon-content min-h-[80px] w-full'>
+      <div className={`project-ribbon-content w-full ${isMinimised ? 'ribbon-minimised' : ''}`}>
         {renderTabContent()}
       </div>
+
+      {/* Quick Access Toolbar - Below */}
+      {qatPosition === 'below' && (
+        <QuickAccessToolbar
+          position="below"
+          onPositionChange={handleQatPositionChange}
+          onUndo={handleUndo}
+          onRedo={handleRedo}
+          onSave={handleSave}
+        />
+      )}
+
+      {/* Group Dialog */}
+      <GroupDialog
+        title={groupDialog.title}
+        onClose={closeGroupDialog}
+        isOpen={groupDialog.isOpen}
+      >
+        {groupDialog.content}
+      </GroupDialog>
     </div>
   );
 }

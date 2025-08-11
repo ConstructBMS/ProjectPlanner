@@ -83,15 +83,45 @@ export const DEFAULT_TEMPLATES = [
       },
     ],
     dependencies: [
-      { fromTask: 'Site Survey', toTask: 'Permits & Approvals', type: 'FS', lag: 0 },
-      { fromTask: 'Permits & Approvals', toTask: 'Site Clearing', type: 'FS', lag: 0 },
-      { fromTask: 'Site Clearing', toTask: 'Foundation Work', type: 'FS', lag: 0 },
+      {
+        fromTask: 'Site Survey',
+        toTask: 'Permits & Approvals',
+        type: 'FS',
+        lag: 0,
+      },
+      {
+        fromTask: 'Permits & Approvals',
+        toTask: 'Site Clearing',
+        type: 'FS',
+        lag: 0,
+      },
+      {
+        fromTask: 'Site Clearing',
+        toTask: 'Foundation Work',
+        type: 'FS',
+        lag: 0,
+      },
       { fromTask: 'Foundation Work', toTask: 'Framing', type: 'FS', lag: 0 },
       { fromTask: 'Framing', toTask: 'Electrical', type: 'SS', lag: 2 },
       { fromTask: 'Framing', toTask: 'Plumbing', type: 'SS', lag: 2 },
-      { fromTask: 'Electrical', toTask: 'Interior Finishing', type: 'FF', lag: 0 },
-      { fromTask: 'Plumbing', toTask: 'Interior Finishing', type: 'FF', lag: 0 },
-      { fromTask: 'Interior Finishing', toTask: 'Final Inspection', type: 'FS', lag: 0 },
+      {
+        fromTask: 'Electrical',
+        toTask: 'Interior Finishing',
+        type: 'FF',
+        lag: 0,
+      },
+      {
+        fromTask: 'Plumbing',
+        toTask: 'Interior Finishing',
+        type: 'FF',
+        lag: 0,
+      },
+      {
+        fromTask: 'Interior Finishing',
+        toTask: 'Final Inspection',
+        type: 'FS',
+        lag: 0,
+      },
       { fromTask: 'Final Inspection', toTask: 'Handover', type: 'FS', lag: 0 },
       { fromTask: 'Handover', toTask: 'Project Closeout', type: 'FS', lag: 0 },
     ],
@@ -168,8 +198,18 @@ export const DEFAULT_TEMPLATES = [
       },
     ],
     dependencies: [
-      { fromTask: 'Requirements Gathering', toTask: 'Architecture Design', type: 'FS', lag: 0 },
-      { fromTask: 'Architecture Design', toTask: 'Environment Setup', type: 'FS', lag: 0 },
+      {
+        fromTask: 'Requirements Gathering',
+        toTask: 'Architecture Design',
+        type: 'FS',
+        lag: 0,
+      },
+      {
+        fromTask: 'Architecture Design',
+        toTask: 'Environment Setup',
+        type: 'FS',
+        lag: 0,
+      },
       { fromTask: 'Environment Setup', toTask: 'Sprint 1', type: 'FS', lag: 0 },
       { fromTask: 'Sprint 1', toTask: 'Sprint 2', type: 'FS', lag: 0 },
       { fromTask: 'Sprint 2', toTask: 'Final Phase', type: 'FS', lag: 0 },
@@ -191,7 +231,7 @@ export const DEFAULT_TEMPLATES = [
 ];
 
 // Save project as template
-export const saveProjectAsTemplate = async (templateData) => {
+export const saveProjectAsTemplate = async templateData => {
   try {
     const {
       name,
@@ -276,7 +316,7 @@ export const loadTemplates = async () => {
 };
 
 // Load template by ID
-export const loadTemplateById = async (templateId) => {
+export const loadTemplateById = async templateId => {
   try {
     // Check if it's a default template
     const defaultTemplate = DEFAULT_TEMPLATES.find(t => t.id === templateId);
@@ -313,18 +353,22 @@ export const applyTemplate = (template, startDate = new Date()) => {
     }
 
     const projectStartDate = new Date(startDate);
-    const templateStartDate = template.tasks.length > 0 
-      ? new Date(template.tasks[0].startDate || new Date())
-      : new Date();
+    const templateStartDate =
+      template.tasks.length > 0
+        ? new Date(template.tasks[0].startDate || new Date())
+        : new Date();
 
     // Calculate date offset
     const dateOffset = projectStartDate.getTime() - templateStartDate.getTime();
 
     // Generate new IDs for tasks
     const idMap = new Map();
-    const generateNewId = (oldId) => {
+    const generateNewId = oldId => {
       if (!idMap.has(oldId)) {
-        idMap.set(oldId, `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+        idMap.set(
+          oldId,
+          `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        );
       }
       return idMap.get(oldId);
     };
@@ -334,8 +378,12 @@ export const applyTemplate = (template, startDate = new Date()) => {
       const newTask = {
         ...task,
         id: generateNewId(task.id),
-        startDate: new Date(new Date(task.startDate || templateStartDate).getTime() + dateOffset).toISOString(),
-        endDate: new Date(new Date(task.endDate || templateStartDate).getTime() + dateOffset).toISOString(),
+        startDate: new Date(
+          new Date(task.startDate || templateStartDate).getTime() + dateOffset
+        ).toISOString(),
+        endDate: new Date(
+          new Date(task.endDate || templateStartDate).getTime() + dateOffset
+        ).toISOString(),
         parentId: task.parentId ? generateNewId(task.parentId) : null,
       };
 
@@ -344,8 +392,13 @@ export const applyTemplate = (template, startDate = new Date()) => {
         newTask.children = task.children.map(child => ({
           ...child,
           id: generateNewId(child.id),
-          startDate: new Date(new Date(child.startDate || templateStartDate).getTime() + dateOffset).toISOString(),
-          endDate: new Date(new Date(child.endDate || templateStartDate).getTime() + dateOffset).toISOString(),
+          startDate: new Date(
+            new Date(child.startDate || templateStartDate).getTime() +
+              dateOffset
+          ).toISOString(),
+          endDate: new Date(
+            new Date(child.endDate || templateStartDate).getTime() + dateOffset
+          ).toISOString(),
           parentId: newTask.id,
         }));
       }
@@ -394,7 +447,7 @@ export const applyTemplate = (template, startDate = new Date()) => {
 };
 
 // Delete template
-export const deleteTemplate = async (templateId) => {
+export const deleteTemplate = async templateId => {
   try {
     // Don't allow deletion of default templates
     const defaultTemplate = DEFAULT_TEMPLATES.find(t => t.id === templateId);
@@ -460,22 +513,26 @@ export const searchTemplates = (templates, searchTerm) => {
   if (!searchTerm) return templates;
 
   const term = searchTerm.toLowerCase();
-  return templates.filter(template =>
-    template.name.toLowerCase().includes(term) ||
-    template.description.toLowerCase().includes(term) ||
-    TEMPLATE_CATEGORY_LABELS[template.category].toLowerCase().includes(term)
+  return templates.filter(
+    template =>
+      template.name.toLowerCase().includes(term) ||
+      template.description.toLowerCase().includes(term) ||
+      TEMPLATE_CATEGORY_LABELS[template.category].toLowerCase().includes(term)
   );
 };
 
 // Validate template data
-export const validateTemplate = (templateData) => {
+export const validateTemplate = templateData => {
   const errors = [];
 
   if (!templateData.name || templateData.name.trim().length === 0) {
     errors.push('Template name is required');
   }
 
-  if (!templateData.description || templateData.description.trim().length === 0) {
+  if (
+    !templateData.description ||
+    templateData.description.trim().length === 0
+  ) {
     errors.push('Template description is required');
   }
 
@@ -491,11 +548,11 @@ export const validateTemplate = (templateData) => {
 };
 
 // Get template statistics
-export const getTemplateStats = (template) => {
+export const getTemplateStats = template => {
   const totalTasks = template.tasks.length;
   const totalDependencies = template.taskLinks ? template.taskLinks.length : 0;
   const totalResources = template.resources ? template.resources.length : 0;
-  
+
   // Calculate total duration
   const totalDuration = template.tasks.reduce((sum, task) => {
     return sum + (task.duration || 0);
@@ -514,7 +571,7 @@ export const getTemplateStats = (template) => {
 };
 
 // Export template to JSON
-export const exportTemplate = (template) => {
+export const exportTemplate = template => {
   try {
     const exportData = {
       ...template,
@@ -541,7 +598,7 @@ export const exportTemplate = (template) => {
 };
 
 // Import template from JSON
-export const importTemplate = async (file) => {
+export const importTemplate = async file => {
   try {
     const text = await file.text();
     const templateData = JSON.parse(text);

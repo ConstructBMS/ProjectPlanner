@@ -40,7 +40,7 @@ const NotesTab = ({ task, onTaskUpdate }) => {
   const [showPreview, setShowPreview] = useState(false);
   const [autoSaveStatus, setAutoSaveStatus] = useState('idle'); // idle, saving, saved, error
   const [lastSaved, setLastSaved] = useState(null);
-  
+
   const quillRef = useRef(null);
   const autoSaveHandlerRef = useRef(null);
 
@@ -50,10 +50,15 @@ const NotesTab = ({ task, onTaskUpdate }) => {
       const taskNotes = task.notes || createNotes();
       setNotes(taskNotes);
       setEditorContent(taskNotes.content || '');
-      setLastSaved(taskNotes.lastModified ? new Date(taskNotes.lastModified) : null);
-      
+      setLastSaved(
+        taskNotes.lastModified ? new Date(taskNotes.lastModified) : null
+      );
+
       // Initialize auto-save handler
-      autoSaveHandlerRef.current = createAutoSaveHandler(handleSaveNotes, DEFAULT_NOTES_CONFIG);
+      autoSaveHandlerRef.current = createAutoSaveHandler(
+        handleSaveNotes,
+        DEFAULT_NOTES_CONFIG
+      );
     }
   }, [task]);
 
@@ -64,49 +69,61 @@ const NotesTab = ({ task, onTaskUpdate }) => {
   }, [editorContent]);
 
   // Handle content change
-  const handleContentChange = useCallback((content, delta, source, editor) => {
-    setEditorContent(content);
-    
-    // Trigger auto-save
-    if (autoSaveHandlerRef.current && source === 'user') {
-      autoSaveHandlerRef.current.trigger(content, task);
-      setAutoSaveStatus('saving');
-    }
-  }, [task]);
+  const handleContentChange = useCallback(
+    (content, delta, source, editor) => {
+      setEditorContent(content);
+
+      // Trigger auto-save
+      if (autoSaveHandlerRef.current && source === 'user') {
+        autoSaveHandlerRef.current.trigger(content, task);
+        setAutoSaveStatus('saving');
+      }
+    },
+    [task]
+  );
 
   // Save notes function
-  const handleSaveNotes = useCallback(async (content, taskToUpdate) => {
-    if (!taskToUpdate) return;
+  const handleSaveNotes = useCallback(
+    async (content, taskToUpdate) => {
+      if (!taskToUpdate) return;
 
-    try {
-      const sanitizedContent = sanitizeNotesContent(content, DEFAULT_NOTES_CONFIG);
-      const updatedNotes = updateNotes(notes, sanitizedContent, DEFAULT_NOTES_CONFIG);
-      
-      // Update task with new notes
-      const updatedTask = {
-        ...taskToUpdate,
-        notes: updatedNotes,
-      };
+      try {
+        const sanitizedContent = sanitizeNotesContent(
+          content,
+          DEFAULT_NOTES_CONFIG
+        );
+        const updatedNotes = updateNotes(
+          notes,
+          sanitizedContent,
+          DEFAULT_NOTES_CONFIG
+        );
 
-      await onTaskUpdate(updatedTask.id, updatedTask);
-      
-      setNotes(updatedNotes);
-      setLastSaved(new Date());
-      setAutoSaveStatus('saved');
-      
-      // Reset status after 2 seconds
-      setTimeout(() => setAutoSaveStatus('idle'), 2000);
-      
-    } catch (error) {
-      console.error('Failed to save notes:', error);
-      setAutoSaveStatus('error');
-    }
-  }, [notes, onTaskUpdate]);
+        // Update task with new notes
+        const updatedTask = {
+          ...taskToUpdate,
+          notes: updatedNotes,
+        };
+
+        await onTaskUpdate(updatedTask.id, updatedTask);
+
+        setNotes(updatedNotes);
+        setLastSaved(new Date());
+        setAutoSaveStatus('saved');
+
+        // Reset status after 2 seconds
+        setTimeout(() => setAutoSaveStatus('idle'), 2000);
+      } catch (error) {
+        console.error('Failed to save notes:', error);
+        setAutoSaveStatus('error');
+      }
+    },
+    [notes, onTaskUpdate]
+  );
 
   // Force save
   const handleForceSave = useCallback(async () => {
     if (!autoSaveHandlerRef.current) return;
-    
+
     try {
       setAutoSaveStatus('saving');
       await autoSaveHandlerRef.current.forceSave(editorContent, task);
@@ -135,16 +152,16 @@ const NotesTab = ({ task, onTaskUpdate }) => {
   };
 
   // Import notes
-  const handleImport = (event) => {
+  const handleImport = event => {
     const file = event.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = e => {
       try {
         const importData = JSON.parse(e.target.result);
         const importResult = importNotes(importData, DEFAULT_NOTES_CONFIG);
-        
+
         if (importResult.success) {
           setNotes(importResult.notes);
           setEditorContent(importResult.notes.content);
@@ -161,7 +178,11 @@ const NotesTab = ({ task, onTaskUpdate }) => {
 
   // Clear notes
   const handleClearNotes = () => {
-    if (window.confirm('Are you sure you want to clear all notes? This action cannot be undone.')) {
+    if (
+      window.confirm(
+        'Are you sure you want to clear all notes? This action cannot be undone.'
+      )
+    ) {
       const emptyNotes = createNotes('', DEFAULT_NOTES_CONFIG);
       setNotes(emptyNotes);
       setEditorContent('');
@@ -193,13 +214,13 @@ const NotesTab = ({ task, onTaskUpdate }) => {
           <DocumentTextIcon className='w-5 h-5 text-blue-600' />
           <h3 className='text-lg font-semibold text-gray-900'>Task Notes</h3>
         </div>
-        
+
         <div className='flex items-center gap-2'>
           {/* Auto-save status */}
           <div className='flex items-center gap-1 text-xs'>
             {autoSaveStatus === 'saving' && (
               <>
-                <div className='w-2 h-2 bg-yellow-500 rounded-full animate-pulse'></div>
+                <div className='w-2 h-2 bg-yellow-500 rounded-full animate-pulse' />
                 <span className='text-yellow-700'>Saving...</span>
               </>
             )}
@@ -238,7 +259,7 @@ const NotesTab = ({ task, onTaskUpdate }) => {
             >
               Save Now
             </button>
-            
+
             <button
               onClick={() => setShowPreview(!showPreview)}
               className='px-3 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors'
@@ -268,7 +289,7 @@ const NotesTab = ({ task, onTaskUpdate }) => {
                 className='hidden'
               />
             </label>
-            
+
             <button
               onClick={handleExport}
               className='px-3 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors'
@@ -276,7 +297,7 @@ const NotesTab = ({ task, onTaskUpdate }) => {
               <DocumentArrowDownIcon className='w-3 h-3 inline mr-1' />
               Export
             </button>
-            
+
             <button
               onClick={handleClearNotes}
               className='px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors'
@@ -336,7 +357,7 @@ const NotesTab = ({ task, onTaskUpdate }) => {
       {showPreview && (
         <div className='bg-white border border-gray-200 rounded-lg p-4 mb-4'>
           <h4 className='text-sm font-semibold text-gray-700 mb-2'>Preview</h4>
-          <div 
+          <div
             className='prose prose-sm max-w-none'
             dangerouslySetInnerHTML={{ __html: editorContent }}
           />
@@ -349,19 +370,27 @@ const NotesTab = ({ task, onTaskUpdate }) => {
         <div className='grid grid-cols-2 md:grid-cols-4 gap-4 text-sm'>
           <div>
             <span className='text-gray-600'>Words:</span>
-            <div className='font-semibold text-blue-600'>{statistics.wordCount}</div>
+            <div className='font-semibold text-blue-600'>
+              {statistics.wordCount}
+            </div>
           </div>
           <div>
             <span className='text-gray-600'>Characters:</span>
-            <div className='font-semibold text-green-600'>{statistics.characterCount}</div>
+            <div className='font-semibold text-green-600'>
+              {statistics.characterCount}
+            </div>
           </div>
           <div>
             <span className='text-gray-600'>Lines:</span>
-            <div className='font-semibold text-purple-600'>{statistics.lineCount}</div>
+            <div className='font-semibold text-purple-600'>
+              {statistics.lineCount}
+            </div>
           </div>
           <div>
             <span className='text-gray-600'>Paragraphs:</span>
-            <div className='font-semibold text-orange-600'>{statistics.paragraphCount}</div>
+            <div className='font-semibold text-orange-600'>
+              {statistics.paragraphCount}
+            </div>
           </div>
         </div>
 
@@ -369,16 +398,19 @@ const NotesTab = ({ task, onTaskUpdate }) => {
         <div className='mt-3'>
           <div className='flex justify-between text-xs text-gray-600 mb-1'>
             <span>Character Usage</span>
-            <span>{statistics.characterCount} / {DEFAULT_NOTES_CONFIG.maxLength}</span>
+            <span>
+              {statistics.characterCount} / {DEFAULT_NOTES_CONFIG.maxLength}
+            </span>
           </div>
           <div className='w-full bg-gray-200 rounded-full h-2'>
             <div
               className={`h-2 rounded-full transition-all duration-300 ${
                 statistics.characterCount > DEFAULT_NOTES_CONFIG.maxLength * 0.8
                   ? 'bg-red-500'
-                  : statistics.characterCount > DEFAULT_NOTES_CONFIG.maxLength * 0.6
-                  ? 'bg-yellow-500'
-                  : 'bg-green-500'
+                  : statistics.characterCount >
+                      DEFAULT_NOTES_CONFIG.maxLength * 0.6
+                    ? 'bg-yellow-500'
+                    : 'bg-green-500'
               }`}
               style={{
                 width: `${Math.min((statistics.characterCount / DEFAULT_NOTES_CONFIG.maxLength) * 100, 100)}%`,
@@ -390,7 +422,9 @@ const NotesTab = ({ task, onTaskUpdate }) => {
 
       {/* Notes Preview */}
       <div className='bg-white border border-gray-200 rounded-lg p-4 mt-4'>
-        <h4 className='text-sm font-semibold text-gray-700 mb-2'>Notes Preview</h4>
+        <h4 className='text-sm font-semibold text-gray-700 mb-2'>
+          Notes Preview
+        </h4>
         <div className='text-sm text-gray-600 bg-gray-50 p-3 rounded'>
           {getNotesPreview(notes, 30)}
         </div>

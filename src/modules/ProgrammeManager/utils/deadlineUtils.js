@@ -8,7 +8,7 @@
  * @param {Object} task - Task object
  * @returns {Object} Deadline status information
  */
-export const calculateDeadlineStatus = (task) => {
+export const calculateDeadlineStatus = task => {
   if (!task.deadline) {
     return {
       hasDeadline: false,
@@ -24,14 +24,16 @@ export const calculateDeadlineStatus = (task) => {
   const deadline = new Date(task.deadline);
   const endDate = task.endDate ? new Date(task.endDate) : null;
   const today = new Date();
-  
+
   // Reset time to compare dates only
   today.setHours(0, 0, 0, 0);
   deadline.setHours(0, 0, 0, 0);
   if (endDate) endDate.setHours(0, 0, 0, 0);
 
-  const daysUntilDeadline = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-  
+  const daysUntilDeadline = Math.ceil(
+    (deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+  );
+
   let status = 'none';
   let isOverdue = false;
   let daysOverdue = null;
@@ -40,7 +42,9 @@ export const calculateDeadlineStatus = (task) => {
 
   if (endDate && endDate > deadline) {
     // Task finished after deadline
-    daysOverdue = Math.ceil((endDate.getTime() - deadline.getTime()) / (1000 * 60 * 60 * 24));
+    daysOverdue = Math.ceil(
+      (endDate.getTime() - deadline.getTime()) / (1000 * 60 * 60 * 24)
+    );
     status = 'exceeded';
     isOverdue = true;
     message = `Overdue by ${daysOverdue} day${daysOverdue !== 1 ? 's' : ''}`;
@@ -84,7 +88,7 @@ export const calculateDeadlineStatus = (task) => {
  * @param {string} status - Deadline status
  * @returns {Object} Styling information
  */
-export const getDeadlineStatusStyling = (status) => {
+export const getDeadlineStatusStyling = status => {
   switch (status) {
     case 'exceeded':
       return {
@@ -144,8 +148,14 @@ export const getDeadlineStatusStyling = (status) => {
  * @param {number} scaledDayWidth - Width per day in pixels
  * @returns {number} X position in pixels
  */
-export const calculateDeadlinePosition = (deadline, projectStart, scaledDayWidth) => {
-  const daysFromStart = Math.ceil((deadline.getTime() - projectStart.getTime()) / (1000 * 60 * 60 * 24));
+export const calculateDeadlinePosition = (
+  deadline,
+  projectStart,
+  scaledDayWidth
+) => {
+  const daysFromStart = Math.ceil(
+    (deadline.getTime() - projectStart.getTime()) / (1000 * 60 * 60 * 24)
+  );
   return Math.max(0, daysFromStart * scaledDayWidth);
 };
 
@@ -154,21 +164,21 @@ export const calculateDeadlinePosition = (deadline, projectStart, scaledDayWidth
  * @param {Object} task - Task object
  * @returns {string} Tooltip text
  */
-export const getDeadlineTooltip = (task) => {
+export const getDeadlineTooltip = task => {
   if (!task.deadline) {
     return 'No deadline set';
   }
 
   const deadlineStatus = calculateDeadlineStatus(task);
   const deadline = new Date(task.deadline);
-  
+
   let tooltip = `Deadline: ${deadline.toLocaleDateString()}\n`;
   tooltip += `${deadlineStatus.message}`;
-  
+
   if (deadlineStatus.isOverdue && deadlineStatus.daysOverdue) {
     tooltip += `\nTask finished ${deadlineStatus.daysOverdue} day${deadlineStatus.daysOverdue !== 1 ? 's' : ''} late`;
   }
-  
+
   return tooltip;
 };
 
@@ -177,11 +187,15 @@ export const getDeadlineTooltip = (task) => {
  * @param {Object} task - Task object
  * @returns {boolean} True if task has deadline warning
  */
-export const hasDeadlineWarning = (task) => {
+export const hasDeadlineWarning = task => {
   if (!task.deadline) return false;
-  
+
   const deadlineStatus = calculateDeadlineStatus(task);
-  return deadlineStatus.isOverdue || deadlineStatus.status === 'today' || deadlineStatus.status === 'approaching';
+  return (
+    deadlineStatus.isOverdue ||
+    deadlineStatus.status === 'today' ||
+    deadlineStatus.status === 'approaching'
+  );
 };
 
 /**
@@ -189,9 +203,9 @@ export const hasDeadlineWarning = (task) => {
  * @param {Object} task - Task object
  * @returns {string} Warning level: 'none', 'warning', 'error'
  */
-export const getDeadlineWarningLevel = (task) => {
+export const getDeadlineWarningLevel = task => {
   if (!task.deadline) return 'none';
-  
+
   const deadlineStatus = calculateDeadlineStatus(task);
   return deadlineStatus.severity;
 };
@@ -201,9 +215,9 @@ export const getDeadlineWarningLevel = (task) => {
  * @param {string} deadline - Deadline date string
  * @returns {string} Formatted deadline string
  */
-export const formatDeadline = (deadline) => {
+export const formatDeadline = deadline => {
   if (!deadline) return 'No deadline';
-  
+
   const date = new Date(deadline);
   return date.toLocaleDateString();
 };
@@ -213,7 +227,7 @@ export const formatDeadline = (deadline) => {
  * @param {Array} tasks - Array of tasks
  * @returns {Object} Summary statistics
  */
-export const getDeadlineSummary = (tasks) => {
+export const getDeadlineSummary = tasks => {
   const summary = {
     total: tasks.length,
     withDeadlines: 0,
@@ -225,10 +239,10 @@ export const getDeadlineSummary = (tasks) => {
 
   tasks.forEach(task => {
     const deadlineStatus = calculateDeadlineStatus(task);
-    
+
     if (deadlineStatus.hasDeadline) {
       summary.withDeadlines++;
-      
+
       switch (deadlineStatus.status) {
         case 'on-track':
           summary.onTrack++;

@@ -28,7 +28,11 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
   const [selectedLabel, setSelectedLabel] = useState(null);
   const [editingLabel, setEditingLabel] = useState(null);
   const [showColorPicker, setShowColorPicker] = useState(null);
-  const [validation, setValidation] = useState({ isValid: true, errors: [], warnings: [] });
+  const [validation, setValidation] = useState({
+    isValid: true,
+    errors: [],
+    warnings: [],
+  });
   const [showPreview, setShowPreview] = useState(true);
   const [newLabelType, setNewLabelType] = useState('');
   const [newLabelPosition, setNewLabelPosition] = useState('center');
@@ -104,9 +108,11 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
     }
   };
 
-  const handleDeleteLabel = (labelId) => {
-    const updatedLabels = barLabels.labels.filter(label => label.id !== labelId);
-    
+  const handleDeleteLabel = labelId => {
+    const updatedLabels = barLabels.labels.filter(
+      label => label.id !== labelId
+    );
+
     const updatedSettings = {
       ...userSettings,
       barLabels: {
@@ -122,7 +128,7 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
     }
   };
 
-  const handleToggleLabel = (labelId) => {
+  const handleToggleLabel = labelId => {
     const updatedLabels = barLabels.labels.map(label =>
       label.id === labelId ? { ...label, enabled: !label.enabled } : label
     );
@@ -141,7 +147,7 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
   const handleMoveLabel = (labelId, direction) => {
     const labels = [...barLabels.labels];
     const index = labels.findIndex(label => label.id === labelId);
-    
+
     if (direction === 'up' && index > 0) {
       [labels[index], labels[index - 1]] = [labels[index - 1], labels[index]];
     } else if (direction === 'down' && index < labels.length - 1) {
@@ -176,7 +182,9 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
 
   const handleExportLabels = () => {
     const exportData = exportBarLabels(userSettings);
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+      type: 'application/json',
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -187,16 +195,16 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
     URL.revokeObjectURL(url);
   };
 
-  const handleImportLabels = (event) => {
+  const handleImportLabels = event => {
     const file = event.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = e => {
       try {
         const importData = JSON.parse(e.target.result);
         const importResult = importBarLabels(importData);
-        
+
         if (importResult.success) {
           const updatedSettings = {
             ...userSettings,
@@ -215,7 +223,7 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
     reader.readAsText(file);
   };
 
-  const getLabelPreview = (label) => {
+  const getLabelPreview = label => {
     if (!label) return null;
     return getLabelPreview(label, sampleTask);
   };
@@ -233,7 +241,11 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
             onClick={() => setShowPreview(!showPreview)}
             className='flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-800 transition-colors'
           >
-            {showPreview ? <EyeIcon className='w-4 h-4' /> : <EyeSlashIcon className='w-4 h-4' />}
+            {showPreview ? (
+              <EyeIcon className='w-4 h-4' />
+            ) : (
+              <EyeSlashIcon className='w-4 h-4' />
+            )}
             {showPreview ? 'Hide' : 'Show'} Preview
           </button>
         </div>
@@ -241,7 +253,9 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
 
       {/* Global Settings */}
       <div className='mb-4 p-3 bg-gray-50 rounded-lg'>
-        <h4 className='text-sm font-semibold text-gray-700 mb-3'>Global Settings</h4>
+        <h4 className='text-sm font-semibold text-gray-700 mb-3'>
+          Global Settings
+        </h4>
         <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
           <div>
             <label className='block text-xs font-medium text-gray-600 mb-1'>
@@ -272,7 +286,9 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
               min='1'
               max='5'
               value={barLabels.globalSettings?.maxLabels || 3}
-              onChange={e => handleGlobalSettingChange('maxLabels', parseInt(e.target.value))}
+              onChange={e =>
+                handleGlobalSettingChange('maxLabels', parseInt(e.target.value))
+              }
               className='w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
             />
           </div>
@@ -285,7 +301,12 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
               min='30'
               max='200'
               value={barLabels.globalSettings?.minBarWidth || 60}
-              onChange={e => handleGlobalSettingChange('minBarWidth', parseInt(e.target.value))}
+              onChange={e =>
+                handleGlobalSettingChange(
+                  'minBarWidth',
+                  parseInt(e.target.value)
+                )
+              }
               className='w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
             />
           </div>
@@ -298,7 +319,12 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
               min='5'
               max='50'
               value={barLabels.globalSettings?.maxLabelLength || 20}
-              onChange={e => handleGlobalSettingChange('maxLabelLength', parseInt(e.target.value))}
+              onChange={e =>
+                handleGlobalSettingChange(
+                  'maxLabelLength',
+                  parseInt(e.target.value)
+                )
+              }
               className='w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
             />
           </div>
@@ -329,12 +355,16 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
       <div className='grid grid-cols-1 lg:grid-cols-3 gap-4'>
         {/* Label List */}
         <div className='space-y-2'>
-          <h4 className='text-sm font-semibold text-gray-700'>Configured Labels</h4>
+          <h4 className='text-sm font-semibold text-gray-700'>
+            Configured Labels
+          </h4>
           <div className='space-y-1 max-h-64 overflow-y-auto'>
             {barLabels.labels.map((label, index) => {
-              const labelType = availableTypes.find(t => t.value === label.type);
+              const labelType = availableTypes.find(
+                t => t.value === label.type
+              );
               const isSelected = selectedLabel?.id === label.id;
-              
+
               return (
                 <div
                   key={label.id}
@@ -455,29 +485,34 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
             <>
               <div className='flex items-center justify-between'>
                 <h4 className='text-sm font-semibold text-gray-700'>
-                  Edit: {availableTypes.find(t => t.value === editingLabel.type)?.label}
+                  Edit:{' '}
+                  {
+                    availableTypes.find(t => t.value === editingLabel.type)
+                      ?.label
+                  }
                 </h4>
               </div>
 
               {/* Label Preview */}
-              {showPreview && (() => {
-                const preview = getLabelPreview(editingLabel);
-                if (!preview) return null;
+              {showPreview &&
+                (() => {
+                  const preview = getLabelPreview(editingLabel);
+                  if (!preview) return null;
 
-                return (
-                  <div className='p-3 bg-gray-50 border border-gray-200 rounded'>
-                    <div className='text-xs text-gray-600 mb-2'>Preview:</div>
-                    <div className='relative h-8 bg-blue-500 rounded'>
-                      <div
-                        className={`absolute ${preview.className} text-xs font-medium`}
-                        style={preview.style}
-                      >
-                        {preview.value}
+                  return (
+                    <div className='p-3 bg-gray-50 border border-gray-200 rounded'>
+                      <div className='text-xs text-gray-600 mb-2'>Preview:</div>
+                      <div className='relative h-8 bg-blue-500 rounded'>
+                        <div
+                          className={`absolute ${preview.className} text-xs font-medium`}
+                          style={preview.style}
+                        >
+                          {preview.value}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })()}
+                  );
+                })()}
 
               {/* Label Properties */}
               <div className='space-y-3'>
@@ -487,7 +522,9 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
                   </label>
                   <select
                     value={editingLabel.position}
-                    onChange={e => handleLabelChange('position', e.target.value)}
+                    onChange={e =>
+                      handleLabelChange('position', e.target.value)
+                    }
                     className='w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
                   >
                     {availablePositions.map(position => (
@@ -508,7 +545,9 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
                       min='8'
                       max='20'
                       value={editingLabel.fontSize}
-                      onChange={e => handleLabelChange('fontSize', parseInt(e.target.value))}
+                      onChange={e =>
+                        handleLabelChange('fontSize', parseInt(e.target.value))
+                      }
                       className='w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
                     />
                   </div>
@@ -521,7 +560,9 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
                       min='0'
                       max='10'
                       value={editingLabel.padding}
-                      onChange={e => handleLabelChange('padding', parseInt(e.target.value))}
+                      onChange={e =>
+                        handleLabelChange('padding', parseInt(e.target.value))
+                      }
                       className='w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
                     />
                   </div>
@@ -533,7 +574,9 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
                   </label>
                   <select
                     value={editingLabel.fontWeight}
-                    onChange={e => handleLabelChange('fontWeight', e.target.value)}
+                    onChange={e =>
+                      handleLabelChange('fontWeight', e.target.value)
+                    }
                     className='w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
                   >
                     <option value='normal'>Normal</option>
@@ -558,7 +601,9 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
                       <input
                         type='text'
                         value={editingLabel.color}
-                        onChange={e => handleLabelChange('color', e.target.value)}
+                        onChange={e =>
+                          handleLabelChange('color', e.target.value)
+                        }
                         className='flex-1 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
                         placeholder='#FFFFFF'
                       />
@@ -567,7 +612,9 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
                       <div className='absolute z-10 mt-1'>
                         <SketchPicker
                           color={editingLabel.color}
-                          onChange={color => handleLabelChange('color', color.hex)}
+                          onChange={color =>
+                            handleLabelChange('color', color.hex)
+                          }
                           onClose={() => setShowColorPicker(null)}
                         />
                       </div>
@@ -582,12 +629,16 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
                       <button
                         onClick={() => setShowColorPicker('backgroundColor')}
                         className='w-6 h-6 rounded border border-gray-300'
-                        style={{ backgroundColor: editingLabel.backgroundColor }}
+                        style={{
+                          backgroundColor: editingLabel.backgroundColor,
+                        }}
                       />
                       <input
                         type='text'
                         value={editingLabel.backgroundColor}
-                        onChange={e => handleLabelChange('backgroundColor', e.target.value)}
+                        onChange={e =>
+                          handleLabelChange('backgroundColor', e.target.value)
+                        }
                         className='flex-1 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
                         placeholder='rgba(0, 0, 0, 0.3)'
                       />
@@ -596,7 +647,9 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
                       <div className='absolute z-10 mt-1'>
                         <SketchPicker
                           color={editingLabel.backgroundColor}
-                          onChange={color => handleLabelChange('backgroundColor', color.hex)}
+                          onChange={color =>
+                            handleLabelChange('backgroundColor', color.hex)
+                          }
                           onClose={() => setShowColorPicker(null)}
                         />
                       </div>
@@ -608,10 +661,14 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
                   <input
                     type='checkbox'
                     checked={editingLabel.showBackground}
-                    onChange={e => handleLabelChange('showBackground', e.target.checked)}
+                    onChange={e =>
+                      handleLabelChange('showBackground', e.target.checked)
+                    }
                     className='w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500'
                   />
-                  <label className='text-xs text-gray-600'>Show background</label>
+                  <label className='text-xs text-gray-600'>
+                    Show background
+                  </label>
                 </div>
 
                 {/* Validation */}
@@ -619,7 +676,9 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
                   <div className='p-2 bg-red-50 border border-red-200 rounded'>
                     <div className='flex items-center gap-2 mb-1'>
                       <ExclamationTriangleIcon className='w-3 h-3 text-red-600' />
-                      <span className='text-xs font-medium text-red-900'>Validation Errors</span>
+                      <span className='text-xs font-medium text-red-900'>
+                        Validation Errors
+                      </span>
                     </div>
                     <ul className='text-xs text-red-700 space-y-1'>
                       {validation.errors.map((error, index) => (
@@ -633,7 +692,9 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
                   <div className='p-2 bg-yellow-50 border border-yellow-200 rounded'>
                     <div className='flex items-center gap-2 mb-1'>
                       <ExclamationTriangleIcon className='w-3 h-3 text-yellow-600' />
-                      <span className='text-xs font-medium text-yellow-900'>Warnings</span>
+                      <span className='text-xs font-medium text-yellow-900'>
+                        Warnings
+                      </span>
                     </div>
                     <ul className='text-xs text-yellow-700 space-y-1'>
                       {validation.warnings.map((warning, index) => (

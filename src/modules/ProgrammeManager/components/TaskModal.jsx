@@ -4,7 +4,7 @@ import {
   CalendarIcon,
   ClockIcon,
   DocumentTextIcon,
-  SwatchIcon,
+  PaintBrushIcon,
   StarIcon,
 } from '@heroicons/react/24/outline';
 
@@ -284,7 +284,7 @@ const TaskModal = ({ task, isOpen, onClose, onSave }) => {
           <div className='grid grid-cols-2 gap-4'>
             <div>
               <label className='block text-sm font-medium text-gray-700 mb-2'>
-                <SwatchIcon className='w-4 h-4 inline mr-1' />
+                <PaintBrushIcon className='w-4 h-4 inline mr-1' />
                 Color
               </label>
               <div className='flex items-center gap-2'>

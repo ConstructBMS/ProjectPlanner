@@ -28,6 +28,9 @@ export const ViewProvider = ({ children }) => {
     calendarView: 'Workweek',
     viewScale: 'Day', // View scale: Day, Week, Month
     timeUnit: 'day', // Time unit: day, week, month
+    timeScale: 'single', // Time scale: single, dual
+    primaryTimeUnit: 'day', // Primary time unit for dual scale
+    secondaryTimeUnit: 'week', // Secondary time unit for dual scale
     timelineZoom: 20, // Pixels per day (10-100 range)
     taskFilter: 'Show All', // Task filter setting
     statusHighlighting: false, // Toggle for status-based row highlighting
@@ -136,6 +139,49 @@ export const ViewProvider = ({ children }) => {
         setViewState(prev => ({ ...prev, timeUnit }));
       } catch (error) {
         console.error('Error loading saved time unit preference:', error);
+      }
+    }
+
+    // Load saved time scale preference
+    const savedTimeScale = window.localStorage.getItem('gantt.timeScale');
+    if (savedTimeScale !== null) {
+      try {
+        const timeScale = JSON.parse(savedTimeScale);
+        setViewState(prev => ({ ...prev, timeScale }));
+      } catch (error) {
+        console.error('Error loading saved time scale preference:', error);
+      }
+    }
+
+    // Load saved primary time unit preference
+    const savedPrimaryTimeUnit = window.localStorage.getItem(
+      'gantt.primaryTimeUnit'
+    );
+    if (savedPrimaryTimeUnit !== null) {
+      try {
+        const primaryTimeUnit = JSON.parse(savedPrimaryTimeUnit);
+        setViewState(prev => ({ ...prev, primaryTimeUnit }));
+      } catch (error) {
+        console.error(
+          'Error loading saved primary time unit preference:',
+          error
+        );
+      }
+    }
+
+    // Load saved secondary time unit preference
+    const savedSecondaryTimeUnit = window.localStorage.getItem(
+      'gantt.secondaryTimeUnit'
+    );
+    if (savedSecondaryTimeUnit !== null) {
+      try {
+        const secondaryTimeUnit = JSON.parse(savedSecondaryTimeUnit);
+        setViewState(prev => ({ ...prev, secondaryTimeUnit }));
+      } catch (error) {
+        console.error(
+          'Error loading saved secondary time unit preference:',
+          error
+        );
       }
     }
 
@@ -274,13 +320,16 @@ export const ViewProvider = ({ children }) => {
     console.log('Baselines updated:', baselines.length);
   };
 
-  const setGlobalMilestoneShape = (shapeKey) => {
+  const setGlobalMilestoneShape = shapeKey => {
     setViewState(prev => {
       const next = {
         ...prev,
         globalMilestoneShape: shapeKey,
       };
-      window.localStorage.setItem('gantt.globalMilestoneShape', JSON.stringify(shapeKey));
+      window.localStorage.setItem(
+        'gantt.globalMilestoneShape',
+        JSON.stringify(shapeKey)
+      );
       return next;
     });
     console.log('Global milestone shape set to:', shapeKey);
@@ -332,6 +381,39 @@ export const ViewProvider = ({ children }) => {
     console.log('Time unit updated to:', timeUnit);
   };
 
+  const updateTimeScale = timeScale => {
+    setViewState(prev => {
+      const newState = { ...prev, timeScale };
+      window.localStorage.setItem('gantt.timeScale', JSON.stringify(timeScale));
+      return newState;
+    });
+    console.log('Time scale updated to:', timeScale);
+  };
+
+  const updatePrimaryTimeUnit = primaryTimeUnit => {
+    setViewState(prev => {
+      const newState = { ...prev, primaryTimeUnit };
+      window.localStorage.setItem(
+        'gantt.primaryTimeUnit',
+        JSON.stringify(primaryTimeUnit)
+      );
+      return newState;
+    });
+    console.log('Primary time unit updated to:', primaryTimeUnit);
+  };
+
+  const updateSecondaryTimeUnit = secondaryTimeUnit => {
+    setViewState(prev => {
+      const newState = { ...prev, secondaryTimeUnit };
+      window.localStorage.setItem(
+        'gantt.secondaryTimeUnit',
+        JSON.stringify(secondaryTimeUnit)
+      );
+      return newState;
+    });
+    console.log('Secondary time unit updated to:', secondaryTimeUnit);
+  };
+
   const value = {
     viewState,
     updateViewState,
@@ -350,6 +432,9 @@ export const ViewProvider = ({ children }) => {
     zoomOut,
     updateViewScale,
     updateTimeUnit,
+    updateTimeScale,
+    updatePrimaryTimeUnit,
+    updateSecondaryTimeUnit,
   };
 
   return <ViewContext.Provider value={value}>{children}</ViewContext.Provider>;

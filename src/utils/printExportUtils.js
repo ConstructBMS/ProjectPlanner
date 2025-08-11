@@ -26,8 +26,16 @@ export class PrintLayoutRenderer {
 
   // Generate print-ready HTML
   generatePrintHTML(tasks, taskLinks, viewState) {
-    const { includeGrid, includeGantt, includeHeaders, includeFooters, showPageNumbers, showDateRange, showProjectInfo } = this.settings;
-    
+    const {
+      includeGrid,
+      includeGantt,
+      includeHeaders,
+      includeFooters,
+      showPageNumbers,
+      showDateRange,
+      showProjectInfo,
+    } = this.settings;
+
     let html = `
       <!DOCTYPE html>
       <html>
@@ -40,14 +48,14 @@ export class PrintLayoutRenderer {
               .print-page { page-break-after: always; }
               .print-page:last-child { page-break-after: avoid; }
             }
-            
+
             body {
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
               margin: 0;
               padding: 0;
               background: white;
             }
-            
+
             .print-container {
               width: ${this.pageSize.width}mm;
               height: ${this.pageSize.height}mm;
@@ -57,51 +65,51 @@ export class PrintLayoutRenderer {
               transform: scale(${this.scaling});
               transform-origin: top left;
             }
-            
+
             .header {
               text-align: center;
               margin-bottom: 20px;
               border-bottom: 2px solid #333;
               padding-bottom: 10px;
             }
-            
+
             .project-title {
               font-size: 24px;
               font-weight: bold;
               margin-bottom: 5px;
             }
-            
+
             .project-info {
               font-size: 12px;
               color: #666;
               margin-bottom: 10px;
             }
-            
+
             .date-range {
               font-size: 14px;
               color: #333;
               margin-bottom: 10px;
             }
-            
+
             .task-grid {
               width: 100%;
               border-collapse: collapse;
               margin-bottom: 20px;
               font-size: 10px;
             }
-            
+
             .task-grid th,
             .task-grid td {
               border: 1px solid #ddd;
               padding: 4px 6px;
               text-align: left;
             }
-            
+
             .task-grid th {
               background-color: #f5f5f5;
               font-weight: bold;
             }
-            
+
             .gantt-chart {
               width: 100%;
               height: 400px;
@@ -110,7 +118,7 @@ export class PrintLayoutRenderer {
               position: relative;
               overflow: hidden;
             }
-            
+
             .gantt-header {
               height: 30px;
               background-color: #f5f5f5;
@@ -121,7 +129,7 @@ export class PrintLayoutRenderer {
               font-size: 10px;
               font-weight: bold;
             }
-            
+
             .gantt-timeline {
               height: 20px;
               background-color: #f8f8f8;
@@ -131,12 +139,12 @@ export class PrintLayoutRenderer {
               padding: 0 10px;
               font-size: 8px;
             }
-            
+
             .gantt-content {
               height: calc(100% - 50px);
               overflow: hidden;
             }
-            
+
             .task-row {
               height: 20px;
               border-bottom: 1px solid #eee;
@@ -144,7 +152,7 @@ export class PrintLayoutRenderer {
               align-items: center;
               font-size: 8px;
             }
-            
+
             .task-name {
               width: 200px;
               padding: 0 5px;
@@ -153,7 +161,7 @@ export class PrintLayoutRenderer {
               text-overflow: ellipsis;
               white-space: nowrap;
             }
-            
+
             .task-bar {
               flex: 1;
               height: 12px;
@@ -162,7 +170,7 @@ export class PrintLayoutRenderer {
               margin: 0 2px;
               position: relative;
             }
-            
+
             .milestone {
               width: 8px;
               height: 8px;
@@ -170,7 +178,7 @@ export class PrintLayoutRenderer {
               border-radius: 50%;
               margin: 0 2px;
             }
-            
+
             .footer {
               text-align: center;
               margin-top: 20px;
@@ -179,7 +187,7 @@ export class PrintLayoutRenderer {
               font-size: 10px;
               color: #666;
             }
-            
+
             .page-number {
               position: absolute;
               bottom: 10mm;
@@ -197,8 +205,8 @@ export class PrintLayoutRenderer {
       html += `
         <div class="header">
           <div class="project-title">Project Schedule</div>
-          ${showProjectInfo ? '<div class="project-info">Generated on ' + new Date().toLocaleDateString() + '</div>' : ''}
-          ${showDateRange ? '<div class="date-range">Date Range: ' + this.getDateRangeText() + '</div>' : ''}
+          ${showProjectInfo ? `<div class="project-info">Generated on ${new Date().toLocaleDateString()}</div>` : ''}
+          ${showDateRange ? `<div class="date-range">Date Range: ${this.getDateRangeText()}</div>` : ''}
         </div>
       `;
     }
@@ -305,7 +313,7 @@ export class PrintLayoutRenderer {
 
   getDateRangeText() {
     const { dateRange, customDateRange } = this.settings;
-    
+
     switch (dateRange) {
       case 'all':
         return 'All dates';
@@ -338,7 +346,7 @@ export class PDFExporter {
     try {
       const renderer = new PrintLayoutRenderer(this.settings);
       const html = renderer.generatePrintHTML(tasks, taskLinks, viewState);
-      
+
       // Create a temporary container
       const container = document.createElement('div');
       container.innerHTML = html;
@@ -362,7 +370,7 @@ export class PDFExporter {
       const imgData = canvas.toDataURL('image/png');
       const imgWidth = this.doc.internal.pageSize.getWidth();
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
+
       this.doc.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
 
       // Save the PDF
@@ -387,7 +395,7 @@ export class PNGExporter {
     try {
       const renderer = new PrintLayoutRenderer(this.settings);
       const html = renderer.generatePrintHTML(tasks, taskLinks, viewState);
-      
+
       // Create a temporary container
       const container = document.createElement('div');
       container.innerHTML = html;
@@ -399,9 +407,9 @@ export class PNGExporter {
       // Convert to canvas with quality settings
       const quality = this.settings.quality;
       const scale = quality === 'high' ? 3 : quality === 'medium' ? 2 : 1;
-      
+
       const canvas = await html2canvas(container, {
-        scale: scale,
+        scale,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
@@ -411,7 +419,7 @@ export class PNGExporter {
       document.body.removeChild(container);
 
       // Convert to blob and download
-      canvas.toBlob((blob) => {
+      canvas.toBlob(blob => {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -445,13 +453,13 @@ export class ExcelExporter {
         'End Date': new Date(task.endDate).toLocaleDateString(),
         'Duration (days)': task.duration || 0,
         'Progress (%)': task.progress || 0,
-        'Status': task.status,
-        'Priority': task.priority,
-        'Assignee': task.assignee || '',
-        'Type': task.type,
+        Status: task.status,
+        Priority: task.priority,
+        Assignee: task.assignee || '',
+        Type: task.type,
         'Is Milestone': task.isMilestone ? 'Yes' : 'No',
         'Parent Task': task.parentId || '',
-        'Notes': task.notes || '',
+        Notes: task.notes || '',
       }));
 
       const taskWorksheet = XLSX.utils.json_to_sheet(taskData);
@@ -462,7 +470,7 @@ export class ExcelExporter {
         const dependencyData = taskLinks.map(link => {
           const fromTask = tasks.find(t => t.id === link.fromId);
           const toTask = tasks.find(t => t.id === link.toId);
-          
+
           return {
             'From Task': fromTask ? fromTask.name : link.fromId,
             'To Task': toTask ? toTask.name : link.toId,
@@ -472,18 +480,44 @@ export class ExcelExporter {
         });
 
         const dependencyWorksheet = XLSX.utils.json_to_sheet(dependencyData);
-        XLSX.utils.book_append_sheet(workbook, dependencyWorksheet, 'Dependencies');
+        XLSX.utils.book_append_sheet(
+          workbook,
+          dependencyWorksheet,
+          'Dependencies'
+        );
       }
 
       // Project summary worksheet
       const summaryData = [
-        { 'Metric': 'Total Tasks', 'Value': tasks.length },
-        { 'Metric': 'Total Duration', 'Value': tasks.reduce((sum, t) => sum + (t.duration || 0), 0) + ' days' },
-        { 'Metric': 'Milestones', 'Value': tasks.filter(t => t.isMilestone).length },
-        { 'Metric': 'Dependencies', 'Value': taskLinks ? taskLinks.length : 0 },
-        { 'Metric': 'Project Start', 'Value': tasks.length > 0 ? new Date(Math.min(...tasks.map(t => new Date(t.startDate)))).toLocaleDateString() : 'N/A' },
-        { 'Metric': 'Project End', 'Value': tasks.length > 0 ? new Date(Math.max(...tasks.map(t => new Date(t.endDate)))).toLocaleDateString() : 'N/A' },
-        { 'Metric': 'Generated Date', 'Value': new Date().toLocaleDateString() },
+        { Metric: 'Total Tasks', Value: tasks.length },
+        {
+          Metric: 'Total Duration',
+          Value: `${tasks.reduce((sum, t) => sum + (t.duration || 0), 0)} days`,
+        },
+        {
+          Metric: 'Milestones',
+          Value: tasks.filter(t => t.isMilestone).length,
+        },
+        { Metric: 'Dependencies', Value: taskLinks ? taskLinks.length : 0 },
+        {
+          Metric: 'Project Start',
+          Value:
+            tasks.length > 0
+              ? new Date(
+                  Math.min(...tasks.map(t => new Date(t.startDate)))
+                ).toLocaleDateString()
+              : 'N/A',
+        },
+        {
+          Metric: 'Project End',
+          Value:
+            tasks.length > 0
+              ? new Date(
+                  Math.max(...tasks.map(t => new Date(t.endDate)))
+                ).toLocaleDateString()
+              : 'N/A',
+        },
+        { Metric: 'Generated Date', Value: new Date().toLocaleDateString() },
       ];
 
       const summaryWorksheet = XLSX.utils.json_to_sheet(summaryData);
@@ -508,15 +542,15 @@ export const exportProject = async (settings, tasks, taskLinks, viewState) => {
       case 'pdf':
         const pdfExporter = new PDFExporter(settings);
         return await pdfExporter.exportToPDF(tasks, taskLinks, viewState);
-      
+
       case 'png':
         const pngExporter = new PNGExporter(settings);
         return await pngExporter.exportToPNG(tasks, taskLinks, viewState);
-      
+
       case 'xlsx':
         const excelExporter = new ExcelExporter(settings);
         return excelExporter.exportToExcel(tasks, taskLinks, viewState);
-      
+
       default:
         throw new Error('Unsupported export format');
     }
@@ -531,18 +565,18 @@ export const printProject = async (settings, tasks, taskLinks, viewState) => {
   try {
     const renderer = new PrintLayoutRenderer(settings);
     const html = renderer.generatePrintHTML(tasks, taskLinks, viewState);
-    
+
     // Create a new window for printing
     const printWindow = window.open('', '_blank');
     printWindow.document.write(html);
     printWindow.document.close();
-    
+
     // Wait for content to load
     printWindow.onload = () => {
       printWindow.print();
       printWindow.close();
     };
-    
+
     return true;
   } catch (error) {
     console.error('Print error:', error);
@@ -551,40 +585,40 @@ export const printProject = async (settings, tasks, taskLinks, viewState) => {
 };
 
 // Utility functions
-export const validatePrintSettings = (settings) => {
+export const validatePrintSettings = settings => {
   const errors = [];
-  
+
   if (settings.pageRange === 'custom') {
     if (settings.customPageRange.start > settings.customPageRange.end) {
       errors.push('Start page cannot be greater than end page');
     }
   }
-  
+
   if (settings.dateRange === 'custom') {
     if (settings.customDateRange.start > settings.customDateRange.end) {
       errors.push('Start date cannot be after end date');
     }
   }
-  
+
   if (settings.scaling < 25 || settings.scaling > 200) {
     errors.push('Scaling must be between 25% and 200%');
   }
-  
+
   return errors;
 };
 
-export const validateExportSettings = (settings) => {
+export const validateExportSettings = settings => {
   const errors = [];
-  
+
   if (settings.dateRange === 'custom') {
     if (settings.customDateRange.start > settings.customDateRange.end) {
       errors.push('Start date cannot be after end date');
     }
   }
-  
+
   if (settings.scaling < 25 || settings.scaling > 200) {
     errors.push('Scaling must be between 25% and 200%');
   }
-  
+
   return errors;
 };

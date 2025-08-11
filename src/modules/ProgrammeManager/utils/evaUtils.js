@@ -45,7 +45,7 @@ export const calculatePlannedValue = (tasks, statusDate) => {
         (status - taskStart) / (1000 * 60 * 60 * 24),
         taskDuration
       );
-      
+
       if (taskDuration > 0) {
         const plannedProgress = (elapsedDays / taskDuration) * 100;
         const plannedValue = (task.cost * plannedProgress) / 100;
@@ -62,12 +62,12 @@ export const calculatePlannedValue = (tasks, statusDate) => {
  * @param {Array} tasks - Array of task objects
  * @returns {number} Earned Value
  */
-export const calculateEarnedValue = (tasks) => {
+export const calculateEarnedValue = tasks => {
   if (!tasks || tasks.length === 0) return 0;
 
   return tasks.reduce((total, task) => {
     if (!task.cost || !task.progress) return total;
-    
+
     const earnedValue = (task.cost * task.progress) / 100;
     return total + earnedValue;
   }, 0);
@@ -78,7 +78,7 @@ export const calculateEarnedValue = (tasks) => {
  * @param {Array} tasks - Array of task objects
  * @returns {number} Actual Cost
  */
-export const calculateActualCost = (tasks) => {
+export const calculateActualCost = tasks => {
   if (!tasks || tasks.length === 0) return 0;
 
   return tasks.reduce((total, task) => {
@@ -86,13 +86,13 @@ export const calculateActualCost = (tasks) => {
     if (task.actualCost !== undefined) {
       return total + task.actualCost;
     }
-    
+
     // Estimate actual cost based on progress and planned cost
     if (task.cost && task.progress) {
       const estimatedActualCost = (task.cost * task.progress) / 100;
       return total + estimatedActualCost;
     }
-    
+
     return total;
   }, 0);
 };
@@ -142,7 +142,7 @@ export const calculateCPI = (ev, ac) => {
  * @param {Array} tasks - Array of task objects
  * @returns {number} Budget at Completion
  */
-export const calculateBAC = (tasks) => {
+export const calculateBAC = tasks => {
   if (!tasks || tasks.length === 0) return 0;
 
   return tasks.reduce((total, task) => {
@@ -164,21 +164,21 @@ export const calculateEAC = (bac, ac, ev, cpi, method = 'cpi') => {
     case 'cpi':
       // EAC = BAC / CPI
       return cpi > 0 ? bac / cpi : bac;
-    
+
     case 'spi_cpi':
       // EAC = AC + (BAC - EV) / (SPI * CPI)
       const spi = ev > 0 ? ev / (ev + (bac - ev)) : 1;
       const combinedIndex = spi * cpi;
       return combinedIndex > 0 ? ac + (bac - ev) / combinedIndex : bac;
-    
+
     case 'actual':
       // EAC = AC + (BAC - EV)
       return ac + (bac - ev);
-    
+
     case 'optimistic':
       // EAC = AC + (BAC - EV) / CPI
       return cpi > 0 ? ac + (bac - ev) / cpi : bac;
-    
+
     default:
       return cpi > 0 ? bac / cpi : bac;
   }
@@ -214,8 +214,11 @@ export const calculateVAC = (bac, eac) => {
  */
 export const calculateTCPI = (bac, ev, ac, method = 'bac') => {
   const remainingWork = bac - ev;
-  const remainingBudget = method === 'eac' ? calculateEAC(bac, ac, ev, calculateCPI(ev, ac)) - ac : bac - ac;
-  
+  const remainingBudget =
+    method === 'eac'
+      ? calculateEAC(bac, ac, ev, calculateCPI(ev, ac)) - ac
+      : bac - ac;
+
   return remainingBudget > 0 ? remainingWork / remainingBudget : 0;
 };
 
@@ -226,17 +229,21 @@ export const calculateTCPI = (bac, ev, ac, method = 'bac') => {
  * @param {Object} config - EVA configuration
  * @returns {Object} Complete EVA metrics
  */
-export const calculateEVAMetrics = (tasks, statusDate, config = DEFAULT_EVA_CONFIG) => {
+export const calculateEVAMetrics = (
+  tasks,
+  statusDate,
+  config = DEFAULT_EVA_CONFIG
+) => {
   const pv = calculatePlannedValue(tasks, statusDate);
   const ev = calculateEarnedValue(tasks);
   const ac = calculateActualCost(tasks);
   const bac = calculateBAC(tasks);
-  
+
   const sv = calculateScheduleVariance(ev, pv);
   const cv = calculateCostVariance(ev, ac);
   const spi = calculateSPI(ev, pv);
   const cpi = calculateCPI(ev, ac);
-  
+
   const eac = calculateEAC(bac, ac, ev, cpi);
   const etc = calculateETC(eac, ac);
   const vac = calculateVAC(bac, eac);
@@ -248,36 +255,37 @@ export const calculateEVAMetrics = (tasks, statusDate, config = DEFAULT_EVA_CONF
     ev: roundToPrecision(ev, config.precision),
     ac: roundToPrecision(ac, config.precision),
     bac: roundToPrecision(bac, config.precision),
-    
+
     // Variances
     sv: roundToPrecision(sv, config.precision),
     cv: roundToPrecision(cv, config.precision),
-    
+
     // Performance indices
     spi: roundToPrecision(spi, 3),
     cpi: roundToPrecision(cpi, 3),
-    
+
     // Forecasts
     eac: roundToPrecision(eac, config.precision),
     etc: roundToPrecision(etc, config.precision),
     vac: roundToPrecision(vac, config.precision),
     tcpi: roundToPrecision(tcpi, 3),
-    
+
     // Percentages
     pvPercentage: bac > 0 ? roundToPrecision((pv / bac) * 100, 1) : 0,
     evPercentage: bac > 0 ? roundToPrecision((ev / bac) * 100, 1) : 0,
     acPercentage: bac > 0 ? roundToPrecision((ac / bac) * 100, 1) : 0,
-    
+
     // Status indicators
     scheduleStatus: getScheduleStatus(sv, spi),
     costStatus: getCostStatus(cv, cpi),
     overallStatus: getOverallStatus(sv, cv, spi, cpi),
-    
+
     // Metadata
-    statusDate: statusDate,
+    statusDate,
     taskCount: tasks.length,
     completedTasks: tasks.filter(t => t.progress === 100).length,
-    inProgressTasks: tasks.filter(t => t.progress > 0 && t.progress < 100).length,
+    inProgressTasks: tasks.filter(t => t.progress > 0 && t.progress < 100)
+      .length,
   };
 };
 
@@ -397,7 +405,10 @@ export const getOverallStatus = (sv, cv, spi, cpi) => {
  * @param {Object} config - Chart configuration
  * @returns {Object} Chart.js compatible data
  */
-export const generateEVAChartData = (evaMetrics, config = DEFAULT_EVA_CONFIG) => {
+export const generateEVAChartData = (
+  evaMetrics,
+  config = DEFAULT_EVA_CONFIG
+) => {
   return {
     labels: ['Planned Value (PV)', 'Earned Value (EV)', 'Actual Cost (AC)'],
     datasets: [
@@ -426,8 +437,11 @@ export const generateEVAChartData = (evaMetrics, config = DEFAULT_EVA_CONFIG) =>
  * @param {Object} config - Chart configuration
  * @returns {Object} Chart.js compatible trend data
  */
-export const generateEVATrendChartData = (evaHistory, config = DEFAULT_EVA_CONFIG) => {
-  const labels = evaHistory.map(item => 
+export const generateEVATrendChartData = (
+  evaHistory,
+  config = DEFAULT_EVA_CONFIG
+) => {
+  const labels = evaHistory.map(item =>
     new Date(item.statusDate).toLocaleDateString('en-GB', {
       day: '2-digit',
       month: 'short',
@@ -474,9 +488,15 @@ export const generateEVATrendChartData = (evaHistory, config = DEFAULT_EVA_CONFI
  * @param {Object} config - Chart configuration
  * @returns {Object} Chart.js compatible data
  */
-export const generatePerformanceIndicesChartData = (evaMetrics, config = DEFAULT_EVA_CONFIG) => {
+export const generatePerformanceIndicesChartData = (
+  evaMetrics,
+  config = DEFAULT_EVA_CONFIG
+) => {
   return {
-    labels: ['Schedule Performance Index (SPI)', 'Cost Performance Index (CPI)'],
+    labels: [
+      'Schedule Performance Index (SPI)',
+      'Cost Performance Index (CPI)',
+    ],
     datasets: [
       {
         label: 'Performance Index',
@@ -501,7 +521,10 @@ export const generatePerformanceIndicesChartData = (evaMetrics, config = DEFAULT
  * @param {Object} config - Chart configuration
  * @returns {Object} Chart.js compatible data
  */
-export const generateVarianceChartData = (evaMetrics, config = DEFAULT_EVA_CONFIG) => {
+export const generateVarianceChartData = (
+  evaMetrics,
+  config = DEFAULT_EVA_CONFIG
+) => {
   return {
     labels: ['Schedule Variance (SV)', 'Cost Variance (CV)'],
     datasets: [
@@ -561,7 +584,7 @@ export const roundToPrecision = (value, precision = 2) => {
  * @param {Object} evaMetrics - EVA metrics to validate
  * @returns {Object} Validation result
  */
-export const validateEVAMetrics = (evaMetrics) => {
+export const validateEVAMetrics = evaMetrics => {
   const errors = [];
   const warnings = [];
 
@@ -577,7 +600,8 @@ export const validateEVAMetrics = (evaMetrics) => {
   if (evaMetrics.pv < 0) warnings.push('Planned Value should not be negative');
   if (evaMetrics.ev < 0) warnings.push('Earned Value should not be negative');
   if (evaMetrics.ac < 0) warnings.push('Actual Cost should not be negative');
-  if (evaMetrics.bac < 0) warnings.push('Budget at Completion should not be negative');
+  if (evaMetrics.bac < 0)
+    warnings.push('Budget at Completion should not be negative');
 
   // Check for logical relationships
   if (evaMetrics.ev > evaMetrics.bac) {
@@ -585,7 +609,9 @@ export const validateEVAMetrics = (evaMetrics) => {
   }
 
   if (evaMetrics.ac > evaMetrics.bac * 2) {
-    warnings.push('Actual Cost is significantly higher than Budget at Completion');
+    warnings.push(
+      'Actual Cost is significantly higher than Budget at Completion'
+    );
   }
 
   return {
@@ -600,7 +626,7 @@ export const validateEVAMetrics = (evaMetrics) => {
  * @param {Object} evaMetrics - EVA metrics to export
  * @returns {Object} Exportable EVA data
  */
-export const exportEVAMetrics = (evaMetrics) => {
+export const exportEVAMetrics = evaMetrics => {
   return {
     version: '1.0',
     timestamp: new Date().toISOString(),
@@ -618,7 +644,7 @@ export const exportEVAMetrics = (evaMetrics) => {
  * @param {Object} importData - Import data object
  * @returns {Object} Import result
  */
-export const importEVAMetrics = (importData) => {
+export const importEVAMetrics = importData => {
   const errors = [];
   const warnings = [];
 
@@ -629,7 +655,7 @@ export const importEVAMetrics = (importData) => {
 
   const evaMetrics = importData.evaMetrics;
   const validation = validateEVAMetrics(evaMetrics);
-  
+
   errors.push(...validation.errors);
   warnings.push(...validation.warnings);
 

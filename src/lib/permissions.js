@@ -301,15 +301,15 @@ export const canAccessButton = (userRole, buttonName) => {
 };
 
 // Get available tabs for a user role
-export const getAvailableTabs = (userRole) => {
-  return Object.keys(TAB_PERMISSIONS).filter(tab => 
+export const getAvailableTabs = userRole => {
+  return Object.keys(TAB_PERMISSIONS).filter(tab =>
     canAccessTab(userRole, tab)
   );
 };
 
 // Get available buttons for a user role
-export const getAvailableButtons = (userRole) => {
-  return Object.keys(BUTTON_PERMISSIONS).filter(button => 
+export const getAvailableButtons = userRole => {
+  return Object.keys(BUTTON_PERMISSIONS).filter(button =>
     canAccessButton(userRole, button)
   );
 };
@@ -349,7 +349,7 @@ export const ROLE_DESCRIPTIONS = {
 };
 
 // Get role description
-export const getRoleDescription = (role) => {
+export const getRoleDescription = role => {
   return ROLE_DESCRIPTIONS[role] || ROLE_DESCRIPTIONS[USER_ROLES.GUEST];
 };
 
@@ -379,54 +379,47 @@ export const PERMISSION_GROUPS = {
     'project-reports',
     'eva-dashboard',
   ],
-  FORMATTING: [
-    'bar-styles',
-    'bar-labels',
-    'milestone-shapes',
-  ],
-  ADMINISTRATION: [
-    'admin-settings',
-    'import-project',
-  ],
+  FORMATTING: ['bar-styles', 'bar-labels', 'milestone-shapes'],
+  ADMINISTRATION: ['admin-settings', 'import-project'],
 };
 
 // Check if user has permission for a group of features
 export const hasGroupPermission = (userRole, groupName) => {
   const group = PERMISSION_GROUPS[groupName];
   if (!group) return false;
-  
+
   return group.some(feature => canAccessButton(userRole, feature));
 };
 
 // Get all permissions for a user role
-export const getUserPermissions = (userRole) => {
+export const getUserPermissions = userRole => {
   const permissions = {};
-  
+
   // Tab permissions
   Object.keys(TAB_PERMISSIONS).forEach(tab => {
     permissions[`tab_${tab}`] = canAccessTab(userRole, tab);
   });
-  
+
   // Button permissions
   Object.keys(BUTTON_PERMISSIONS).forEach(button => {
     permissions[`button_${button}`] = canAccessButton(userRole, button);
   });
-  
+
   // Group permissions
   Object.keys(PERMISSION_GROUPS).forEach(group => {
     permissions[`group_${group}`] = hasGroupPermission(userRole, group);
   });
-  
+
   return permissions;
 };
 
 // Validate user role
-export const isValidRole = (role) => {
+export const isValidRole = role => {
   return Object.values(USER_ROLES).includes(role);
 };
 
 // Get role level for comparison
-export const getRoleLevel = (role) => {
+export const getRoleLevel = role => {
   return ROLE_HIERARCHY[role] || 0;
 };
 

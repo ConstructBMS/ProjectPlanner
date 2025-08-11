@@ -67,11 +67,14 @@ export const calculateProjectCost = (tasks, resources) => {
   const priorityCosts = {};
 
   tasks.forEach(task => {
-    const resource = resources.find(r => r.id === task.resourceId || r.name === task.resource || task.assignedTo);
-    
+    const resource = resources.find(
+      r =>
+        r.id === task.resourceId || r.name === task.resource || task.assignedTo
+    );
+
     if (resource && resource.costRate) {
       const taskCost = calculateTaskCost(task, resource);
-      
+
       costSummary.totalCost += taskCost.cost;
       costSummary.taskCount++;
       totalDuration += task.duration || 0;
@@ -119,23 +122,29 @@ export const calculateProjectCost = (tasks, resources) => {
 
   // Convert breakdowns to arrays
   costSummary.breakdown.byResource = Object.values(resourceCosts);
-  costSummary.breakdown.byStatus = Object.entries(statusCosts).map(([status, cost]) => ({
-    status,
-    cost,
-  }));
-  costSummary.breakdown.byPriority = Object.entries(priorityCosts).map(([priority, cost]) => ({
-    priority,
-    cost,
-  }));
+  costSummary.breakdown.byStatus = Object.entries(statusCosts).map(
+    ([status, cost]) => ({
+      status,
+      cost,
+    })
+  );
+  costSummary.breakdown.byPriority = Object.entries(priorityCosts).map(
+    ([priority, cost]) => ({
+      priority,
+      cost,
+    })
+  );
 
   // Calculate averages
-  costSummary.averageCostPerTask = costSummary.taskCount > 0 
-    ? Math.round((costSummary.totalCost / costSummary.taskCount) * 100) / 100 
-    : 0;
-  
-  costSummary.averageCostPerDay = totalDuration > 0 
-    ? Math.round((costSummary.totalCost / totalDuration) * 100) / 100 
-    : 0;
+  costSummary.averageCostPerTask =
+    costSummary.taskCount > 0
+      ? Math.round((costSummary.totalCost / costSummary.taskCount) * 100) / 100
+      : 0;
+
+  costSummary.averageCostPerDay =
+    totalDuration > 0
+      ? Math.round((costSummary.totalCost / totalDuration) * 100) / 100
+      : 0;
 
   costSummary.resourceCount = Object.keys(resourceCosts).length;
 
@@ -152,7 +161,7 @@ export const formatCost = (cost, currency = '£') => {
   if (cost === null || cost === undefined || isNaN(cost)) {
     return `${currency}0.00`;
   }
-  
+
   return `${currency}${cost.toFixed(2)}`;
 };
 
@@ -167,7 +176,7 @@ export const formatCostRate = (rate, unit = 'day', currency = '£') => {
   if (!rate || isNaN(rate)) {
     return `${currency}0.00/${unit}`;
   }
-  
+
   return `${currency}${rate.toFixed(2)}/${unit}`;
 };
 
@@ -176,7 +185,7 @@ export const formatCostRate = (rate, unit = 'day', currency = '£') => {
  * @param {number} rate - Cost rate to validate
  * @returns {Object} Validation result
  */
-export const validateCostRate = (rate) => {
+export const validateCostRate = rate => {
   const errors = [];
   const warnings = [];
 
@@ -230,10 +239,11 @@ export const getResourceCostSummary = (resourceId, tasks, resources) => {
     };
   }
 
-  const resourceTasks = tasks.filter(task => 
-    task.resourceId === resourceId || 
-    task.resource === resource.name || 
-    task.assignedTo === resource.name
+  const resourceTasks = tasks.filter(
+    task =>
+      task.resourceId === resourceId ||
+      task.resource === resource.name ||
+      task.assignedTo === resource.name
   );
 
   let totalCost = 0;
@@ -244,7 +254,7 @@ export const getResourceCostSummary = (resourceId, tasks, resources) => {
     const taskCost = calculateTaskCost(task, resource);
     totalCost += taskCost.cost;
     totalDuration += task.duration || 0;
-    
+
     taskCosts.push({
       taskId: task.id,
       taskName: task.name,
@@ -261,12 +271,14 @@ export const getResourceCostSummary = (resourceId, tasks, resources) => {
     totalCost: Math.round(totalCost * 100) / 100,
     taskCount: resourceTasks.length,
     totalDuration,
-    averageCostPerTask: resourceTasks.length > 0 
-      ? Math.round((totalCost / resourceTasks.length) * 100) / 100 
-      : 0,
-    averageCostPerDay: totalDuration > 0 
-      ? Math.round((totalCost / totalDuration) * 100) / 100 
-      : 0,
+    averageCostPerTask:
+      resourceTasks.length > 0
+        ? Math.round((totalCost / resourceTasks.length) * 100) / 100
+        : 0,
+    averageCostPerDay:
+      totalDuration > 0
+        ? Math.round((totalCost / totalDuration) * 100) / 100
+        : 0,
     tasks: taskCosts,
   };
 };
@@ -278,16 +290,25 @@ export const getResourceCostSummary = (resourceId, tasks, resources) => {
  * @param {string} period - Time period ('week', 'month', 'quarter')
  * @returns {Array} Cost breakdown by period
  */
-export const getCostBreakdownByPeriod = (tasks, resources, period = 'month') => {
+export const getCostBreakdownByPeriod = (
+  tasks,
+  resources,
+  period = 'month'
+) => {
   const periodCosts = {};
 
   tasks.forEach(task => {
-    const resource = resources.find(r => r.id === task.resourceId || r.name === task.resource || task.assignedTo === r.name);
-    
+    const resource = resources.find(
+      r =>
+        r.id === task.resourceId ||
+        r.name === task.resource ||
+        task.assignedTo === r.name
+    );
+
     if (resource && resource.costRate) {
       const taskCost = calculateTaskCost(task, resource);
       const startDate = new Date(task.startDate);
-      
+
       let periodKey;
       switch (period) {
         case 'week':
@@ -326,7 +347,9 @@ export const getCostBreakdownByPeriod = (tasks, resources, period = 'month') => 
     }
   });
 
-  return Object.values(periodCosts).sort((a, b) => a.period.localeCompare(b.period));
+  return Object.values(periodCosts).sort((a, b) =>
+    a.period.localeCompare(b.period)
+  );
 };
 
 /**
@@ -349,13 +372,15 @@ export const getCostVariance = (task, resource) => {
   const baselineDuration = task.baselineDuration || task.duration || 0;
   const actualDuration = task.duration || 0;
 
-  const baselineCost = calculateTaskCost({ ...task, duration: baselineDuration }, resource);
+  const baselineCost = calculateTaskCost(
+    { ...task, duration: baselineDuration },
+    resource
+  );
   const actualCost = calculateTaskCost(task, resource);
 
   const variance = actualCost.cost - baselineCost.cost;
-  const variancePercentage = baselineCost.cost > 0 
-    ? (variance / baselineCost.cost) * 100 
-    : 0;
+  const variancePercentage =
+    baselineCost.cost > 0 ? (variance / baselineCost.cost) * 100 : 0;
 
   return {
     baselineCost: baselineCost.cost,
@@ -388,11 +413,16 @@ export const getCostEfficiencyMetrics = (tasks, resources) => {
   let varianceCount = 0;
 
   tasks.forEach(task => {
-    const resource = resources.find(r => r.id === task.resourceId || r.name === task.resource || task.assignedTo === r.name);
-    
+    const resource = resources.find(
+      r =>
+        r.id === task.resourceId ||
+        r.name === task.resource ||
+        task.assignedTo === r.name
+    );
+
     if (resource && resource.costRate) {
       const variance = getCostVariance(task, resource);
-      
+
       metrics.totalBudget += variance.baselineCost;
       metrics.totalActual += variance.actualCost;
       metrics.totalVariance += variance.variance;
@@ -412,13 +442,13 @@ export const getCostEfficiencyMetrics = (tasks, resources) => {
     }
   });
 
-  metrics.efficiencyScore = varianceCount > 0 
-    ? Math.max(0, 100 - (totalVariance / varianceCount)) 
-    : 100;
-  
-  metrics.averageVariance = varianceCount > 0 
-    ? Math.round((totalVariance / varianceCount) * 100) / 100 
-    : 0;
+  metrics.efficiencyScore =
+    varianceCount > 0 ? Math.max(0, 100 - totalVariance / varianceCount) : 100;
+
+  metrics.averageVariance =
+    varianceCount > 0
+      ? Math.round((totalVariance / varianceCount) * 100) / 100
+      : 0;
 
   return metrics;
 };
@@ -444,16 +474,26 @@ export const getCostTrendAnalysis = (tasks, resources) => {
   trend.totalCost = projectCost.totalCost;
 
   // Calculate cost per day
-  const totalDuration = tasks.reduce((sum, task) => sum + (task.duration || 0), 0);
-  trend.costPerDay = totalDuration > 0 ? projectCost.totalCost / totalDuration : 0;
+  const totalDuration = tasks.reduce(
+    (sum, task) => sum + (task.duration || 0),
+    0
+  );
+  trend.costPerDay =
+    totalDuration > 0 ? projectCost.totalCost / totalDuration : 0;
 
   // Simple trend analysis based on task completion
   const completedTasks = tasks.filter(task => task.status === 'Complete');
   const inProgressTasks = tasks.filter(task => task.status === 'In Progress');
   const plannedTasks = tasks.filter(task => task.status === 'Planned');
 
-  const completedCost = calculateProjectCost(completedTasks, resources).totalCost;
-  const inProgressCost = calculateProjectCost(inProgressTasks, resources).totalCost;
+  const completedCost = calculateProjectCost(
+    completedTasks,
+    resources
+  ).totalCost;
+  const inProgressCost = calculateProjectCost(
+    inProgressTasks,
+    resources
+  ).totalCost;
   const plannedCost = calculateProjectCost(plannedTasks, resources).totalCost;
 
   // Projected cost based on current rate
@@ -461,15 +501,21 @@ export const getCostTrendAnalysis = (tasks, resources) => {
 
   // Generate recommendations
   if (trend.projectedCost > trend.totalCost * 1.1) {
-    trend.recommendations.push('Project is trending over budget. Consider resource optimization.');
+    trend.recommendations.push(
+      'Project is trending over budget. Consider resource optimization.'
+    );
   }
 
   if (inProgressCost > plannedCost * 0.8) {
-    trend.recommendations.push('High cost tasks in progress. Monitor resource allocation.');
+    trend.recommendations.push(
+      'High cost tasks in progress. Monitor resource allocation.'
+    );
   }
 
   if (completedCost < trend.totalCost * 0.3 && tasks.length > 5) {
-    trend.recommendations.push('Low completion rate. Review project timeline and resource allocation.');
+    trend.recommendations.push(
+      'Low completion rate. Review project timeline and resource allocation.'
+    );
   }
 
   return trend;

@@ -5,7 +5,11 @@ import React, {
   useCallback,
   useEffect,
 } from 'react';
-import { DEFAULT_CALENDAR, validateCalendar, createCalendar } from '../utils/calendarUtils';
+import {
+  DEFAULT_CALENDAR,
+  validateCalendar,
+  createCalendar,
+} from '../utils/calendarUtils';
 
 const CalendarContext = createContext();
 
@@ -61,7 +65,9 @@ export const CalendarProvider = ({ children }) => {
         setTaskCalendars(parsed);
       }
 
-      const savedProjectCalendars = localStorage.getItem('gantt.projectCalendars');
+      const savedProjectCalendars = localStorage.getItem(
+        'gantt.projectCalendars'
+      );
       if (savedProjectCalendars) {
         const parsed = JSON.parse(savedProjectCalendars);
         setProjectCalendars(parsed);
@@ -147,17 +153,6 @@ export const CalendarProvider = ({ children }) => {
     }));
   }, []);
 
-  // Get calendar for a specific task
-  const getCalendarForTask = useCallback(
-    (taskId, task) => {
-      if (task && task.useTaskCalendar && taskCalendars[taskId]) {
-        return taskCalendars[taskId];
-      }
-      return globalCalendar;
-    },
-    [globalCalendar, taskCalendars]
-  );
-
   // Set task calendar
   const setTaskCalendar = useCallback((taskId, calendar) => {
     const validation = validateCalendar(calendar);
@@ -204,17 +199,19 @@ export const CalendarProvider = ({ children }) => {
     (taskId, task) => {
       // If task has a specific calendar ID, use that calendar
       if (task && task.calendarId) {
-        const selectedCalendar = projectCalendars.find(cal => cal.id === task.calendarId);
+        const selectedCalendar = projectCalendars.find(
+          cal => cal.id === task.calendarId
+        );
         if (selectedCalendar) {
           return selectedCalendar;
         }
       }
-      
+
       // Fallback to task-specific calendar if exists
       if (task && task.useTaskCalendar && taskCalendars[taskId]) {
         return taskCalendars[taskId];
       }
-      
+
       // Default to global calendar
       return globalCalendar;
     },
@@ -228,30 +225,34 @@ export const CalendarProvider = ({ children }) => {
   }, []);
 
   // Add new project calendar
-  const addProjectCalendar = useCallback((name, workingDays = {}, holidays = []) => {
-    const newCalendar = createCalendar(name, workingDays, holidays);
-    setProjectCalendars(prev => [...prev, newCalendar]);
-    return newCalendar;
-  }, []);
+  const addProjectCalendar = useCallback(
+    (name, workingDays = {}, holidays = []) => {
+      const newCalendar = createCalendar(name, workingDays, holidays);
+      setProjectCalendars(prev => [...prev, newCalendar]);
+      return newCalendar;
+    },
+    []
+  );
 
   // Update project calendar
   const updateProjectCalendar = useCallback((calendarId, updates) => {
-    setProjectCalendars(prev => 
-      prev.map(cal => 
-        cal.id === calendarId ? { ...cal, ...updates } : cal
-      )
+    setProjectCalendars(prev =>
+      prev.map(cal => (cal.id === calendarId ? { ...cal, ...updates } : cal))
     );
   }, []);
 
   // Remove project calendar
-  const removeProjectCalendar = useCallback((calendarId) => {
+  const removeProjectCalendar = useCallback(calendarId => {
     setProjectCalendars(prev => prev.filter(cal => cal.id !== calendarId));
   }, []);
 
   // Get project calendar by ID
-  const getProjectCalendarById = useCallback((calendarId) => {
-    return projectCalendars.find(cal => cal.id === calendarId);
-  }, [projectCalendars]);
+  const getProjectCalendarById = useCallback(
+    calendarId => {
+      return projectCalendars.find(cal => cal.id === calendarId);
+    },
+    [projectCalendars]
+  );
 
   const value = {
     // State

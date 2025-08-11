@@ -45,7 +45,7 @@ export const createCalendarException = (
       reason ||
       DEFAULT_EXCEPTION_CONFIG.defaultReasons[type] ||
       'Custom Exception',
-    description: description,
+    description,
     isWorkingDay: false,
     workingHours: 0,
     createdAt: new Date().toISOString(),

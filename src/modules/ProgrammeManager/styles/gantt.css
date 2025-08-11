@@ -70,7 +70,7 @@
 }
 
 .progress-drag-handle:hover {
-  background-color: #3B82F6 !important;
+  background-color: #3b82f6 !important;
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3) !important;
   transform: translateX(-50%) scaleY(1.2);
 }

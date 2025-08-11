@@ -19,6 +19,16 @@ export default [
         document: 'readonly',
         process: 'readonly',
         performance: 'readonly',
+        confirm: 'readonly',
+        localStorage: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        Blob: 'readonly',
+        URL: 'readonly',
+        FileReader: 'readonly',
+        alert: 'readonly',
       },
       parserOptions: {
         ecmaFeatures: {

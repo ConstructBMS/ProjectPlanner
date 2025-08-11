@@ -1,0 +1,102 @@
+/* Splitter Styles */
+.splitter-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.splitter-gutter {
+  background: transparent;
+  transition: background-color 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.splitter-gutter:hover {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.splitter-gutter.active {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.splitter-gutter.vertical {
+  cursor: col-resize;
+}
+
+.splitter-gutter.horizontal {
+  cursor: row-resize;
+}
+
+.splitter-handle {
+  width: 2px;
+  height: 20px;
+  background: #d1d5db;
+  border-radius: 1px;
+  transition: all 0.15s ease;
+}
+
+.splitter-gutter.vertical .splitter-handle {
+  width: 2px;
+  height: 20px;
+}
+
+.splitter-gutter.horizontal .splitter-handle {
+  width: 20px;
+  height: 2px;
+}
+
+.splitter-gutter:hover .splitter-handle {
+  background: #3b82f6;
+  width: 3px;
+}
+
+.splitter-gutter.horizontal:hover .splitter-handle {
+  height: 3px;
+}
+
+.splitter-gutter.active .splitter-handle {
+  background: #3b82f6;
+  width: 4px;
+}
+
+.splitter-gutter.horizontal.active .splitter-handle {
+  height: 4px;
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .splitter-gutter,
+  .splitter-handle {
+    transition: none;
+  }
+}
+
+/* Ensure smooth dragging */
+.splitter-container * {
+  pointer-events: none;
+}
+
+.splitter-container > * {
+  pointer-events: auto;
+}
+
+.splitter-gutter {
+  pointer-events: auto;
+}
+
+/* Active state styles */
+.splitter-container.dragging {
+  cursor: col-resize;
+}
+
+.splitter-container.dragging.horizontal {
+  cursor: row-resize;
+}
+
+/* Prevent text selection during drag */
+.splitter-container.dragging * {
+  user-select: none;
+}

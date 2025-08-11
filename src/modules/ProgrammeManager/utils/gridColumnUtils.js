@@ -355,7 +355,7 @@ export const createColumnConfig = (key, customProps = {}) => {
 };
 
 // Validate column configuration
-export const validateColumnConfig = (config) => {
+export const validateColumnConfig = config => {
   const errors = [];
 
   if (!config.key) {
@@ -366,11 +366,20 @@ export const validateColumnConfig = (config) => {
     errors.push('Column label is required');
   }
 
-  if (config.width && (config.width < DEFAULT_COLUMN_CONFIG.minColumnWidth || config.width > DEFAULT_COLUMN_CONFIG.maxColumnWidth)) {
-    errors.push(`Column width must be between ${DEFAULT_COLUMN_CONFIG.minColumnWidth} and ${DEFAULT_COLUMN_CONFIG.maxColumnWidth}px`);
+  if (
+    config.width &&
+    (config.width < DEFAULT_COLUMN_CONFIG.minColumnWidth ||
+      config.width > DEFAULT_COLUMN_CONFIG.maxColumnWidth)
+  ) {
+    errors.push(
+      `Column width must be between ${DEFAULT_COLUMN_CONFIG.minColumnWidth} and ${DEFAULT_COLUMN_CONFIG.maxColumnWidth}px`
+    );
   }
 
-  if (config.type && !Object.values(COLUMN_TYPES).some(col => col.type === config.type)) {
+  if (
+    config.type &&
+    !Object.values(COLUMN_TYPES).some(col => col.type === config.type)
+  ) {
     errors.push(`Invalid column type: ${config.type}`);
   }
 
@@ -391,7 +400,7 @@ export const getAvailableColumns = () => {
 // Get columns by category
 export const getColumnsByCategory = () => {
   const categorized = {};
-  
+
   Object.values(COLUMN_TYPES).forEach(column => {
     const category = column.category || 'other';
     if (!categorized[category]) {
@@ -406,28 +415,30 @@ export const getColumnsByCategory = () => {
 // Filter columns by search term
 export const filterColumnsBySearch = (columns, searchTerm) => {
   if (!searchTerm) return columns;
-  
+
   const term = searchTerm.toLowerCase();
-  return columns.filter(column => 
-    column.label.toLowerCase().includes(term) ||
-    column.key.toLowerCase().includes(term) ||
-    column.description.toLowerCase().includes(term) ||
-    (column.category && COLUMN_CATEGORIES[column.category]?.name.toLowerCase().includes(term))
+  return columns.filter(
+    column =>
+      column.label.toLowerCase().includes(term) ||
+      column.key.toLowerCase().includes(term) ||
+      column.description.toLowerCase().includes(term) ||
+      (column.category &&
+        COLUMN_CATEGORIES[column.category]?.name.toLowerCase().includes(term))
   );
 };
 
 // Sort columns by category and name
-export const sortColumnsByCategory = (columns) => {
+export const sortColumnsByCategory = columns => {
   return columns.sort((a, b) => {
     // First sort by category order
     const categoryOrder = Object.keys(COLUMN_CATEGORIES);
     const aCategoryIndex = categoryOrder.indexOf(a.category || 'other');
     const bCategoryIndex = categoryOrder.indexOf(b.category || 'other');
-    
+
     if (aCategoryIndex !== bCategoryIndex) {
       return aCategoryIndex - bCategoryIndex;
     }
-    
+
     // Then sort by label
     return a.label.localeCompare(b.label);
   });
@@ -438,8 +449,11 @@ export const createDefaultGridConfig = () => {
   return {
     columns: DEFAULT_COLUMN_ORDER.map(key => ({
       key,
+      label: COLUMN_TYPES[key]?.label || key,
       visible: true,
-      width: COLUMN_TYPES[key]?.defaultWidth || DEFAULT_COLUMN_CONFIG.defaultColumnWidth,
+      width:
+        COLUMN_TYPES[key]?.defaultWidth ||
+        DEFAULT_COLUMN_CONFIG.defaultColumnWidth,
       order: DEFAULT_COLUMN_ORDER.indexOf(key),
     })),
     settings: {
@@ -458,7 +472,7 @@ export const createDefaultGridConfig = () => {
 };
 
 // Validate grid configuration
-export const validateGridConfig = (config) => {
+export const validateGridConfig = config => {
   const errors = [];
 
   if (!config.columns || !Array.isArray(config.columns)) {
@@ -486,7 +500,9 @@ export const validateGridConfig = (config) => {
   config.columns.forEach((column, index) => {
     const validation = validateColumnConfig(column);
     if (!validation.isValid) {
-      errors.push(`Column ${index + 1} (${column.key}): ${validation.errors.join(', ')}`);
+      errors.push(
+        `Column ${index + 1} (${column.key}): ${validation.errors.join(', ')}`
+      );
     }
   });
 
@@ -501,7 +517,7 @@ export const reorderColumns = (columns, fromIndex, toIndex) => {
   const result = [...columns];
   const [removed] = result.splice(fromIndex, 1);
   result.splice(toIndex, 0, removed);
-  
+
   // Update order property
   return result.map((col, index) => ({
     ...col,
@@ -518,13 +534,14 @@ export const addColumnToGrid = (gridConfig, columnKey, position = null) => {
 
   const newColumn = {
     key: columnKey,
+    label: columnType.label || columnKey,
     visible: true,
     width: columnType.defaultWidth,
     order: position !== null ? position : gridConfig.columns.length,
   };
 
   const updatedColumns = [...gridConfig.columns];
-  
+
   if (position !== null) {
     updatedColumns.splice(position, 0, newColumn);
     // Update order for all columns
@@ -544,8 +561,10 @@ export const addColumnToGrid = (gridConfig, columnKey, position = null) => {
 
 // Remove column from grid
 export const removeColumnFromGrid = (gridConfig, columnKey) => {
-  const updatedColumns = gridConfig.columns.filter(col => col.key !== columnKey);
-  
+  const updatedColumns = gridConfig.columns.filter(
+    col => col.key !== columnKey
+  );
+
   // Update order for remaining columns
   updatedColumns.forEach((col, index) => {
     col.order = index;
@@ -560,10 +579,8 @@ export const removeColumnFromGrid = (gridConfig, columnKey) => {
 
 // Toggle column visibility
 export const toggleColumnVisibility = (gridConfig, columnKey) => {
-  const updatedColumns = gridConfig.columns.map(col => 
-    col.key === columnKey 
-      ? { ...col, visible: !col.visible }
-      : col
+  const updatedColumns = gridConfig.columns.map(col =>
+    col.key === columnKey ? { ...col, visible: !col.visible } : col
   );
 
   return {
@@ -580,10 +597,8 @@ export const updateColumnWidth = (gridConfig, columnKey, width) => {
     Math.min(DEFAULT_COLUMN_CONFIG.maxColumnWidth, width)
   );
 
-  const updatedColumns = gridConfig.columns.map(col => 
-    col.key === columnKey 
-      ? { ...col, width: validatedWidth }
-      : col
+  const updatedColumns = gridConfig.columns.map(col =>
+    col.key === columnKey ? { ...col, width: validatedWidth } : col
   );
 
   return {
@@ -593,20 +608,37 @@ export const updateColumnWidth = (gridConfig, columnKey, width) => {
   };
 };
 
+// Get column width
+export const getColumnWidth = (gridConfig, columnKey) => {
+  const column = gridConfig.columns.find(col => col.key === columnKey);
+  if (!column) {
+    // Return default width if column not found
+    return (
+      COLUMN_TYPES[columnKey]?.defaultWidth ||
+      DEFAULT_COLUMN_CONFIG.defaultColumnWidth
+    );
+  }
+  return (
+    column.width ||
+    COLUMN_TYPES[columnKey]?.defaultWidth ||
+    DEFAULT_COLUMN_CONFIG.defaultColumnWidth
+  );
+};
+
 // Get visible columns
-export const getVisibleColumns = (gridConfig) => {
+export const getVisibleColumns = gridConfig => {
   return gridConfig.columns
     .filter(col => col.visible)
     .sort((a, b) => a.order - b.order);
 };
 
 // Get hidden columns
-export const getHiddenColumns = (gridConfig) => {
+export const getHiddenColumns = gridConfig => {
   return gridConfig.columns.filter(col => !col.visible);
 };
 
 // Export grid configuration
-export const exportGridConfig = (gridConfig) => {
+export const exportGridConfig = gridConfig => {
   return {
     version: '1.0',
     exportedAt: new Date().toISOString(),
@@ -615,14 +647,16 @@ export const exportGridConfig = (gridConfig) => {
 };
 
 // Import grid configuration
-export const importGridConfig = (exportedConfig) => {
+export const importGridConfig = exportedConfig => {
   if (!exportedConfig.config) {
     throw new Error('Invalid grid configuration format');
   }
 
   const validation = validateGridConfig(exportedConfig.config);
   if (!validation.isValid) {
-    throw new Error(`Invalid grid configuration: ${validation.errors.join(', ')}`);
+    throw new Error(
+      `Invalid grid configuration: ${validation.errors.join(', ')}`
+    );
   }
 
   return {
@@ -647,7 +681,9 @@ export const createGridPreset = (gridConfig, name, description = '') => {
 export const applyGridPreset = (currentConfig, preset) => {
   const validation = validateGridConfig(preset.config);
   if (!validation.isValid) {
-    throw new Error(`Invalid preset configuration: ${validation.errors.join(', ')}`);
+    throw new Error(
+      `Invalid preset configuration: ${validation.errors.join(', ')}`
+    );
   }
 
   return {
@@ -682,11 +718,12 @@ export const getColumnStatistics = (gridConfig, tasks = []) => {
   if (tasks.length > 0) {
     stats.taskCount = tasks.length;
     stats.dataCompleteness = {};
-    
+
     gridConfig.columns.forEach(col => {
       const key = col.key;
-      const nonEmptyCount = tasks.filter(task => 
-        task[key] !== null && task[key] !== undefined && task[key] !== ''
+      const nonEmptyCount = tasks.filter(
+        task =>
+          task[key] !== null && task[key] !== undefined && task[key] !== ''
       ).length;
       stats.dataCompleteness[key] = {
         total: tasks.length,
@@ -716,7 +753,7 @@ export const autoFitColumnWidths = (gridConfig, tasks = []) => {
       const contentWidths = tasks.map(task => {
         const value = task[col.key];
         if (value === null || value === undefined) return 0;
-        
+
         switch (columnType.type) {
           case 'date':
             return 100; // Fixed width for dates
@@ -724,7 +761,9 @@ export const autoFitColumnWidths = (gridConfig, tasks = []) => {
           case 'percentage':
             return value.toString().length * 8 + 20;
           case 'select':
-            return Math.max(...columnType.options.map(opt => opt.length * 8)) + 30;
+            return (
+              Math.max(...columnType.options.map(opt => opt.length * 8)) + 30
+            );
           case 'boolean':
             return 80;
           case 'currency':
@@ -733,7 +772,7 @@ export const autoFitColumnWidths = (gridConfig, tasks = []) => {
             return value.toString().length * 8 + 20;
         }
       });
-      
+
       const maxContentWidth = Math.max(...contentWidths);
       maxWidth = Math.max(maxWidth, maxContentWidth);
     }
@@ -761,7 +800,10 @@ export const resetToDefaultConfig = () => {
 };
 
 // Save configuration to localStorage
-export const saveGridConfigToStorage = (gridConfig, key = 'gantt.gridConfig') => {
+export const saveGridConfigToStorage = (
+  gridConfig,
+  key = 'gantt.gridConfig'
+) => {
   try {
     localStorage.setItem(key, JSON.stringify(gridConfig));
     return true;
@@ -781,12 +823,15 @@ export const loadGridConfigFromStorage = (key = 'gantt.gridConfig') => {
       if (validation.isValid) {
         return parsed;
       } else {
-        console.warn('Invalid saved grid configuration, using default:', validation.errors);
+        // Silently use default instead of warning
+        console.debug(
+          'Using default grid configuration due to validation errors'
+        );
       }
     }
   } catch (error) {
-    console.error('Error loading grid configuration from localStorage:', error);
+    console.debug('Error loading grid configuration, using default');
   }
-  
+
   return createDefaultGridConfig();
 };

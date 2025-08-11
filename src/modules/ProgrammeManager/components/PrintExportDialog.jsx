@@ -1,5 +1,9 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { XMarkIcon, DocumentArrowDownIcon, PrinterIcon } from '@heroicons/react/24/outline';
+import {
+  XMarkIcon,
+  DocumentArrowDownIcon,
+  PrinterIcon,
+} from '@heroicons/react/24/outline';
 
 const PrintExportDialog = ({ isOpen, onClose, contentRef }) => {
   const [exportType, setExportType] = useState('pdf'); // 'pdf' or 'print'
@@ -41,7 +45,18 @@ const PrintExportDialog = ({ isOpen, onClose, contentRef }) => {
     } finally {
       setIsExporting(false);
     }
-  }, [exportType, dateRange, scale, customScale, orientation, includeGrid, includeGantt, includeProperties, margins, contentRef]);
+  }, [
+    exportType,
+    dateRange,
+    scale,
+    customScale,
+    orientation,
+    includeGrid,
+    includeGantt,
+    includeProperties,
+    margins,
+    contentRef,
+  ]);
 
   const exportToPDF = async () => {
     // Dynamic import for jsPDF and html2canvas
@@ -67,7 +82,7 @@ const PrintExportDialog = ({ isOpen, onClose, contentRef }) => {
     try {
       // Clone the content
       const contentClone = contentRef.current.cloneNode(true);
-      
+
       // Apply date range filtering if specified
       if (dateRange.start || dateRange.end) {
         applyDateRangeFilter(contentClone, dateRange);
@@ -102,7 +117,7 @@ const PrintExportDialog = ({ isOpen, onClose, contentRef }) => {
 
       // Create PDF
       const pdf = new JsPDF({
-        orientation: orientation,
+        orientation,
         unit: 'mm',
         format: 'a4',
       });
@@ -118,11 +133,13 @@ const PrintExportDialog = ({ isOpen, onClose, contentRef }) => {
       pdf.setFontSize(16);
       pdf.setFont('helvetica', 'bold');
       pdf.text('Project Schedule', 105, 15, { align: 'center' });
-      
+
       pdf.setFontSize(10);
       pdf.setFont('helvetica', 'normal');
-      pdf.text(`Generated: ${new Date().toLocaleDateString()}`, 105, 25, { align: 'center' });
-      
+      pdf.text(`Generated: ${new Date().toLocaleDateString()}`, 105, 25, {
+        align: 'center',
+      });
+
       if (dateRange.start || dateRange.end) {
         const rangeText = `Date Range: ${dateRange.start || 'Start'} - ${dateRange.end || 'End'}`;
         pdf.text(rangeText, 105, 32, { align: 'center' });
@@ -130,23 +147,36 @@ const PrintExportDialog = ({ isOpen, onClose, contentRef }) => {
 
       // Add content pages
       while (heightLeft >= pageHeight) {
-        pdf.addImage(canvas, 'PNG', margins.left, margins.top + position, imgWidth, imgHeight);
+        pdf.addImage(
+          canvas,
+          'PNG',
+          margins.left,
+          margins.top + position,
+          imgWidth,
+          imgHeight
+        );
         heightLeft -= pageHeight;
         position -= pageHeight;
-        
+
         if (heightLeft >= pageHeight) {
           pdf.addPage();
         }
       }
 
       if (heightLeft > 0) {
-        pdf.addImage(canvas, 'PNG', margins.left, margins.top + position, imgWidth, imgHeight);
+        pdf.addImage(
+          canvas,
+          'PNG',
+          margins.left,
+          margins.top + position,
+          imgWidth,
+          imgHeight
+        );
       }
 
       // Save the PDF
       const fileName = `project-schedule-${new Date().toISOString().split('T')[0]}.pdf`;
       pdf.save(fileName);
-
     } finally {
       // Clean up
       document.body.removeChild(tempContainer);
@@ -156,7 +186,7 @@ const PrintExportDialog = ({ isOpen, onClose, contentRef }) => {
   const printContent = async () => {
     // Create a new window for printing
     const printWindow = window.open('', '_blank');
-    
+
     if (!printWindow) {
       alert('Please allow popups to print the content.');
       return;
@@ -164,7 +194,7 @@ const PrintExportDialog = ({ isOpen, onClose, contentRef }) => {
 
     // Clone the content
     const contentClone = contentRef.current.cloneNode(true);
-    
+
     // Apply date range filtering if specified
     if (dateRange.start || dateRange.end) {
       applyDateRangeFilter(contentClone, dateRange);
@@ -233,7 +263,7 @@ const PrintExportDialog = ({ isOpen, onClose, contentRef }) => {
     `);
 
     printWindow.document.close();
-    
+
     // Wait for content to load then print
     printWindow.onload = () => {
       printWindow.print();
@@ -243,19 +273,24 @@ const PrintExportDialog = ({ isOpen, onClose, contentRef }) => {
 
   const applyDateRangeFilter = (content, dateRange) => {
     // Apply date range filtering to Gantt chart
-    const ganttBars = content.querySelectorAll('.gantt-bar, .milestone-diamond');
+    const ganttBars = content.querySelectorAll(
+      '.gantt-bar, .milestone-diamond'
+    );
     ganttBars.forEach(bar => {
       const taskStart = bar.getAttribute('data-start-date');
       const taskEnd = bar.getAttribute('data-end-date');
-      
+
       if (taskStart && taskEnd) {
         const startDate = new Date(taskStart);
         const endDate = new Date(taskEnd);
         const filterStart = dateRange.start ? new Date(dateRange.start) : null;
         const filterEnd = dateRange.end ? new Date(dateRange.end) : null;
-        
+
         // Hide bars that don't overlap with the date range
-        if ((filterStart && endDate < filterStart) || (filterEnd && startDate > filterEnd)) {
+        if (
+          (filterStart && endDate < filterStart) ||
+          (filterEnd && startDate > filterEnd)
+        ) {
           bar.style.display = 'none';
         }
       }
@@ -270,14 +305,14 @@ const PrintExportDialog = ({ isOpen, onClose, contentRef }) => {
         gridElement.style.display = 'none';
       }
     }
-    
+
     if (!settings.includeGantt) {
       const ganttElement = content.querySelector('.gantt-chart');
       if (ganttElement) {
         ganttElement.style.display = 'none';
       }
     }
-    
+
     if (!settings.includeProperties) {
       const propertiesElement = content.querySelector('.task-properties-pane');
       if (propertiesElement) {
@@ -293,76 +328,84 @@ const PrintExportDialog = ({ isOpen, onClose, contentRef }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+      <div className='bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto'>
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">
+        <div className='flex items-center justify-between p-6 border-b border-gray-200'>
+          <h2 className='text-xl font-semibold text-gray-900'>
             Print & Export Options
           </h2>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className='text-gray-400 hover:text-gray-600 transition-colors'
           >
-            <XMarkIcon className="w-6 h-6" />
+            <XMarkIcon className='w-6 h-6' />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
+        <div className='p-6 space-y-6'>
           {/* Export Type */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-3">Export Type</h3>
-            <div className="flex space-x-4">
-              <label className="flex items-center space-x-2 cursor-pointer">
+            <h3 className='text-lg font-medium text-gray-900 mb-3'>
+              Export Type
+            </h3>
+            <div className='flex space-x-4'>
+              <label className='flex items-center space-x-2 cursor-pointer'>
                 <input
-                  type="radio"
-                  value="pdf"
+                  type='radio'
+                  value='pdf'
                   checked={exportType === 'pdf'}
-                  onChange={(e) => setExportType(e.target.value)}
-                  className="w-4 h-4 text-blue-600"
+                  onChange={e => setExportType(e.target.value)}
+                  className='w-4 h-4 text-blue-600'
                 />
-                <DocumentArrowDownIcon className="w-5 h-5 text-gray-600" />
-                <span className="text-sm font-medium">PDF Export</span>
+                <DocumentArrowDownIcon className='w-5 h-5 text-gray-600' />
+                <span className='text-sm font-medium'>PDF Export</span>
               </label>
-              <label className="flex items-center space-x-2 cursor-pointer">
+              <label className='flex items-center space-x-2 cursor-pointer'>
                 <input
-                  type="radio"
-                  value="print"
+                  type='radio'
+                  value='print'
                   checked={exportType === 'print'}
-                  onChange={(e) => setExportType(e.target.value)}
-                  className="w-4 h-4 text-blue-600"
+                  onChange={e => setExportType(e.target.value)}
+                  className='w-4 h-4 text-blue-600'
                 />
-                <PrinterIcon className="w-5 h-5 text-gray-600" />
-                <span className="text-sm font-medium">Print</span>
+                <PrinterIcon className='w-5 h-5 text-gray-600' />
+                <span className='text-sm font-medium'>Print</span>
               </label>
             </div>
           </div>
 
           {/* Date Range */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-3">Date Range (Optional)</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <h3 className='text-lg font-medium text-gray-900 mb-3'>
+              Date Range (Optional)
+            </h3>
+            <div className='grid grid-cols-2 gap-4'>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className='block text-sm font-medium text-gray-700 mb-1'>
                   Start Date
                 </label>
                 <input
-                  type="date"
+                  type='date'
                   value={dateRange.start}
-                  onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={e =>
+                    setDateRange(prev => ({ ...prev, start: e.target.value }))
+                  }
+                  className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className='block text-sm font-medium text-gray-700 mb-1'>
                   End Date
                 </label>
                 <input
-                  type="date"
+                  type='date'
                   value={dateRange.end}
-                  onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={e =>
+                    setDateRange(prev => ({ ...prev, end: e.target.value }))
+                  }
+                  className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
                 />
               </div>
             </div>
@@ -370,49 +413,51 @@ const PrintExportDialog = ({ isOpen, onClose, contentRef }) => {
 
           {/* Scale Options */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-3">Scale Options</h3>
-            <div className="space-y-3">
-              <label className="flex items-center space-x-2 cursor-pointer">
+            <h3 className='text-lg font-medium text-gray-900 mb-3'>
+              Scale Options
+            </h3>
+            <div className='space-y-3'>
+              <label className='flex items-center space-x-2 cursor-pointer'>
                 <input
-                  type="radio"
-                  value="fit-width"
+                  type='radio'
+                  value='fit-width'
                   checked={scale === 'fit-width'}
-                  onChange={(e) => setScale(e.target.value)}
-                  className="w-4 h-4 text-blue-600"
+                  onChange={e => setScale(e.target.value)}
+                  className='w-4 h-4 text-blue-600'
                 />
-                <span className="text-sm">Fit to Page Width</span>
+                <span className='text-sm'>Fit to Page Width</span>
               </label>
-              <label className="flex items-center space-x-2 cursor-pointer">
+              <label className='flex items-center space-x-2 cursor-pointer'>
                 <input
-                  type="radio"
-                  value="fit-height"
+                  type='radio'
+                  value='fit-height'
                   checked={scale === 'fit-height'}
-                  onChange={(e) => setScale(e.target.value)}
-                  className="w-4 h-4 text-blue-600"
+                  onChange={e => setScale(e.target.value)}
+                  className='w-4 h-4 text-blue-600'
                 />
-                <span className="text-sm">Fit to Page Height</span>
+                <span className='text-sm'>Fit to Page Height</span>
               </label>
-              <label className="flex items-center space-x-2 cursor-pointer">
+              <label className='flex items-center space-x-2 cursor-pointer'>
                 <input
-                  type="radio"
-                  value="custom"
+                  type='radio'
+                  value='custom'
                   checked={scale === 'custom'}
-                  onChange={(e) => setScale(e.target.value)}
-                  className="w-4 h-4 text-blue-600"
+                  onChange={e => setScale(e.target.value)}
+                  className='w-4 h-4 text-blue-600'
                 />
-                <span className="text-sm">Custom Scale</span>
+                <span className='text-sm'>Custom Scale</span>
               </label>
               {scale === 'custom' && (
-                <div className="ml-6">
+                <div className='ml-6'>
                   <input
-                    type="range"
-                    min="25"
-                    max="200"
+                    type='range'
+                    min='25'
+                    max='200'
                     value={customScale}
-                    onChange={(e) => setCustomScale(parseInt(e.target.value))}
-                    className="w-full"
+                    onChange={e => setCustomScale(parseInt(e.target.value))}
+                    className='w-full'
                   />
-                  <span className="text-sm text-gray-600">{customScale}%</span>
+                  <span className='text-sm text-gray-600'>{customScale}%</span>
                 </div>
               )}
             </div>
@@ -420,119 +465,145 @@ const PrintExportDialog = ({ isOpen, onClose, contentRef }) => {
 
           {/* Orientation */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-3">Page Orientation</h3>
-            <div className="flex space-x-4">
-              <label className="flex items-center space-x-2 cursor-pointer">
+            <h3 className='text-lg font-medium text-gray-900 mb-3'>
+              Page Orientation
+            </h3>
+            <div className='flex space-x-4'>
+              <label className='flex items-center space-x-2 cursor-pointer'>
                 <input
-                  type="radio"
-                  value="portrait"
+                  type='radio'
+                  value='portrait'
                   checked={orientation === 'portrait'}
-                  onChange={(e) => setOrientation(e.target.value)}
-                  className="w-4 h-4 text-blue-600"
+                  onChange={e => setOrientation(e.target.value)}
+                  className='w-4 h-4 text-blue-600'
                 />
-                <span className="text-sm font-medium">Portrait</span>
+                <span className='text-sm font-medium'>Portrait</span>
               </label>
-              <label className="flex items-center space-x-2 cursor-pointer">
+              <label className='flex items-center space-x-2 cursor-pointer'>
                 <input
-                  type="radio"
-                  value="landscape"
+                  type='radio'
+                  value='landscape'
                   checked={orientation === 'landscape'}
-                  onChange={(e) => setOrientation(e.target.value)}
-                  className="w-4 h-4 text-blue-600"
+                  onChange={e => setOrientation(e.target.value)}
+                  className='w-4 h-4 text-blue-600'
                 />
-                <span className="text-sm font-medium">Landscape</span>
+                <span className='text-sm font-medium'>Landscape</span>
               </label>
             </div>
           </div>
 
           {/* Content Selection */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-3">Include Content</h3>
-            <div className="space-y-2">
-              <label className="flex items-center space-x-2 cursor-pointer">
+            <h3 className='text-lg font-medium text-gray-900 mb-3'>
+              Include Content
+            </h3>
+            <div className='space-y-2'>
+              <label className='flex items-center space-x-2 cursor-pointer'>
                 <input
-                  type="checkbox"
+                  type='checkbox'
                   checked={includeGrid}
-                  onChange={(e) => setIncludeGrid(e.target.checked)}
-                  className="w-4 h-4 text-blue-600"
+                  onChange={e => setIncludeGrid(e.target.checked)}
+                  className='w-4 h-4 text-blue-600'
                 />
-                <span className="text-sm">Task Grid</span>
+                <span className='text-sm'>Task Grid</span>
               </label>
-              <label className="flex items-center space-x-2 cursor-pointer">
+              <label className='flex items-center space-x-2 cursor-pointer'>
                 <input
-                  type="checkbox"
+                  type='checkbox'
                   checked={includeGantt}
-                  onChange={(e) => setIncludeGantt(e.target.checked)}
-                  className="w-4 h-4 text-blue-600"
+                  onChange={e => setIncludeGantt(e.target.checked)}
+                  className='w-4 h-4 text-blue-600'
                 />
-                <span className="text-sm">Gantt Chart</span>
+                <span className='text-sm'>Gantt Chart</span>
               </label>
-              <label className="flex items-center space-x-2 cursor-pointer">
+              <label className='flex items-center space-x-2 cursor-pointer'>
                 <input
-                  type="checkbox"
+                  type='checkbox'
                   checked={includeProperties}
-                  onChange={(e) => setIncludeProperties(e.target.checked)}
-                  className="w-4 h-4 text-blue-600"
+                  onChange={e => setIncludeProperties(e.target.checked)}
+                  className='w-4 h-4 text-blue-600'
                 />
-                <span className="text-sm">Task Properties</span>
+                <span className='text-sm'>Task Properties</span>
               </label>
             </div>
           </div>
 
           {/* Margins */}
           <div>
-            <h3 className="text-lg font-medium text-gray-900 mb-3">Margins (mm)</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <h3 className='text-lg font-medium text-gray-900 mb-3'>
+              Margins (mm)
+            </h3>
+            <div className='grid grid-cols-2 gap-4'>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className='block text-sm font-medium text-gray-700 mb-1'>
                   Top
                 </label>
                 <input
-                  type="number"
-                  min="0"
-                  max="50"
+                  type='number'
+                  min='0'
+                  max='50'
                   value={margins.top}
-                  onChange={(e) => setMargins(prev => ({ ...prev, top: parseInt(e.target.value) }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={e =>
+                    setMargins(prev => ({
+                      ...prev,
+                      top: parseInt(e.target.value),
+                    }))
+                  }
+                  className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className='block text-sm font-medium text-gray-700 mb-1'>
                   Bottom
                 </label>
                 <input
-                  type="number"
-                  min="0"
-                  max="50"
+                  type='number'
+                  min='0'
+                  max='50'
                   value={margins.bottom}
-                  onChange={(e) => setMargins(prev => ({ ...prev, bottom: parseInt(e.target.value) }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={e =>
+                    setMargins(prev => ({
+                      ...prev,
+                      bottom: parseInt(e.target.value),
+                    }))
+                  }
+                  className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className='block text-sm font-medium text-gray-700 mb-1'>
                   Left
                 </label>
                 <input
-                  type="number"
-                  min="0"
-                  max="50"
+                  type='number'
+                  min='0'
+                  max='50'
                   value={margins.left}
-                  onChange={(e) => setMargins(prev => ({ ...prev, left: parseInt(e.target.value) }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={e =>
+                    setMargins(prev => ({
+                      ...prev,
+                      left: parseInt(e.target.value),
+                    }))
+                  }
+                  className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className='block text-sm font-medium text-gray-700 mb-1'>
                   Right
                 </label>
                 <input
-                  type="number"
-                  min="0"
-                  max="50"
+                  type='number'
+                  min='0'
+                  max='50'
                   value={margins.right}
-                  onChange={(e) => setMargins(prev => ({ ...prev, right: parseInt(e.target.value) }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={e =>
+                    setMargins(prev => ({
+                      ...prev,
+                      right: parseInt(e.target.value),
+                    }))
+                  }
+                  className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
                 />
               </div>
             </div>
@@ -540,29 +611,29 @@ const PrintExportDialog = ({ isOpen, onClose, contentRef }) => {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200">
+        <div className='flex items-center justify-end space-x-3 p-6 border-t border-gray-200'>
           <button
             onClick={handleClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+            className='px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors'
           >
             Cancel
           </button>
           <button
             onClick={handleExport}
             disabled={isExporting}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+            className='px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2'
           >
             {isExporting ? (
               <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin' />
                 <span>Exporting...</span>
               </>
             ) : (
               <>
                 {exportType === 'pdf' ? (
-                  <DocumentArrowDownIcon className="w-4 h-4" />
+                  <DocumentArrowDownIcon className='w-4 h-4' />
                 ) : (
-                  <PrinterIcon className="w-4 h-4" />
+                  <PrinterIcon className='w-4 h-4' />
                 )}
                 <span>{exportType === 'pdf' ? 'Export PDF' : 'Print'}</span>
               </>

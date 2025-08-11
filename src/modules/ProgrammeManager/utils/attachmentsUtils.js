@@ -25,7 +25,13 @@ export const DEFAULT_ATTACHMENTS_CONFIG = {
     'application/x-zip-compressed',
   ],
   imageTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
-  previewableTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'],
+  previewableTypes: [
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+    'application/pdf',
+  ],
   storageBucket: 'task-attachments',
   uploadPath: 'uploads',
 };
@@ -47,18 +53,27 @@ export const FILE_CATEGORIES = {
  * @param {string} mimeType - File MIME type
  * @returns {string} File category
  */
-export const getFileCategory = (mimeType) => {
+export const getFileCategory = mimeType => {
   if (!mimeType) return FILE_CATEGORIES.OTHER;
 
   if (mimeType.startsWith('image/')) {
     return FILE_CATEGORIES.IMAGE;
   }
 
-  if (mimeType.includes('word') || mimeType.includes('document') || mimeType === 'application/pdf' || mimeType === 'text/') {
+  if (
+    mimeType.includes('word') ||
+    mimeType.includes('document') ||
+    mimeType === 'application/pdf' ||
+    mimeType === 'text/'
+  ) {
     return FILE_CATEGORIES.DOCUMENT;
   }
 
-  if (mimeType.includes('excel') || mimeType.includes('spreadsheet') || mimeType === 'text/csv') {
+  if (
+    mimeType.includes('excel') ||
+    mimeType.includes('spreadsheet') ||
+    mimeType === 'text/csv'
+  ) {
     return FILE_CATEGORIES.SPREADSHEET;
   }
 
@@ -78,7 +93,7 @@ export const getFileCategory = (mimeType) => {
  * @param {string} category - File category
  * @returns {string} Icon name
  */
-export const getFileIcon = (category) => {
+export const getFileIcon = category => {
   switch (category) {
     case FILE_CATEGORIES.IMAGE:
       return 'PhotoIcon';
@@ -100,14 +115,14 @@ export const getFileIcon = (category) => {
  * @param {number} bytes - File size in bytes
  * @returns {string} Formatted file size
  */
-export const formatFileSize = (bytes) => {
+export const formatFileSize = bytes => {
   if (bytes === 0) return '0 Bytes';
 
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 };
 
 /**
@@ -122,7 +137,9 @@ export const validateFile = (file, config = DEFAULT_ATTACHMENTS_CONFIG) => {
 
   // Check file size
   if (file.size > config.maxFileSize) {
-    errors.push(`File size (${formatFileSize(file.size)}) exceeds maximum allowed size (${formatFileSize(config.maxFileSize)})`);
+    errors.push(
+      `File size (${formatFileSize(file.size)}) exceeds maximum allowed size (${formatFileSize(config.maxFileSize)})`
+    );
   }
 
   // Check file type
@@ -159,7 +176,7 @@ export const generateFileName = (originalName, taskId) => {
   const random = Math.random().toString(36).substring(2, 15);
   const extension = originalName.split('.').pop();
   const baseName = originalName.replace(`.${extension}`, '');
-  
+
   return `${taskId}_${baseName}_${timestamp}_${random}.${extension}`;
 };
 
@@ -173,7 +190,7 @@ export const generateFileName = (originalName, taskId) => {
 export const createAttachment = (file, taskId, storagePath) => {
   const category = getFileCategory(file.type);
   const icon = getFileIcon(category);
-  
+
   return {
     id: `${taskId}_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`,
     name: file.name,
@@ -185,7 +202,9 @@ export const createAttachment = (file, taskId, storagePath) => {
     storagePath,
     uploadedAt: new Date().toISOString(),
     uploadedBy: 'current-user', // TODO: Get from auth context
-    isPreviewable: DEFAULT_ATTACHMENTS_CONFIG.previewableTypes.includes(file.type),
+    isPreviewable: DEFAULT_ATTACHMENTS_CONFIG.previewableTypes.includes(
+      file.type
+    ),
     isImage: DEFAULT_ATTACHMENTS_CONFIG.imageTypes.includes(file.type),
     downloadUrl: null, // Will be set after upload
     previewUrl: null, // Will be set for images
@@ -200,12 +219,19 @@ export const createAttachment = (file, taskId, storagePath) => {
  * @param {Object} config - Configuration
  * @returns {Promise<Object>} Upload result
  */
-export const uploadFile = async (file, taskId, supabaseClient, config = DEFAULT_ATTACHMENTS_CONFIG) => {
+export const uploadFile = async (
+  file,
+  taskId,
+  supabaseClient,
+  config = DEFAULT_ATTACHMENTS_CONFIG
+) => {
   try {
     // Validate file
     const validation = validateFile(file, config);
     if (!validation.isValid) {
-      throw new Error(`File validation failed: ${validation.errors.join(', ')}`);
+      throw new Error(
+        `File validation failed: ${validation.errors.join(', ')}`
+      );
     }
 
     // Generate file name and path
@@ -243,7 +269,6 @@ export const uploadFile = async (file, taskId, supabaseClient, config = DEFAULT_
       attachment,
       data,
     };
-
   } catch (error) {
     console.error('File upload error:', error);
     return {
@@ -260,7 +285,11 @@ export const uploadFile = async (file, taskId, supabaseClient, config = DEFAULT_
  * @param {Object} config - Configuration
  * @returns {Promise<Object>} Delete result
  */
-export const deleteFile = async (attachment, supabaseClient, config = DEFAULT_ATTACHMENTS_CONFIG) => {
+export const deleteFile = async (
+  attachment,
+  supabaseClient,
+  config = DEFAULT_ATTACHMENTS_CONFIG
+) => {
   try {
     const { error } = await supabaseClient.storage
       .from(config.storageBucket)
@@ -273,7 +302,6 @@ export const deleteFile = async (attachment, supabaseClient, config = DEFAULT_AT
     return {
       success: true,
     };
-
   } catch (error) {
     console.error('File delete error:', error);
     return {
@@ -290,7 +318,11 @@ export const deleteFile = async (attachment, supabaseClient, config = DEFAULT_AT
  * @param {Object} config - Configuration
  * @returns {string} Preview URL
  */
-export const getPreviewUrl = (attachment, supabaseClient, config = DEFAULT_ATTACHMENTS_CONFIG) => {
+export const getPreviewUrl = (
+  attachment,
+  supabaseClient,
+  config = DEFAULT_ATTACHMENTS_CONFIG
+) => {
   if (attachment.previewUrl) {
     return attachment.previewUrl;
   }
@@ -299,7 +331,7 @@ export const getPreviewUrl = (attachment, supabaseClient, config = DEFAULT_ATTAC
     const { data } = supabaseClient.storage
       .from(config.storageBucket)
       .getPublicUrl(attachment.storagePath);
-    
+
     return data.publicUrl;
   }
 
@@ -313,7 +345,11 @@ export const getPreviewUrl = (attachment, supabaseClient, config = DEFAULT_ATTAC
  * @param {Object} config - Configuration
  * @returns {Promise<Object>} Download result
  */
-export const downloadFile = async (attachment, supabaseClient, config = DEFAULT_ATTACHMENTS_CONFIG) => {
+export const downloadFile = async (
+  attachment,
+  supabaseClient,
+  config = DEFAULT_ATTACHMENTS_CONFIG
+) => {
   try {
     const { data, error } = await supabaseClient.storage
       .from(config.storageBucket)
@@ -336,7 +372,6 @@ export const downloadFile = async (attachment, supabaseClient, config = DEFAULT_
     return {
       success: true,
     };
-
   } catch (error) {
     console.error('File download error:', error);
     return {
@@ -352,7 +387,10 @@ export const downloadFile = async (attachment, supabaseClient, config = DEFAULT_
  * @param {Object} config - Configuration
  * @returns {Object} Validation result
  */
-export const validateAttachments = (attachments, config = DEFAULT_ATTACHMENTS_CONFIG) => {
+export const validateAttachments = (
+  attachments,
+  config = DEFAULT_ATTACHMENTS_CONFIG
+) => {
   const errors = [];
   const warnings = [];
 
@@ -367,8 +405,10 @@ export const validateAttachments = (attachments, config = DEFAULT_ATTACHMENTS_CO
 
   // Check for duplicate file names
   const fileNames = attachments.map(att => att.originalName);
-  const duplicates = fileNames.filter((name, index) => fileNames.indexOf(name) !== index);
-  
+  const duplicates = fileNames.filter(
+    (name, index) => fileNames.indexOf(name) !== index
+  );
+
   if (duplicates.length > 0) {
     warnings.push(`Duplicate file names found: ${duplicates.join(', ')}`);
   }
@@ -376,9 +416,11 @@ export const validateAttachments = (attachments, config = DEFAULT_ATTACHMENTS_CO
   // Check total size
   const totalSize = attachments.reduce((sum, att) => sum + att.size, 0);
   const maxTotalSize = config.maxFileSize * config.maxFiles;
-  
+
   if (totalSize > maxTotalSize) {
-    warnings.push(`Total file size (${formatFileSize(totalSize)}) is approaching the limit`);
+    warnings.push(
+      `Total file size (${formatFileSize(totalSize)}) is approaching the limit`
+    );
   }
 
   return {
@@ -395,7 +437,7 @@ export const validateAttachments = (attachments, config = DEFAULT_ATTACHMENTS_CO
  * @param {Array} attachments - Attachments array
  * @returns {Object} Statistics
  */
-export const getAttachmentsStatistics = (attachments) => {
+export const getAttachmentsStatistics = attachments => {
   if (!Array.isArray(attachments) || attachments.length === 0) {
     return {
       totalFiles: 0,
@@ -413,11 +455,11 @@ export const getAttachmentsStatistics = (attachments) => {
 
   attachments.forEach(attachment => {
     totalSize += attachment.size;
-    
+
     if (attachment.isPreviewable) {
       previewableCount++;
     }
-    
+
     if (attachment.isImage) {
       imageCount++;
     }
@@ -442,7 +484,11 @@ export const getAttachmentsStatistics = (attachments) => {
  * @param {string} sortOrder - Sort order (asc/desc)
  * @returns {Array} Sorted attachments
  */
-export const sortAttachments = (attachments, sortBy = 'uploadedAt', sortOrder = 'desc') => {
+export const sortAttachments = (
+  attachments,
+  sortBy = 'uploadedAt',
+  sortOrder = 'desc'
+) => {
   if (!Array.isArray(attachments)) return [];
 
   return [...attachments].sort((a, b) => {
@@ -494,8 +540,11 @@ export const filterAttachments = (attachments, filters = {}) => {
       const searchTerm = filters.search.toLowerCase();
       const fileName = attachment.name.toLowerCase();
       const originalName = attachment.originalName.toLowerCase();
-      
-      if (!fileName.includes(searchTerm) && !originalName.includes(searchTerm)) {
+
+      if (
+        !fileName.includes(searchTerm) &&
+        !originalName.includes(searchTerm)
+      ) {
         return false;
       }
     }
@@ -503,11 +552,11 @@ export const filterAttachments = (attachments, filters = {}) => {
     // Date range filter
     if (filters.dateFrom || filters.dateTo) {
       const uploadDate = new Date(attachment.uploadedAt);
-      
+
       if (filters.dateFrom && uploadDate < new Date(filters.dateFrom)) {
         return false;
       }
-      
+
       if (filters.dateTo && uploadDate > new Date(filters.dateTo)) {
         return false;
       }
@@ -553,7 +602,7 @@ export const exportAttachments = (attachments, task) => {
  * @param {Object} importData - Import data object
  * @returns {Object} Import result
  */
-export const importAttachments = (importData) => {
+export const importAttachments = importData => {
   const errors = [];
   const warnings = [];
 
@@ -565,8 +614,13 @@ export const importAttachments = (importData) => {
     errors.push('Attachments data must be an array');
   }
 
-  if (importData.attachments && importData.attachments.length > DEFAULT_ATTACHMENTS_CONFIG.maxFiles) {
-    errors.push(`Import contains too many files (${importData.attachments.length} > ${DEFAULT_ATTACHMENTS_CONFIG.maxFiles})`);
+  if (
+    importData.attachments &&
+    importData.attachments.length > DEFAULT_ATTACHMENTS_CONFIG.maxFiles
+  ) {
+    errors.push(
+      `Import contains too many files (${importData.attachments.length} > ${DEFAULT_ATTACHMENTS_CONFIG.maxFiles})`
+    );
   }
 
   return {

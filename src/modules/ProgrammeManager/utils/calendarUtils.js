@@ -115,7 +115,7 @@ export const isWorkingDay = isWorkday;
  * @returns {Date} - The next working day
  */
 export const nextWorkday = (date, calendar = DEFAULT_CALENDAR) => {
-  let nextDate = new Date(date);
+  const nextDate = new Date(date);
   nextDate.setDate(nextDate.getDate() + 1);
 
   while (!isWorkday(nextDate, calendar)) {
@@ -132,7 +132,7 @@ export const nextWorkday = (date, calendar = DEFAULT_CALENDAR) => {
  * @returns {Date} - The previous working day
  */
 export const prevWorkday = (date, calendar = DEFAULT_CALENDAR) => {
-  let prevDate = new Date(date);
+  const prevDate = new Date(date);
   prevDate.setDate(prevDate.getDate() - 1);
 
   while (!isWorkday(prevDate, calendar)) {
@@ -140,6 +140,19 @@ export const prevWorkday = (date, calendar = DEFAULT_CALENDAR) => {
   }
 
   return prevDate;
+};
+
+/**
+ * Add calendar days to a date
+ * @param {Date} date - The starting date
+ * @param {number} days - Number of days to add (can be negative)
+ * @param {Object} calendar - The calendar configuration (unused for calendar days)
+ * @returns {Date} - The resulting date
+ */
+export const addDays = (date, days, calendar = DEFAULT_CALENDAR) => {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
 };
 
 /**
@@ -186,7 +199,7 @@ export const diffWorkdays = (
   }
 
   let workdays = 0;
-  let current = new Date(start);
+  const current = new Date(start);
 
   while (current <= end) {
     if (isWorkday(current, calendar)) {
@@ -278,13 +291,24 @@ export const validateCalendar = calendar => {
   } else if (calendar.exceptions) {
     calendar.exceptions.forEach((exception, index) => {
       if (!exception.date || !/^\d{4}-\d{2}-\d{2}$/.test(exception.date)) {
-        errors.push(`Exception at index ${index} must have a valid date in YYYY-MM-DD format`);
+        errors.push(
+          `Exception at index ${index} must have a valid date in YYYY-MM-DD format`
+        );
       }
       if (typeof exception.isWorkingDay !== 'boolean') {
-        errors.push(`Exception at index ${index} must have a valid isWorkingDay boolean value`);
+        errors.push(
+          `Exception at index ${index} must have a valid isWorkingDay boolean value`
+        );
       }
-      if (exception.workingHours !== undefined && (typeof exception.workingHours !== 'number' || exception.workingHours < 0 || exception.workingHours > 24)) {
-        errors.push(`Exception at index ${index} working hours must be a number between 0 and 24`);
+      if (
+        exception.workingHours !== undefined &&
+        (typeof exception.workingHours !== 'number' ||
+          exception.workingHours < 0 ||
+          exception.workingHours > 24)
+      ) {
+        errors.push(
+          `Exception at index ${index} working hours must be a number between 0 and 24`
+        );
       }
     });
   }
@@ -303,7 +327,12 @@ export const validateCalendar = calendar => {
  * @param {Array} exceptions - Array of calendar exceptions
  * @returns {Object} - New calendar object
  */
-export const createCalendar = (name, workingDays = {}, holidays = [], exceptions = []) => {
+export const createCalendar = (
+  name,
+  workingDays = {},
+  holidays = [],
+  exceptions = []
+) => {
   return {
     id: `calendar_${Date.now()}`,
     name,

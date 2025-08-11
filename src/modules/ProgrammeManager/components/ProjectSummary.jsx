@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  CurrencyPoundIcon,
+  CurrencyDollarIcon,
   ChartBarIcon,
   TrendingUpIcon,
   TrendingDownIcon,
@@ -59,7 +59,7 @@ const ProjectSummary = ({ tasks, resources }) => {
       {/* Header */}
       <div className='flex items-center justify-between mb-4'>
         <div className='flex items-center gap-2'>
-          <CurrencyPoundIcon className='w-5 h-5 text-green-600' />
+          <CurrencyDollarIcon className='w-5 h-5 text-green-600' />
           <h3 className='text-lg font-semibold text-gray-900'>
             Project Cost Summary
           </h3>

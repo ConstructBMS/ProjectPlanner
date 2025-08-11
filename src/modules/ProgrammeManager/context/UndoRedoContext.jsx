@@ -31,29 +31,32 @@ export const UndoRedoProvider = ({ children }) => {
   }, []);
 
   // Add action to undo stack
-  const pushAction = useCallback((action) => {
-    if (isUndoRedoAction) {
-      // Don't add to undo stack if this is an undo/redo action
-      return;
-    }
-
-    setUndoStack(prev => {
-      const newStack = [...prev, action];
-      // Limit stack size
-      if (newStack.length > MAX_STACK_SIZE) {
-        return newStack.slice(-MAX_STACK_SIZE);
+  const pushAction = useCallback(
+    action => {
+      if (isUndoRedoAction) {
+        // Don't add to undo stack if this is an undo/redo action
+        return;
       }
-      return newStack;
-    });
-    clearRedoStack();
-  }, [isUndoRedoAction, clearRedoStack]);
+
+      setUndoStack(prev => {
+        const newStack = [...prev, action];
+        // Limit stack size
+        if (newStack.length > MAX_STACK_SIZE) {
+          return newStack.slice(-MAX_STACK_SIZE);
+        }
+        return newStack;
+      });
+      clearRedoStack();
+    },
+    [isUndoRedoAction, clearRedoStack]
+  );
 
   // Undo last action
   const undo = useCallback(() => {
     if (undoStack.length === 0) return;
 
     setIsUndoRedoAction(true);
-    
+
     const lastAction = undoStack[undoStack.length - 1];
     const remainingActions = undoStack.slice(0, -1);
 
@@ -62,7 +65,7 @@ export const UndoRedoProvider = ({ children }) => {
 
     // Apply the inverse of the action
     applyActionInverse(lastAction);
-    
+
     setIsUndoRedoAction(false);
   }, [undoStack]);
 
@@ -71,7 +74,7 @@ export const UndoRedoProvider = ({ children }) => {
     if (redoStack.length === 0) return;
 
     setIsUndoRedoAction(true);
-    
+
     const lastRedoAction = redoStack[redoStack.length - 1];
     const remainingRedoActions = redoStack.slice(0, -1);
 
@@ -80,12 +83,12 @@ export const UndoRedoProvider = ({ children }) => {
 
     // Reapply the action
     applyAction(lastRedoAction);
-    
+
     setIsUndoRedoAction(false);
   }, [redoStack]);
 
   // Apply action (for redo)
-  const applyAction = useCallback((action) => {
+  const applyAction = useCallback(action => {
     // This will be implemented by the consuming components
     // The action object will contain the necessary data to reapply the change
     if (action.onRedo) {
@@ -94,7 +97,7 @@ export const UndoRedoProvider = ({ children }) => {
   }, []);
 
   // Apply inverse action (for undo)
-  const applyActionInverse = useCallback((action) => {
+  const applyActionInverse = useCallback(action => {
     // This will be implemented by the consuming components
     // The action object will contain the necessary data to reverse the change
     if (action.onUndo) {
@@ -124,12 +127,12 @@ export const UndoRedoProvider = ({ children }) => {
 
   // Keyboard shortcuts
   useEffect(() => {
-    const handleKeyDown = (e) => {
+    const handleKeyDown = e => {
       if (e.ctrlKey || e.metaKey) {
         if (e.key === 'z' && !e.shiftKey) {
           e.preventDefault();
           if (canUndo) undo();
-        } else if ((e.key === 'y') || (e.key === 'z' && e.shiftKey)) {
+        } else if (e.key === 'y' || (e.key === 'z' && e.shiftKey)) {
           e.preventDefault();
           if (canRedo) redo();
         }

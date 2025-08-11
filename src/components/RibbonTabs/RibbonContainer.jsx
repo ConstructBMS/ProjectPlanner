@@ -3,17 +3,14 @@ import { useUserContext } from '../../modules/ProgrammeManager/context/UserConte
 import { supabase } from '../../supabase/client';
 import RibbonTabs from '../../modules/ProgrammeManager/components/RibbonTabs/RibbonTabs';
 import GlobalSearch from '../GlobalSearch';
-import {
-  ChevronUpIcon,
-  ChevronDownIcon,
-} from '@heroicons/react/24/outline';
+import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 
-const RibbonContainer = ({ 
-  onExpandAll, 
-  onCollapseAll, 
-  contentRef, 
-  projectId, 
-  onBackToPortfolio 
+const RibbonContainer = ({
+  onExpandAll,
+  onCollapseAll,
+  contentRef,
+  projectId,
+  onBackToPortfolio,
 }) => {
   const { user, getRoleDescription } = useUserContext();
   const [isExpanded, setIsExpanded] = useState(true);
@@ -40,7 +37,7 @@ const RibbonContainer = ({
 
       if (settingsError && settingsError.code !== 'PGRST116') {
         // PGRST116 is "not found" error, which is expected for new users
-        console.warn('User settings not found, using default ribbon state');
+        console.debug('User settings not found, using default ribbon state');
       }
 
       // Set ribbon state (default to expanded if no settings found)
@@ -57,31 +54,32 @@ const RibbonContainer = ({
   }, [user]);
 
   // Save ribbon state to Supabase
-  const saveRibbonState = useCallback(async (expanded) => {
-    if (!user) return;
+  const saveRibbonState = useCallback(
+    async expanded => {
+      if (!user) return;
 
-    try {
-      const ribbonState = { expanded };
-      
-      // Upsert user settings
-      const { error } = await supabase
-        .from('user_settings')
-        .upsert({
+      try {
+        const ribbonState = { expanded };
+
+        // Upsert user settings
+        const { error } = await supabase.from('user_settings').upsert({
           user_id: user.id,
           ribbon_state: ribbonState,
           updated_at: new Date().toISOString(),
         });
 
-      if (error) {
-        throw new Error(`Error saving ribbon state: ${error.message}`);
-      }
+        if (error) {
+          throw new Error(`Error saving ribbon state: ${error.message}`);
+        }
 
-      console.log('Ribbon state saved successfully');
-    } catch (err) {
-      setError(err.message);
-      console.error('Error saving ribbon state:', err);
-    }
-  }, [user]);
+        console.log('Ribbon state saved successfully');
+      } catch (err) {
+        setError(err.message);
+        console.error('Error saving ribbon state:', err);
+      }
+    },
+    [user]
+  );
 
   // Toggle ribbon expand/collapse
   const toggleRibbon = useCallback(async () => {
@@ -97,7 +95,7 @@ const RibbonContainer = ({
 
   // Handle keyboard shortcut (Ctrl/Cmd + F1)
   useEffect(() => {
-    const handleKeyDown = (event) => {
+    const handleKeyDown = event => {
       if ((event.ctrlKey || event.metaKey) && event.key === 'F1') {
         event.preventDefault();
         toggleRibbon();
@@ -114,19 +112,19 @@ const RibbonContainer = ({
       <div className='z-10 bg-white border-b border-gray-200'>
         <div className='flex items-center justify-between px-4 py-2'>
           <div className='flex items-center space-x-2'>
-            <div className='animate-pulse bg-gray-200 h-4 w-4 rounded'></div>
+            <div className='animate-pulse bg-gray-200 h-4 w-4 rounded' />
             <span className='text-sm text-gray-500'>Loading ribbon...</span>
           </div>
         </div>
-        <div className='asta-ribbon'>
+        <div className='project-ribbon'>
           <div className='flex border-b border-gray-300'>
-            <div className='animate-pulse bg-gray-200 h-8 w-16 rounded m-2'></div>
-            <div className='animate-pulse bg-gray-200 h-8 w-16 rounded m-2'></div>
-            <div className='animate-pulse bg-gray-200 h-8 w-16 rounded m-2'></div>
+            <div className='animate-pulse bg-gray-200 h-8 w-16 rounded m-2' />
+            <div className='animate-pulse bg-gray-200 h-8 w-16 rounded m-2' />
+            <div className='animate-pulse bg-gray-200 h-8 w-16 rounded m-2' />
           </div>
-          <div className='asta-ribbon-content min-h-[80px] w-full'>
+          <div className='project-ribbon-content min-h-[80px] w-full'>
             <div className='flex items-center justify-center h-full'>
-              <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600'></div>
+              <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600' />
             </div>
           </div>
         </div>
@@ -183,12 +181,8 @@ const RibbonContainer = ({
           </button>
           <span className='text-xs text-gray-400'>Ctrl+F1</span>
         </div>
-        
-        {error && (
-          <div className='text-xs text-red-500'>
-            Error: {error}
-          </div>
-        )}
+
+        {error && <div className='text-xs text-red-500'>Error: {error}</div>}
       </div>
 
       {/* Ribbon Content */}

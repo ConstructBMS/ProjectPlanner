@@ -22,7 +22,7 @@ export const CONSTRAINT_TYPES = {
  * @param {string} constraintType - Constraint type
  * @returns {string} Human-readable label
  */
-export const getConstraintLabel = (constraintType) => {
+export const getConstraintLabel = constraintType => {
   switch (constraintType) {
     case CONSTRAINT_TYPES.ASAP:
       return 'As Soon As Possible';
@@ -46,7 +46,7 @@ export const getConstraintLabel = (constraintType) => {
  * @param {string} constraintType - Constraint type
  * @returns {string} Detailed description
  */
-export const getConstraintDescription = (constraintType) => {
+export const getConstraintDescription = constraintType => {
   switch (constraintType) {
     case CONSTRAINT_TYPES.ASAP:
       return 'Task will be scheduled as early as possible based on dependencies';
@@ -70,7 +70,7 @@ export const getConstraintDescription = (constraintType) => {
  * @param {string} constraintType - Constraint type
  * @returns {string} Icon name
  */
-export const getConstraintIcon = (constraintType) => {
+export const getConstraintIcon = constraintType => {
   switch (constraintType) {
     case CONSTRAINT_TYPES.ASAP:
       return '⚡';
@@ -94,7 +94,7 @@ export const getConstraintIcon = (constraintType) => {
  * @param {string} constraintType - Constraint type
  * @returns {Object} Styling information
  */
-export const getConstraintStyling = (constraintType) => {
+export const getConstraintStyling = constraintType => {
   switch (constraintType) {
     case CONSTRAINT_TYPES.ASAP:
       return {
@@ -153,7 +153,7 @@ export const getConstraintStyling = (constraintType) => {
  * @param {Object} constraint - Constraint object
  * @returns {Object} Validation result
  */
-export const validateConstraint = (constraint) => {
+export const validateConstraint = constraint => {
   const errors = [];
   const warnings = [];
 
@@ -167,7 +167,14 @@ export const validateConstraint = (constraint) => {
   }
 
   // Validate date constraints
-  if ([CONSTRAINT_TYPES.MSO, CONSTRAINT_TYPES.MFO, CONSTRAINT_TYPES.SNET, CONSTRAINT_TYPES.FNLT].includes(constraint.type)) {
+  if (
+    [
+      CONSTRAINT_TYPES.MSO,
+      CONSTRAINT_TYPES.MFO,
+      CONSTRAINT_TYPES.SNET,
+      CONSTRAINT_TYPES.FNLT,
+    ].includes(constraint.type)
+  ) {
     if (!constraint.date) {
       errors.push(`${getConstraintLabel(constraint.type)} requires a date`);
     } else {
@@ -241,7 +248,10 @@ export const applyConstraint = (task, constraint, globalCalendar) => {
     case CONSTRAINT_TYPES.SNET:
       // Start no earlier than constraint date
       if (constraint.date) {
-        const constraintDate = snapToWorkday(new Date(constraint.date), globalCalendar);
+        const constraintDate = snapToWorkday(
+          new Date(constraint.date),
+          globalCalendar
+        );
         if (startDate < constraintDate) {
           startDate = constraintDate;
           endDate = addDays(startDate, duration - 1, globalCalendar);
@@ -252,7 +262,10 @@ export const applyConstraint = (task, constraint, globalCalendar) => {
     case CONSTRAINT_TYPES.FNLT:
       // Finish no later than constraint date
       if (constraint.date) {
-        const constraintDate = snapToWorkday(new Date(constraint.date), globalCalendar);
+        const constraintDate = snapToWorkday(
+          new Date(constraint.date),
+          globalCalendar
+        );
         if (endDate > constraintDate) {
           endDate = constraintDate;
           startDate = addDays(endDate, -(duration - 1), globalCalendar);
@@ -279,7 +292,12 @@ export const applyConstraint = (task, constraint, globalCalendar) => {
  * @param {Object} globalCalendar - Global calendar
  * @returns {Object} Conflict analysis
  */
-export const checkConstraintConflicts = (task, allTasks, taskLinks, globalCalendar) => {
+export const checkConstraintConflicts = (
+  task,
+  allTasks,
+  taskLinks,
+  globalCalendar
+) => {
   const conflicts = [];
   const warnings = [];
 
@@ -296,7 +314,7 @@ export const checkConstraintConflicts = (task, allTasks, taskLinks, globalCalend
 
   if (constraint.type === CONSTRAINT_TYPES.MSO && constraint.date) {
     const constraintStart = new Date(constraint.date);
-    
+
     // Check if predecessors would conflict
     predecessors.forEach(link => {
       const predecessor = allTasks.find(t => t.id === link.fromTaskId);
@@ -315,7 +333,7 @@ export const checkConstraintConflicts = (task, allTasks, taskLinks, globalCalend
 
   if (constraint.type === CONSTRAINT_TYPES.MFO && constraint.date) {
     const constraintEnd = new Date(constraint.date);
-    
+
     // Check if successors would conflict
     successors.forEach(link => {
       const successor = allTasks.find(t => t.id === link.toTaskId);
@@ -333,11 +351,19 @@ export const checkConstraintConflicts = (task, allTasks, taskLinks, globalCalend
   }
 
   // Check for duration conflicts
-  if (constraint.type === CONSTRAINT_TYPES.MSO && constraint.date && constraint.type === CONSTRAINT_TYPES.MFO && constraint.date) {
+  if (
+    constraint.type === CONSTRAINT_TYPES.MSO &&
+    constraint.date &&
+    constraint.type === CONSTRAINT_TYPES.MFO &&
+    constraint.date
+  ) {
     const startDate = new Date(constraint.date);
     const endDate = new Date(constraint.date);
-    const actualDuration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-    
+    const actualDuration =
+      Math.ceil(
+        (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+      ) + 1;
+
     if (actualDuration !== duration) {
       conflicts.push({
         type: 'duration',
@@ -367,19 +393,19 @@ export const checkConstraintConflicts = (task, allTasks, taskLinks, globalCalend
  * @param {Object} constraint - Constraint object
  * @returns {string} Tooltip text
  */
-export const getConstraintTooltip = (constraint) => {
+export const getConstraintTooltip = constraint => {
   if (!constraint || !constraint.type) {
     return 'No constraint applied';
   }
 
   const label = getConstraintLabel(constraint.type);
   const description = getConstraintDescription(constraint.type);
-  
+
   if (constraint.date) {
     const date = new Date(constraint.date).toLocaleDateString();
     return `${label}: ${date}\n${description}`;
   }
-  
+
   return `${label}\n${description}`;
 };
 
@@ -388,18 +414,18 @@ export const getConstraintTooltip = (constraint) => {
  * @param {Object} constraint - Constraint object
  * @returns {string} Formatted constraint string
  */
-export const formatConstraint = (constraint) => {
+export const formatConstraint = constraint => {
   if (!constraint || !constraint.type) {
     return 'No Constraint';
   }
 
   const label = getConstraintLabel(constraint.type);
-  
+
   if (constraint.date) {
     const date = new Date(constraint.date).toLocaleDateString();
     return `${label}: ${date}`;
   }
-  
+
   return label;
 };
 

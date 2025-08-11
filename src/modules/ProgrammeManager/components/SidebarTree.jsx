@@ -34,7 +34,7 @@ import {
   getTaskMilestoneShape,
   getMilestoneColor,
   createMilestoneShapeComponent,
-} from '../utils/milestoneShapeUtils';
+} from '../utils/milestoneShapeUtils.jsx';
 
 // Mock tree data for programme structure
 // const treeData = [

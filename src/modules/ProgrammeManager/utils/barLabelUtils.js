@@ -212,7 +212,7 @@ export const getTaskBarLabels = (task, userSettings = {}, barWidth = 0) => {
       globalSettings.truncateLongLabels &&
       value.length > globalSettings.maxLabelLength
     ) {
-      value = value.substring(0, globalSettings.maxLabelLength) + '...';
+      value = `${value.substring(0, globalSettings.maxLabelLength)}...`;
     }
 
     return {

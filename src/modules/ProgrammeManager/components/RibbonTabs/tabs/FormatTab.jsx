@@ -1,6 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { RibbonGroup, RibbonButton } from '../../RibbonComponents';
-import { PaintBrushIcon, TagIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import RibbonGroup from '../shared/RibbonGroup';
+import RibbonButton from '../shared/RibbonButton';
+import GroupDialogLauncher from '../GroupDialogLauncher';
+import {
+  PaintBrushIcon,
+  TagIcon,
+  ChevronDownIcon,
+} from '@heroicons/react/24/outline';
 import { useViewContext } from '../../../context/ViewContext';
 import { useTaskContext } from '../../../context/TaskContext';
 import {
@@ -9,13 +15,13 @@ import {
   createMilestoneShapeComponent,
   applyGlobalMilestoneShape,
   getMilestoneShapeStats,
-} from '../../../utils/milestoneShapeUtils';
+} from '../../../utils/milestoneShapeUtils.jsx';
 
-const FormatTab = ({ tasks, userSettings, onSettingsUpdate }) => {
+const FormatTab = ({ tasks, userSettings, onSettingsUpdate, onOpenGroupDialog }) => {
   return (
     <div className='flex flex-nowrap gap-0 p-2 bg-white w-full min-w-0'>
       {/* Bar Styles Group */}
-      <RibbonGroup title='Bar Styles'>
+      <RibbonGroup title='Bar Styles' className="ribbon-group">
         <RibbonButton
           icon={PaintBrushIcon}
           label='Bar Styles'
@@ -25,10 +31,27 @@ const FormatTab = ({ tasks, userSettings, onSettingsUpdate }) => {
             console.log('Open Bar Style Editor');
           }}
         />
+        <GroupDialogLauncher
+          groupName="Bar Styles"
+          onClick={() => onOpenGroupDialog?.('Bar Styles Options', (
+            <div className="space-y-4">
+              <p className="text-gray-300">Extended bar style configuration options will be available here.</p>
+              <div className="bg-gray-700 rounded-lg p-4">
+                <h3 className="text-white font-medium mb-2">Available Features:</h3>
+                <ul className="text-gray-300 text-sm space-y-1">
+                  <li>• Custom bar colors and patterns</li>
+                  <li>• Progress visualization styles</li>
+                  <li>• Milestone shape customization</li>
+                  <li>• Bar thickness and spacing</li>
+                </ul>
+              </div>
+            </div>
+          ))}
+        />
       </RibbonGroup>
 
       {/* Bar Labels Group */}
-      <RibbonGroup title='Bar Labels'>
+      <RibbonGroup title='Bar Labels' className="ribbon-group">
         <RibbonButton
           icon={TagIcon}
           label='Bar Labels'
@@ -37,6 +60,23 @@ const FormatTab = ({ tasks, userSettings, onSettingsUpdate }) => {
             // This would typically open a modal or panel
             console.log('Open Bar Label Editor');
           }}
+        />
+        <GroupDialogLauncher
+          groupName="Bar Labels"
+          onClick={() => onOpenGroupDialog?.('Bar Labels Options', (
+            <div className="space-y-4">
+              <p className="text-gray-300">Extended bar label configuration options will be available here.</p>
+              <div className="bg-gray-700 rounded-lg p-4">
+                <h3 className="text-white font-medium mb-2">Available Features:</h3>
+                <ul className="text-gray-300 text-sm space-y-1">
+                  <li>• Custom label positioning</li>
+                  <li>• Font styles and colors</li>
+                  <li>• Label content templates</li>
+                  <li>• Conditional label display</li>
+                </ul>
+              </div>
+            </div>
+          ))}
         />
       </RibbonGroup>
 
@@ -68,7 +108,7 @@ const MilestoneShapeDropdown = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleShapeSelect = (shapeKey) => {
+  const handleShapeSelect = shapeKey => {
     setGlobalMilestoneShape(shapeKey);
     setIsOpen(false);
   };
@@ -95,9 +135,7 @@ const MilestoneShapeDropdown = () => {
             getCurrentShape().defaultColor
           )}
         </div>
-        <span className='text-gray-700'>
-          {getCurrentShape().label}
-        </span>
+        <span className='text-gray-700'>{getCurrentShape().label}</span>
         <ChevronDownIcon className='w-3 h-3 text-gray-500' />
       </button>
 
@@ -107,7 +145,7 @@ const MilestoneShapeDropdown = () => {
             <div className='px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-200'>
               Milestone Shapes
             </div>
-            {getAvailableMilestoneShapes().map((shape) => (
+            {getAvailableMilestoneShapes().map(shape => (
               <button
                 key={shape.key}
                 onClick={() => handleShapeSelect(shape.key)}

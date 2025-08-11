@@ -38,10 +38,21 @@ export const createBaseline = (tasks, name, description = '') => {
       })),
       projectInfo: {
         totalTasks: tasks.length,
-        totalDuration: tasks.reduce((sum, task) => sum + (task.duration || 0), 0),
-        totalProgress: tasks.reduce((sum, task) => sum + (task.progress || 0), 0) / tasks.length,
-        startDate: tasks.length > 0 ? Math.min(...tasks.map(t => new Date(t.startDate))) : null,
-        endDate: tasks.length > 0 ? Math.max(...tasks.map(t => new Date(t.endDate))) : null,
+        totalDuration: tasks.reduce(
+          (sum, task) => sum + (task.duration || 0),
+          0
+        ),
+        totalProgress:
+          tasks.reduce((sum, task) => sum + (task.progress || 0), 0) /
+          tasks.length,
+        startDate:
+          tasks.length > 0
+            ? Math.min(...tasks.map(t => new Date(t.startDate)))
+            : null,
+        endDate:
+          tasks.length > 0
+            ? Math.max(...tasks.map(t => new Date(t.endDate)))
+            : null,
       },
     },
   };
@@ -54,7 +65,7 @@ export const createBaseline = (tasks, name, description = '') => {
  * @param {Object} baseline - Baseline object to validate
  * @returns {Object} Validation result
  */
-export const validateBaseline = (baseline) => {
+export const validateBaseline = baseline => {
   const errors = [];
   const warnings = [];
 
@@ -74,7 +85,11 @@ export const validateBaseline = (baseline) => {
     errors.push('Baseline must contain task data');
   }
 
-  if (baseline.data && baseline.data.tasks && baseline.data.tasks.length === 0) {
+  if (
+    baseline.data &&
+    baseline.data.tasks &&
+    baseline.data.tasks.length === 0
+  ) {
     warnings.push('Baseline contains no tasks');
   }
 
@@ -107,7 +122,11 @@ export const getBaselineById = (baselines, baselineId) => {
  * @returns {Object|null} Baseline object or null if not found
  */
 export const getBaselineByName = (baselines, name) => {
-  return baselines.find(baseline => baseline.name.toLowerCase() === name.toLowerCase()) || null;
+  return (
+    baselines.find(
+      baseline => baseline.name.toLowerCase() === name.toLowerCase()
+    ) || null
+  );
 };
 
 /**
@@ -140,7 +159,7 @@ export const compareWithBaseline = (currentTasks, baseline) => {
   // Find added and modified tasks
   currentTasks.forEach(currentTask => {
     const baselineTask = baselineTasks.find(bt => bt.id === currentTask.id);
-    
+
     if (!baselineTask) {
       // Task was added
       changes.push({
@@ -154,12 +173,21 @@ export const compareWithBaseline = (currentTasks, baseline) => {
     } else {
       // Check for modifications
       const modifications = [];
-      
+
       const fieldsToCompare = [
-        'startDate', 'endDate', 'duration', 'progress', 'status', 
-        'priority', 'resource', 'assignedTo', 'cost', 'work', 'units'
+        'startDate',
+        'endDate',
+        'duration',
+        'progress',
+        'status',
+        'priority',
+        'resource',
+        'assignedTo',
+        'cost',
+        'work',
+        'units',
       ];
-      
+
       fieldsToCompare.forEach(field => {
         if (currentTask[field] !== baselineTask[field]) {
           modifications.push({
@@ -169,7 +197,7 @@ export const compareWithBaseline = (currentTasks, baseline) => {
           });
         }
       });
-      
+
       if (modifications.length > 0) {
         changes.push({
           type: 'modified',
@@ -189,7 +217,7 @@ export const compareWithBaseline = (currentTasks, baseline) => {
   // Find removed tasks
   baselineTasks.forEach(baselineTask => {
     const currentTask = currentTasks.find(ct => ct.id === baselineTask.id);
-    
+
     if (!currentTask) {
       changes.push({
         type: 'removed',
@@ -219,14 +247,20 @@ export const compareWithBaseline = (currentTasks, baseline) => {
  * @param {Object} comparison - Comparison result from compareWithBaseline
  * @returns {Object} Summary statistics
  */
-export const getBaselineComparisonSummary = (comparison) => {
+export const getBaselineComparisonSummary = comparison => {
   const { summary } = comparison;
-  const totalTasks = summary.added + summary.removed + summary.modified + summary.unchanged;
-  
+  const totalTasks =
+    summary.added + summary.removed + summary.modified + summary.unchanged;
+
   return {
     totalTasks,
-    changePercentage: totalTasks > 0 ? ((summary.added + summary.removed + summary.modified) / totalTasks) * 100 : 0,
-    stabilityScore: totalTasks > 0 ? (summary.unchanged / totalTasks) * 100 : 100,
+    changePercentage:
+      totalTasks > 0
+        ? ((summary.added + summary.removed + summary.modified) / totalTasks) *
+          100
+        : 0,
+    stabilityScore:
+      totalTasks > 0 ? (summary.unchanged / totalTasks) * 100 : 100,
     ...summary,
   };
 };
@@ -236,7 +270,7 @@ export const getBaselineComparisonSummary = (comparison) => {
  * @param {Object} comparison - Comparison result
  * @returns {Array} Formatted changes for display
  */
-export const formatBaselineChanges = (comparison) => {
+export const formatBaselineChanges = comparison => {
   return comparison.changes.map(change => {
     switch (change.type) {
       case 'added':
@@ -247,7 +281,7 @@ export const formatBaselineChanges = (comparison) => {
           icon: '➕',
           color: 'green',
         };
-      
+
       case 'removed':
         return {
           type: 'removed',
@@ -256,7 +290,7 @@ export const formatBaselineChanges = (comparison) => {
           icon: '➖',
           color: 'red',
         };
-      
+
       case 'modified':
         const modificationDescriptions = change.modifications.map(mod => {
           switch (mod.field) {
@@ -280,7 +314,7 @@ export const formatBaselineChanges = (comparison) => {
               return `${mod.field}: ${mod.baseline} → ${mod.current}`;
           }
         });
-        
+
         return {
           type: 'modified',
           taskName: change.taskName,
@@ -289,7 +323,7 @@ export const formatBaselineChanges = (comparison) => {
           color: 'yellow',
           modifications: change.modifications,
         };
-      
+
       default:
         return {
           type: 'unknown',
@@ -307,7 +341,7 @@ export const formatBaselineChanges = (comparison) => {
  * @param {Object} baseline - Baseline object
  * @returns {Object} Statistics object
  */
-export const getBaselineStatistics = (baseline) => {
+export const getBaselineStatistics = baseline => {
   if (!baseline || !baseline.data || !baseline.data.tasks) {
     return {
       taskCount: 0,
@@ -327,24 +361,24 @@ export const getBaselineStatistics = (baseline) => {
 
   let totalDuration = 0;
   let totalProgress = 0;
-  let startDates = [];
-  let endDates = [];
+  const startDates = [];
+  const endDates = [];
 
   tasks.forEach(task => {
     totalDuration += task.duration || 0;
     totalProgress += task.progress || 0;
-    
+
     if (task.startDate) startDates.push(new Date(task.startDate));
     if (task.endDate) endDates.push(new Date(task.endDate));
-    
+
     // Status breakdown
     const status = task.status || 'Unknown';
     statusBreakdown[status] = (statusBreakdown[status] || 0) + 1;
-    
+
     // Priority breakdown
     const priority = task.priority || 'Medium';
     priorityBreakdown[priority] = (priorityBreakdown[priority] || 0) + 1;
-    
+
     // Resource breakdown
     const resource = task.resource || task.assignedTo || 'Unassigned';
     resourceBreakdown[resource] = (resourceBreakdown[resource] || 0) + 1;
@@ -369,7 +403,7 @@ export const getBaselineStatistics = (baseline) => {
  * @param {Object} baseline - Baseline object to export
  * @returns {Object} Exportable baseline object
  */
-export const exportBaseline = (baseline) => {
+export const exportBaseline = baseline => {
   return {
     version: '1.0',
     exportDate: new Date().toISOString(),
@@ -385,7 +419,7 @@ export const exportBaseline = (baseline) => {
  * @param {Object} importData - Import data object
  * @returns {Object} Import result
  */
-export const importBaseline = (importData) => {
+export const importBaseline = importData => {
   const errors = [];
   const warnings = [];
 
@@ -395,7 +429,7 @@ export const importBaseline = (importData) => {
   }
 
   const baseline = importData.baseline;
-  
+
   // Validate baseline structure
   if (!baseline.id || !baseline.name || !baseline.data) {
     errors.push('Invalid baseline structure');
@@ -445,7 +479,9 @@ export const generateBaselineNameSuggestions = (existingBaselines = []) => {
   ];
 
   const existingNames = existingBaselines.map(b => b.name.toLowerCase());
-  const suggestions = baseNames.filter(name => !existingNames.includes(name.toLowerCase()));
+  const suggestions = baseNames.filter(
+    name => !existingNames.includes(name.toLowerCase())
+  );
 
   // Add date-based suggestions
   const today = new Date();
@@ -464,7 +500,10 @@ export const generateBaselineNameSuggestions = (existingBaselines = []) => {
  * @param {Object} comparisonSettings - Comparison display settings
  * @returns {Object} Comparison mode configuration
  */
-export const getBaselineComparisonMode = (activeBaselineId, comparisonSettings = {}) => {
+export const getBaselineComparisonMode = (
+  activeBaselineId,
+  comparisonSettings = {}
+) => {
   return {
     isEnabled: !!activeBaselineId,
     activeBaselineId,
@@ -503,35 +542,40 @@ export const calculateBaselinePerformance = (currentTasks, baseline) => {
     const baselineTask = baselineTasks.find(bt => bt.id === currentTask.id);
     if (baselineTask) {
       totalTasks++;
-      
+
       // Schedule variance (days)
       const currentEnd = new Date(currentTask.endDate);
       const baselineEnd = new Date(baselineTask.endDate);
       const scheduleDiff = (currentEnd - baselineEnd) / (1000 * 60 * 60 * 24);
       scheduleVariance += scheduleDiff;
-      
+
       // Cost variance
       const currentCost = currentTask.cost || 0;
       const baselineCost = baselineTask.cost || 0;
-      costVariance += (currentCost - baselineCost);
-      
+      costVariance += currentCost - baselineCost;
+
       // Scope variance (progress)
       const currentProgress = currentTask.progress || 0;
       const baselineProgress = baselineTask.progress || 0;
-      scopeVariance += (currentProgress - baselineProgress);
+      scopeVariance += currentProgress - baselineProgress;
     }
   });
 
-  const avgScheduleVariance = totalTasks > 0 ? scheduleVariance / totalTasks : 0;
+  const avgScheduleVariance =
+    totalTasks > 0 ? scheduleVariance / totalTasks : 0;
   const avgCostVariance = totalTasks > 0 ? costVariance / totalTasks : 0;
   const avgScopeVariance = totalTasks > 0 ? scopeVariance / totalTasks : 0;
 
   // Calculate performance indices (higher is better)
-  const schedulePerformance = Math.max(0, 100 - Math.abs(avgScheduleVariance) * 10);
+  const schedulePerformance = Math.max(
+    0,
+    100 - Math.abs(avgScheduleVariance) * 10
+  );
   const costPerformance = Math.max(0, 100 - Math.abs(avgCostVariance) * 5);
   const scopePerformance = Math.max(0, 100 - Math.abs(avgScopeVariance) * 2);
 
-  const overallPerformance = (schedulePerformance + costPerformance + scopePerformance) / 3;
+  const overallPerformance =
+    (schedulePerformance + costPerformance + scopePerformance) / 3;
 
   return {
     schedulePerformance: Math.round(schedulePerformance * 100) / 100,

@@ -21,6 +21,7 @@ import {
   updateRecurringSeries,
 } from '../utils/recurringTaskUtils';
 import { useCalendarContext } from './CalendarContext';
+import { supabase } from '../../../supabase/client';
 
 const TaskContext = createContext();
 
@@ -37,74 +38,74 @@ export const TaskProvider = ({ children }) => {
   // Get global calendar for rollup calculations
   const { globalCalendar } = useCalendarContext();
 
-  // Task data
-  const [tasks, setTasks] = useState([
-    {
-      id: 'task-1',
-      name: 'Foundation Excavation',
-      startDate: '2024-01-15T00:00:00.000Z',
-      endDate: '2024-01-20T00:00:00.000Z',
-      duration: 6,
-      status: 'In Progress',
-      priority: 'High',
-      assignee: 'John Smith',
-      progress: 50,
-      color: '#3B82F6',
-      type: 'task',
-      isMilestone: false,
-      notes: 'Excavate foundation for building A',
-      parentId: null,
-      isGroup: false,
-      isExpanded: true,
-      baselineStart: '2024-01-15T00:00:00.000Z',
-      baselineEnd: '2024-01-18T00:00:00.000Z',
-      predecessors: [], // No predecessors
-    },
-    {
-      id: 'task-2',
-      name: 'Concrete Pouring',
-      startDate: '2024-01-21T00:00:00.000Z',
-      endDate: '2024-01-25T00:00:00.000Z',
-      duration: 5,
-      status: 'Complete',
-      priority: 'High',
-      assignee: 'Mike Johnson',
-      progress: 100,
-      color: '#10B981',
-      type: 'task',
-      isMilestone: false,
-      notes: 'Pour concrete for foundation',
-      parentId: null,
-      isGroup: false,
-      isExpanded: true,
-      baselineStart: '2024-01-20T00:00:00.000Z',
-      baselineEnd: '2024-01-23T00:00:00.000Z',
-      predecessors: ['task-1'], // Depends on Foundation Excavation
-    },
-    {
-      id: 'task-3',
-      name: 'Structural Framework',
-      startDate: '2024-01-26T00:00:00.000Z',
-      endDate: '2024-02-10T00:00:00.000Z',
-      duration: 16,
-      status: 'Delayed',
-      priority: 'Medium',
-      assignee: 'Sarah Wilson',
-      progress: 25,
-      color: '#F59E0B',
-      type: 'task',
-      isMilestone: false,
-      notes: 'Install structural steel framework',
-      parentId: null,
-      isGroup: false,
-      isExpanded: true,
-      baselineStart: '2024-01-25T00:00:00.000Z',
-      baselineEnd: '2024-02-05T00:00:00.000Z',
-      predecessors: ['task-2'], // Depends on Concrete Pouring
-    },
-  ]);
+  // Task data - will be loaded from ConstructBMS database
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const [nextId, setNextId] = useState(4);
+  // Load tasks from ConstructBMS database
+  const loadTasks = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const { data: tasksData, error: tasksError } = await supabase
+        .from('project_tasks')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (tasksError) {
+        throw new Error(`Error loading tasks: ${tasksError.message}`);
+      }
+
+      // Transform ConstructBMS task data to ProjectPlanner format
+      const transformedTasks = (tasksData || []).map(task => ({
+        id: task.id,
+        name: task.name,
+        startDate: task.start_date
+          ? new Date(task.start_date).toISOString()
+          : null,
+        endDate: task.end_date ? new Date(task.end_date).toISOString() : null,
+        duration: task.duration || 1,
+        status: task.status || 'not-started',
+        priority: task.priority || 'medium',
+        assignee: task.assigned_to || null,
+        progress: task.progress || 0,
+        color: '#3B82F6', // Default color
+        type: 'task',
+        isMilestone: false,
+        notes: task.description || '',
+        parentId: task.parent_task_id || null,
+        isGroup: false,
+        isExpanded: true,
+        baselineStart: null,
+        baselineEnd: null,
+        predecessors: [], // Will be populated from dependencies
+        projectId: task.project_id,
+      }));
+
+      console.log(
+        'Loaded tasks from database:',
+        transformedTasks.length,
+        'tasks'
+      );
+      console.log('Sample task data:', transformedTasks[0]);
+
+      setTasks(transformedTasks);
+    } catch (err) {
+      setError(err.message);
+      console.error('Error loading tasks:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Load tasks on mount
+  useEffect(() => {
+    loadTasks();
+  }, [loadTasks]);
+
+  const [nextId, setNextId] = useState(1);
 
   // Undo/Redo context
   const { pushAction, isUndoRedoAction } = useUndoRedoContext();
@@ -116,23 +117,53 @@ export const TaskProvider = ({ children }) => {
   // Multi-selection state
   const [selectedTaskIds, setSelectedTaskIds] = useState([]);
 
-  // Task links/dependencies with enhanced structure
-  const [taskLinks, setTaskLinks] = useState([
-    {
-      id: 'link-1',
-      fromId: 'task-1',
-      toId: 'task-2',
-      type: 'FS', // Finish-to-Start
-      lag: 0, // Days of lag/lead time (+/-)
-    },
-    {
-      id: 'link-2',
-      fromId: 'task-2',
-      toId: 'task-3',
-      type: 'FS',
-      lag: 0,
-    },
-  ]);
+  // Task links/dependencies - will be loaded from ConstructBMS database
+  const [taskLinks, setTaskLinks] = useState([]);
+
+  // Load task links from ConstructBMS database
+  const loadTaskLinks = useCallback(async () => {
+    try {
+      const { data: linksData, error: linksError } = await supabase
+        .from('project_dependencies')
+        .select('*');
+
+      if (linksError) {
+        console.warn('Error loading task links:', linksError.message);
+        return;
+      }
+
+      // Transform ConstructBMS task links to ProjectPlanner format
+      const transformedLinks = (linksData || []).map(link => ({
+        id: link.id,
+        fromId: link.predecessor_task_id,
+        toId: link.successor_task_id,
+        type:
+          link.dependency_type === 'finish-to-start'
+            ? 'FS'
+            : link.dependency_type === 'start-to-start'
+              ? 'SS'
+              : link.dependency_type === 'finish-to-finish'
+                ? 'FF'
+                : 'SF',
+        lag: link.lag_days || 0,
+        projectId: link.project_id,
+      }));
+
+      console.log(
+        'Loaded task links from database:',
+        transformedLinks.length,
+        'links'
+      );
+      setTaskLinks(transformedLinks);
+    } catch (err) {
+      console.error('Error loading task links:', err);
+    }
+  }, []);
+
+  // Load task links on mount
+  useEffect(() => {
+    loadTaskLinks();
+  }, [loadTaskLinks]);
 
   // Linking mode state
   const [linkingMode, setLinkingMode] = useState(false);
@@ -176,6 +207,35 @@ export const TaskProvider = ({ children }) => {
     []
   );
 
+  // Helper function to save current state to undo stack
+  const saveToUndoStack = useCallback(() => {
+    // This function saves the current state for undo operations
+    // It's used when we need to save state before making changes
+    const currentState = {
+      tasks: [...tasks],
+      taskLinks: [...taskLinks],
+      selectedTaskId,
+      selectedTaskIds: [...selectedTaskIds],
+    };
+
+    const action = createUndoAction(
+      'SAVE_STATE',
+      currentState,
+      currentState,
+      () => {}, // onUndo - no action needed for save state
+      () => {} // onRedo - no action needed for save state
+    );
+
+    pushAction(action);
+  }, [
+    tasks,
+    taskLinks,
+    selectedTaskId,
+    selectedTaskIds,
+    createUndoAction,
+    pushAction,
+  ]);
+
   // Helper function to push action to undo stack
   const pushUndoAction = useCallback(
     action => {
@@ -216,7 +276,11 @@ export const TaskProvider = ({ children }) => {
     if (newTask.recurrence && newTask.recurrence.isActive) {
       const projectStartDate = new Date('2024-01-01');
       const projectEndDate = new Date('2024-12-31');
-      const recurringInstances = generateRecurringTasks(newTask, projectStartDate, projectEndDate);
+      const recurringInstances = generateRecurringTasks(
+        newTask,
+        projectStartDate,
+        projectEndDate
+      );
       tasksToAdd = recurringInstances;
     }
 
@@ -229,7 +293,11 @@ export const TaskProvider = ({ children }) => {
       after,
       // onUndo: remove the tasks
       () => {
-        setTasks(prev => prev.filter(task => !tasksToAdd.some(newTask => newTask.id === task.id)));
+        setTasks(prev =>
+          prev.filter(
+            task => !tasksToAdd.some(newTask => newTask.id === task.id)
+          )
+        );
         setNextId(prev => prev - 1);
       },
       // onRedo: add the tasks back
@@ -636,10 +704,16 @@ export const TaskProvider = ({ children }) => {
       const updatedTask = { ...oldTask, ...updates };
 
       // Handle recurring task updates
-      let updatedTasks = tasks.map(task => (task.id === taskId ? updatedTask : task));
+      let updatedTasks = tasks.map(task =>
+        task.id === taskId ? updatedTask : task
+      );
       if (updatedTask && isRecurringTask(updatedTask)) {
         // Update all instances in the series
-        updatedTasks = updateRecurringSeries(updatedTasks, updatedTask.recurrence.id, updates);
+        updatedTasks = updateRecurringSeries(
+          updatedTasks,
+          updatedTask.recurrence.id,
+          updates
+        );
       }
 
       const before = { tasks: [...tasks] };

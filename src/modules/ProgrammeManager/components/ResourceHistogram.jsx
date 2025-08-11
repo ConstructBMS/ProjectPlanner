@@ -5,7 +5,7 @@ import {
   MagnifyingGlassMinusIcon,
   ArrowPathIcon,
   ArrowsPointingOutIcon,
-  HandIcon,
+  UserGroupIcon,
 } from '@heroicons/react/24/outline';
 import {
   createZoomState,
@@ -402,7 +402,7 @@ const ResourceHistogram = ({
       {/* Header with zoom controls */}
       <div className='flex items-center justify-between p-4 border-b border-gray-200'>
         <div className='flex items-center gap-2'>
-          <HandIcon className='w-5 h-5 text-blue-600' />
+          <UserGroupIcon className='w-5 h-5 text-blue-600' />
           <h3 className='text-lg font-semibold text-gray-900'>
             Resource Allocation
           </h3>

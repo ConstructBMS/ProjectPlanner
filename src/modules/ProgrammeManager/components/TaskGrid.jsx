@@ -58,7 +58,7 @@ import {
   getTaskMilestoneShape,
   getMilestoneColor,
   createMilestoneShapeComponent,
-} from '../utils/milestoneShapeUtils';
+} from '../utils/milestoneShapeUtils.jsx';
 import {
   ChevronRightIcon,
   ChevronDownIcon,
@@ -264,9 +264,11 @@ const TaskGrid = React.memo(() => {
           </div>
         );
 
-      case 'cost':
+      case 'cost': {
         // Find the resource for this task
-        const resource = tasks.find(t => t.id === task.resourceId) || {
+        const resource = getVisibleTasks().find(
+          t => t.id === task.resourceId
+        ) || {
           name: task.resource || task.assignedTo,
           costRate: 0,
         };
@@ -285,22 +287,12 @@ const TaskGrid = React.memo(() => {
             )}
           </div>
         );
+      }
 
       case 'work':
         return (
           <div className='text-right'>
             {calculateTaskWork(task).toFixed(1)}h
-          </div>
-        );
-
-      case 'cost':
-        return (
-          <div className='text-right'>
-            £
-            {calculateTaskCost(task).toLocaleString('en-GB', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
           </div>
         );
 

@@ -45,7 +45,7 @@ export const DEFAULT_BAR_STYLES = {
       borderWidth: 1,
       borderRadius: 4,
     },
-    'Planned': {
+    Planned: {
       backgroundColor: '#3B82F6',
       borderColor: '#2563EB',
       textColor: '#FFFFFF',
@@ -61,7 +61,7 @@ export const DEFAULT_BAR_STYLES = {
       borderWidth: 1,
       borderRadius: 4,
     },
-    'Complete': {
+    Complete: {
       backgroundColor: '#10B981',
       borderColor: '#059669',
       textColor: '#FFFFFF',
@@ -69,7 +69,7 @@ export const DEFAULT_BAR_STYLES = {
       borderWidth: 1,
       borderRadius: 4,
     },
-    'Delayed': {
+    Delayed: {
       backgroundColor: '#EF4444',
       borderColor: '#DC2626',
       textColor: '#FFFFFF',
@@ -85,7 +85,7 @@ export const DEFAULT_BAR_STYLES = {
       borderWidth: 1,
       borderRadius: 4,
     },
-    'Cancelled': {
+    Cancelled: {
       backgroundColor: '#6B7280',
       borderColor: '#4B5563',
       textColor: '#FFFFFF',
@@ -152,7 +152,7 @@ export const DEFAULT_BAR_STYLES = {
  */
 export const getTaskBarStyle = (task, userSettings = {}) => {
   const barStyles = userSettings.barStyles || {};
-  
+
   // Priority order: user-defined > status > priority > task type > default
   let style = { ...DEFAULT_BAR_STYLES.taskType.task };
 
@@ -169,7 +169,11 @@ export const getTaskBarStyle = (task, userSettings = {}) => {
     style = { ...style, ...barStyles.priority[task.priority] };
   }
 
-  if (barStyles.resource && task.resource && barStyles.resource[task.resource]) {
+  if (
+    barStyles.resource &&
+    task.resource &&
+    barStyles.resource[task.resource]
+  ) {
     style = { ...style, ...barStyles.resource[task.resource] };
   }
 
@@ -198,7 +202,7 @@ export const getTaskBarStyle = (task, userSettings = {}) => {
  * @param {Object} barStyle - Bar style configuration
  * @returns {Object} CSS style object
  */
-export const createBarStyleObject = (barStyle) => {
+export const createBarStyleObject = barStyle => {
   return {
     backgroundColor: barStyle.backgroundColor,
     border: `${barStyle.borderWidth}px solid ${barStyle.borderColor}`,
@@ -214,7 +218,7 @@ export const createBarStyleObject = (barStyle) => {
  * @param {Object} style - Style configuration to validate
  * @returns {Object} Validation result
  */
-export const validateBarStyle = (style) => {
+export const validateBarStyle = style => {
   const errors = [];
   const warnings = [];
 
@@ -227,16 +231,17 @@ export const validateBarStyle = (style) => {
   });
 
   // Validate color formats
-  const colorRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$|^rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)$/;
-  
+  const colorRegex =
+    /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$|^rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)$/;
+
   if (style.backgroundColor && !colorRegex.test(style.backgroundColor)) {
     errors.push('Invalid backgroundColor format');
   }
-  
+
   if (style.borderColor && !colorRegex.test(style.borderColor)) {
     errors.push('Invalid borderColor format');
   }
-  
+
   if (style.textColor && !colorRegex.test(style.textColor)) {
     errors.push('Invalid textColor format');
   }
@@ -276,9 +281,21 @@ export const validateBarStyle = (style) => {
  */
 export const getAvailableTaskTypes = () => {
   return [
-    { value: 'task', label: 'Regular Task', description: 'Standard project tasks' },
-    { value: 'milestone', label: 'Milestone', description: 'Project milestones and key dates' },
-    { value: 'summary', label: 'Summary Task', description: 'Group and summary tasks' },
+    {
+      value: 'task',
+      label: 'Regular Task',
+      description: 'Standard project tasks',
+    },
+    {
+      value: 'milestone',
+      label: 'Milestone',
+      description: 'Project milestones and key dates',
+    },
+    {
+      value: 'summary',
+      label: 'Summary Task',
+      description: 'Group and summary tasks',
+    },
   ];
 };
 
@@ -288,11 +305,27 @@ export const getAvailableTaskTypes = () => {
  */
 export const getAvailableStatuses = () => {
   return [
-    { value: 'Not Started', label: 'Not Started', description: 'Tasks that haven\'t begun' },
-    { value: 'Planned', label: 'Planned', description: 'Tasks scheduled for future' },
-    { value: 'In Progress', label: 'In Progress', description: 'Tasks currently being worked on' },
+    {
+      value: 'Not Started',
+      label: 'Not Started',
+      description: "Tasks that haven't begun",
+    },
+    {
+      value: 'Planned',
+      label: 'Planned',
+      description: 'Tasks scheduled for future',
+    },
+    {
+      value: 'In Progress',
+      label: 'In Progress',
+      description: 'Tasks currently being worked on',
+    },
     { value: 'Complete', label: 'Complete', description: 'Finished tasks' },
-    { value: 'Delayed', label: 'Delayed', description: 'Tasks behind schedule' },
+    {
+      value: 'Delayed',
+      label: 'Delayed',
+      description: 'Tasks behind schedule',
+    },
     { value: 'On Hold', label: 'On Hold', description: 'Paused tasks' },
     { value: 'Cancelled', label: 'Cancelled', description: 'Cancelled tasks' },
   ];
@@ -305,9 +338,17 @@ export const getAvailableStatuses = () => {
 export const getAvailablePriorities = () => {
   return [
     { value: 'Low', label: 'Low', description: 'Low priority tasks' },
-    { value: 'Medium', label: 'Medium', description: 'Standard priority tasks' },
+    {
+      value: 'Medium',
+      label: 'Medium',
+      description: 'Standard priority tasks',
+    },
     { value: 'High', label: 'High', description: 'High priority tasks' },
-    { value: 'Critical', label: 'Critical', description: 'Critical priority tasks' },
+    {
+      value: 'Critical',
+      label: 'Critical',
+      description: 'Critical priority tasks',
+    },
   ];
 };
 
@@ -316,9 +357,9 @@ export const getAvailablePriorities = () => {
  * @param {Array} tasks - Array of task objects
  * @returns {Array} Array of resource objects
  */
-export const getAvailableResources = (tasks) => {
+export const getAvailableResources = tasks => {
   const resources = new Set();
-  
+
   tasks.forEach(task => {
     if (task.resource) {
       resources.add(task.resource);
@@ -364,7 +405,7 @@ export const createDefaultBarStyle = (category, key) => {
  * @param {Object} userSettings - User settings containing barStyles
  * @returns {Object} Exportable bar styles object
  */
-export const exportBarStyles = (userSettings) => {
+export const exportBarStyles = userSettings => {
   return {
     version: '1.0',
     timestamp: new Date().toISOString(),
@@ -381,7 +422,7 @@ export const exportBarStyles = (userSettings) => {
  * @param {Object} importData - Import data object
  * @returns {Object} Import result
  */
-export const importBarStyles = (importData) => {
+export const importBarStyles = importData => {
   const errors = [];
   const warnings = [];
 
@@ -395,9 +436,13 @@ export const importBarStyles = (importData) => {
     Object.entries(styles).forEach(([key, style]) => {
       const validation = validateBarStyle(style);
       if (!validation.isValid) {
-        errors.push(`Invalid style for ${category}.${key}: ${validation.errors.join(', ')}`);
+        errors.push(
+          `Invalid style for ${category}.${key}: ${validation.errors.join(', ')}`
+        );
       }
-      warnings.push(...validation.warnings.map(w => `${category}.${key}: ${w}`));
+      warnings.push(
+        ...validation.warnings.map(w => `${category}.${key}: ${w}`)
+      );
     });
   });
 
@@ -414,7 +459,7 @@ export const importBarStyles = (importData) => {
  * @param {Object} style - Bar style configuration
  * @returns {Object} Preview style object
  */
-export const getStylePreview = (style) => {
+export const getStylePreview = style => {
   return createBarStyleObject(style);
 };
 
@@ -423,11 +468,23 @@ export const getStylePreview = (style) => {
  * @param {Array} resources - Array of resource names
  * @returns {Object} Color mapping for resources
  */
-export const generateResourceColors = (resources) => {
+export const generateResourceColors = resources => {
   const colors = [
-    '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
-    '#06B6D4', '#84CC16', '#F97316', '#EC4899', '#6366F1',
-    '#14B8A6', '#FBBF24', '#F87171', '#A78BFA', '#60A5FA',
+    '#3B82F6',
+    '#10B981',
+    '#F59E0B',
+    '#EF4444',
+    '#8B5CF6',
+    '#06B6D4',
+    '#84CC16',
+    '#F97316',
+    '#EC4899',
+    '#6366F1',
+    '#14B8A6',
+    '#FBBF24',
+    '#F87171',
+    '#A78BFA',
+    '#60A5FA',
   ];
 
   const colorMap = {};

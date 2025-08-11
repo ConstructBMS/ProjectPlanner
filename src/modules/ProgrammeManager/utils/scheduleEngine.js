@@ -59,7 +59,8 @@ export const calculateEarliestStart = (
         dependencyDate = addDays(predecessorStart, lag, predecessorCalendar);
         break;
 
-      case LINK_TYPES.FF: // Finish-to-Finish
+      case LINK_TYPES.FF: {
+        // Finish-to-Finish
         // For FF, we need to work backwards from predecessor end
         const taskDuration = task.duration || 1;
         dependencyDate = addDays(
@@ -68,8 +69,10 @@ export const calculateEarliestStart = (
           predecessorCalendar
         );
         break;
+      }
 
-      case LINK_TYPES.SF: // Start-to-Finish
+      case LINK_TYPES.SF: {
+        // Start-to-Finish
         // For SF, task must finish before predecessor starts
         const taskDurationForSF = task.duration || 1;
         dependencyDate = addDays(
@@ -78,6 +81,7 @@ export const calculateEarliestStart = (
           predecessorCalendar
         );
         break;
+      }
 
       default:
         dependencyDate = addDays(predecessorEnd, lag + 1, predecessorCalendar);
@@ -384,7 +388,7 @@ export const performBackwardPass = (
       task,
       updatedTasks,
       taskLinks,
-      globalCalendar
+      taskCalendar
     );
 
     // Determine if task is critical (zero float)
@@ -425,7 +429,11 @@ export const performScheduling = (allTasks, taskLinks, getCalendarForTask) => {
     );
 
     // Calculate critical path
-    updatedTasks = calculateCriticalPath(updatedTasks, taskLinks, getCalendarForTask);
+    updatedTasks = calculateCriticalPath(
+      updatedTasks,
+      taskLinks,
+      getCalendarForTask
+    );
 
     return {
       tasks: updatedTasks,

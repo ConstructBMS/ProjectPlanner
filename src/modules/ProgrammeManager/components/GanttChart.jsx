@@ -1,4 +1,10 @@
-import React, { useRef, useEffect, useMemo, useState, useCallback } from 'react';
+import React, {
+  useRef,
+  useEffect,
+  useMemo,
+  useState,
+  useCallback,
+} from 'react';
 import {
   ChevronRightIcon,
   ChevronDownIcon,
@@ -91,6 +97,7 @@ import {
 } from '../utils/progressEditUtils';
 import TaskSplitModal from './modals/TaskSplitModal';
 import DependencyLagModal from './modals/DependencyLagModal';
+import { useSmoothScroll } from '../hooks/useSmoothScroll';
 import '../styles/gantt.css';
 
 const GanttChart = () => {
@@ -156,6 +163,14 @@ const GanttChart = () => {
   const taskRefs = useRef({});
   const svgContainerRef = useRef(null);
   const timelineContainerRef = useRef(null);
+
+  // Smooth scrolling hook for Gantt chart
+  const { scrollRef: smoothScrollRef } = useSmoothScroll({
+    horizontalMultiplier: 0.8,
+    verticalMultiplier: 1.0,
+    throttleMs: 16,
+    enableShiftWheel: true
+  });
 
   // Scroll state for header synchronization
   const [scrollLeft, setScrollLeft] = useState(0);
@@ -2028,8 +2043,11 @@ const GanttChart = () => {
 
       {/* Asta-style Timeline Grid */}
       <div
-        ref={timelineContainerRef}
-        className={`flex-1 overflow-auto relative ${
+        ref={(el) => {
+          timelineContainerRef.current = el;
+          smoothScrollRef.current = el;
+        }}
+        className={`flex-1 overflow-auto relative gantt-scroll-container ${
           viewState.showGridlines ? 'divide-y divide-gray-300' : ''
         }`}
         onClick={handleChartClick}

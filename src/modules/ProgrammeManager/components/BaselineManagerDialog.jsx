@@ -24,11 +24,11 @@ import {
   calculateBaselinePerformance,
 } from '../utils/baselineManagerUtils';
 
-const BaselineManagerDialog = ({ 
-  isOpen, 
-  onClose, 
-  tasks, 
-  baselines = [], 
+const BaselineManagerDialog = ({
+  isOpen,
+  onClose,
+  tasks,
+  baselines = [],
   activeBaselineId,
   onSaveBaseline,
   onDeleteBaseline,
@@ -36,7 +36,11 @@ const BaselineManagerDialog = ({
   onImportBaseline,
 }) => {
   const [newBaseline, setNewBaseline] = useState({ name: '', description: '' });
-  const [validation, setValidation] = useState({ isValid: true, errors: [], warnings: [] });
+  const [validation, setValidation] = useState({
+    isValid: true,
+    errors: [],
+    warnings: [],
+  });
   const [selectedBaseline, setSelectedBaseline] = useState(null);
   const [showComparison, setShowComparison] = useState(false);
   const [comparisonResults, setComparisonResults] = useState(null);
@@ -48,11 +52,19 @@ const BaselineManagerDialog = ({
   // Validate new baseline when it changes
   useEffect(() => {
     if (newBaseline.name) {
-      const tempBaseline = createBaseline(tasks, newBaseline.name, newBaseline.description);
+      const tempBaseline = createBaseline(
+        tasks,
+        newBaseline.name,
+        newBaseline.description
+      );
       const validationResult = validateBaseline(tempBaseline);
       setValidation(validationResult);
     } else {
-      setValidation({ isValid: false, errors: ['Baseline name is required'], warnings: [] });
+      setValidation({
+        isValid: false,
+        errors: ['Baseline name is required'],
+        warnings: [],
+      });
     }
   }, [newBaseline, tasks]);
 
@@ -67,14 +79,22 @@ const BaselineManagerDialog = ({
   const handleCreateBaseline = () => {
     if (!validation.isValid) return;
 
-    const baseline = createBaseline(tasks, newBaseline.name, newBaseline.description);
+    const baseline = createBaseline(
+      tasks,
+      newBaseline.name,
+      newBaseline.description
+    );
     onSaveBaseline(baseline);
     setNewBaseline({ name: '', description: '' });
     setSelectedBaseline(baseline);
   };
 
-  const handleDeleteBaseline = (baselineId) => {
-    if (window.confirm('Are you sure you want to delete this baseline? This action cannot be undone.')) {
+  const handleDeleteBaseline = baselineId => {
+    if (
+      window.confirm(
+        'Are you sure you want to delete this baseline? This action cannot be undone.'
+      )
+    ) {
       onDeleteBaseline(baselineId);
       if (selectedBaseline?.id === baselineId) {
         setSelectedBaseline(null);
@@ -82,9 +102,11 @@ const BaselineManagerDialog = ({
     }
   };
 
-  const handleExportBaseline = (baseline) => {
+  const handleExportBaseline = baseline => {
     const exportData = exportBaseline(baseline);
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+      type: 'application/json',
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -95,16 +117,16 @@ const BaselineManagerDialog = ({
     URL.revokeObjectURL(url);
   };
 
-  const handleImportBaseline = (event) => {
+  const handleImportBaseline = event => {
     const file = event.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = e => {
       try {
         const importData = JSON.parse(e.target.result);
         const importResult = importBaseline(importData);
-        
+
         if (importResult.success) {
           onImportBaseline(importResult.baseline);
         } else {
@@ -119,11 +141,11 @@ const BaselineManagerDialog = ({
     reader.readAsText(file);
   };
 
-  const getBaselineStats = (baseline) => {
+  const getBaselineStats = baseline => {
     return getBaselineStatistics(baseline);
   };
 
-  const getPerformanceMetrics = (baseline) => {
+  const getPerformanceMetrics = baseline => {
     return calculateBaselinePerformance(tasks, baseline);
   };
 
@@ -136,7 +158,9 @@ const BaselineManagerDialog = ({
         <div className='flex items-center justify-between p-6 border-b border-gray-200'>
           <div className='flex items-center gap-3'>
             <ChartBarIcon className='w-6 h-6 text-blue-600' />
-            <h2 className='text-xl font-semibold text-gray-900'>Baseline Manager</h2>
+            <h2 className='text-xl font-semibold text-gray-900'>
+              Baseline Manager
+            </h2>
           </div>
           <button
             onClick={onClose}
@@ -151,7 +175,9 @@ const BaselineManagerDialog = ({
           <div className='w-1/3 border-r border-gray-200 flex flex-col'>
             {/* Create New Baseline */}
             <div className='p-4 border-b border-gray-200'>
-              <h3 className='text-sm font-semibold text-gray-700 mb-3'>Create New Baseline</h3>
+              <h3 className='text-sm font-semibold text-gray-700 mb-3'>
+                Create New Baseline
+              </h3>
               <div className='space-y-3'>
                 <div>
                   <label className='block text-xs font-medium text-gray-600 mb-1'>
@@ -161,7 +187,12 @@ const BaselineManagerDialog = ({
                     <input
                       type='text'
                       value={newBaseline.name}
-                      onChange={e => setNewBaseline(prev => ({ ...prev, name: e.target.value }))}
+                      onChange={e =>
+                        setNewBaseline(prev => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
+                      }
                       onFocus={() => setShowNameSuggestions(true)}
                       className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
                       placeholder='Enter baseline name'
@@ -172,7 +203,10 @@ const BaselineManagerDialog = ({
                           <button
                             key={index}
                             onClick={() => {
-                              setNewBaseline(prev => ({ ...prev, name: suggestion }));
+                              setNewBaseline(prev => ({
+                                ...prev,
+                                name: suggestion,
+                              }));
                               setShowNameSuggestions(false);
                             }}
                             className='w-full px-3 py-2 text-sm text-left hover:bg-gray-100 border-b border-gray-100 last:border-b-0'
@@ -190,7 +224,12 @@ const BaselineManagerDialog = ({
                   </label>
                   <textarea
                     value={newBaseline.description}
-                    onChange={e => setNewBaseline(prev => ({ ...prev, description: e.target.value }))}
+                    onChange={e =>
+                      setNewBaseline(prev => ({
+                        ...prev,
+                        description: e.target.value,
+                      }))
+                    }
                     className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
                     placeholder='Describe this baseline'
                     rows={2}
@@ -215,12 +254,14 @@ const BaselineManagerDialog = ({
             {/* Baseline List */}
             <div className='flex-1 overflow-y-auto'>
               <div className='p-4'>
-                <h3 className='text-sm font-semibold text-gray-700 mb-3'>Saved Baselines</h3>
+                <h3 className='text-sm font-semibold text-gray-700 mb-3'>
+                  Saved Baselines
+                </h3>
                 <div className='space-y-2'>
                   {baselines.map(baseline => {
                     const stats = getBaselineStats(baseline);
                     const isActive = activeBaselineId === baseline.id;
-                    
+
                     return (
                       <div
                         key={baseline.id}
@@ -251,15 +292,19 @@ const BaselineManagerDialog = ({
                             <div className='flex items-center gap-4 text-xs text-gray-500'>
                               <span>{stats.taskCount} tasks</span>
                               <span>{stats.totalDuration} days</span>
-                              <span>{Math.round(stats.averageProgress)}% complete</span>
+                              <span>
+                                {Math.round(stats.averageProgress)}% complete
+                              </span>
                             </div>
                             <div className='text-xs text-gray-400 mt-1'>
-                              {new Date(baseline.createdAt).toLocaleDateString()}
+                              {new Date(
+                                baseline.createdAt
+                              ).toLocaleDateString()}
                             </div>
                           </div>
                           <div className='flex items-center gap-1'>
                             <button
-                              onClick={(e) => {
+                              onClick={e => {
                                 e.stopPropagation();
                                 handleExportBaseline(baseline);
                               }}
@@ -269,7 +314,7 @@ const BaselineManagerDialog = ({
                               <DocumentArrowDownIcon className='w-4 h-4' />
                             </button>
                             <button
-                              onClick={(e) => {
+                              onClick={e => {
                                 e.stopPropagation();
                                 handleDeleteBaseline(baseline.id);
                               }}
@@ -318,9 +363,13 @@ const BaselineManagerDialog = ({
                 <div className='p-4 border-b border-gray-200'>
                   <div className='flex items-center justify-between'>
                     <div>
-                      <h3 className='text-lg font-semibold text-gray-900'>{selectedBaseline.name}</h3>
+                      <h3 className='text-lg font-semibold text-gray-900'>
+                        {selectedBaseline.name}
+                      </h3>
                       {selectedBaseline.description && (
-                        <p className='text-sm text-gray-600 mt-1'>{selectedBaseline.description}</p>
+                        <p className='text-sm text-gray-600 mt-1'>
+                          {selectedBaseline.description}
+                        </p>
                       )}
                     </div>
                     <div className='flex items-center gap-2'>
@@ -332,7 +381,11 @@ const BaselineManagerDialog = ({
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                       >
-                        {showComparison ? <EyeIcon className='w-3 h-3' /> : <EyeSlashIcon className='w-3 h-3' />}
+                        {showComparison ? (
+                          <EyeIcon className='w-3 h-3' />
+                        ) : (
+                          <EyeSlashIcon className='w-3 h-3' />
+                        )}
                         {showComparison ? 'Hide' : 'Show'} Comparison
                       </button>
                       <button
@@ -355,21 +408,39 @@ const BaselineManagerDialog = ({
                         return (
                           <>
                             <div className='bg-blue-50 p-3 rounded-lg'>
-                              <div className='text-xs text-blue-600 font-medium'>Tasks</div>
-                              <div className='text-lg font-bold text-blue-900'>{stats.taskCount}</div>
+                              <div className='text-xs text-blue-600 font-medium'>
+                                Tasks
+                              </div>
+                              <div className='text-lg font-bold text-blue-900'>
+                                {stats.taskCount}
+                              </div>
                             </div>
                             <div className='bg-green-50 p-3 rounded-lg'>
-                              <div className='text-xs text-green-600 font-medium'>Duration</div>
-                              <div className='text-lg font-bold text-green-900'>{stats.totalDuration} days</div>
+                              <div className='text-xs text-green-600 font-medium'>
+                                Duration
+                              </div>
+                              <div className='text-lg font-bold text-green-900'>
+                                {stats.totalDuration} days
+                              </div>
                             </div>
                             <div className='bg-purple-50 p-3 rounded-lg'>
-                              <div className='text-xs text-purple-600 font-medium'>Progress</div>
-                              <div className='text-lg font-bold text-purple-900'>{Math.round(stats.averageProgress)}%</div>
+                              <div className='text-xs text-purple-600 font-medium'>
+                                Progress
+                              </div>
+                              <div className='text-lg font-bold text-purple-900'>
+                                {Math.round(stats.averageProgress)}%
+                              </div>
                             </div>
                             <div className='bg-orange-50 p-3 rounded-lg'>
-                              <div className='text-xs text-orange-600 font-medium'>Date Range</div>
+                              <div className='text-xs text-orange-600 font-medium'>
+                                Date Range
+                              </div>
                               <div className='text-sm font-bold text-orange-900'>
-                                {stats.dateRange.start ? new Date(stats.dateRange.start).toLocaleDateString() : 'N/A'}
+                                {stats.dateRange.start
+                                  ? new Date(
+                                      stats.dateRange.start
+                                    ).toLocaleDateString()
+                                  : 'N/A'}
                               </div>
                             </div>
                           </>
@@ -380,52 +451,96 @@ const BaselineManagerDialog = ({
                     {/* Comparison Results */}
                     {showComparison && comparisonResults && (
                       <div className='bg-gray-50 p-4 rounded-lg'>
-                        <h4 className='text-sm font-semibold text-gray-700 mb-3'>Comparison with Current State</h4>
+                        <h4 className='text-sm font-semibold text-gray-700 mb-3'>
+                          Comparison with Current State
+                        </h4>
                         {(() => {
-                          const summary = getBaselineComparisonSummary(comparisonResults);
-                          const performance = getPerformanceMetrics(selectedBaseline);
-                          
+                          const summary =
+                            getBaselineComparisonSummary(comparisonResults);
+                          const performance =
+                            getPerformanceMetrics(selectedBaseline);
+
                           return (
                             <div className='space-y-4'>
                               {/* Summary */}
                               <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
                                 <div className='bg-white p-3 rounded border'>
-                                  <div className='text-xs text-gray-600'>Added</div>
-                                  <div className='text-lg font-bold text-green-600'>{summary.added}</div>
+                                  <div className='text-xs text-gray-600'>
+                                    Added
+                                  </div>
+                                  <div className='text-lg font-bold text-green-600'>
+                                    {summary.added}
+                                  </div>
                                 </div>
                                 <div className='bg-white p-3 rounded border'>
-                                  <div className='text-xs text-gray-600'>Removed</div>
-                                  <div className='text-lg font-bold text-red-600'>{summary.removed}</div>
+                                  <div className='text-xs text-gray-600'>
+                                    Removed
+                                  </div>
+                                  <div className='text-lg font-bold text-red-600'>
+                                    {summary.removed}
+                                  </div>
                                 </div>
                                 <div className='bg-white p-3 rounded border'>
-                                  <div className='text-xs text-gray-600'>Modified</div>
-                                  <div className='text-lg font-bold text-yellow-600'>{summary.modified}</div>
+                                  <div className='text-xs text-gray-600'>
+                                    Modified
+                                  </div>
+                                  <div className='text-lg font-bold text-yellow-600'>
+                                    {summary.modified}
+                                  </div>
                                 </div>
                                 <div className='bg-white p-3 rounded border'>
-                                  <div className='text-xs text-gray-600'>Unchanged</div>
-                                  <div className='text-lg font-bold text-blue-600'>{summary.unchanged}</div>
+                                  <div className='text-xs text-gray-600'>
+                                    Unchanged
+                                  </div>
+                                  <div className='text-lg font-bold text-blue-600'>
+                                    {summary.unchanged}
+                                  </div>
                                 </div>
                               </div>
 
                               {/* Performance Metrics */}
                               <div className='bg-white p-4 rounded border'>
-                                <h5 className='text-sm font-semibold text-gray-700 mb-3'>Performance Metrics</h5>
+                                <h5 className='text-sm font-semibold text-gray-700 mb-3'>
+                                  Performance Metrics
+                                </h5>
                                 <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
                                   <div>
-                                    <div className='text-xs text-gray-600'>Schedule Performance</div>
-                                    <div className='text-lg font-bold text-blue-600'>{performance.schedulePerformance.toFixed(1)}%</div>
+                                    <div className='text-xs text-gray-600'>
+                                      Schedule Performance
+                                    </div>
+                                    <div className='text-lg font-bold text-blue-600'>
+                                      {performance.schedulePerformance.toFixed(
+                                        1
+                                      )}
+                                      %
+                                    </div>
                                   </div>
                                   <div>
-                                    <div className='text-xs text-gray-600'>Cost Performance</div>
-                                    <div className='text-lg font-bold text-green-600'>{performance.costPerformance.toFixed(1)}%</div>
+                                    <div className='text-xs text-gray-600'>
+                                      Cost Performance
+                                    </div>
+                                    <div className='text-lg font-bold text-green-600'>
+                                      {performance.costPerformance.toFixed(1)}%
+                                    </div>
                                   </div>
                                   <div>
-                                    <div className='text-xs text-gray-600'>Scope Performance</div>
-                                    <div className='text-lg font-bold text-purple-600'>{performance.scopePerformance.toFixed(1)}%</div>
+                                    <div className='text-xs text-gray-600'>
+                                      Scope Performance
+                                    </div>
+                                    <div className='text-lg font-bold text-purple-600'>
+                                      {performance.scopePerformance.toFixed(1)}%
+                                    </div>
                                   </div>
                                   <div>
-                                    <div className='text-xs text-gray-600'>Overall Performance</div>
-                                    <div className='text-lg font-bold text-orange-600'>{performance.overallPerformance.toFixed(1)}%</div>
+                                    <div className='text-xs text-gray-600'>
+                                      Overall Performance
+                                    </div>
+                                    <div className='text-lg font-bold text-orange-600'>
+                                      {performance.overallPerformance.toFixed(
+                                        1
+                                      )}
+                                      %
+                                    </div>
                                   </div>
                                 </div>
                               </div>
@@ -433,14 +548,27 @@ const BaselineManagerDialog = ({
                               {/* Changes List */}
                               {comparisonResults.changes.length > 0 && (
                                 <div className='bg-white p-4 rounded border'>
-                                  <h5 className='text-sm font-semibold text-gray-700 mb-3'>Detailed Changes</h5>
+                                  <h5 className='text-sm font-semibold text-gray-700 mb-3'>
+                                    Detailed Changes
+                                  </h5>
                                   <div className='space-y-2 max-h-64 overflow-y-auto'>
-                                    {formatBaselineChanges(comparisonResults).map((change, index) => (
-                                      <div key={index} className='flex items-start gap-2 p-2 bg-gray-50 rounded'>
-                                        <span className='text-lg'>{change.icon}</span>
+                                    {formatBaselineChanges(
+                                      comparisonResults
+                                    ).map((change, index) => (
+                                      <div
+                                        key={index}
+                                        className='flex items-start gap-2 p-2 bg-gray-50 rounded'
+                                      >
+                                        <span className='text-lg'>
+                                          {change.icon}
+                                        </span>
                                         <div className='flex-1 min-w-0'>
-                                          <div className='text-sm font-medium text-gray-900'>{change.taskName}</div>
-                                          <div className='text-xs text-gray-600'>{change.description}</div>
+                                          <div className='text-sm font-medium text-gray-900'>
+                                            {change.taskName}
+                                          </div>
+                                          <div className='text-xs text-gray-600'>
+                                            {change.description}
+                                          </div>
                                         </div>
                                       </div>
                                     ))}
@@ -455,25 +583,35 @@ const BaselineManagerDialog = ({
 
                     {/* Baseline Metadata */}
                     <div className='bg-gray-50 p-4 rounded-lg'>
-                      <h4 className='text-sm font-semibold text-gray-700 mb-3'>Baseline Information</h4>
+                      <h4 className='text-sm font-semibold text-gray-700 mb-3'>
+                        Baseline Information
+                      </h4>
                       <div className='grid grid-cols-2 gap-4 text-sm'>
                         <div>
                           <span className='text-gray-600'>Created:</span>
                           <div className='font-medium text-gray-900'>
-                            {new Date(selectedBaseline.createdAt).toLocaleString()}
+                            {new Date(
+                              selectedBaseline.createdAt
+                            ).toLocaleString()}
                           </div>
                         </div>
                         <div>
                           <span className='text-gray-600'>Created By:</span>
-                          <div className='font-medium text-gray-900'>{selectedBaseline.createdBy}</div>
+                          <div className='font-medium text-gray-900'>
+                            {selectedBaseline.createdBy}
+                          </div>
                         </div>
                         <div>
                           <span className='text-gray-600'>Version:</span>
-                          <div className='font-medium text-gray-900'>{selectedBaseline.version}</div>
+                          <div className='font-medium text-gray-900'>
+                            {selectedBaseline.version}
+                          </div>
                         </div>
                         <div>
                           <span className='text-gray-600'>ID:</span>
-                          <div className='font-medium text-gray-900 font-mono text-xs'>{selectedBaseline.id}</div>
+                          <div className='font-medium text-gray-900 font-mono text-xs'>
+                            {selectedBaseline.id}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -484,8 +622,13 @@ const BaselineManagerDialog = ({
               <div className='flex-1 flex items-center justify-center text-gray-500'>
                 <div className='text-center'>
                   <ChartBarIcon className='w-16 h-16 mx-auto mb-4 text-gray-400' />
-                  <p className='text-lg font-medium'>Select a baseline to view details</p>
-                  <p className='text-sm'>Choose a baseline from the list to see its statistics and comparison data</p>
+                  <p className='text-lg font-medium'>
+                    Select a baseline to view details
+                  </p>
+                  <p className='text-sm'>
+                    Choose a baseline from the list to see its statistics and
+                    comparison data
+                  </p>
                 </div>
               </div>
             )}

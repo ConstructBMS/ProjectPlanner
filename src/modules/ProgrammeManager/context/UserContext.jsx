@@ -41,8 +41,11 @@ export const UserProvider = ({ children }) => {
       setError(null);
 
       // Get current session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
       if (sessionError) {
         throw new Error(`Session error: ${sessionError.message}`);
       }
@@ -90,7 +93,7 @@ export const UserProvider = ({ children }) => {
     } catch (err) {
       setError(err.message);
       console.error('Error loading user:', err);
-      
+
       // Fallback to mock user for development
       const fallbackUser = {
         id: 'fallback-user-id',
@@ -110,62 +113,64 @@ export const UserProvider = ({ children }) => {
   }, []);
 
   // Update user role
-  const updateUserRole = useCallback(async (newRole) => {
-    try {
-      if (!user) return;
+  const updateUserRole = useCallback(
+    async newRole => {
+      try {
+        if (!user) return;
 
-      // Update role in Supabase profiles table
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({
+        // Update role in Supabase profiles table
+        const { error } = await supabase.from('profiles').upsert({
           id: user.id,
           role: newRole,
           updated_at: new Date().toISOString(),
         });
 
-      if (error) {
-        throw new Error(`Error updating role: ${error.message}`);
+        if (error) {
+          throw new Error(`Error updating role: ${error.message}`);
+        }
+
+        // Update local state
+        setUser(prev => ({ ...prev, role: newRole }));
+        setUserRole(newRole);
+
+        return true;
+      } catch (err) {
+        setError(err.message);
+        console.error('Error updating user role:', err);
+        return false;
       }
-
-      // Update local state
-      setUser(prev => ({ ...prev, role: newRole }));
-      setUserRole(newRole);
-
-      return true;
-    } catch (err) {
-      setError(err.message);
-      console.error('Error updating user role:', err);
-      return false;
-    }
-  }, [user]);
+    },
+    [user]
+  );
 
   // Update user profile
-  const updateUserProfile = useCallback(async (updates) => {
-    try {
-      if (!user) return;
+  const updateUserProfile = useCallback(
+    async updates => {
+      try {
+        if (!user) return;
 
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({
+        const { error } = await supabase.from('profiles').upsert({
           id: user.id,
           ...updates,
           updated_at: new Date().toISOString(),
         });
 
-      if (error) {
-        throw new Error(`Error updating profile: ${error.message}`);
+        if (error) {
+          throw new Error(`Error updating profile: ${error.message}`);
+        }
+
+        // Update local state
+        setUser(prev => ({ ...prev, ...updates }));
+
+        return true;
+      } catch (err) {
+        setError(err.message);
+        console.error('Error updating user profile:', err);
+        return false;
       }
-
-      // Update local state
-      setUser(prev => ({ ...prev, ...updates }));
-
-      return true;
-    } catch (err) {
-      setError(err.message);
-      console.error('Error updating user profile:', err);
-      return false;
-    }
-  }, [user]);
+    },
+    [user]
+  );
 
   // Sign out user
   const signOut = useCallback(async () => {
@@ -184,14 +189,20 @@ export const UserProvider = ({ children }) => {
   }, []);
 
   // Check if user can access a specific tab
-  const canAccessTabByName = useCallback((tabName) => {
-    return canAccessTab(userRole, tabName);
-  }, [userRole]);
+  const canAccessTabByName = useCallback(
+    tabName => {
+      return canAccessTab(userRole, tabName);
+    },
+    [userRole]
+  );
 
   // Check if user can access a specific button/feature
-  const canAccessButtonByName = useCallback((buttonName) => {
-    return canAccessButton(userRole, buttonName);
-  }, [userRole]);
+  const canAccessButtonByName = useCallback(
+    buttonName => {
+      return canAccessButton(userRole, buttonName);
+    },
+    [userRole]
+  );
 
   // Get available tabs for current user
   const getAvailableTabsForUser = useCallback(() => {
@@ -230,12 +241,19 @@ export const UserProvider = ({ children }) => {
 
   // Check if user has planner privileges
   const isPlanner = useCallback(() => {
-    return [USER_ROLES.PLANNER, USER_ROLES.MANAGER, USER_ROLES.ADMIN].includes(userRole);
+    return [USER_ROLES.PLANNER, USER_ROLES.MANAGER, USER_ROLES.ADMIN].includes(
+      userRole
+    );
   }, [userRole]);
 
   // Check if user has viewer privileges
   const isViewer = useCallback(() => {
-    return [USER_ROLES.VIEWER, USER_ROLES.PLANNER, USER_ROLES.MANAGER, USER_ROLES.ADMIN].includes(userRole);
+    return [
+      USER_ROLES.VIEWER,
+      USER_ROLES.PLANNER,
+      USER_ROLES.MANAGER,
+      USER_ROLES.ADMIN,
+    ].includes(userRole);
   }, [userRole]);
 
   // Load user on mount
@@ -245,16 +263,16 @@ export const UserProvider = ({ children }) => {
 
   // Listen for auth state changes
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
-          await loadUser();
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null);
-          setUserRole(DEFAULT_ROLE);
-        }
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        await loadUser();
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setUserRole(DEFAULT_ROLE);
       }
-    );
+    });
 
     return () => subscription.unsubscribe();
   }, [loadUser]);
@@ -281,9 +299,5 @@ export const UserProvider = ({ children }) => {
     isViewer,
   };
 
-  return (
-    <UserContext.Provider value={value}>
-      {children}
-    </UserContext.Provider>
-  );
+  return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 };

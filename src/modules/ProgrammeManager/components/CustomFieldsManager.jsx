@@ -335,7 +335,10 @@ const CustomFieldsManager = () => {
                 </label>
                 <div className='space-y-2'>
                   {newField.options.map((option, index) => (
-                    <div key={`option-${option}`} className='flex items-center gap-2'>
+                    <div
+                      key={`option-${option}`}
+                      className='flex items-center gap-2'
+                    >
                       <input
                         type='text'
                         value={option}

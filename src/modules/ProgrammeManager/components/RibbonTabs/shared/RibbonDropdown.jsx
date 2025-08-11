@@ -43,7 +43,7 @@ const RibbonDropdown = ({
           onClick={() => !disabled && setIsOpen(!isOpen)}
           disabled={disabled}
           className={`
-            asta-button
+            project-button
             group
             flex flex-col items-center justify-center
             w-[48px] h-[36px]

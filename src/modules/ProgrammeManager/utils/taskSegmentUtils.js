@@ -15,7 +15,7 @@ export const createTaskSegment = (startDate, endDate, duration) => {
     id: `segment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     startDate: startDate.toISOString(),
     endDate: endDate.toISOString(),
-    duration: duration,
+    duration,
     progress: 0,
     isActive: true,
   };
@@ -32,7 +32,7 @@ export const splitTask = (task, segmentRanges) => {
     return task;
   }
 
-  const segments = segmentRanges.map(range => 
+  const segments = segmentRanges.map(range =>
     createTaskSegment(
       new Date(range.startDate),
       new Date(range.endDate),
@@ -41,14 +41,21 @@ export const splitTask = (task, segmentRanges) => {
   );
 
   // Calculate total duration and progress
-  const totalDuration = segments.reduce((sum, segment) => sum + segment.duration, 0);
-  const totalProgress = segments.reduce((sum, segment) => sum + (segment.progress || 0), 0);
-  const averageProgress = segments.length > 0 ? totalProgress / segments.length : 0;
+  const totalDuration = segments.reduce(
+    (sum, segment) => sum + segment.duration,
+    0
+  );
+  const totalProgress = segments.reduce(
+    (sum, segment) => sum + (segment.progress || 0),
+    0
+  );
+  const averageProgress =
+    segments.length > 0 ? totalProgress / segments.length : 0;
 
   // Update task with segments
   const updatedTask = {
     ...task,
-    segments: segments,
+    segments,
     isSplit: true,
     originalDuration: task.duration,
     originalStartDate: task.startDate,
@@ -68,15 +75,18 @@ export const splitTask = (task, segmentRanges) => {
  * @param {Object} task - Task with segments
  * @returns {Object} Task without segments
  */
-export const mergeTaskSegments = (task) => {
+export const mergeTaskSegments = task => {
   if (!task.segments || task.segments.length === 0) {
     return task;
   }
 
   // Use original values if available, otherwise calculate from segments
   const startDate = task.originalStartDate || task.segments[0].startDate;
-  const endDate = task.originalEndDate || task.segments[task.segments.length - 1].endDate;
-  const duration = task.originalDuration || task.segments.reduce((sum, segment) => sum + segment.duration, 0);
+  const endDate =
+    task.originalEndDate || task.segments[task.segments.length - 1].endDate;
+  const duration =
+    task.originalDuration ||
+    task.segments.reduce((sum, segment) => sum + segment.duration, 0);
 
   return {
     ...task,
@@ -85,9 +95,9 @@ export const mergeTaskSegments = (task) => {
     originalDuration: undefined,
     originalStartDate: undefined,
     originalEndDate: undefined,
-    startDate: startDate,
-    endDate: endDate,
-    duration: duration,
+    startDate,
+    endDate,
+    duration,
   };
 };
 
@@ -105,8 +115,8 @@ export const addTaskSegment = (task, startDate, endDate, duration) => {
   }
 
   const newSegment = createTaskSegment(startDate, endDate, duration);
-  const updatedSegments = [...task.segments, newSegment].sort((a, b) => 
-    new Date(a.startDate) - new Date(b.startDate)
+  const updatedSegments = [...task.segments, newSegment].sort(
+    (a, b) => new Date(a.startDate) - new Date(b.startDate)
   );
 
   return updateTaskWithSegments(task, updatedSegments);
@@ -123,8 +133,10 @@ export const removeTaskSegment = (task, segmentId) => {
     return task;
   }
 
-  const updatedSegments = task.segments.filter(segment => segment.id !== segmentId);
-  
+  const updatedSegments = task.segments.filter(
+    segment => segment.id !== segmentId
+  );
+
   if (updatedSegments.length === 0) {
     return mergeTaskSegments(task);
   }
@@ -144,7 +156,7 @@ export const updateTaskSegment = (task, segmentId, updates) => {
     return task;
   }
 
-  const updatedSegments = task.segments.map(segment => 
+  const updatedSegments = task.segments.map(segment =>
     segment.id === segmentId ? { ...segment, ...updates } : segment
   );
 
@@ -163,13 +175,20 @@ const updateTaskWithSegments = (task, segments) => {
   }
 
   // Calculate total duration and progress
-  const totalDuration = segments.reduce((sum, segment) => sum + segment.duration, 0);
-  const totalProgress = segments.reduce((sum, segment) => sum + (segment.progress || 0), 0);
-  const averageProgress = segments.length > 0 ? totalProgress / segments.length : 0;
+  const totalDuration = segments.reduce(
+    (sum, segment) => sum + segment.duration,
+    0
+  );
+  const totalProgress = segments.reduce(
+    (sum, segment) => sum + (segment.progress || 0),
+    0
+  );
+  const averageProgress =
+    segments.length > 0 ? totalProgress / segments.length : 0;
 
   return {
     ...task,
-    segments: segments,
+    segments,
     startDate: segments[0].startDate,
     endDate: segments[segments.length - 1].endDate,
     duration: totalDuration,
@@ -182,7 +201,7 @@ const updateTaskWithSegments = (task, segments) => {
  * @param {Object} task - Task object
  * @returns {Array} Array of segments (empty if not split)
  */
-export const getTaskSegments = (task) => {
+export const getTaskSegments = task => {
   return task.segments || [];
 };
 
@@ -191,7 +210,7 @@ export const getTaskSegments = (task) => {
  * @param {Object} task - Task object
  * @returns {boolean} True if task has segments
  */
-export const isTaskSplit = (task) => {
+export const isTaskSplit = task => {
   return task.isSplit === true && task.segments && task.segments.length > 0;
 };
 
@@ -200,7 +219,7 @@ export const isTaskSplit = (task) => {
  * @param {Object} task - Task object
  * @returns {number} Total duration in days
  */
-export const getTotalSegmentDuration = (task) => {
+export const getTotalSegmentDuration = task => {
   if (!isTaskSplit(task)) {
     return task.duration || 0;
   }
@@ -213,12 +232,15 @@ export const getTotalSegmentDuration = (task) => {
  * @param {Object} task - Task object
  * @returns {number} Total progress percentage
  */
-export const getTotalSegmentProgress = (task) => {
+export const getTotalSegmentProgress = task => {
   if (!isTaskSplit(task)) {
     return task.progress || 0;
   }
 
-  const totalProgress = task.segments.reduce((sum, segment) => sum + (segment.progress || 0), 0);
+  const totalProgress = task.segments.reduce(
+    (sum, segment) => sum + (segment.progress || 0),
+    0
+  );
   return task.segments.length > 0 ? totalProgress / task.segments.length : 0;
 };
 
@@ -227,25 +249,27 @@ export const getTotalSegmentProgress = (task) => {
  * @param {Array} segments - Array of task segments
  * @returns {Array} Array of gap objects with start, end, and duration
  */
-export const calculateSegmentGaps = (segments) => {
+export const calculateSegmentGaps = segments => {
   if (!segments || segments.length < 2) {
     return [];
   }
 
-  const sortedSegments = [...segments].sort((a, b) => 
-    new Date(a.endDate) - new Date(b.endDate)
+  const sortedSegments = [...segments].sort(
+    (a, b) => new Date(a.endDate) - new Date(b.endDate)
   );
 
   const gaps = [];
-  
+
   for (let i = 0; i < sortedSegments.length - 1; i++) {
     const currentSegment = sortedSegments[i];
     const nextSegment = sortedSegments[i + 1];
-    
+
     const gapStart = new Date(currentSegment.endDate);
     const gapEnd = new Date(nextSegment.startDate);
-    const gapDuration = Math.ceil((gapEnd.getTime() - gapStart.getTime()) / (1000 * 60 * 60 * 24));
-    
+    const gapDuration = Math.ceil(
+      (gapEnd.getTime() - gapStart.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
     if (gapDuration > 0) {
       gaps.push({
         id: `gap_${currentSegment.id}_${nextSegment.id}`,
@@ -269,10 +293,11 @@ export const calculateSegmentGaps = (segments) => {
  * @returns {Object} Styling information
  */
 export const getSegmentStyling = (segment, task, isSelected = false) => {
-  const baseClasses = 'rounded-sm transition-all duration-200 cursor-move border';
-  
+  const baseClasses =
+    'rounded-sm transition-all duration-200 cursor-move border';
+
   let segmentClasses = baseClasses;
-  
+
   if (isSelected) {
     segmentClasses += ' ring-2 ring-blue-400 border-blue-500 shadow-md';
   } else {
@@ -298,7 +323,7 @@ export const getSegmentStyling = (segment, task, isSelected = false) => {
  * @param {Array} segments - Array of segments to validate
  * @returns {Object} Validation result
  */
-export const validateSegments = (segments) => {
+export const validateSegments = segments => {
   const errors = [];
   const warnings = [];
 
@@ -332,7 +357,7 @@ export const validateSegments = (segments) => {
       if (index !== otherIndex) {
         const otherStart = new Date(otherSegment.startDate);
         const otherEnd = new Date(otherSegment.endDate);
-        
+
         if (startDate < otherEnd && endDate > otherStart) {
           errors.push(`Segments ${index + 1} and ${otherIndex + 1} overlap`);
         }
@@ -344,7 +369,9 @@ export const validateSegments = (segments) => {
   const gaps = calculateSegmentGaps(segments);
   gaps.forEach(gap => {
     if (gap.duration > 30) {
-      warnings.push(`Large gap detected: ${gap.duration} days between segments`);
+      warnings.push(
+        `Large gap detected: ${gap.duration} days between segments`
+      );
     }
   });
 
@@ -379,7 +406,7 @@ export const getSegmentTooltip = (segment, task) => {
  * @param {Object} task - Task object
  * @returns {Object} Segment summary
  */
-export const getSegmentSummary = (task) => {
+export const getSegmentSummary = task => {
   if (!isTaskSplit(task)) {
     return {
       isSplit: false,

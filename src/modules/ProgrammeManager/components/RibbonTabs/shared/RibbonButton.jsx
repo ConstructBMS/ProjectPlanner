@@ -1,6 +1,8 @@
 // RibbonButton component
+import { useState, useRef } from 'react';
 import { useUserContext } from '../../../context/UserContext';
 import Tooltip from '../../common/Tooltip';
+import RibbonMenu from '../RibbonMenu';
 
 const RibbonButton = ({
   icon,
@@ -14,7 +16,11 @@ const RibbonButton = ({
   compact = false,
   permissionKey = null, // New prop for permission checking
   showIfNoPermission = false, // Whether to show button but disabled if no permission
+  menuItems = null, // Menu items for dropdown functionality
+  onMenuSelect = null, // Callback for menu item selection
 }) => {
+  const [showMenu, setShowMenu] = useState(false);
+  const buttonRef = useRef(null);
   const { canAccessButton } = useUserContext();
 
   // Check if user has permission for this button
@@ -36,47 +42,108 @@ const RibbonButton = ({
     return tooltip || label;
   };
 
+  // Handle button click
+  const handleClick = (e) => {
+    if (menuItems && menuItems.length > 0) {
+      e.preventDefault();
+      setShowMenu(!showMenu);
+    } else if (onClick) {
+      onClick(e);
+    }
+  };
+
+  // Handle menu item selection
+  const handleMenuSelect = (item) => {
+    if (onMenuSelect) {
+      onMenuSelect(item);
+    }
+    setShowMenu(false);
+  };
+
+  // Close menu when clicking outside
+  const handleClickOutside = (e) => {
+    if (buttonRef.current && !buttonRef.current.contains(e.target)) {
+      setShowMenu(false);
+    }
+  };
+
+  // Add click outside listener
+  if (showMenu) {
+    document.addEventListener('mousedown', handleClickOutside);
+  }
+
   return (
-    <Tooltip content={getTooltip()}>
-      <button
-        onClick={onClick}
-        disabled={isDisabled}
-        className={`
-          asta-button
-          group
-          flex flex-col items-center justify-center
-          w-[40px] ${compact ? 'h-[20px]' : 'h-[32px]'}
-          flex-shrink-0
-          transition-all duration-150
-          ${isDisabled ? 'opacity-50 cursor-not-allowed' : active ? 'bg-blue-100 border-blue-300' : 'hover:bg-blue-50 hover:border-blue-200'}
-          ${!hasPermission ? 'opacity-30' : ''}
-          ${className}
-        `}
-        aria-label={label}
-        title={getTooltip()}
-      >
-        <div className={`text-[12px] flex items-center justify-center w-full h-[14px] transition-colors duration-150 ${
-          isDisabled ? 'text-gray-400' : 'text-gray-700 group-hover:text-blue-600'
-        }`}>
+    <div className="relative" ref={buttonRef}>
+      <Tooltip content={getTooltip()}>
+        <button
+          onClick={handleClick}
+          disabled={isDisabled}
+          className={`
+            project-button ribbon-button
+            group
+            flex flex-col items-center justify-center
+            w-[40px] ${compact ? 'h-[20px]' : 'h-[32px]'}
+            flex-shrink-0
+            transition-all duration-150
+            ${isDisabled ? 'opacity-50 cursor-not-allowed' : active ? 'bg-blue-100 border-blue-300' : 'hover:bg-blue-50 hover:border-blue-200'}
+            ${!hasPermission ? 'opacity-30' : ''}
+            ${menuItems ? 'split' : ''}
+            ${className}
+          `}
+          aria-label={label}
+          title={getTooltip()}
+          aria-haspopup={menuItems ? 'true' : undefined}
+          aria-expanded={showMenu ? 'true' : undefined}
+          tabIndex={0}
+        >
+        <div
+          className={`text-[12px] flex items-center justify-center w-full h-[14px] transition-colors duration-150 ${
+            isDisabled
+              ? 'text-gray-400'
+              : 'text-gray-700 group-hover:text-blue-600'
+          }`}
+        >
           {iconType === 'text' ? (
-            <span className={`font-bold transition-colors duration-150 ${
-              isDisabled ? 'text-gray-400' : 'text-gray-700 group-hover:text-blue-600'
-            }`}>
+            <span
+              className={`font-bold transition-colors duration-150 ${
+                isDisabled
+                  ? 'text-gray-400'
+                  : 'text-gray-700 group-hover:text-blue-600'
+              }`}
+            >
               {icon}
             </span>
           ) : (
             icon
           )}
         </div>
-        {!compact && (
-          <div className={`text-[6px] uppercase tracking-wide font-medium mt-0.5 leading-tight text-center ${
-            isDisabled ? 'text-gray-400' : 'text-gray-600'
-          }`}>
-            {label}
-          </div>
-        )}
+                    {!compact && (
+              <div
+                className={`text-[6px] uppercase tracking-wide font-medium mt-0.5 leading-tight text-center rbn-ellipsis ${
+                  isDisabled ? 'text-gray-400' : 'text-gray-600'
+                }`}
+                title={label}
+              >
+                {label}
+              </div>
+            )}
       </button>
-    </Tooltip>
+      </Tooltip>
+      
+      {/* Menu */}
+      {showMenu && menuItems && (
+        <RibbonMenu
+          items={menuItems}
+          onSelect={handleMenuSelect}
+          onClose={() => setShowMenu(false)}
+          position={{
+            x: buttonRef.current?.getBoundingClientRect().left || 0,
+            y: (buttonRef.current?.getBoundingClientRect().bottom || 0) + 4
+          }}
+          parentRef={buttonRef}
+        />
+      )}
+    </div>
   );
 };
 

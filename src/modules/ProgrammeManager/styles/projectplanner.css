@@ -1,0 +1,228 @@
+/* ProjectPlanner Shared Styles */
+
+/* ConstructBMS-Styled Scrollbars */
+
+/* WebKit Scrollbars (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #111928;
+  border: 1px inset #232a38;
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2a3448;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background-clip: content-box;
+  transition: background-color 0.15s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334158;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: #3b4a63;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: #111928;
+  border: 1px inset #232a38;
+}
+
+/* Firefox Scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2a3448 #111928;
+}
+
+/* Smooth Scrolling */
+.smooth-scroll {
+  scroll-behavior: smooth;
+}
+
+/* Gantt-specific scroll containers */
+.gantt-scroll-container {
+  overflow: auto;
+  scroll-behavior: smooth;
+}
+
+.gantt-scroll-container::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.gantt-scroll-container::-webkit-scrollbar-track {
+  background: #111928;
+  border: 1px inset #232a38;
+  border-radius: 8px;
+}
+
+.gantt-scroll-container::-webkit-scrollbar-thumb {
+  background: #2a3448;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background-clip: content-box;
+  transition: background-color 0.15s ease;
+}
+
+.gantt-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #334158;
+  background-clip: content-box;
+}
+
+.gantt-scroll-container::-webkit-scrollbar-thumb:active {
+  background: #3b4a63;
+  background-clip: content-box;
+}
+
+.gantt-scroll-container::-webkit-scrollbar-corner {
+  background: #111928;
+  border: 1px inset #232a38;
+}
+
+/* Grid-specific scroll containers */
+.grid-scroll-container {
+  overflow: auto;
+  scroll-behavior: smooth;
+}
+
+.grid-scroll-container::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.grid-scroll-container::-webkit-scrollbar-track {
+  background: #111928;
+  border: 1px inset #232a38;
+  border-radius: 8px;
+}
+
+.grid-scroll-container::-webkit-scrollbar-thumb {
+  background: #2a3448;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background-clip: content-box;
+  transition: background-color 0.15s ease;
+}
+
+.grid-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #334158;
+  background-clip: content-box;
+}
+
+.grid-scroll-container::-webkit-scrollbar-thumb:active {
+  background: #3b4a63;
+  background-clip: content-box;
+}
+
+.grid-scroll-container::-webkit-scrollbar-corner {
+  background: #111928;
+  border: 1px inset #232a38;
+}
+
+/* Tree-specific scroll containers */
+.tree-scroll-container {
+  overflow: auto;
+  scroll-behavior: smooth;
+}
+
+.tree-scroll-container::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.tree-scroll-container::-webkit-scrollbar-track {
+  background: #111928;
+  border: 1px inset #232a38;
+  border-radius: 8px;
+}
+
+.tree-scroll-container::-webkit-scrollbar-thumb {
+  background: #2a3448;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background-clip: content-box;
+  transition: background-color 0.15s ease;
+}
+
+.tree-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #334158;
+  background-clip: content-box;
+}
+
+.tree-scroll-container::-webkit-scrollbar-thumb:active {
+  background: #3b4a63;
+  background-clip: content-box;
+}
+
+.tree-scroll-container::-webkit-scrollbar-corner {
+  background: #111928;
+  border: 1px inset #232a38;
+}
+
+/* Properties pane scroll containers */
+.properties-scroll-container {
+  overflow: auto;
+  scroll-behavior: smooth;
+}
+
+.properties-scroll-container::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.properties-scroll-container::-webkit-scrollbar-track {
+  background: #111928;
+  border: 1px inset #232a38;
+  border-radius: 8px;
+}
+
+.properties-scroll-container::-webkit-scrollbar-thumb {
+  background: #2a3448;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background-clip: content-box;
+  transition: background-color 0.15s ease;
+}
+
+.properties-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #334158;
+  background-clip: content-box;
+}
+
+.properties-scroll-container::-webkit-scrollbar-thumb:active {
+  background: #3b4a63;
+  background-clip: content-box;
+}
+
+.properties-scroll-container::-webkit-scrollbar-corner {
+  background: #111928;
+  border: 1px inset #232a38;
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .smooth-scroll,
+  .gantt-scroll-container,
+  .grid-scroll-container,
+  .tree-scroll-container,
+  .properties-scroll-container {
+    scroll-behavior: auto;
+  }
+  
+  ::-webkit-scrollbar-thumb,
+  .gantt-scroll-container::-webkit-scrollbar-thumb,
+  .grid-scroll-container::-webkit-scrollbar-thumb,
+  .tree-scroll-container::-webkit-scrollbar-thumb,
+  .properties-scroll-container::-webkit-scrollbar-thumb {
+    transition: none;
+  }
+}

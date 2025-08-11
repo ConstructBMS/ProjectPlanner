@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   UserIcon,
-  CurrencyPoundIcon,
+  CurrencyDollarIcon,
   ExclamationTriangleIcon,
   CheckIcon,
   ChartBarIcon,
@@ -23,7 +23,12 @@ import {
   DEFAULT_RESOURCE_CALENDAR_CONFIG,
 } from '../utils/resourceCalendarUtils';
 
-const ResourcePropertiesPane = ({ resource, tasks, onResourceUpdate, projectCalendars = {} }) => {
+const ResourcePropertiesPane = ({
+  resource,
+  tasks,
+  onResourceUpdate,
+  projectCalendars = {},
+}) => {
   const [editingResource, setEditingResource] = useState(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [costRateValidation, setCostRateValidation] = useState({
@@ -60,7 +65,10 @@ const ResourcePropertiesPane = ({ resource, tasks, onResourceUpdate, projectCale
   // Validate calendar assignment when it changes
   useEffect(() => {
     if (editingResource) {
-      const validation = validateResourceCalendar(editingResource, projectCalendars);
+      const validation = validateResourceCalendar(
+        editingResource,
+        projectCalendars
+      );
       setCalendarValidation(validation);
     }
   }, [editingResource?.calendarId, projectCalendars]);
@@ -108,8 +116,15 @@ const ResourcePropertiesPane = ({ resource, tasks, onResourceUpdate, projectCale
   const costSummary = getResourceCostSummary(resource.id, tasks, []);
 
   // Get calendar information
-  const calendarSummary = getResourceCalendarSummary(editingResource, projectCalendars, DEFAULT_RESOURCE_CALENDAR_CONFIG);
-  const availableCalendars = getAvailableCalendars(projectCalendars, DEFAULT_RESOURCE_CALENDAR_CONFIG);
+  const calendarSummary = getResourceCalendarSummary(
+    editingResource,
+    projectCalendars,
+    DEFAULT_RESOURCE_CALENDAR_CONFIG
+  );
+  const availableCalendars = getAvailableCalendars(
+    projectCalendars,
+    DEFAULT_RESOURCE_CALENDAR_CONFIG
+  );
 
   return (
     <div className='w-80 bg-gray-50 border-l border-gray-200 p-4 overflow-y-auto'>
@@ -182,7 +197,7 @@ const ResourcePropertiesPane = ({ resource, tasks, onResourceUpdate, projectCale
       {/* Cost Rate Section */}
       <div className='bg-white border border-gray-200 rounded-lg p-4 mb-4'>
         <div className='flex items-center gap-2 mb-3'>
-          <CurrencyPoundIcon className='w-4 h-4 text-green-600' />
+          <CurrencyDollarIcon className='w-4 h-4 text-green-600' />
           <h4 className='text-sm font-semibold text-gray-700'>Cost Rate</h4>
         </div>
 
@@ -286,7 +301,9 @@ const ResourcePropertiesPane = ({ resource, tasks, onResourceUpdate, projectCale
       <div className='bg-white border border-gray-200 rounded-lg p-4 mb-4'>
         <div className='flex items-center gap-2 mb-3'>
           <CalendarIcon className='w-4 h-4 text-purple-600' />
-          <h4 className='text-sm font-semibold text-gray-700'>Working Calendar</h4>
+          <h4 className='text-sm font-semibold text-gray-700'>
+            Working Calendar
+          </h4>
         </div>
 
         <div className='space-y-3'>
@@ -296,7 +313,9 @@ const ResourcePropertiesPane = ({ resource, tasks, onResourceUpdate, projectCale
             </label>
             <select
               value={editingResource.calendarId || ''}
-              onChange={e => handleFieldChange('calendarId', e.target.value || null)}
+              onChange={e =>
+                handleFieldChange('calendarId', e.target.value || null)
+              }
               className='w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
             >
               <option value=''>No Calendar Assigned</option>
@@ -314,7 +333,8 @@ const ResourcePropertiesPane = ({ resource, tasks, onResourceUpdate, projectCale
               <strong>Current Calendar:</strong> {calendarSummary.calendarName}
             </div>
             <div className='text-xs text-gray-500 mt-1'>
-              {calendarSummary.workingDays} working days, {calendarSummary.totalWeeklyHours}h per week
+              {calendarSummary.workingDays} working days,{' '}
+              {calendarSummary.totalWeeklyHours}h per week
             </div>
           </div>
 
@@ -373,7 +393,7 @@ const ResourcePropertiesPane = ({ resource, tasks, onResourceUpdate, projectCale
                 const startDate = new Date();
                 const endDate = new Date();
                 endDate.setDate(endDate.getDate() + 30);
-                
+
                 const availability = calculateResourceAvailability(
                   editingResource,
                   startDate,
@@ -385,10 +405,13 @@ const ResourcePropertiesPane = ({ resource, tasks, onResourceUpdate, projectCale
                 return (
                   <div className='p-2 bg-blue-50 border border-blue-200 rounded'>
                     <div className='text-xs text-blue-700'>
-                      <strong>Available:</strong> {availability.totalWorkingDays} days, {availability.totalWorkingHours}h
+                      <strong>Available:</strong>{' '}
+                      {availability.totalWorkingDays} days,{' '}
+                      {availability.totalWorkingHours}h
                     </div>
                     <div className='text-xs text-blue-600 mt-1'>
-                      <strong>Unavailable:</strong> {availability.unavailableDates.length} days
+                      <strong>Unavailable:</strong>{' '}
+                      {availability.unavailableDates.length} days
                     </div>
                   </div>
                 );

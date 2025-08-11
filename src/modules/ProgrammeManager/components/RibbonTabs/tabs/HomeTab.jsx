@@ -6,8 +6,11 @@ import { useUndoRedoContext } from '../../../context/UndoRedoContext';
 import RibbonButton from '../shared/RibbonButton';
 import RibbonGroup from '../shared/RibbonGroup';
 import RibbonDropdown from '../shared/RibbonDropdown';
-import PrintExportDialog from '../../../../PrintExportDialog';
-import { exportProject, printProject } from '../../../../utils/printExportUtils';
+import PrintExportDialog from '../../../components/PrintExportDialog';
+import {
+  exportProject,
+  printProject,
+} from '../../../../../utils/printExportUtils';
 
 import {
   ClipboardDocumentIcon,
@@ -27,12 +30,11 @@ import {
   PlusIcon,
   ChartBarIcon,
   DocumentTextIcon,
-  CodeBracketIcon,
+  CodeBracketSquareIcon,
   ExclamationTriangleIcon,
-  ChartBarSquareIcon,
   CheckIcon,
-  Square3Stack3DIcon,
-  SwatchIcon,
+  Squares2X2Icon,
+  PaintBrushIcon,
   PencilIcon,
   MagnifyingGlassPlusIcon,
   MagnifyingGlassMinusIcon,
@@ -76,7 +78,8 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
   } = useViewContext();
 
   // Get expand milestones function and tasks from task context
-  const { expandMilestones, getVisibleTasks, tasks, taskLinks } = useTaskContext();
+  const { expandMilestones, getVisibleTasks, tasks, taskLinks } =
+    useTaskContext();
 
   const handleTaskDetailsClick = () => {
     console.log('Task details clicked');
@@ -140,7 +143,7 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
   };
 
   // Print and Export handlers
-  const handlePrint = async (printSettings) => {
+  const handlePrint = async printSettings => {
     try {
       await printProject(printSettings, tasks, taskLinks, viewState);
     } catch (error) {
@@ -149,9 +152,14 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     }
   };
 
-  const handleExport = async (exportSettings) => {
+  const handleExport = async exportSettings => {
     try {
-      const filename = await exportProject(exportSettings, tasks, taskLinks, viewState);
+      const filename = await exportProject(
+        exportSettings,
+        tasks,
+        taskLinks,
+        viewState
+      );
       console.log('Export completed:', filename);
     } catch (error) {
       console.error('Export error:', error);
@@ -346,7 +354,7 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
           tooltip='Insert a summary task and group selected tasks under it'
         />
         <RibbonButton
-          icon={<ChartBarSquareIcon className='w-4 h-4' />}
+          icon={<ChartBarIcon className='w-4 h-4' />}
           label='Hammock Task'
           onClick={() => console.log('Insert Hammock Task clicked')}
           tooltip='Insert a hammock task'
@@ -384,13 +392,13 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
       {/* Appearance Group */}
       <RibbonGroup title='Appearance'>
         <RibbonButton
-          icon={<Square3Stack3DIcon className='w-4 h-4' />}
+          icon={<Squares2X2Icon className='w-4 h-4' />}
           label='Bar Style'
           onClick={() => console.log('Change Bar Style clicked')}
           tooltip='Change the visual bar style of selected tasks'
         />
         <RibbonButton
-          icon={<SwatchIcon className='w-4 h-4' />}
+          icon={<PaintBrushIcon className='w-4 h-4' />}
           label='Colour'
           onClick={() => console.log('Change Colour clicked')}
           tooltip='Change colour of selected task bars'
@@ -488,7 +496,7 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
             compact={true}
           />
           <RibbonButton
-            icon={<CodeBracketIcon className='w-4 h-4' />}
+            icon={<CodeBracketSquareIcon className='w-4 h-4' />}
             onClick={addCode}
             tooltip='Code Library'
             compact={true}

@@ -1,6 +1,7 @@
 import { Suspense, lazy, useState } from 'react';
 import ErrorBoundary from './components/ErrorBoundary';
 import { ProjectsProvider } from './modules/ProgrammeManager/context/ProjectsContext';
+import Navigation from './components/Navigation';
 
 // Lazy load the main application components
 const ProgrammeManager = lazy(
@@ -21,7 +22,7 @@ const LoadingSpinner = () => (
 );
 
 function App() {
-  const [currentView, setCurrentView] = useState('portfolio'); // 'portfolio', 'project', or 'templates'
+  const [currentView, setCurrentView] = useState('project'); // Default to the Asta replica
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
 
@@ -35,7 +36,7 @@ function App() {
     setSelectedProjectId(null);
   };
 
-  const handleTemplateSelect = (template) => {
+  const handleTemplateSelect = template => {
     setSelectedTemplate(template);
     setCurrentView('project');
   };
@@ -47,24 +48,27 @@ function App() {
   return (
     <ErrorBoundary>
       <ProjectsProvider>
-        <Suspense fallback={<LoadingSpinner />}>
-          {currentView === 'portfolio' ? (
-            <PortfolioDashboard 
-              onProjectSelect={handleProjectSelect}
-              onShowTemplates={handleShowTemplates}
-            />
-          ) : currentView === 'templates' ? (
-            <ProjectTemplates
-              onTemplateSelect={handleTemplateSelect}
-              onBackToPortfolio={handleBackToPortfolio}
-            />
-          ) : (
-            <ProgrammeManager
-              projectId={selectedProjectId}
-              onBackToPortfolio={handleBackToPortfolio}
-            />
-          )}
-        </Suspense>
+        <div className='min-h-screen bg-gray-50'>
+          <Navigation currentView={currentView} onViewChange={setCurrentView} />
+          <Suspense fallback={<LoadingSpinner />}>
+            {currentView === 'portfolio' ? (
+              <PortfolioDashboard
+                onProjectSelect={handleProjectSelect}
+                onShowTemplates={handleShowTemplates}
+              />
+            ) : currentView === 'templates' ? (
+              <ProjectTemplates
+                onTemplateSelect={handleTemplateSelect}
+                onBackToPortfolio={handleBackToPortfolio}
+              />
+            ) : (
+              <ProgrammeManager
+                projectId={selectedProjectId}
+                onBackToPortfolio={handleBackToPortfolio}
+              />
+            )}
+          </Suspense>
+        </div>
       </ProjectsProvider>
     </ErrorBoundary>
   );

@@ -25,11 +25,15 @@ export const calculateDailyAllocations = (tasks, globalCalendar) => {
     const duration = task.duration || 1;
 
     // Calculate allocation per day
-    const allocationPerDay = task.resourceAssignments.reduce((acc, assignment) => {
-      const dailyAllocation = (assignment.work || 0) / duration;
-      acc[assignment.resourceId] = (acc[assignment.resourceId] || 0) + dailyAllocation;
-      return acc;
-    }, {});
+    const allocationPerDay = task.resourceAssignments.reduce(
+      (acc, assignment) => {
+        const dailyAllocation = (assignment.work || 0) / duration;
+        acc[assignment.resourceId] =
+          (acc[assignment.resourceId] || 0) + dailyAllocation;
+        return acc;
+      },
+      {}
+    );
 
     // Apply allocation to each working day
     for (let i = 0; i < duration; i++) {
@@ -41,7 +45,8 @@ export const calculateDailyAllocations = (tasks, globalCalendar) => {
       }
 
       Object.entries(allocationPerDay).forEach(([resourceId, allocation]) => {
-        dailyAllocations[dateKey][resourceId] = (dailyAllocations[dateKey][resourceId] || 0) + allocation;
+        dailyAllocations[dateKey][resourceId] =
+          (dailyAllocations[dateKey][resourceId] || 0) + allocation;
       });
     }
   });
@@ -90,7 +95,12 @@ export const detectOverAllocations = (dailyAllocations, resources) => {
  * @param {Object} globalCalendar - Global calendar
  * @returns {Array} Array of tasks that can be shifted
  */
-export const findShiftableTasks = (conflict, tasks, taskLinks, globalCalendar) => {
+export const findShiftableTasks = (
+  conflict,
+  tasks,
+  taskLinks,
+  globalCalendar
+) => {
   const shiftableTasks = [];
 
   tasks.forEach(task => {
@@ -122,9 +132,10 @@ export const findShiftableTasks = (conflict, tasks, taskLinks, globalCalendar) =
           shiftedStart: shiftedStart.toISOString(),
           maxShift,
           totalFloat: task.totalFloat,
-          resourceAllocation: task.resourceAssignments.find(
-            a => a.resourceId === conflict.resourceId
-          )?.allocation || 0,
+          resourceAllocation:
+            task.resourceAssignments.find(
+              a => a.resourceId === conflict.resourceId
+            )?.allocation || 0,
         });
       }
     }
@@ -147,7 +158,12 @@ export const findShiftableTasks = (conflict, tasks, taskLinks, globalCalendar) =
  * @param {Object} globalCalendar - Global calendar
  * @returns {boolean} True if shift would create conflicts
  */
-export const wouldCreateConflicts = (taskShift, tasks, taskLinks, globalCalendar) => {
+export const wouldCreateConflicts = (
+  taskShift,
+  tasks,
+  taskLinks,
+  globalCalendar
+) => {
   const task = tasks.find(t => t.id === taskShift.taskId);
   if (!task) return true;
 
@@ -189,7 +205,12 @@ export const wouldCreateConflicts = (taskShift, tasks, taskLinks, globalCalendar
  * @param {Object} globalCalendar - Global calendar
  * @returns {Object} Impact analysis
  */
-export const calculateShiftImpact = (taskShift, conflict, tasks, globalCalendar) => {
+export const calculateShiftImpact = (
+  taskShift,
+  conflict,
+  tasks,
+  globalCalendar
+) => {
   const task = tasks.find(t => t.id === taskShift.taskId);
   if (!task) return null;
 
@@ -198,22 +219,31 @@ export const calculateShiftImpact = (taskShift, conflict, tasks, globalCalendar)
   const duration = task.duration || 1;
 
   // Calculate allocation on conflict date before shift
-  const allocationOnConflictDate = task.resourceAssignments?.find(
-    a => a.resourceId === conflict.resourceId
-  )?.allocation || 0;
+  const allocationOnConflictDate =
+    task.resourceAssignments?.find(a => a.resourceId === conflict.resourceId)
+      ?.allocation || 0;
 
   // Calculate if task would still be active on conflict date after shift
   const shiftedEnd = addDays(shiftedStart, duration - 1, globalCalendar);
   const conflictDate = new Date(conflict.date);
-  const stillActiveOnConflictDate = conflictDate >= shiftedStart && conflictDate <= shiftedEnd;
+  const stillActiveOnConflictDate =
+    conflictDate >= shiftedStart && conflictDate <= shiftedEnd;
 
   const impact = {
     taskId: taskShift.taskId,
     taskName: taskShift.taskName,
     allocationRemoved: stillActiveOnConflictDate ? 0 : allocationOnConflictDate,
-    allocationReduced: stillActiveOnConflictDate ? allocationOnConflictDate * 0.5 : 0, // Estimate
-    newOverAllocation: Math.max(0, conflict.overAllocation - (stillActiveOnConflictDate ? 0 : allocationOnConflictDate)),
-    daysShifted: Math.ceil((shiftedStart.getTime() - currentStart.getTime()) / (1000 * 60 * 60 * 24)),
+    allocationReduced: stillActiveOnConflictDate
+      ? allocationOnConflictDate * 0.5
+      : 0, // Estimate
+    newOverAllocation: Math.max(
+      0,
+      conflict.overAllocation -
+        (stillActiveOnConflictDate ? 0 : allocationOnConflictDate)
+    ),
+    daysShifted: Math.ceil(
+      (shiftedStart.getTime() - currentStart.getTime()) / (1000 * 60 * 60 * 24)
+    ),
   };
 
   return impact;
@@ -227,7 +257,12 @@ export const calculateShiftImpact = (taskShift, conflict, tasks, globalCalendar)
  * @param {Object} globalCalendar - Global calendar
  * @returns {Object} Leveling preview with proposed changes
  */
-export const generateLevelingPreview = (tasks, taskLinks, resources, globalCalendar) => {
+export const generateLevelingPreview = (
+  tasks,
+  taskLinks,
+  resources,
+  globalCalendar
+) => {
   const dailyAllocations = calculateDailyAllocations(tasks, globalCalendar);
   const conflicts = detectOverAllocations(dailyAllocations, resources);
 
@@ -244,21 +279,33 @@ export const generateLevelingPreview = (tasks, taskLinks, resources, globalCalen
   const resolvedConflicts = new Set();
 
   // Process conflicts in order of severity (highest over-allocation first)
-  const sortedConflicts = conflicts.sort((a, b) => b.overAllocation - a.overAllocation);
+  const sortedConflicts = conflicts.sort(
+    (a, b) => b.overAllocation - a.overAllocation
+  );
 
   for (const conflict of sortedConflicts) {
     if (resolvedConflicts.has(`${conflict.date}-${conflict.resourceId}`)) {
       continue; // Already resolved
     }
 
-    const shiftableTasks = findShiftableTasks(conflict, tasks, taskLinks, globalCalendar);
-    
+    const shiftableTasks = findShiftableTasks(
+      conflict,
+      tasks,
+      taskLinks,
+      globalCalendar
+    );
+
     for (const taskShift of shiftableTasks) {
       if (wouldCreateConflicts(taskShift, tasks, taskLinks, globalCalendar)) {
         continue; // Skip if would create new conflicts
       }
 
-      const impact = calculateShiftImpact(taskShift, conflict, tasks, globalCalendar);
+      const impact = calculateShiftImpact(
+        taskShift,
+        conflict,
+        tasks,
+        globalCalendar
+      );
       if (impact && impact.allocationRemoved > 0) {
         proposedShifts.push({
           ...taskShift,
@@ -276,9 +323,10 @@ export const generateLevelingPreview = (tasks, taskLinks, resources, globalCalen
 
   return {
     hasConflicts: conflicts.length > 0,
-    message: conflicts.length > 0 
-      ? `${conflicts.length} resource conflicts detected, ${proposedShifts.length} tasks can be shifted`
-      : 'No resource conflicts detected',
+    message:
+      conflicts.length > 0
+        ? `${conflicts.length} resource conflicts detected, ${proposedShifts.length} tasks can be shifted`
+        : 'No resource conflicts detected',
     proposedShifts,
     conflicts,
   };
@@ -306,7 +354,9 @@ export const applyResourceLeveling = (proposedShifts, tasks, updateTask) => {
       // Calculate new end date
       const newStart = new Date(shift.shiftedStart);
       const duration = task.duration || 1;
-      const newEnd = new Date(newStart.getTime() + (duration - 1) * 24 * 60 * 60 * 1000);
+      const newEnd = new Date(
+        newStart.getTime() + (duration - 1) * 24 * 60 * 60 * 1000
+      );
 
       // Update task dates
       updateTask(shift.taskId, {
@@ -330,9 +380,10 @@ export const applyResourceLeveling = (proposedShifts, tasks, updateTask) => {
     success: errors.length === 0,
     appliedShifts,
     errors,
-    message: errors.length === 0
-      ? `Successfully shifted ${appliedShifts.length} tasks`
-      : `Applied ${appliedShifts.length} shifts with ${errors.length} errors`,
+    message:
+      errors.length === 0
+        ? `Successfully shifted ${appliedShifts.length} tasks`
+        : `Applied ${appliedShifts.length} shifts with ${errors.length} errors`,
   };
 };
 
@@ -347,10 +398,15 @@ export const getLevelingStats = (tasks, resources, globalCalendar) => {
   const dailyAllocations = calculateDailyAllocations(tasks, globalCalendar);
   const conflicts = detectOverAllocations(dailyAllocations, resources);
 
-  const totalOverAllocation = conflicts.reduce((sum, conflict) => sum + conflict.overAllocation, 0);
-  const nonCriticalTasks = tasks.filter(task => !task.isCritical && task.totalFloat > 0);
-  const shiftableTasks = nonCriticalTasks.filter(task => 
-    task.resourceAssignments && task.resourceAssignments.length > 0
+  const totalOverAllocation = conflicts.reduce(
+    (sum, conflict) => sum + conflict.overAllocation,
+    0
+  );
+  const nonCriticalTasks = tasks.filter(
+    task => !task.isCritical && task.totalFloat > 0
+  );
+  const shiftableTasks = nonCriticalTasks.filter(
+    task => task.resourceAssignments && task.resourceAssignments.length > 0
   );
 
   return {
@@ -358,8 +414,12 @@ export const getLevelingStats = (tasks, resources, globalCalendar) => {
     totalOverAllocation,
     nonCriticalTasks: nonCriticalTasks.length,
     shiftableTasks: shiftableTasks.length,
-    averageFloat: nonCriticalTasks.length > 0 
-      ? nonCriticalTasks.reduce((sum, task) => sum + (task.totalFloat || 0), 0) / nonCriticalTasks.length 
-      : 0,
+    averageFloat:
+      nonCriticalTasks.length > 0
+        ? nonCriticalTasks.reduce(
+            (sum, task) => sum + (task.totalFloat || 0),
+            0
+          ) / nonCriticalTasks.length
+        : 0,
   };
 };

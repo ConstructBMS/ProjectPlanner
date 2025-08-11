@@ -27,14 +27,21 @@ export const DEFAULT_PROGRESS_EDIT_CONFIG = {
  * @param {Object} config - Configuration
  * @returns {number} Progress percentage
  */
-export const calculateProgressFromPosition = (mouseX, barWidth, config = DEFAULT_PROGRESS_EDIT_CONFIG) => {
+export const calculateProgressFromPosition = (
+  mouseX,
+  barWidth,
+  config = DEFAULT_PROGRESS_EDIT_CONFIG
+) => {
   if (barWidth <= 0) return config.minProgress;
 
   // Calculate raw percentage
   let progress = (mouseX / barWidth) * 100;
 
   // Clamp to min/max
-  progress = Math.max(config.minProgress, Math.min(config.maxProgress, progress));
+  progress = Math.max(
+    config.minProgress,
+    Math.min(config.maxProgress, progress)
+  );
 
   // Snap to grid if enabled
   if (config.snapToGrid) {
@@ -63,7 +70,10 @@ export const calculatePositionFromProgress = (progress, barWidth) => {
  * @param {Object} config - Configuration
  * @returns {Object} Validation result
  */
-export const validateProgress = (progress, config = DEFAULT_PROGRESS_EDIT_CONFIG) => {
+export const validateProgress = (
+  progress,
+  config = DEFAULT_PROGRESS_EDIT_CONFIG
+) => {
   const errors = [];
   const warnings = [];
 
@@ -91,7 +101,10 @@ export const validateProgress = (progress, config = DEFAULT_PROGRESS_EDIT_CONFIG
     isValid: errors.length === 0,
     errors,
     warnings,
-    progress: Math.max(config.minProgress, Math.min(config.maxProgress, progress)),
+    progress: Math.max(
+      config.minProgress,
+      Math.min(config.maxProgress, progress)
+    ),
   };
 };
 
@@ -133,7 +146,10 @@ export const getProgressColor = (progress, isCritical = false) => {
  * @param {Object} config - Configuration
  * @returns {Object} Progress edit state
  */
-export const createProgressEditState = (task, config = DEFAULT_PROGRESS_EDIT_CONFIG) => {
+export const createProgressEditState = (
+  task,
+  config = DEFAULT_PROGRESS_EDIT_CONFIG
+) => {
   return {
     isEditing: false,
     isDragging: false,
@@ -155,7 +171,11 @@ export const createProgressEditState = (task, config = DEFAULT_PROGRESS_EDIT_CON
  * @param {Object} config - Configuration
  * @returns {Object} Updated state
  */
-export const updateProgressEditState = (state, updates, config = DEFAULT_PROGRESS_EDIT_CONFIG) => {
+export const updateProgressEditState = (
+  state,
+  updates,
+  config = DEFAULT_PROGRESS_EDIT_CONFIG
+) => {
   const newState = { ...state, ...updates };
 
   // Calculate progress if position changed
@@ -181,7 +201,10 @@ export const updateProgressEditState = (state, updates, config = DEFAULT_PROGRES
  * @param {Object} config - Configuration
  * @returns {Object} CSS styles
  */
-export const getProgressEditStyles = (state, config = DEFAULT_PROGRESS_EDIT_CONFIG) => {
+export const getProgressEditStyles = (
+  state,
+  config = DEFAULT_PROGRESS_EDIT_CONFIG
+) => {
   const baseStyles = {
     cursor: state.isEditing ? 'col-resize' : 'pointer',
     userSelect: 'none',
@@ -208,15 +231,21 @@ export const getProgressEditStyles = (state, config = DEFAULT_PROGRESS_EDIT_CONF
  * @param {Object} config - Configuration
  * @returns {Object} CSS styles
  */
-export const getProgressBarStyles = (progress, isCritical = false, config = DEFAULT_PROGRESS_EDIT_CONFIG) => {
+export const getProgressBarStyles = (
+  progress,
+  isCritical = false,
+  config = DEFAULT_PROGRESS_EDIT_CONFIG
+) => {
   const backgroundColor = getProgressColor(progress, isCritical);
-  
+
   return {
     width: `${progress}%`,
     backgroundColor,
     height: '100%',
     borderRadius: 'inherit',
-    transition: config.visualFeedback ? `width ${config.animationDuration}ms ease-out` : 'none',
+    transition: config.visualFeedback
+      ? `width ${config.animationDuration}ms ease-out`
+      : 'none',
     position: 'relative',
   };
 };
@@ -227,9 +256,15 @@ export const getProgressBarStyles = (progress, isCritical = false, config = DEFA
  * @param {Object} config - Configuration
  * @returns {Object} CSS styles
  */
-export const getDragHandleStyles = (state, config = DEFAULT_PROGRESS_EDIT_CONFIG) => {
-  const position = calculatePositionFromProgress(state.currentProgress, state.barWidth);
-  
+export const getDragHandleStyles = (
+  state,
+  config = DEFAULT_PROGRESS_EDIT_CONFIG
+) => {
+  const position = calculatePositionFromProgress(
+    state.currentProgress,
+    state.barWidth
+  );
+
   return {
     position: 'absolute',
     left: `${position}px`,
@@ -253,7 +288,11 @@ export const getDragHandleStyles = (state, config = DEFAULT_PROGRESS_EDIT_CONFIG
  * @param {Object} config - Configuration
  * @returns {Object} CSS styles
  */
-export const getTooltipStyles = (state, mousePosition, config = DEFAULT_PROGRESS_EDIT_CONFIG) => {
+export const getTooltipStyles = (
+  state,
+  mousePosition,
+  config = DEFAULT_PROGRESS_EDIT_CONFIG
+) => {
   if (!config.showTooltip || !state.isDragging) {
     return { display: 'none' };
   }
@@ -282,7 +321,11 @@ export const getTooltipStyles = (state, mousePosition, config = DEFAULT_PROGRESS
  * @param {Object} config - Configuration
  * @returns {boolean} Whether threshold is exceeded
  */
-export const exceedsDragThreshold = (startX, currentX, config = DEFAULT_PROGRESS_EDIT_CONFIG) => {
+export const exceedsDragThreshold = (
+  startX,
+  currentX,
+  config = DEFAULT_PROGRESS_EDIT_CONFIG
+) => {
   return Math.abs(currentX - startX) >= config.dragThreshold;
 };
 
@@ -312,7 +355,7 @@ export const throttle = (func, limit) => {
     if (!inThrottle) {
       func(...args);
       inThrottle = true;
-      setTimeout(() => inThrottle = false, limit);
+      setTimeout(() => (inThrottle = false), limit);
     }
   };
 };
@@ -323,7 +366,10 @@ export const throttle = (func, limit) => {
  * @param {Object} config - Configuration
  * @returns {Function} Progress update handler
  */
-export const createProgressUpdateHandler = (updateTask, config = DEFAULT_PROGRESS_EDIT_CONFIG) => {
+export const createProgressUpdateHandler = (
+  updateTask,
+  config = DEFAULT_PROGRESS_EDIT_CONFIG
+) => {
   const debouncedUpdate = debounce(async (taskId, progress) => {
     try {
       await updateTask(taskId, { progress });
@@ -360,7 +406,11 @@ export const getProgressEditAccessibility = (state, task) => {
  * @param {Object} config - Configuration
  * @returns {Object} Updated state
  */
-export const handleProgressKeyboard = (state, key, config = DEFAULT_PROGRESS_EDIT_CONFIG) => {
+export const handleProgressKeyboard = (
+  state,
+  key,
+  config = DEFAULT_PROGRESS_EDIT_CONFIG
+) => {
   let newProgress = state.currentProgress;
 
   switch (key) {
@@ -388,7 +438,11 @@ export const handleProgressKeyboard = (state, key, config = DEFAULT_PROGRESS_EDI
       return state;
   }
 
-  return updateProgressEditState(state, { currentProgress: newProgress }, config);
+  return updateProgressEditState(
+    state,
+    { currentProgress: newProgress },
+    config
+  );
 };
 
 /**
@@ -399,8 +453,13 @@ export const handleProgressKeyboard = (state, key, config = DEFAULT_PROGRESS_EDI
  * @param {Object} config - Configuration
  * @returns {Object} Event handlers
  */
-export const getProgressEditHandlers = (state, setState, onProgressChange, config = DEFAULT_PROGRESS_EDIT_CONFIG) => {
-  const handleMouseDown = (e) => {
+export const getProgressEditHandlers = (
+  state,
+  setState,
+  onProgressChange,
+  config = DEFAULT_PROGRESS_EDIT_CONFIG
+) => {
+  const handleMouseDown = e => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -417,22 +476,21 @@ export const getProgressEditHandlers = (state, setState, onProgressChange, confi
     }));
   };
 
-  const handleMouseMove = (e) => {
+  const handleMouseMove = e => {
     if (!state.isEditing) return;
 
     const rect = e.currentTarget.getBoundingClientRect();
     const currentX = e.clientX - rect.left;
 
-    if (!state.isDragging && exceedsDragThreshold(state.startX, currentX, config)) {
+    if (
+      !state.isDragging &&
+      exceedsDragThreshold(state.startX, currentX, config)
+    ) {
       setState(prev => ({ ...prev, isDragging: true }));
     }
 
     if (state.isDragging) {
-      const newState = updateProgressEditState(
-        state,
-        { currentX },
-        config
-      );
+      const newState = updateProgressEditState(state, { currentX }, config);
       setState(newState);
       onProgressChange(newState.currentProgress);
     }
@@ -448,7 +506,7 @@ export const getProgressEditHandlers = (state, setState, onProgressChange, confi
     }
   };
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = e => {
     const newState = handleProgressKeyboard(state, e.key, config);
     if (newState !== state) {
       setState(newState);

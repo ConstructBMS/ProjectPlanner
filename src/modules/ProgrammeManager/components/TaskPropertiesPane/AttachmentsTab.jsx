@@ -67,28 +67,31 @@ const AttachmentsTab = ({ task, onTaskUpdate, supabaseClient }) => {
 
   // Validate attachments when they change
   useEffect(() => {
-    const validation = validateAttachments(attachments, DEFAULT_ATTACHMENTS_CONFIG);
+    const validation = validateAttachments(
+      attachments,
+      DEFAULT_ATTACHMENTS_CONFIG
+    );
     setValidation(validation);
   }, [attachments]);
 
   // Handle file selection
-  const handleFileSelect = useCallback((files) => {
+  const handleFileSelect = useCallback(files => {
     const fileArray = Array.from(files);
     setSelectedFiles(fileArray);
   }, []);
 
   // Handle file input change
-  const handleFileInputChange = (event) => {
+  const handleFileInputChange = event => {
     handleFileSelect(event.target.files);
   };
 
   // Handle drag events
-  const handleDrag = useCallback((e) => {
+  const handleDrag = useCallback(e => {
     e.preventDefault();
     e.stopPropagation();
   }, []);
 
-  const handleDragIn = useCallback((e) => {
+  const handleDragIn = useCallback(e => {
     e.preventDefault();
     e.stopPropagation();
     if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
@@ -96,25 +99,33 @@ const AttachmentsTab = ({ task, onTaskUpdate, supabaseClient }) => {
     }
   }, []);
 
-  const handleDragOut = useCallback((e) => {
+  const handleDragOut = useCallback(e => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
   }, []);
 
-  const handleDrop = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
+  const handleDrop = useCallback(
+    e => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDragActive(false);
 
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleFileSelect(e.dataTransfer.files);
-    }
-  }, [handleFileSelect]);
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        handleFileSelect(e.dataTransfer.files);
+      }
+    },
+    [handleFileSelect]
+  );
 
   // Upload files
   const handleUpload = useCallback(async () => {
-    if (!selectedFiles.length || !task || !supabaseClient) return;
+    if (!selectedFiles.length || !task) return;
+
+    if (!supabaseClient) {
+      console.warn('Supabase client not available. File uploads are disabled.');
+      return;
+    }
 
     setIsUploading(true);
     setUploadProgress({});
@@ -123,8 +134,13 @@ const AttachmentsTab = ({ task, onTaskUpdate, supabaseClient }) => {
       try {
         setUploadProgress(prev => ({ ...prev, [index]: 0 }));
 
-        const result = await uploadFile(file, task.id, supabaseClient, DEFAULT_ATTACHMENTS_CONFIG);
-        
+        const result = await uploadFile(
+          file,
+          task.id,
+          supabaseClient,
+          DEFAULT_ATTACHMENTS_CONFIG
+        );
+
         if (result.success) {
           setUploadProgress(prev => ({ ...prev, [index]: 100 }));
           return result.attachment;
@@ -165,46 +181,73 @@ const AttachmentsTab = ({ task, onTaskUpdate, supabaseClient }) => {
   }, [selectedFiles, task, supabaseClient, attachments, onTaskUpdate]);
 
   // Delete attachment
-  const handleDeleteAttachment = useCallback(async (attachment) => {
-    if (!task || !supabaseClient) return;
+  const handleDeleteAttachment = useCallback(
+    async attachment => {
+      if (!task) return;
 
-    if (!window.confirm(`Are you sure you want to delete "${attachment.originalName}"?`)) {
-      return;
-    }
-
-    try {
-      const result = await deleteFile(attachment, supabaseClient, DEFAULT_ATTACHMENTS_CONFIG);
-      
-      if (result.success) {
-        const updatedAttachments = attachments.filter(att => att.id !== attachment.id);
-        const updatedTask = {
-          ...task,
-          attachments: updatedAttachments,
-        };
-
-        await onTaskUpdate(task.id, updatedTask);
-        setAttachments(updatedAttachments);
-      } else {
-        throw new Error(result.error);
+      if (!supabaseClient) {
+        console.warn(
+          'Supabase client not available. File deletion is disabled.'
+        );
+        return;
       }
-    } catch (error) {
-      console.error('Delete failed:', error);
-    }
-  }, [task, supabaseClient, attachments, onTaskUpdate]);
+
+      if (
+        !window.confirm(
+          `Are you sure you want to delete "${attachment.originalName}"?`
+        )
+      ) {
+        return;
+      }
+
+      try {
+        const result = await deleteFile(
+          attachment,
+          supabaseClient,
+          DEFAULT_ATTACHMENTS_CONFIG
+        );
+
+        if (result.success) {
+          const updatedAttachments = attachments.filter(
+            att => att.id !== attachment.id
+          );
+          const updatedTask = {
+            ...task,
+            attachments: updatedAttachments,
+          };
+
+          await onTaskUpdate(task.id, updatedTask);
+          setAttachments(updatedAttachments);
+        } else {
+          throw new Error(result.error);
+        }
+      } catch (error) {
+        console.error('Delete failed:', error);
+      }
+    },
+    [task, supabaseClient, attachments, onTaskUpdate]
+  );
 
   // Download attachment
-  const handleDownloadAttachment = useCallback(async (attachment) => {
-    if (!supabaseClient) return;
+  const handleDownloadAttachment = useCallback(
+    async attachment => {
+      if (!supabaseClient) return;
 
-    try {
-      await downloadFile(attachment, supabaseClient, DEFAULT_ATTACHMENTS_CONFIG);
-    } catch (error) {
-      console.error('Download failed:', error);
-    }
-  }, [supabaseClient]);
+      try {
+        await downloadFile(
+          attachment,
+          supabaseClient,
+          DEFAULT_ATTACHMENTS_CONFIG
+        );
+      } catch (error) {
+        console.error('Download failed:', error);
+      }
+    },
+    [supabaseClient]
+  );
 
   // Toggle preview
-  const handleTogglePreview = useCallback((attachmentId) => {
+  const handleTogglePreview = useCallback(attachmentId => {
     setShowPreview(prev => ({
       ...prev,
       [attachmentId]: !prev[attachmentId],
@@ -228,16 +271,16 @@ const AttachmentsTab = ({ task, onTaskUpdate, supabaseClient }) => {
   };
 
   // Import attachments
-  const handleImport = (event) => {
+  const handleImport = event => {
     const file = event.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = e => {
       try {
         const importData = JSON.parse(e.target.result);
         const importResult = importAttachments(importData);
-        
+
         if (importResult.success) {
           // Note: This only imports metadata, not the actual files
           console.log('Import successful:', importResult.attachments);
@@ -252,12 +295,19 @@ const AttachmentsTab = ({ task, onTaskUpdate, supabaseClient }) => {
   };
 
   // Get filtered and sorted attachments
-  const filteredAttachments = filterAttachments(attachments, { ...filters, search: searchTerm });
-  const sortedAttachments = sortAttachments(filteredAttachments, sortBy, sortOrder);
+  const filteredAttachments = filterAttachments(attachments, {
+    ...filters,
+    search: searchTerm,
+  });
+  const sortedAttachments = sortAttachments(
+    filteredAttachments,
+    sortBy,
+    sortOrder
+  );
   const statistics = getAttachmentsStatistics(attachments);
 
   // Get icon component
-  const getIconComponent = (iconName) => {
+  const getIconComponent = iconName => {
     const iconMap = {
       PhotoIcon,
       DocumentTextIcon,
@@ -286,9 +336,11 @@ const AttachmentsTab = ({ task, onTaskUpdate, supabaseClient }) => {
       <div className='flex items-center justify-between mb-4'>
         <div className='flex items-center gap-2'>
           <PaperClipIcon className='w-5 h-5 text-blue-600' />
-          <h3 className='text-lg font-semibold text-gray-900'>Task Attachments</h3>
+          <h3 className='text-lg font-semibold text-gray-900'>
+            Task Attachments
+          </h3>
         </div>
-        
+
         <div className='flex items-center gap-2'>
           <label className='px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors cursor-pointer'>
             <DocumentArrowUpIcon className='w-3 h-3 inline mr-1' />
@@ -300,7 +352,7 @@ const AttachmentsTab = ({ task, onTaskUpdate, supabaseClient }) => {
               className='hidden'
             />
           </label>
-          
+
           <button
             onClick={handleExport}
             disabled={attachments.length === 0}
@@ -318,27 +370,37 @@ const AttachmentsTab = ({ task, onTaskUpdate, supabaseClient }) => {
         <div className='grid grid-cols-2 md:grid-cols-4 gap-4 text-sm'>
           <div>
             <span className='text-gray-600'>Total Files:</span>
-            <div className='font-semibold text-blue-600'>{statistics.totalFiles}</div>
+            <div className='font-semibold text-blue-600'>
+              {statistics.totalFiles}
+            </div>
           </div>
           <div>
             <span className='text-gray-600'>Total Size:</span>
-            <div className='font-semibold text-green-600'>{formatFileSize(statistics.totalSize)}</div>
+            <div className='font-semibold text-green-600'>
+              {formatFileSize(statistics.totalSize)}
+            </div>
           </div>
           <div>
             <span className='text-gray-600'>Images:</span>
-            <div className='font-semibold text-purple-600'>{statistics.imageCount}</div>
+            <div className='font-semibold text-purple-600'>
+              {statistics.imageCount}
+            </div>
           </div>
           <div>
             <span className='text-gray-600'>Previewable:</span>
-            <div className='font-semibold text-orange-600'>{statistics.previewableCount}</div>
+            <div className='font-semibold text-orange-600'>
+              {statistics.previewableCount}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Upload Area */}
       <div className='bg-white border border-gray-200 rounded-lg p-4 mb-4'>
-        <h4 className='text-sm font-semibold text-gray-700 mb-3'>Upload Files</h4>
-        
+        <h4 className='text-sm font-semibold text-gray-700 mb-3'>
+          Upload Files
+        </h4>
+
         {/* Drag & Drop Zone */}
         <div
           ref={dropZoneRef}
@@ -363,10 +425,11 @@ const AttachmentsTab = ({ task, onTaskUpdate, supabaseClient }) => {
             </button>
           </p>
           <p className='text-xs text-gray-500'>
-            Maximum file size: {formatFileSize(DEFAULT_ATTACHMENTS_CONFIG.maxFileSize)} | 
-            Maximum files: {DEFAULT_ATTACHMENTS_CONFIG.maxFiles}
+            Maximum file size:{' '}
+            {formatFileSize(DEFAULT_ATTACHMENTS_CONFIG.maxFileSize)} | Maximum
+            files: {DEFAULT_ATTACHMENTS_CONFIG.maxFiles}
           </p>
-          
+
           <input
             ref={fileInputRef}
             type='file'
@@ -380,24 +443,37 @@ const AttachmentsTab = ({ task, onTaskUpdate, supabaseClient }) => {
         {/* Selected Files */}
         {selectedFiles.length > 0 && (
           <div className='mt-4'>
-            <h5 className='text-xs font-medium text-gray-700 mb-2'>Selected Files:</h5>
+            <h5 className='text-xs font-medium text-gray-700 mb-2'>
+              Selected Files:
+            </h5>
             <div className='space-y-2 max-h-32 overflow-y-auto'>
               {selectedFiles.map((file, index) => {
-                const IconComponent = getIconComponent(getFileIcon(getFileCategory(file.type)));
+                const IconComponent = getIconComponent(
+                  getFileIcon(getFileCategory(file.type))
+                );
                 const progress = uploadProgress[index];
-                
+
                 return (
-                  <div key={index} className='flex items-center justify-between p-2 bg-gray-50 rounded'>
+                  <div
+                    key={index}
+                    className='flex items-center justify-between p-2 bg-gray-50 rounded'
+                  >
                     <div className='flex items-center gap-2'>
                       <IconComponent className='w-4 h-4 text-gray-600' />
                       <span className='text-sm text-gray-700'>{file.name}</span>
-                      <span className='text-xs text-gray-500'>({formatFileSize(file.size)})</span>
+                      <span className='text-xs text-gray-500'>
+                        ({formatFileSize(file.size)})
+                      </span>
                     </div>
-                    
+
                     {progress !== undefined && (
                       <div className='flex items-center gap-2'>
-                        {progress === 100 && <CheckIcon className='w-4 h-4 text-green-600' />}
-                        {progress === -1 && <XMarkIcon className='w-4 h-4 text-red-600' />}
+                        {progress === 100 && (
+                          <CheckIcon className='w-4 h-4 text-green-600' />
+                        )}
+                        {progress === -1 && (
+                          <XMarkIcon className='w-4 h-4 text-red-600' />
+                        )}
                         {progress >= 0 && progress < 100 && (
                           <div className='w-16 bg-gray-200 rounded-full h-2'>
                             <div
@@ -412,7 +488,7 @@ const AttachmentsTab = ({ task, onTaskUpdate, supabaseClient }) => {
                 );
               })}
             </div>
-            
+
             <div className='mt-3 flex gap-2'>
               <button
                 onClick={handleUpload}
@@ -421,7 +497,7 @@ const AttachmentsTab = ({ task, onTaskUpdate, supabaseClient }) => {
               >
                 {isUploading ? 'Uploading...' : 'Upload Files'}
               </button>
-              
+
               <button
                 onClick={() => {
                   setSelectedFiles([]);
@@ -483,17 +559,22 @@ const AttachmentsTab = ({ task, onTaskUpdate, supabaseClient }) => {
                 type='text'
                 placeholder='Search attachments...'
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
                 className='w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
               />
             </div>
           </div>
-          
+
           <div className='flex items-center gap-2'>
             <FunnelIcon className='w-4 h-4 text-gray-600' />
             <select
               value={filters.category || ''}
-              onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value || undefined }))}
+              onChange={e =>
+                setFilters(prev => ({
+                  ...prev,
+                  category: e.target.value || undefined,
+                }))
+              }
               className='px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
             >
               <option value=''>All Categories</option>
@@ -503,10 +584,10 @@ const AttachmentsTab = ({ task, onTaskUpdate, supabaseClient }) => {
                 </option>
               ))}
             </select>
-            
+
             <select
               value={`${sortBy}-${sortOrder}`}
-              onChange={(e) => {
+              onChange={e => {
                 const [field, order] = e.target.value.split('-');
                 setSortBy(field);
                 setSortOrder(order);
@@ -531,7 +612,7 @@ const AttachmentsTab = ({ task, onTaskUpdate, supabaseClient }) => {
             Attachments ({sortedAttachments.length})
           </h4>
         </div>
-        
+
         {sortedAttachments.length === 0 ? (
           <div className='p-8 text-center text-gray-500'>
             <PaperClipIcon className='w-12 h-12 mx-auto mb-2 text-gray-400' />
@@ -542,13 +623,13 @@ const AttachmentsTab = ({ task, onTaskUpdate, supabaseClient }) => {
           <div className='divide-y divide-gray-200'>
             {sortedAttachments.map(attachment => {
               const IconComponent = getIconComponent(attachment.icon);
-              
+
               return (
                 <div key={attachment.id} className='p-4 hover:bg-gray-50'>
                   <div className='flex items-start justify-between'>
                     <div className='flex items-start gap-3 flex-1'>
                       <IconComponent className='w-8 h-8 text-gray-600 mt-1' />
-                      
+
                       <div className='flex-1 min-w-0'>
                         <div className='flex items-center gap-2 mb-1'>
                           <h5 className='text-sm font-medium text-gray-900 truncate'>
@@ -558,23 +639,27 @@ const AttachmentsTab = ({ task, onTaskUpdate, supabaseClient }) => {
                             {formatFileSize(attachment.size)}
                           </span>
                         </div>
-                        
+
                         <div className='text-xs text-gray-500'>
-                          Uploaded {new Date(attachment.uploadedAt).toLocaleDateString()} at{' '}
+                          Uploaded{' '}
+                          {new Date(attachment.uploadedAt).toLocaleDateString()}{' '}
+                          at{' '}
                           {new Date(attachment.uploadedAt).toLocaleTimeString()}
                         </div>
-                        
+
                         {attachment.isPreviewable && (
                           <button
                             onClick={() => handleTogglePreview(attachment.id)}
                             className='text-xs text-blue-600 hover:text-blue-700 mt-1'
                           >
-                            {showPreview[attachment.id] ? 'Hide Preview' : 'Show Preview'}
+                            {showPreview[attachment.id]
+                              ? 'Hide Preview'
+                              : 'Show Preview'}
                           </button>
                         )}
                       </div>
                     </div>
-                    
+
                     <div className='flex items-center gap-1'>
                       {attachment.isPreviewable && (
                         <button
@@ -585,7 +670,7 @@ const AttachmentsTab = ({ task, onTaskUpdate, supabaseClient }) => {
                           <EyeIcon className='w-4 h-4' />
                         </button>
                       )}
-                      
+
                       <button
                         onClick={() => handleDownloadAttachment(attachment)}
                         className='p-1 text-gray-400 hover:text-gray-600 rounded hover:bg-gray-100'
@@ -593,7 +678,7 @@ const AttachmentsTab = ({ task, onTaskUpdate, supabaseClient }) => {
                       >
                         <ArrowDownTrayIcon className='w-4 h-4' />
                       </button>
-                      
+
                       <button
                         onClick={() => handleDeleteAttachment(attachment)}
                         className='p-1 text-gray-400 hover:text-red-600 rounded hover:bg-red-50'
@@ -603,16 +688,19 @@ const AttachmentsTab = ({ task, onTaskUpdate, supabaseClient }) => {
                       </button>
                     </div>
                   </div>
-                  
+
                   {/* Preview */}
                   {showPreview[attachment.id] && attachment.isPreviewable && (
                     <div className='mt-3 p-3 bg-gray-50 rounded border'>
                       {attachment.isImage ? (
                         <img
-                          src={attachment.previewUrl || getPreviewUrl(attachment, supabaseClient)}
+                          src={
+                            attachment.previewUrl ||
+                            getPreviewUrl(attachment, supabaseClient)
+                          }
                           alt={attachment.originalName}
                           className='max-w-full max-h-64 object-contain rounded'
-                          onError={(e) => {
+                          onError={e => {
                             e.target.style.display = 'none';
                             e.target.nextSibling.style.display = 'block';
                           }}
@@ -620,7 +708,9 @@ const AttachmentsTab = ({ task, onTaskUpdate, supabaseClient }) => {
                       ) : (
                         <div className='text-center py-8'>
                           <DocumentTextIcon className='w-12 h-12 mx-auto mb-2 text-gray-400' />
-                          <p className='text-sm text-gray-500'>Preview not available</p>
+                          <p className='text-sm text-gray-500'>
+                            Preview not available
+                          </p>
                           <button
                             onClick={() => handleDownloadAttachment(attachment)}
                             className='text-xs text-blue-600 hover:text-blue-700 mt-1'

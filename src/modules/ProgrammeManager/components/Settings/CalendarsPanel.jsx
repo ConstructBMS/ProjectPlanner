@@ -29,7 +29,7 @@ const CalendarsPanel = () => {
     { key: 'sunday', label: 'Sunday' },
   ];
 
-  const handleWorkingDayToggle = (dayKey) => {
+  const handleWorkingDayToggle = dayKey => {
     const updatedWorkingDays = {
       ...globalCalendar.workingDays,
       [dayKey]: !globalCalendar.workingDays[dayKey],
@@ -44,11 +44,11 @@ const CalendarsPanel = () => {
     }
   };
 
-  const handleRemoveHoliday = (dateString) => {
+  const handleRemoveHoliday = dateString => {
     removeHoliday(dateString);
   };
 
-  const formatHolidayDate = (dateString) => {
+  const formatHolidayDate = dateString => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       weekday: 'long',
@@ -59,83 +59,87 @@ const CalendarsPanel = () => {
   };
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-sm border border-gray-200">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-2">
-          <CalendarIcon className="w-6 h-6 text-blue-600" />
-          <h2 className="text-xl font-semibold text-gray-900">Working Calendar</h2>
+    <div className='p-6 bg-white rounded-lg shadow-sm border border-gray-200'>
+      <div className='flex items-center justify-between mb-6'>
+        <div className='flex items-center space-x-2'>
+          <CalendarIcon className='w-6 h-6 text-blue-600' />
+          <h2 className='text-xl font-semibold text-gray-900'>
+            Working Calendar
+          </h2>
         </div>
         <button
           onClick={resetGlobalCalendar}
-          className="flex items-center space-x-1 px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
+          className='flex items-center space-x-1 px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded'
         >
-          <ArrowPathIcon className="w-4 h-4" />
+          <ArrowPathIcon className='w-4 h-4' />
           <span>Reset to Default</span>
         </button>
       </div>
 
       {/* Working Days Section */}
-      <div className="mb-8">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Working Days</h3>
-        <div className="grid grid-cols-2 gap-3">
+      <div className='mb-8'>
+        <h3 className='text-lg font-medium text-gray-900 mb-4'>Working Days</h3>
+        <div className='grid grid-cols-2 gap-3'>
           {dayNames.map(({ key, label }) => (
             <label
               key={key}
-              className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+              className='flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer'
             >
               <input
-                type="checkbox"
+                type='checkbox'
                 checked={globalCalendar.workingDays[key]}
                 onChange={() => handleWorkingDayToggle(key)}
-                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                className='w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2'
               />
-              <span className="text-sm font-medium text-gray-700">{label}</span>
+              <span className='text-sm font-medium text-gray-700'>{label}</span>
             </label>
           ))}
         </div>
       </div>
 
       {/* Holidays Section */}
-      <div className="mb-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Holidays</h3>
-        
+      <div className='mb-6'>
+        <h3 className='text-lg font-medium text-gray-900 mb-4'>Holidays</h3>
+
         {/* Add Holiday Form */}
-        <div className="flex space-x-2 mb-4">
+        <div className='flex space-x-2 mb-4'>
           <input
-            type="date"
+            type='date'
             value={newHoliday}
-            onChange={(e) => setNewHoliday(e.target.value)}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Select date"
+            onChange={e => setNewHoliday(e.target.value)}
+            className='flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+            placeholder='Select date'
           />
           <button
             onClick={handleAddHoliday}
             disabled={!newHoliday}
-            className="flex items-center space-x-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className='flex items-center space-x-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed'
           >
-            <PlusIcon className="w-4 h-4" />
+            <PlusIcon className='w-4 h-4' />
             <span>Add</span>
           </button>
         </div>
 
         {/* Holidays List */}
-        <div className="space-y-2">
+        <div className='space-y-2'>
           {globalCalendar.holidays.length === 0 ? (
-            <p className="text-gray-500 text-sm italic">No holidays configured</p>
+            <p className='text-gray-500 text-sm italic'>
+              No holidays configured
+            </p>
           ) : (
-            globalCalendar.holidays.map((dateString) => (
+            globalCalendar.holidays.map(dateString => (
               <div
                 key={dateString}
-                className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg"
+                className='flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg'
               >
-                <span className="text-sm font-medium text-gray-700">
+                <span className='text-sm font-medium text-gray-700'>
                   {formatHolidayDate(dateString)}
                 </span>
                 <button
                   onClick={() => handleRemoveHoliday(dateString)}
-                  className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                  className='p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded'
                 >
-                  <TrashIcon className="w-4 h-4" />
+                  <TrashIcon className='w-4 h-4' />
                 </button>
               </div>
             ))
@@ -144,9 +148,11 @@ const CalendarsPanel = () => {
       </div>
 
       {/* Summary */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h4 className="text-sm font-medium text-blue-900 mb-2">Calendar Summary</h4>
-        <div className="text-sm text-blue-800">
+      <div className='bg-blue-50 border border-blue-200 rounded-lg p-4'>
+        <h4 className='text-sm font-medium text-blue-900 mb-2'>
+          Calendar Summary
+        </h4>
+        <div className='text-sm text-blue-800'>
           <p>
             <strong>Working days per week:</strong>{' '}
             {Object.values(globalCalendar.workingDays).filter(Boolean).length}

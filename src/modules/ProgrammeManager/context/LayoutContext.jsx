@@ -73,7 +73,7 @@ export const LayoutProvider = ({ children }) => {
   }, [savedPresets]);
 
   // Update grid configuration
-  const updateGridConfig = useCallback((newConfig) => {
+  const updateGridConfig = useCallback(newConfig => {
     const validation = validateGridConfig(newConfig);
     if (validation.isValid) {
       setGridConfig(newConfig);
@@ -83,10 +83,13 @@ export const LayoutProvider = ({ children }) => {
   }, []);
 
   // Update column width
-  const updateColumnWidth = useCallback((columnName, width) => {
-    const newConfig = updateColumnWidthUtil(gridConfig, columnName, width);
-    setGridConfig(newConfig);
-  }, [gridConfig]);
+  const updateColumnWidth = useCallback(
+    (columnName, width) => {
+      const newConfig = updateColumnWidthUtil(gridConfig, columnName, width);
+      setGridConfig(newConfig);
+    },
+    [gridConfig]
+  );
 
   // Update pane size
   const updatePaneSize = useCallback((paneName, size) => {
@@ -100,24 +103,28 @@ export const LayoutProvider = ({ children }) => {
   }, []);
 
   // Toggle column visibility
-  const toggleColumnVisibility = useCallback(columnName => {
-    const newConfig = toggleColumnVisibilityUtil(gridConfig, columnName);
-    setGridConfig(newConfig);
-  }, [gridConfig]);
+  const toggleColumnVisibility = useCallback(
+    columnName => {
+      const newConfig = toggleColumnVisibilityUtil(gridConfig, columnName);
+      setGridConfig(newConfig);
+    },
+    [gridConfig]
+  );
 
   // Set column visibility
-  const setColumnVisibility = useCallback((columnName, isVisible) => {
-    const newConfig = {
-      ...gridConfig,
-      columns: gridConfig.columns.map(col => 
-        col.key === columnName 
-          ? { ...col, visible: isVisible }
-          : col
-      ),
-      lastModified: new Date().toISOString(),
-    };
-    setGridConfig(newConfig);
-  }, [gridConfig]);
+  const setColumnVisibility = useCallback(
+    (columnName, isVisible) => {
+      const newConfig = {
+        ...gridConfig,
+        columns: gridConfig.columns.map(col =>
+          col.key === columnName ? { ...col, visible: isVisible } : col
+        ),
+        lastModified: new Date().toISOString(),
+      };
+      setGridConfig(newConfig);
+    },
+    [gridConfig]
+  );
 
   // Save current layout as a preset
   const savePreset = useCallback(
@@ -125,9 +132,9 @@ export const LayoutProvider = ({ children }) => {
       const newPreset = {
         id: Date.now().toString(),
         name,
-        layout: { 
+        layout: {
           ...currentLayout,
-          gridConfig: { ...gridConfig }
+          gridConfig: { ...gridConfig },
         },
         createdAt: new Date().toISOString(),
       };

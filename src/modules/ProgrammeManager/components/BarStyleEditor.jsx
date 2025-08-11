@@ -28,7 +28,11 @@ const BarStyleEditor = ({ tasks, userSettings, onSettingsUpdate }) => {
   const [selectedStyle, setSelectedStyle] = useState(null);
   const [editingStyle, setEditingStyle] = useState(null);
   const [showColorPicker, setShowColorPicker] = useState(null);
-  const [validation, setValidation] = useState({ isValid: true, errors: [], warnings: [] });
+  const [validation, setValidation] = useState({
+    isValid: true,
+    errors: [],
+    warnings: [],
+  });
   const [showPreview, setShowPreview] = useState(true);
 
   const categories = [
@@ -43,11 +47,13 @@ const BarStyleEditor = ({ tasks, userSettings, onSettingsUpdate }) => {
     if (selectedStyle) {
       const currentStyles = userSettings.barStyles?.[activeCategory] || {};
       const existingStyle = currentStyles[selectedStyle.value];
-      
+
       if (existingStyle) {
         setEditingStyle({ ...existingStyle });
       } else {
-        setEditingStyle(createDefaultBarStyle(activeCategory, selectedStyle.value));
+        setEditingStyle(
+          createDefaultBarStyle(activeCategory, selectedStyle.value)
+        );
       }
     }
   }, [selectedStyle, activeCategory, userSettings.barStyles]);
@@ -114,7 +120,9 @@ const BarStyleEditor = ({ tasks, userSettings, onSettingsUpdate }) => {
 
   const handleExportStyles = () => {
     const exportData = exportBarStyles(userSettings);
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+      type: 'application/json',
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -125,16 +133,16 @@ const BarStyleEditor = ({ tasks, userSettings, onSettingsUpdate }) => {
     URL.revokeObjectURL(url);
   };
 
-  const handleImportStyles = (event) => {
+  const handleImportStyles = event => {
     const file = event.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = e => {
       try {
         const importData = JSON.parse(e.target.result);
         const importResult = importBarStyles(importData);
-        
+
         if (importResult.success) {
           const updatedSettings = {
             ...userSettings,
@@ -153,13 +161,16 @@ const BarStyleEditor = ({ tasks, userSettings, onSettingsUpdate }) => {
 
   const handleAutoGenerateResourceColors = () => {
     const resources = getAvailableResources(tasks).map(r => r.value);
-    const updatedStyles = applyResourceColors(userSettings.barStyles || {}, resources);
-    
+    const updatedStyles = applyResourceColors(
+      userSettings.barStyles || {},
+      resources
+    );
+
     const updatedSettings = {
       ...userSettings,
       barStyles: updatedStyles,
     };
-    
+
     onSettingsUpdate(updatedSettings);
   };
 
@@ -167,7 +178,7 @@ const BarStyleEditor = ({ tasks, userSettings, onSettingsUpdate }) => {
     return userSettings.barStyles?.[activeCategory] || {};
   };
 
-  const getStylePreview = (style) => {
+  const getStylePreview = style => {
     if (!style) return {};
     return createBarStyleObject(style);
   };
@@ -185,7 +196,11 @@ const BarStyleEditor = ({ tasks, userSettings, onSettingsUpdate }) => {
             onClick={() => setShowPreview(!showPreview)}
             className='flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-800 transition-colors'
           >
-            {showPreview ? <EyeIcon className='w-4 h-4' /> : <EyeSlashIcon className='w-4 h-4' />}
+            {showPreview ? (
+              <EyeIcon className='w-4 h-4' />
+            ) : (
+              <EyeSlashIcon className='w-4 h-4' />
+            )}
             {showPreview ? 'Hide' : 'Show'} Preview
           </button>
         </div>
@@ -257,7 +272,7 @@ const BarStyleEditor = ({ tasks, userSettings, onSettingsUpdate }) => {
               ?.items.map(item => {
                 const currentStyles = getCurrentStyles();
                 const style = currentStyles[item.value];
-                
+
                 return (
                   <button
                     key={item.value}
@@ -337,7 +352,9 @@ const BarStyleEditor = ({ tasks, userSettings, onSettingsUpdate }) => {
                     <input
                       type='text'
                       value={editingStyle.backgroundColor}
-                      onChange={e => handleStyleChange('backgroundColor', e.target.value)}
+                      onChange={e =>
+                        handleStyleChange('backgroundColor', e.target.value)
+                      }
                       className='flex-1 px-2 py-1 text-xs border border-gray-300 rounded'
                       placeholder='#3B82F6'
                     />
@@ -346,7 +363,9 @@ const BarStyleEditor = ({ tasks, userSettings, onSettingsUpdate }) => {
                     <div className='absolute z-10 mt-1'>
                       <SketchPicker
                         color={editingStyle.backgroundColor}
-                        onChange={color => handleStyleChange('backgroundColor', color.hex)}
+                        onChange={color =>
+                          handleStyleChange('backgroundColor', color.hex)
+                        }
                         onClose={() => setShowColorPicker(null)}
                       />
                     </div>
@@ -366,7 +385,9 @@ const BarStyleEditor = ({ tasks, userSettings, onSettingsUpdate }) => {
                     <input
                       type='text'
                       value={editingStyle.borderColor}
-                      onChange={e => handleStyleChange('borderColor', e.target.value)}
+                      onChange={e =>
+                        handleStyleChange('borderColor', e.target.value)
+                      }
                       className='flex-1 px-2 py-1 text-xs border border-gray-300 rounded'
                       placeholder='#2563EB'
                     />
@@ -375,7 +396,9 @@ const BarStyleEditor = ({ tasks, userSettings, onSettingsUpdate }) => {
                     <div className='absolute z-10 mt-1'>
                       <SketchPicker
                         color={editingStyle.borderColor}
-                        onChange={color => handleStyleChange('borderColor', color.hex)}
+                        onChange={color =>
+                          handleStyleChange('borderColor', color.hex)
+                        }
                         onClose={() => setShowColorPicker(null)}
                       />
                     </div>
@@ -395,7 +418,9 @@ const BarStyleEditor = ({ tasks, userSettings, onSettingsUpdate }) => {
                     <input
                       type='text'
                       value={editingStyle.textColor}
-                      onChange={e => handleStyleChange('textColor', e.target.value)}
+                      onChange={e =>
+                        handleStyleChange('textColor', e.target.value)
+                      }
                       className='flex-1 px-2 py-1 text-xs border border-gray-300 rounded'
                       placeholder='#FFFFFF'
                     />
@@ -404,7 +429,9 @@ const BarStyleEditor = ({ tasks, userSettings, onSettingsUpdate }) => {
                     <div className='absolute z-10 mt-1'>
                       <SketchPicker
                         color={editingStyle.textColor}
-                        onChange={color => handleStyleChange('textColor', color.hex)}
+                        onChange={color =>
+                          handleStyleChange('textColor', color.hex)
+                        }
                         onClose={() => setShowColorPicker(null)}
                       />
                     </div>
@@ -423,7 +450,9 @@ const BarStyleEditor = ({ tasks, userSettings, onSettingsUpdate }) => {
                       max='1'
                       step='0.1'
                       value={editingStyle.opacity}
-                      onChange={e => handleStyleChange('opacity', parseFloat(e.target.value))}
+                      onChange={e =>
+                        handleStyleChange('opacity', parseFloat(e.target.value))
+                      }
                       className='w-full px-2 py-1 text-xs border border-gray-300 rounded'
                     />
                   </div>
@@ -436,7 +465,12 @@ const BarStyleEditor = ({ tasks, userSettings, onSettingsUpdate }) => {
                       min='0'
                       max='10'
                       value={editingStyle.borderWidth}
-                      onChange={e => handleStyleChange('borderWidth', parseInt(e.target.value))}
+                      onChange={e =>
+                        handleStyleChange(
+                          'borderWidth',
+                          parseInt(e.target.value)
+                        )
+                      }
                       className='w-full px-2 py-1 text-xs border border-gray-300 rounded'
                     />
                   </div>
@@ -449,7 +483,12 @@ const BarStyleEditor = ({ tasks, userSettings, onSettingsUpdate }) => {
                       min='0'
                       max='20'
                       value={editingStyle.borderRadius}
-                      onChange={e => handleStyleChange('borderRadius', parseInt(e.target.value))}
+                      onChange={e =>
+                        handleStyleChange(
+                          'borderRadius',
+                          parseInt(e.target.value)
+                        )
+                      }
                       className='w-full px-2 py-1 text-xs border border-gray-300 rounded'
                     />
                   </div>
@@ -460,7 +499,9 @@ const BarStyleEditor = ({ tasks, userSettings, onSettingsUpdate }) => {
                   <div className='p-2 bg-red-50 border border-red-200 rounded'>
                     <div className='flex items-center gap-2 mb-1'>
                       <ExclamationTriangleIcon className='w-3 h-3 text-red-600' />
-                      <span className='text-xs font-medium text-red-900'>Validation Errors</span>
+                      <span className='text-xs font-medium text-red-900'>
+                        Validation Errors
+                      </span>
                     </div>
                     <ul className='text-xs text-red-700 space-y-1'>
                       {validation.errors.map((error, index) => (
@@ -474,7 +515,9 @@ const BarStyleEditor = ({ tasks, userSettings, onSettingsUpdate }) => {
                   <div className='p-2 bg-yellow-50 border border-yellow-200 rounded'>
                     <div className='flex items-center gap-2 mb-1'>
                       <ExclamationTriangleIcon className='w-3 h-3 text-yellow-600' />
-                      <span className='text-xs font-medium text-yellow-900'>Warnings</span>
+                      <span className='text-xs font-medium text-yellow-900'>
+                        Warnings
+                      </span>
                     </div>
                     <ul className='text-xs text-yellow-700 space-y-1'>
                       {validation.warnings.map((warning, index) => (
