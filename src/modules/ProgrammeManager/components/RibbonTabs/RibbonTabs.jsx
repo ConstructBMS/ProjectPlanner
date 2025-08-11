@@ -10,6 +10,7 @@ import FormatTab from './tabs/FormatTab';
 import QuickAccessToolbar from './QuickAccessToolbar';
 import GroupDialog from './GroupDialog';
 import StyleOptions from './StyleOptions';
+import BackstageView from '../Backstage/BackstageView';
 import { loadRibbonStyle } from '../../utils/ribbonTheme';
 import './Ribbon.css';
 
@@ -21,6 +22,7 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
   const [groupDialog, setGroupDialog] = useState({ isOpen: false, title: '', content: null });
   const [isMinimised, setIsMinimised] = useState(false);
   const [ribbonStyle, setRibbonStyle] = useState(loadRibbonStyle());
+  const [isBackstageOpen, setIsBackstageOpen] = useState(false);
   const { viewState, updateViewState } = useViewContext();
   const { canAccessTab, getAvailableTabs } = useUserContext();
 
@@ -92,6 +94,15 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
     setRibbonStyle(newStyle);
   };
 
+  // Handle backstage open/close
+  const handleBackstageToggle = () => {
+    setIsBackstageOpen(!isBackstageOpen);
+  };
+
+  const handleBackstageClose = () => {
+    setIsBackstageOpen(false);
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'Home':
@@ -132,6 +143,16 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
 
                   {/* Tab Buttons */}
             <div className='flex border-b border-gray-300 overflow-x-auto relative'>
+              {/* File Button (Backstage) */}
+              <button
+                onClick={handleBackstageToggle}
+                className={`project-ribbon-tab ribbon-tab ${isBackstageOpen ? 'active' : ''}`}
+                tabIndex={0}
+                title="File"
+              >
+                File
+              </button>
+              
               {/* Style Options Button */}
               <StyleOptions onStyleChange={handleStyleChange} />
               
@@ -189,14 +210,20 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
         />
       )}
 
-      {/* Group Dialog */}
-      <GroupDialog
-        title={groupDialog.title}
-        onClose={closeGroupDialog}
-        isOpen={groupDialog.isOpen}
-      >
-        {groupDialog.content}
-      </GroupDialog>
-    </div>
-  );
-}
+                {/* Group Dialog */}
+          <GroupDialog
+            title={groupDialog.title}
+            onClose={closeGroupDialog}
+            isOpen={groupDialog.isOpen}
+          >
+            {groupDialog.content}
+          </GroupDialog>
+
+          {/* Backstage View */}
+          <BackstageView
+            isOpen={isBackstageOpen}
+            onClose={handleBackstageClose}
+          />
+        </div>
+      );
+    }

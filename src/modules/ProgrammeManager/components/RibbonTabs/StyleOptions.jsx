@@ -104,42 +104,42 @@ const StyleOptions = ({ onStyleChange }) => {
                 className={`ribbon-style-option ${currentStyle.accent === 'blue' ? 'selected' : ''}`}
                 onClick={() => handleAccentChange('blue')}
               >
-                <span className="ribbon-accent-swatch blue"></span>
+                <span className="ribbon-accent-swatch blue" />
                 Blue
               </button>
               <button
                 className={`ribbon-style-option ${currentStyle.accent === 'cyan' ? 'selected' : ''}`}
                 onClick={() => handleAccentChange('cyan')}
               >
-                <span className="ribbon-accent-swatch cyan"></span>
+                <span className="ribbon-accent-swatch cyan" />
                 Cyan
               </button>
               <button
                 className={`ribbon-style-option ${currentStyle.accent === 'teal' ? 'selected' : ''}`}
                 onClick={() => handleAccentChange('teal')}
               >
-                <span className="ribbon-accent-swatch teal"></span>
+                <span className="ribbon-accent-swatch teal" />
                 Teal
               </button>
               <button
                 className={`ribbon-style-option ${currentStyle.accent === 'green' ? 'selected' : ''}`}
                 onClick={() => handleAccentChange('green')}
               >
-                <span className="ribbon-accent-swatch green"></span>
+                <span className="ribbon-accent-swatch green" />
                 Green
               </button>
               <button
                 className={`ribbon-style-option ${currentStyle.accent === 'orange' ? 'selected' : ''}`}
                 onClick={() => handleAccentChange('orange')}
               >
-                <span className="ribbon-accent-swatch orange"></span>
+                <span className="ribbon-accent-swatch orange" />
                 Orange
               </button>
               <button
                 className={`ribbon-style-option ${currentStyle.accent === 'magenta' ? 'selected' : ''}`}
                 onClick={() => handleAccentChange('magenta')}
               >
-                <span className="ribbon-accent-swatch magenta"></span>
+                <span className="ribbon-accent-swatch magenta" />
                 Magenta
               </button>
             </div>
