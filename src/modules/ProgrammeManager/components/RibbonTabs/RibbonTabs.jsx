@@ -9,6 +9,8 @@ import FourDTab from './tabs/FourDTab';
 import FormatTab from './tabs/FormatTab';
 import QuickAccessToolbar from './QuickAccessToolbar';
 import GroupDialog from './GroupDialog';
+import StyleOptions from './StyleOptions';
+import { loadRibbonStyle } from '../../utils/ribbonTheme';
 import './Ribbon.css';
 
 const allTabs = ['Home', 'View', 'Project', 'Allocation', '4D', 'Format'];
@@ -18,6 +20,7 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
   const [qatPosition, setQatPosition] = useState('above');
   const [groupDialog, setGroupDialog] = useState({ isOpen: false, title: '', content: null });
   const [isMinimised, setIsMinimised] = useState(false);
+  const [ribbonStyle, setRibbonStyle] = useState(loadRibbonStyle());
   const { viewState, updateViewState } = useViewContext();
   const { canAccessTab, getAvailableTabs } = useUserContext();
 
@@ -84,6 +87,11 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
     toggleMinimise();
   };
 
+  // Handle ribbon style change
+  const handleStyleChange = (newStyle) => {
+    setRibbonStyle(newStyle);
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'Home':
@@ -105,10 +113,14 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
     }
   };
 
-  return (
-    <div className='pm-ribbon'>
-      {/* Quick Access Toolbar - Above */}
-      {qatPosition === 'above' && (
+          return (
+          <div 
+            className='pm-ribbon'
+            data-mode={ribbonStyle.mode}
+            data-accent={ribbonStyle.accent}
+          >
+            {/* Quick Access Toolbar - Above */}
+            {qatPosition === 'above' && (
         <QuickAccessToolbar
           position="above"
           onPositionChange={handleQatPositionChange}
@@ -118,9 +130,12 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
         />
       )}
 
-      {/* Tab Buttons */}
-      <div className='flex border-b border-gray-300 overflow-x-auto relative'>
-        {tabs.map((tab, index) => (
+                  {/* Tab Buttons */}
+            <div className='flex border-b border-gray-300 overflow-x-auto relative'>
+              {/* Style Options Button */}
+              <StyleOptions onStyleChange={handleStyleChange} />
+              
+              {tabs.map((tab, index) => (
           <button
             key={tab}
             onClick={() => handleTabChange(tab)}

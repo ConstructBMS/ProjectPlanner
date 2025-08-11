@@ -788,3 +788,197 @@
 .ribbon-menu {
   tabindex: 0;
 }
+
+/* Ribbon Theme Variables */
+.pm-ribbon {
+  /* Default dark theme variables */
+  --rbn-font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --rbn-tab-size: 13px;
+  --rbn-tab-weight: 500;
+  --rbn-group-title-size: 10px;
+  --rbn-group-title-weight: 600;
+  --rbn-group-title-tracking: 0.5px;
+  --rbn-button-label-size: 10px;
+  --rbn-button-label-weight: 500;
+  --rbn-bg: #1e293b;
+  --rbn-bg-elev: #334155;
+  --rbn-border: #475569;
+  --rbn-text: #f1f5f9;
+  --rbn-text-2: #cbd5e1;
+  --rbn-text-muted: #94a3b8;
+  --rbn-icon: #94a3b8;
+  --rbn-accent: #3b82f6;
+  --rbn-hover: #475569;
+  --rbn-pressed: #64748b;
+  --rbn-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --rbn-pad-x: 8px;
+  --rbn-pad-y: 4px;
+  --rbn-gap: 4px;
+  --rbn-group-gap: 8px;
+}
+
+/* Light Mode Variables */
+.pm-ribbon[data-mode="light"] {
+  --rbn-bg: #ffffff;
+  --rbn-bg-elev: #f8fafc;
+  --rbn-border: #e2e8f0;
+  --rbn-text: #1e293b;
+  --rbn-text-2: #475569;
+  --rbn-text-muted: #64748b;
+  --rbn-icon: #64748b;
+  --rbn-hover: #f1f5f9;
+  --rbn-pressed: #e2e8f0;
+  --rbn-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark Mode Variables */
+.pm-ribbon[data-mode="dark"] {
+  --rbn-bg: #1e293b;
+  --rbn-bg-elev: #334155;
+  --rbn-border: #475569;
+  --rbn-text: #f1f5f9;
+  --rbn-text-2: #cbd5e1;
+  --rbn-text-muted: #94a3b8;
+  --rbn-icon: #94a3b8;
+  --rbn-hover: #475569;
+  --rbn-pressed: #64748b;
+  --rbn-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+/* Accent Color Variables */
+.pm-ribbon[data-accent="blue"] {
+  --rbn-accent: #3b82f6;
+}
+
+.pm-ribbon[data-accent="cyan"] {
+  --rbn-accent: #06b6d4;
+}
+
+.pm-ribbon[data-accent="teal"] {
+  --rbn-accent: #14b8a6;
+}
+
+.pm-ribbon[data-accent="green"] {
+  --rbn-accent: #10b981;
+}
+
+.pm-ribbon[data-accent="orange"] {
+  --rbn-accent: #f59e0b;
+}
+
+.pm-ribbon[data-accent="magenta"] {
+  --rbn-accent: #ec4899;
+}
+
+/* Style Options Button */
+.ribbon-style-options {
+  position: absolute;
+  top: 8px;
+  right: 40px;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rbn-text-muted);
+  transition: all 0.15s ease;
+  z-index: 10;
+}
+
+.ribbon-style-options:hover {
+  background: var(--rbn-hover);
+  color: var(--rbn-text);
+}
+
+.ribbon-style-options:focus {
+  outline: 2px solid color-mix(in oklab, var(--rbn-accent), white 60%);
+  outline-offset: 2px;
+}
+
+/* Style Options Menu */
+.ribbon-style-menu {
+  position: absolute;
+  top: 40px;
+  right: 8px;
+  background: var(--rbn-bg-elev);
+  border: 1px solid var(--rbn-border);
+  border-radius: 8px;
+  padding: 8px;
+  min-width: 160px;
+  box-shadow: var(--rbn-shadow);
+  z-index: 1000;
+}
+
+.ribbon-style-section {
+  margin-bottom: 8px;
+}
+
+.ribbon-style-section:last-child {
+  margin-bottom: 0;
+}
+
+.ribbon-style-section-title {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--rbn-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  padding: 0 4px;
+}
+
+.ribbon-style-options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+}
+
+.ribbon-style-option {
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--rbn-text);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.ribbon-style-option:hover {
+  background: var(--rbn-hover);
+  border-color: var(--rbn-border);
+}
+
+.ribbon-style-option.selected {
+  background: var(--rbn-accent);
+  color: white;
+  border-color: var(--rbn-accent);
+}
+
+.ribbon-style-option.selected:hover {
+  background: var(--rbn-accent);
+  color: white;
+}
+
+/* Accent Color Swatches */
+.ribbon-accent-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  margin-right: 6px;
+  display: inline-block;
+  border: 1px solid var(--rbn-border);
+}
+
+.ribbon-accent-swatch.blue { background: #3b82f6; }
+.ribbon-accent-swatch.cyan { background: #06b6d4; }
+.ribbon-accent-swatch.teal { background: #14b8a6; }
+.ribbon-accent-swatch.green { background: #10b981; }
+.ribbon-accent-swatch.orange { background: #f59e0b; }
+.ribbon-accent-swatch.magenta { background: #ec4899; }
