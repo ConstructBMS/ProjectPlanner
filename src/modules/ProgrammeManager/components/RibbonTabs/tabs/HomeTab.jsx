@@ -8,6 +8,7 @@ import RibbonGroup from '../shared/RibbonGroup';
 import RibbonDropdown from '../shared/RibbonDropdown';
 import RibbonMenu from '../RibbonMenu';
 import SwatchRow from '../ui/SwatchRow';
+import ExportDialog from '../ui/ExportDialog';
 import PrintExportDialog from '../../../components/PrintExportDialog';
 import {
   exportProject,
@@ -96,6 +97,13 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
   const [showBarStyleMenu, setShowBarStyleMenu] = useState(false);
   const [barStyleMenuPosition, setBarStyleMenuPosition] = useState({ x: 0, y: 0 });
   const barStyleButtonRef = useRef(null);
+  
+  // Print/Export state
+  const [showExportDialog, setShowExportDialog] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const [exportMenuPosition, setExportMenuPosition] = useState({ x: 0, y: 0 });
+  const [exportDialogMode, setExportDialogMode] = useState('export');
+  const exportButtonRef = useRef(null);
 
   // Color swatches (ConstructBMS-friendly colors)
   const colorSwatches = [
@@ -890,14 +898,14 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     const event = new window.CustomEvent('STYLE_COLOR_APPLY', {
       detail: { 
         taskIds: selectedTasks,
-        color: color
+        color
       }
     });
     document.dispatchEvent(event);
     
     console.info('Apply color to tasks:', { 
       taskIds: selectedTasks, 
-      color: color 
+      color
     });
   }, [selectedTaskId, selectedTaskIds]);
 
@@ -921,14 +929,14 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     const event = new window.CustomEvent('STYLE_BAR_APPLY', {
       detail: { 
         taskIds: selectedTasks,
-        styleId: styleId
+        styleId
       }
     });
     document.dispatchEvent(event);
     
     console.info('Apply bar style to tasks:', { 
       taskIds: selectedTasks, 
-      styleId: styleId 
+      styleId
     });
   }, [selectedTaskId, selectedTaskIds]);
 
@@ -964,8 +972,74 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     }
   }, []);
 
-  // Print and Export handlers
-  const handlePrint = async printSettings => {
+  // Print/Export handlers
+  const handlePrint = useCallback(() => {
+    setExportDialogMode('print');
+    setShowExportDialog(true);
+  }, []);
+
+  const handleExportMenuToggle = useCallback(() => {
+    if (exportButtonRef.current) {
+      const rect = exportButtonRef.current.getBoundingClientRect();
+      setExportMenuPosition({
+        x: rect.left,
+        y: rect.bottom + 4
+      });
+    }
+    setShowExportMenu(!showExportMenu);
+  }, [showExportMenu]);
+
+  const handleExportMenuClose = useCallback(() => {
+    setShowExportMenu(false);
+  }, []);
+
+  const handleExportOption = useCallback((option) => {
+    setShowExportMenu(false);
+    setExportDialogMode('export');
+    setShowExportDialog(true);
+    console.info(`Export option selected: ${option}`);
+  }, []);
+
+  const handleExportDialogClose = useCallback(() => {
+    setShowExportDialog(false);
+  }, []);
+
+  const getExportMenuItems = useCallback(() => [
+    {
+      id: 'png',
+      label: 'PNG (Timeline Only)',
+      disabled: false,
+      action: () => handleExportOption('PNG (Timeline Only)'),
+      icon: <DocumentArrowDownIcon className="w-4 h-4" />
+    },
+    {
+      id: 'pdf',
+      label: 'PDF (Timeline + Grid)',
+      disabled: false,
+      action: () => handleExportOption('PDF (Timeline + Grid)'),
+      icon: <DocumentArrowDownIcon className="w-4 h-4" />
+    },
+    {
+      id: 'csv',
+      label: 'CSV (Grid)',
+      disabled: false,
+      action: () => handleExportOption('CSV (Grid)'),
+      icon: <DocumentArrowDownIcon className="w-4 h-4" />
+    },
+    {
+      id: 'asta',
+      label: 'Asta XML',
+      disabled: false,
+      action: () => handleExportOption('Asta XML'),
+      icon: <DocumentArrowDownIcon className="w-4 h-4" />
+    }
+  ], [handleExportOption]);
+
+  // Check if there's data to export
+  const hasDataToExport = tasks && tasks.length > 0;
+
+  // Legacy Print and Export handlers (for existing PrintExportDialog)
+  const handlePrintLegacy = async printSettings => {
     try {
       await printProject(printSettings, tasks, taskLinks, viewState);
     } catch (error) {
@@ -974,7 +1048,7 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     }
   };
 
-  const handleExport = async exportSettings => {
+  const handleExportLegacy = async exportSettings => {
     try {
       const filename = await exportProject(
         exportSettings,
@@ -1362,15 +1436,30 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
         <RibbonButton
           icon={<PrinterIcon className='w-4 h-4' />}
           label='Print'
-          onClick={() => setShowPrintExportDialog(true)}
+          onClick={handlePrint}
           tooltip='Print project schedule with advanced options'
+          disabled={!hasDataToExport}
         />
-        <RibbonButton
-          icon={<DocumentArrowDownIcon className='w-4 h-4' />}
-          label='Export'
-          onClick={() => setShowPrintExportDialog(true)}
-          tooltip='Export to PDF, PNG, or Excel'
-        />
+        
+        {/* Export Split Button */}
+        <div className="relative" ref={exportButtonRef}>
+          <RibbonButton
+            icon={<DocumentArrowDownIcon className='w-4 h-4' />}
+            label='Export'
+            onClick={handleExportMenuToggle}
+            tooltip='Export to various formats'
+            disabled={!hasDataToExport}
+            className="split"
+          />
+          <RibbonButton
+            icon={<ChevronDownIcon className='w-3 h-3' />}
+            label=""
+            onClick={handleExportMenuToggle}
+            tooltip="Choose export format"
+            disabled={!hasDataToExport}
+            className="split-caret"
+          />
+        </div>
       </RibbonGroup>
 
       {/* Status Group */}
@@ -1658,12 +1747,30 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
         />
       )}
 
+      {/* Export Menu */}
+      {showExportMenu && (
+        <RibbonMenu
+          items={getExportMenuItems()}
+          onSelect={(item) => item.action()}
+          onClose={handleExportMenuClose}
+          position={exportMenuPosition}
+          parentRef={exportButtonRef}
+        />
+      )}
+
+      {/* Export Dialog */}
+      <ExportDialog
+        isOpen={showExportDialog}
+        onClose={handleExportDialogClose}
+        mode={exportDialogMode}
+      />
+
       {/* Print/Export Dialog */}
       <PrintExportDialog
         isOpen={showPrintExportDialog}
         onClose={() => setShowPrintExportDialog(false)}
-        onPrint={handlePrint}
-        onExport={handleExport}
+        onPrint={handlePrintLegacy}
+        onExport={handleExportLegacy}
       />
     </div>
   );
