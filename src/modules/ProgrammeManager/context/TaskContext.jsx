@@ -22,6 +22,7 @@ import {
 } from '../utils/recurringTaskUtils';
 import { useCalendarContext } from './CalendarContext';
 import { supabase } from '../../../supabase/client';
+import { checkTableExists } from '../utils/databaseSchema.js';
 
 const TaskContext = createContext();
 
@@ -49,18 +50,20 @@ export const TaskProvider = ({ children }) => {
       setLoading(true);
       setError(null);
 
+      // Check if table exists before making request
+      const tableExists = await checkTableExists('project_tasks');
+      if (!tableExists) {
+        console.info('Using mock task data (database table not found)');
+        setTasks([]);
+        return;
+      }
+
       const { data: tasksData, error: tasksError } = await supabase
         .from('project_tasks')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (tasksError) {
-        // If table doesn't exist, use mock data instead of throwing error
-        if (tasksError.message.includes('does not exist') || tasksError.code === '42P01') {
-          console.info('Using mock task data (database table not found)');
-          setTasks([]);
-          return;
-        }
         throw new Error(`Error loading tasks: ${tasksError.message}`);
       }
 
@@ -131,17 +134,19 @@ export const TaskProvider = ({ children }) => {
   // Load task links from ConstructBMS database
   const loadTaskLinks = useCallback(async () => {
     try {
+      // Check if table exists before making request
+      const tableExists = await checkTableExists('project_dependencies');
+      if (!tableExists) {
+        console.info('Using mock task links (database table not found)');
+        setTaskLinks([]);
+        return;
+      }
+
       const { data: linksData, error: linksError } = await supabase
         .from('project_dependencies')
         .select('*');
 
       if (linksError) {
-        // If table doesn't exist, use empty array instead of logging error
-        if (linksError.message.includes('does not exist') || linksError.code === '42P01') {
-          console.info('Using mock task links (database table not found)');
-          setTaskLinks([]);
-          return;
-        }
         console.warn('Error loading task links:', linksError.message);
         return;
       }

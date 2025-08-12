@@ -6,6 +6,7 @@ import {
   useCallback,
 } from 'react';
 import { supabase } from '../../../supabase/client';
+import { checkTableExists } from '../utils/databaseSchema.js';
 
 const ProjectsContext = createContext();
 
@@ -44,6 +45,16 @@ export const ProjectsProvider = ({ children }) => {
       setLoading(true);
       setError(null);
 
+      // Check if table exists before making request
+      const tableExists = await checkTableExists('projects');
+      if (!tableExists) {
+        console.info('Using mock project data (database table not found)');
+        setProjects([]);
+        setEnhancedProjects([]);
+        calculateMetrics([], []);
+        return;
+      }
+
       // Fetch projects with enhanced ProjectPlanner fields
       const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
@@ -51,14 +62,6 @@ export const ProjectsProvider = ({ children }) => {
         .order('created_at', { ascending: false });
 
       if (projectsError) {
-        // If table doesn't exist, use empty array instead of throwing error
-        if (projectsError.message.includes('does not exist') || projectsError.code === '42P01') {
-          console.info('Using mock project data (database table not found)');
-          setProjects([]);
-          setEnhancedProjects([]);
-          calculateMetrics([], []);
-          return;
-        }
         throw new Error(`Error loading projects: ${projectsError.message}`);
       }
 
