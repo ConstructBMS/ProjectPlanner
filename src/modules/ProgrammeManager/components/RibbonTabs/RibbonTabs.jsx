@@ -12,6 +12,7 @@ import GroupDialog from './GroupDialog';
 import StyleOptions from './StyleOptions';
 import BackstageView from '../Backstage/BackstageView';
 import { loadRibbonStyle } from '../../utils/ribbonTheme';
+import { getRibbonPrefs, setRibbonPrefs } from '../../utils/ribbonStorage';
 import './Ribbon.css';
 
 const allTabs = ['Home', 'View', 'Project', 'Allocation', '4D', 'Format'];
@@ -39,12 +40,24 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
     }
   }, [viewState.activeTab, canAccessTab, tabs]);
 
-  // Load minimised state from localStorage on mount
+  // Load ribbon preferences from storage on mount
   useEffect(() => {
-    const savedMinimised = localStorage.getItem('pm.ribbon.minimised');
-    if (savedMinimised === 'true') {
-      setIsMinimised(true);
-    }
+    const loadPreferences = async () => {
+      try {
+        const prefs = await getRibbonPrefs();
+        if (prefs) {
+          setIsMinimised(prefs.minimised);
+          setQatPosition(prefs.qatPosition);
+          if (prefs.style) {
+            setRibbonStyle(prefs.style);
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to load ribbon preferences:', error);
+      }
+    };
+
+    loadPreferences();
   }, []);
 
   // Keyboard shortcut for Ctrl+F1 to toggle ribbon
@@ -70,8 +83,18 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
     updateViewState({ activeTab: tab });
   };
 
-  const handleQatPositionChange = (position) => {
+  const handleQatPositionChange = async (position) => {
     setQatPosition(position);
+    
+    try {
+      await setRibbonPrefs({
+        minimised: isMinimised,
+        qatPosition: position,
+        style: ribbonStyle
+      });
+    } catch (error) {
+      console.warn('Failed to save ribbon preferences:', error);
+    }
   };
 
   // QAT action handlers
@@ -97,19 +120,38 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
   };
 
   // Minimise/restore ribbon handlers
-  const toggleMinimise = useCallback(() => {
+  const toggleMinimise = useCallback(async () => {
     const newMinimised = !isMinimised;
     setIsMinimised(newMinimised);
-    localStorage.setItem('pm.ribbon.minimised', newMinimised.toString());
-  }, [isMinimised]);
+    
+    try {
+      await setRibbonPrefs({
+        minimised: newMinimised,
+        qatPosition,
+        style: ribbonStyle
+      });
+    } catch (error) {
+      console.warn('Failed to save ribbon preferences:', error);
+    }
+  }, [isMinimised, qatPosition, ribbonStyle]);
 
   const handleTabDoubleClick = () => {
     toggleMinimise();
   };
 
   // Handle ribbon style change
-  const handleStyleChange = (newStyle) => {
+  const handleStyleChange = async (newStyle) => {
     setRibbonStyle(newStyle);
+    
+    try {
+      await setRibbonPrefs({
+        minimised: isMinimised,
+        qatPosition,
+        style: newStyle
+      });
+    } catch (error) {
+      console.warn('Failed to save ribbon preferences:', error);
+    }
   };
 
   // Handle backstage open/close

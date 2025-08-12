@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import RibbonButton from './shared/RibbonButton';
+import { getRibbonPrefs, setRibbonPrefs } from '../../utils/ribbonStorage';
 
 const QuickAccessToolbar = ({ 
   position = 'above', 
@@ -11,19 +12,37 @@ const QuickAccessToolbar = ({
   const [showPositionMenu, setShowPositionMenu] = useState(false);
   const [currentPosition, setCurrentPosition] = useState(position);
 
-  // Load position from localStorage on mount
+  // Load position from storage on mount
   useEffect(() => {
-    const savedPosition = localStorage.getItem('pm.ribbon.qat.position');
-    if (savedPosition && (savedPosition === 'above' || savedPosition === 'below')) {
-      setCurrentPosition(savedPosition);
-      onPositionChange?.(savedPosition);
-    }
+    const loadPosition = async () => {
+      try {
+        const prefs = await getRibbonPrefs();
+        if (prefs?.qatPosition && (prefs.qatPosition === 'above' || prefs.qatPosition === 'below')) {
+          setCurrentPosition(prefs.qatPosition);
+          onPositionChange?.(prefs.qatPosition);
+        }
+      } catch (error) {
+        console.warn('Failed to load QAT position:', error);
+      }
+    };
+
+    loadPosition();
   }, [onPositionChange]);
 
-  // Save position to localStorage when changed
-  const handlePositionChange = (newPosition) => {
+  // Save position to storage when changed
+  const handlePositionChange = async (newPosition) => {
     setCurrentPosition(newPosition);
-    localStorage.setItem('pm.ribbon.qat.position', newPosition);
+    
+    try {
+      await setRibbonPrefs({
+        minimised: false, // We don't have access to this here, but it will be merged
+        qatPosition: newPosition,
+        style: undefined // We don't have access to this here, but it will be merged
+      });
+    } catch (error) {
+      console.warn('Failed to save QAT position:', error);
+    }
+    
     onPositionChange?.(newPosition);
     setShowPositionMenu(false);
   };

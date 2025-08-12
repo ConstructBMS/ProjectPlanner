@@ -14,8 +14,9 @@ const DEFAULT_STYLE: RibbonStyle = {
   accent: 'blue'
 };
 
-// Load ribbon style from localStorage
+// Load ribbon style from storage
 export const loadRibbonStyle = (): RibbonStyle => {
+  // For backward compatibility, try localStorage first
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -28,18 +29,19 @@ export const loadRibbonStyle = (): RibbonStyle => {
       }
     }
   } catch (error) {
-    console.warn('Failed to load ribbon style:', error);
+    console.warn('Failed to load ribbon style from localStorage:', error);
   }
   
   return DEFAULT_STYLE;
 };
 
-// Save ribbon style to localStorage
+// Save ribbon style to storage
 export const saveRibbonStyle = (style: RibbonStyle): void => {
+  // For backward compatibility, save to localStorage as well
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(style));
   } catch (error) {
-    console.warn('Failed to save ribbon style:', error);
+    console.warn('Failed to save ribbon style to localStorage:', error);
   }
 };
 
