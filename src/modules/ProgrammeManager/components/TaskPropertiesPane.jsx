@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTaskContext } from '../context/TaskContext';
 import { useCalendarContext } from '../context/CalendarContext';
 import { useUndoRedoContext } from '../context/UndoRedoContext';
@@ -40,6 +40,7 @@ import {
   formatCost,
   getCostVariance,
 } from '../utils/costUtils';
+import ResizeHandle from './common/ResizeHandle';
 
 // Task Properties Pane Component
 const TaskPropertiesPane = () => {
@@ -78,6 +79,7 @@ const TaskPropertiesPane = () => {
     errors: [],
     warnings: [],
   });
+  const [paneHeight, setPaneHeight] = useState(256);
 
   // Get the currently selected task
   const selectedTask = tasks.find(task => task.id === selectedTaskId);
@@ -97,6 +99,35 @@ const TaskPropertiesPane = () => {
   const getCurrentColor = task => {
     return task.color || getDefaultColor(task);
   };
+
+  // Load saved pane height on mount
+  useEffect(() => {
+    const savedHeight = localStorage.getItem('pm.layout.props.height');
+    if (savedHeight) {
+      const height = parseInt(savedHeight, 10);
+      if (height >= 180) {
+        setPaneHeight(height);
+      }
+    } else {
+      // Default to ~28% of main area (assuming 100vh - 260px header)
+      const defaultHeight = Math.round((window.innerHeight - 260) * 0.28);
+      setPaneHeight(Math.max(defaultHeight, 256));
+    }
+  }, []);
+
+  // Resize handlers
+  const handleResize = useCallback((newHeight) => {
+    const clampedHeight = Math.max(180, Math.min(newHeight, window.innerHeight - 300));
+    setPaneHeight(clampedHeight);
+  }, []);
+
+  const handleResizeStart = useCallback(() => {
+    // Optional: Add visual feedback for resize start
+  }, []);
+
+  const handleResizeEnd = useCallback(() => {
+    localStorage.setItem('pm.layout.props.height', paneHeight.toString());
+  }, [paneHeight]);
 
   // Handle color change
   const handleColorChange = color => {
@@ -323,33 +354,57 @@ const TaskPropertiesPane = () => {
 
   if (!selectedTask || !editingTask) {
     return (
-      <div className='bg-gray-50 border-t border-gray-200 shadow-inner flex flex-col overflow-hidden h-full'>
-        <div className='px-4 py-3 border-b border-gray-200 bg-white'>
-          <h3 className='text-sm font-semibold text-gray-700'>
-            Task Properties
-          </h3>
-          <p className='text-xs text-gray-500 mt-1'>
-            Select a task to view properties
-          </p>
-        </div>
-        <div className='flex-1 flex items-center justify-center'>
-          <div className='text-center'>
-            <PencilIcon className='w-12 h-12 text-gray-300 mx-auto mb-4' />
-            <div className='text-sm font-medium text-gray-500 mb-1'>
-              No Task Selected
-            </div>
-            <div className='text-xs text-gray-400'>
-              Select a task to edit its properties
+      <>
+        {/* Resize Handle */}
+        <ResizeHandle
+          onResize={handleResize}
+          onResizeStart={handleResizeStart}
+          onResizeEnd={handleResizeEnd}
+        />
+        
+        {/* Properties Pane */}
+        <div 
+          className='pm-properties-pane flex flex-col overflow-hidden'
+          style={{ height: `${paneHeight}px` }}
+        >
+          <div className='properties-header'>
+            <h3 className='text-sm font-semibold text-gray-700'>
+              Task Properties
+            </h3>
+            <p className='text-xs text-gray-500 mt-1'>
+              Select a task to view properties
+            </p>
+          </div>
+          <div className='flex-1 flex items-center justify-center'>
+            <div className='text-center'>
+              <PencilIcon className='w-12 h-12 text-gray-300 mx-auto mb-4' />
+              <div className='text-sm font-medium text-gray-500 mb-1'>
+                No Task Selected
+              </div>
+              <div className='text-xs text-gray-400'>
+                Select a task to edit its properties
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
     <>
-      <div className='pm-properties-pane flex flex-col overflow-hidden h-full'>
+      {/* Resize Handle */}
+      <ResizeHandle
+        onResize={handleResize}
+        onResizeStart={handleResizeStart}
+        onResizeEnd={handleResizeEnd}
+      />
+      
+      {/* Properties Pane */}
+      <div 
+        className='pm-properties-pane flex flex-col overflow-hidden'
+        style={{ height: `${paneHeight}px` }}
+      >
         {/* Header with Save/Cancel buttons */}
         <div className='properties-header'>
           <div className='flex items-center justify-between mb-3'>

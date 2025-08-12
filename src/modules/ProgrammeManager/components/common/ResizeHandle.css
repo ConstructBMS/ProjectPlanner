@@ -1,0 +1,62 @@
+/* ResizeHandle Styles */
+.resize-handle {
+  height: 8px;
+  background: var(--rbn-bg, #111928);
+  border-top: 1px solid var(--rbn-border, #232a38);
+  cursor: row-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: height 0.15s ease;
+  position: relative;
+  user-select: none;
+}
+
+.resize-handle:hover {
+  height: 12px;
+  background: var(--rbn-bg-elev, #1b2433);
+}
+
+.resize-handle.dragging {
+  height: 12px;
+  background: var(--rbn-accent, #3880f4);
+  border-top-color: var(--rbn-accent, #3880f4);
+}
+
+.resize-handle-line {
+  width: 40px;
+  height: 2px;
+  background: var(--rbn-border, #232a38);
+  border-radius: 1px;
+  transition: background-color 0.15s ease;
+}
+
+.resize-handle:hover .resize-handle-line {
+  background: var(--rbn-text-muted, #9aa3af);
+}
+
+.resize-handle.dragging .resize-handle-line {
+  background: var(--rbn-text, #e8eef7);
+}
+
+/* Prevent text selection during drag */
+.resize-handle.dragging * {
+  user-select: none;
+}
+
+/* Accessibility */
+.resize-handle:focus {
+  outline: 2px solid var(--rbn-accent, #3880f4);
+  outline-offset: -2px;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .resize-handle {
+    transition: none;
+  }
+  
+  .resize-handle-line {
+    transition: none;
+  }
+}

@@ -213,6 +213,8 @@ html, body {
   background: var(--rbn-bg, #111928) !important;
   color: var(--rbn-text, #e8eef7);
   border-top: 1px solid var(--rbn-border, #232a38);
+  min-height: 180px;
+  max-height: calc(100vh - 300px);
 }
 
 .properties-header {
@@ -220,12 +222,18 @@ html, body {
   border-bottom: 1px solid var(--rbn-border, #232a38);
   color: var(--rbn-text, #e8eef7);
   padding: 12px 16px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-shrink: 0;
 }
 
 .properties-content {
   background: var(--rbn-bg, #111928);
   color: var(--rbn-text, #e8eef7);
   padding: 12px 16px;
+  flex: 1;
+  overflow: auto;
 }
 
 .properties-section {
