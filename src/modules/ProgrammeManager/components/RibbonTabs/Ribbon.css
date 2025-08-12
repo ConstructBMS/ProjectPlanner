@@ -27,7 +27,7 @@
   --rbn-pad-x: 12px;
   --rbn-pad-y: 8px;
   --rbn-gap: 8px;
-  --rbn-group-gap: 14px;
+  --rbn-group-gap: 12px;
   
   /* button dimensions */
   --rbn-btn-large-icon: 28px;
@@ -35,7 +35,7 @@
   --rbn-btn-large-min-height: 82px;
   --rbn-btn-large-padding: 12px 10px;
   
-  --rbn-btn-standard-icon: 20px;
+  --rbn-btn-standard-icon: 18px;
   --rbn-btn-standard-min-height: 36px;
   --rbn-btn-standard-padding: 8px 10px;
   
@@ -127,12 +127,13 @@
 .pm-ribbon .project-group {
   display: flex;
   flex-direction: column;
-  padding: var(--rbn-pad-y) var(--rbn-pad-x);
+  padding: 10px 12px;
   min-width: 80px;
   flex-shrink: 1;
   min-height: 50px;
   background: var(--rbn-bg-elev);
-  border-radius: 10px;
+  border: 1px solid var(--rbn-border);
+  border-radius: 8px;
   margin-right: var(--rbn-group-gap);
   position: relative;
 }
@@ -153,7 +154,7 @@
 .pm-ribbon .project-group > div:not(.project-group-title) {
   display: flex;
   flex-wrap: wrap;
-  gap: 2px;
+  gap: 8px;
   align-items: baseline;
 }
 
@@ -161,7 +162,7 @@
 .pm-ribbon .project-group .button-row {
   display: flex;
   align-items: baseline;
-  gap: 2px;
+  gap: 8px;
   margin-bottom: 4px;
 }
 
@@ -175,6 +176,7 @@
   font: var(--rbn-group-title-weight) var(--rbn-group-title-size)/1 var(--rbn-font-sans);
   letter-spacing: var(--rbn-group-title-tracking);
   color: var(--rbn-text-muted);
+  margin-top: 2px;
   margin-bottom: var(--rbn-gap);
   padding-bottom: var(--rbn-gap);
   border-bottom: 1px solid var(--rbn-border);
@@ -308,6 +310,20 @@
 
 .pm-ribbon .project-button:hover .text-\[12px\] {
   color: var(--rbn-accent);
+}
+
+/* Icon clarity improvements */
+.pm-ribbon .project-button svg {
+  vector-effect: non-scaling-stroke;
+  shape-rendering: geometricPrecision;
+  width: var(--rbn-btn-large-icon);
+  height: var(--rbn-btn-large-icon);
+}
+
+.pm-ribbon .project-button.standard svg,
+.pm-ribbon .project-button[data-size="standard"] svg {
+  width: var(--rbn-btn-standard-icon);
+  height: var(--rbn-btn-standard-icon);
 }
 
 /* Ensure contrast for accessibility */
