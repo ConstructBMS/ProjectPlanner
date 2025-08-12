@@ -81,6 +81,11 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
   // Hierarchy state
   const [showBreakSummaryDialog, setShowBreakSummaryDialog] = useState(false);
   const [breakSummaryTask, setBreakSummaryTask] = useState(null);
+  
+  // Task conversion and assignment state
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [assignResourceId, setAssignResourceId] = useState('');
+  const [assignResourceSearch, setAssignResourceSearch] = useState('');
 
   const {
     addMilestone,
@@ -665,6 +670,109 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     return task && task.children && task.children.length > 0;
   }, [selectedTaskId, selectedTaskIds, tasks]);
 
+  // Task conversion and assignment functions
+  const handleMakeMilestone = useCallback(() => {
+    const selectedTasks = selectedTaskIds || [selectedTaskId].filter(Boolean);
+    
+    if (selectedTasks.length === 0) {
+      console.info('No tasks selected for milestone conversion');
+      return;
+    }
+    
+    // Emit TASK_CONVERT_TO_MILESTONE event
+    const event = new window.CustomEvent('TASK_CONVERT_TO_MILESTONE', {
+      detail: { selectedTasks }
+    });
+    document.dispatchEvent(event);
+    
+    console.info('Convert tasks to milestones:', { selectedTasks });
+  }, [selectedTaskId, selectedTaskIds]);
+
+  const handleMakeTask = useCallback(() => {
+    const selectedTasks = selectedTaskIds || [selectedTaskId].filter(Boolean);
+    
+    if (selectedTasks.length === 0) {
+      console.info('No tasks selected for task conversion');
+      return;
+    }
+    
+    // Emit TASK_CONVERT_TO_TASK event
+    const event = new window.CustomEvent('TASK_CONVERT_TO_TASK', {
+      detail: { selectedTasks }
+    });
+    document.dispatchEvent(event);
+    
+    console.info('Convert items to tasks:', { selectedTasks });
+  }, [selectedTaskId, selectedTaskIds]);
+
+  const handleAssignResource = useCallback(() => {
+    const selectedTasks = selectedTaskIds || [selectedTaskId].filter(Boolean);
+    
+    if (selectedTasks.length === 0) {
+      console.info('No tasks selected for resource assignment');
+      return;
+    }
+    
+    setShowAssignModal(true);
+    setAssignResourceId('');
+    setAssignResourceSearch('');
+  }, [selectedTaskId, selectedTaskIds]);
+
+  const handleAssignConfirm = useCallback(() => {
+    const selectedTasks = selectedTaskIds || [selectedTaskId].filter(Boolean);
+    
+    if (!assignResourceId.trim()) {
+      console.info('No resource selected for assignment');
+      return;
+    }
+    
+    // Emit TASK_ASSIGN_RESOURCE event
+    const event = new window.CustomEvent('TASK_ASSIGN_RESOURCE', {
+      detail: { 
+        taskIds: selectedTasks,
+        resourceId: assignResourceId.trim()
+      }
+    });
+    document.dispatchEvent(event);
+    
+    console.info('Assign resource to tasks:', { 
+      taskIds: selectedTasks, 
+      resourceId: assignResourceId.trim() 
+    });
+    
+    setShowAssignModal(false);
+    setAssignResourceId('');
+    setAssignResourceSearch('');
+  }, [selectedTaskId, selectedTaskIds, assignResourceId]);
+
+  const handleAssignCancel = useCallback(() => {
+    setShowAssignModal(false);
+    setAssignResourceId('');
+    setAssignResourceSearch('');
+  }, []);
+
+  const handleAssignKeyDown = useCallback((e) => {
+    if (e.key === 'Escape') {
+      handleAssignCancel();
+    } else if (e.key === 'Enter') {
+      handleAssignConfirm();
+    }
+  }, [handleAssignCancel, handleAssignConfirm]);
+
+  // Mock resource data for assignment modal
+  const mockResources = [
+    { id: 'res-001', name: 'John Smith', type: 'Labour' },
+    { id: 'res-002', name: 'Jane Doe', type: 'Labour' },
+    { id: 'res-003', name: 'Excavator 1', type: 'Equipment' },
+    { id: 'res-004', name: 'Concrete Mix', type: 'Material' },
+    { id: 'res-005', name: 'Subcontractor A', type: 'Subcontractor' },
+  ];
+
+  const filteredResources = mockResources.filter(resource =>
+    resource.name.toLowerCase().includes(assignResourceSearch.toLowerCase()) ||
+    resource.type.toLowerCase().includes(assignResourceSearch.toLowerCase())
+  );
+
   // Print and Export handlers
   const handlePrint = async printSettings => {
     try {
@@ -876,16 +984,25 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
       {/* Task Group */}
       <RibbonGroup title='Task'>
         <RibbonButton
-          icon={<PlusIcon className='w-4 h-4' />}
-          label='Make Into'
-          onClick={() => console.log('Make Into clicked')}
-          tooltip='Convert selected item into another type (task, milestone, etc.)'
+          icon={<FlagIcon className='w-4 h-4' />}
+          label='Make Milestone'
+          onClick={handleMakeMilestone}
+          tooltip='Convert selected tasks to milestones'
+          disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
+        />
+        <RibbonButton
+          icon={<ChartBarIcon className='w-4 h-4' />}
+          label='Make Task'
+          onClick={handleMakeTask}
+          tooltip='Convert selected items to tasks'
+          disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
         />
         <RibbonButton
           icon={<UserIcon className='w-4 h-4' />}
-          label='Assign'
-          onClick={() => console.log('Assign clicked')}
-          tooltip='Assign a resource, person, or role to this task'
+          label='Assign...'
+          onClick={handleAssignResource}
+          tooltip='Assign resource to selected tasks'
+          disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
         />
         <RibbonButton
           icon={<TrashIcon className='w-4 h-4' />}
@@ -1186,6 +1303,73 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
                 className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
               >
                 Break Summary
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Assign Resource Modal */}
+      {showAssignModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Assign Resource
+            </h3>
+            
+            {/* Search Input */}
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Search resources..."
+                value={assignResourceSearch}
+                onChange={(e) => setAssignResourceSearch(e.target.value)}
+                onKeyDown={handleAssignKeyDown}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                autoFocus
+              />
+            </div>
+            
+            {/* Resource List */}
+            <div className="max-h-48 overflow-y-auto mb-4 border border-gray-200 dark:border-gray-600 rounded-md">
+              {filteredResources.length > 0 ? (
+                filteredResources.map((resource) => (
+                  <div
+                    key={resource.id}
+                    onClick={() => setAssignResourceId(resource.id)}
+                    className={`px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
+                      assignResourceId === resource.id ? 'bg-blue-100 dark:bg-blue-900' : ''
+                    }`}
+                  >
+                    <div className="font-medium text-gray-900 dark:text-white">
+                      {resource.name}
+                    </div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      {resource.type}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="px-3 py-2 text-gray-500 dark:text-gray-400">
+                  No resources found
+                </div>
+              )}
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={handleAssignCancel}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAssignConfirm}
+                disabled={!assignResourceId}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                Assign
               </button>
             </div>
           </div>
