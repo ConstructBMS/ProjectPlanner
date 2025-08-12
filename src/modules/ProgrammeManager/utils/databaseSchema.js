@@ -47,12 +47,17 @@ export const checkTableExists = async (tableName) => {
 export const checkColumnExists = async (tableName, columnName) => {
   const cacheKey = `${tableName}.${columnName}`;
   
+  // Return cached result if available
+  if (tableExistenceCache.has(cacheKey)) {
+    return tableExistenceCache.get(cacheKey);
+  }
+
   // Wait for initialization to complete
   if (!isInitialized && initializationPromise) {
     await initializationPromise;
   }
 
-  // Return cached result if available
+  // Return cached result again after initialization
   if (tableExistenceCache.has(cacheKey)) {
     return tableExistenceCache.get(cacheKey);
   }

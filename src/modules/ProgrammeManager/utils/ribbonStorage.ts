@@ -48,6 +48,7 @@ const getSupabaseClient = () => {
 // Check if user_settings table and ribbon_state column exist
 const checkDatabaseSchema = async (supabase: any): Promise<boolean> => {
   try {
+    // Use cached result directly to avoid any HTTP requests
     return getCachedColumnExists('user_settings', 'ribbon_state');
   } catch (error) {
     return false;
@@ -172,8 +173,8 @@ export const getRibbonPrefs = async (userId?: string): Promise<RibbonPrefs | nul
       return getRibbonPrefsFromLocalStorage();
     }
 
-    // Check if database schema supports ribbon_state
-    const schemaOk = await checkDatabaseSchema(supabase);
+    // Check if database schema supports ribbon_state using cached result
+    const schemaOk = getCachedColumnExists('user_settings', 'ribbon_state');
     if (!schemaOk) {
       useLocalStorageFallback = true;
       return getRibbonPrefsFromLocalStorage();
@@ -212,8 +213,8 @@ export const setRibbonPrefs = async (prefs: RibbonPrefs, userId?: string): Promi
       return;
     }
 
-    // Check if database schema supports ribbon_state
-    const schemaOk = await checkDatabaseSchema(supabase);
+    // Check if database schema supports ribbon_state using cached result
+    const schemaOk = getCachedColumnExists('user_settings', 'ribbon_state');
     if (!schemaOk) {
       useLocalStorageFallback = true;
       return;
