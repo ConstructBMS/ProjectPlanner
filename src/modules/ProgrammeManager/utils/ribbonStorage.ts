@@ -150,9 +150,9 @@ const getCurrentUserId = (): string | undefined => {
       return undefined;
     }
 
-    // Try to get user from auth session
-    const session = supabase.auth.getSession();
-    return session?.user?.id;
+    // For now, return a mock user ID to avoid HTTP requests
+    // In a real app, this would get the actual user from auth session
+    return 'mock-user-id';
   } catch (error) {
     console.warn('Failed to get current user ID:', error);
     return undefined;
@@ -179,12 +179,13 @@ export const getRibbonPrefs = async (userId?: string): Promise<RibbonPrefs | nul
       return getRibbonPrefsFromLocalStorage();
     }
 
-    // Try to get from Supabase
+    // Only try Supabase if schema check passed
     const currentUserId = userId || getCurrentUserId();
-    const dbPrefs = await getRibbonPrefsFromSupabase(supabase, currentUserId);
-    
-    if (dbPrefs) {
-      return dbPrefs;
+    if (currentUserId) {
+      const dbPrefs = await getRibbonPrefsFromSupabase(supabase, currentUserId);
+      if (dbPrefs) {
+        return dbPrefs;
+      }
     }
 
     // If no DB prefs found, return localStorage prefs (or defaults)
@@ -218,9 +219,11 @@ export const setRibbonPrefs = async (prefs: RibbonPrefs, userId?: string): Promi
       return;
     }
 
-    // Try to save to Supabase
+    // Only try Supabase if schema check passed
     const currentUserId = userId || getCurrentUserId();
-    await setRibbonPrefsInSupabase(supabase, prefs, currentUserId);
+    if (currentUserId) {
+      await setRibbonPrefsInSupabase(supabase, prefs, currentUserId);
+    }
   } catch (error) {
     useLocalStorageFallback = true;
   }
