@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useViewContext } from '../../context/ViewContext';
 import { useUserContext } from '../../context/UserContext';
 import HomeTab from './tabs/HomeTab';
@@ -47,6 +47,24 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
     }
   }, []);
 
+  // Keyboard shortcut for Ctrl+F1 to toggle ribbon
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.ctrlKey && event.key === 'F1') {
+        event.preventDefault();
+        toggleMinimise();
+      }
+    };
+
+    // Add event listener to document
+    document.addEventListener('keydown', handleKeyDown);
+
+    // Cleanup on unmount
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isMinimised]); // Include isMinimised in dependencies since toggleMinimise uses it
+
   const handleTabChange = tab => {
     setActiveTab(tab);
     updateViewState({ activeTab: tab });
@@ -79,11 +97,11 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
   };
 
   // Minimise/restore ribbon handlers
-  const toggleMinimise = () => {
+  const toggleMinimise = useCallback(() => {
     const newMinimised = !isMinimised;
     setIsMinimised(newMinimised);
     localStorage.setItem('pm.ribbon.minimised', newMinimised.toString());
-  };
+  }, [isMinimised]);
 
   const handleTabDoubleClick = () => {
     toggleMinimise();
