@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import useTaskManager from '../../../hooks/useTaskManager';
 import { useTaskContext } from '../../../context/TaskContext';
 import { useViewContext } from '../../../context/ViewContext';
@@ -7,6 +7,7 @@ import RibbonButton from '../shared/RibbonButton';
 import RibbonGroup from '../shared/RibbonGroup';
 import RibbonDropdown from '../shared/RibbonDropdown';
 import RibbonMenu from '../RibbonMenu';
+import SwatchRow from '../ui/SwatchRow';
 import PrintExportDialog from '../../../components/PrintExportDialog';
 import {
   exportProject,
@@ -88,6 +89,37 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
   
   // Progress state
   const [currentProgressPercent, setCurrentProgressPercent] = useState(100);
+  
+  // Appearance state
+  const [lastUsedColor, setLastUsedColor] = useState('#3b82f6'); // Default blue
+  const [lastUsedBarStyle, setLastUsedBarStyle] = useState('normal');
+  const [showBarStyleMenu, setShowBarStyleMenu] = useState(false);
+  const [barStyleMenuPosition, setBarStyleMenuPosition] = useState({ x: 0, y: 0 });
+  const barStyleButtonRef = useRef(null);
+
+  // Color swatches (ConstructBMS-friendly colors)
+  const colorSwatches = [
+    '#3b82f6', // Blue
+    '#10b981', // Green
+    '#f59e0b', // Amber
+    '#ef4444', // Red
+    '#8b5cf6', // Purple
+    '#06b6d4', // Cyan
+    '#f97316', // Orange
+    '#ec4899', // Pink
+  ];
+
+  // Bar style options
+  const barStyleOptions = [
+    { id: 'normal', label: 'Normal', icon: '■' },
+    { id: 'critical', label: 'Critical', icon: '⚠' },
+    { id: 'milestone', label: 'Milestone', icon: '◆' },
+    { id: 'summary', label: 'Summary', icon: '▣' },
+    { id: 'baseline', label: 'Baseline', icon: '▭' },
+    { id: 'deadline', label: 'Deadline', icon: '⚡' },
+    { id: 'progress', label: 'Progress', icon: '▰' },
+    { id: 'custom', label: 'Custom...', icon: '⚙' },
+  ];
 
   const {
     addMilestone,
@@ -333,6 +365,22 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     ];
   }, [handleTextColorApply]);
 
+  const getAppearanceColorMenuItems = useCallback(() => [
+    {
+      id: 'swatches',
+      label: 'Color Swatches',
+      disabled: false,
+      action: () => {}, // Will be handled by custom content
+      customContent: (
+        <SwatchRow
+          colors={colorSwatches}
+          onColorSelect={handleColorSelect}
+          selectedColor={lastUsedColor}
+        />
+      )
+    }
+  ], [colorSwatches, handleColorSelect, lastUsedColor]);
+
   // Row height functions
   const handleRowHeightChange = useCallback((mode) => {
     setRowHeight(mode);
@@ -556,6 +604,22 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
       icon: <ArrowPathIcon className="w-4 h-4" />
     }
   ], [handleRescheduleToProjectStart, handleRescheduleToNextWorkingDay, handleRescheduleToDate]);
+
+
+
+  const getBarStyleMenuItems = useCallback(() => 
+    barStyleOptions.map(style => ({
+      id: style.id,
+      label: style.label,
+      disabled: false,
+      action: () => handleBarStyleSelect(style.id),
+      icon: <span className="text-lg">{style.icon}</span>
+    }))
+  , [barStyleOptions, handleBarStyleSelect]);
+
+  const handleBarStyleMenuClose = useCallback(() => {
+    setShowBarStyleMenu(false);
+  }, []);
 
   // Hierarchy functions
   const handlePromote = useCallback(() => {
@@ -806,6 +870,99 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     // Call the toggle function from ViewContext
     toggleProgressLine();
   }, [toggleProgressLine]);
+
+  // Appearance handlers
+  const handleColorSelect = useCallback((color) => {
+    const selectedTasks = selectedTaskIds || [selectedTaskId].filter(Boolean);
+    
+    if (selectedTasks.length === 0) {
+      console.info('No tasks selected for color change');
+      return;
+    }
+    
+    setLastUsedColor(color);
+    setShowColorMenu(false);
+    
+    // Save to localStorage
+    localStorage.setItem('pm.style.last.color', color);
+    
+    // Emit STYLE_COLOR_APPLY event
+    const event = new window.CustomEvent('STYLE_COLOR_APPLY', {
+      detail: { 
+        taskIds: selectedTasks,
+        color: color
+      }
+    });
+    document.dispatchEvent(event);
+    
+    console.info('Apply color to tasks:', { 
+      taskIds: selectedTasks, 
+      color: color 
+    });
+  }, [selectedTaskId, selectedTaskIds]);
+
+
+
+  const handleBarStyleSelect = useCallback((styleId) => {
+    const selectedTasks = selectedTaskIds || [selectedTaskId].filter(Boolean);
+    
+    if (selectedTasks.length === 0) {
+      console.info('No tasks selected for bar style change');
+      return;
+    }
+    
+    setLastUsedBarStyle(styleId);
+    setShowBarStyleMenu(false);
+    
+    // Save to localStorage
+    localStorage.setItem('pm.style.last.barStyle', styleId);
+    
+    // Emit STYLE_BAR_APPLY event
+    const event = new window.CustomEvent('STYLE_BAR_APPLY', {
+      detail: { 
+        taskIds: selectedTasks,
+        styleId: styleId
+      }
+    });
+    document.dispatchEvent(event);
+    
+    console.info('Apply bar style to tasks:', { 
+      taskIds: selectedTasks, 
+      styleId: styleId 
+    });
+  }, [selectedTaskId, selectedTaskIds]);
+
+  const handleBarStyleMenuToggle = useCallback(() => {
+    if (barStyleButtonRef.current) {
+      const rect = barStyleButtonRef.current.getBoundingClientRect();
+      setBarStyleMenuPosition({
+        x: rect.left,
+        y: rect.bottom + 4
+      });
+    }
+    setShowBarStyleMenu(!showBarStyleMenu);
+  }, [showBarStyleMenu]);
+
+  const handleApplyLastColor = useCallback(() => {
+    handleColorSelect(lastUsedColor);
+  }, [handleColorSelect, lastUsedColor]);
+
+  const handleApplyLastBarStyle = useCallback(() => {
+    handleBarStyleSelect(lastUsedBarStyle);
+  }, [handleBarStyleSelect, lastUsedBarStyle]);
+
+  // Load last used styles from localStorage on mount
+  useEffect(() => {
+    const savedColor = localStorage.getItem('pm.style.last.color');
+    const savedBarStyle = localStorage.getItem('pm.style.last.barStyle');
+    
+    if (savedColor) {
+      setLastUsedColor(savedColor);
+    }
+    if (savedBarStyle) {
+      setLastUsedBarStyle(savedBarStyle);
+    }
+  }, []);
 
   // Print and Export handlers
   const handlePrint = async printSettings => {
@@ -1152,18 +1309,46 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
 
       {/* Appearance Group */}
       <RibbonGroup title='Appearance'>
-        <RibbonButton
-          icon={<Squares2X2Icon className='w-4 h-4' />}
-          label='Bar Style'
-          onClick={() => console.log('Change Bar Style clicked')}
-          tooltip='Change the visual bar style of selected tasks'
-        />
-        <RibbonButton
-          icon={<PaintBrushIcon className='w-4 h-4' />}
-          label='Colour'
-          onClick={() => console.log('Change Colour clicked')}
-          tooltip='Change colour of selected task bars'
-        />
+        {/* Colour Split Button */}
+        <div className="relative" ref={colorButtonRef}>
+          <RibbonButton
+            icon={<PaintBrushIcon className='w-4 h-4' />}
+            label='Colour'
+            onClick={handleApplyLastColor}
+            tooltip={`Apply last used color (${lastUsedColor})`}
+            disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
+            className="split"
+          />
+          <RibbonButton
+            icon={<ChevronDownIcon className='w-3 h-3' />}
+            label=""
+            onClick={handleColorMenuToggle}
+            tooltip="Choose color from palette"
+            disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
+            className="split-caret"
+          />
+        </div>
+        
+        {/* Bar Style Split Button */}
+        <div className="relative" ref={barStyleButtonRef}>
+          <RibbonButton
+            icon={<Squares2X2Icon className='w-4 h-4' />}
+            label='Bar Style'
+            onClick={handleApplyLastBarStyle}
+            tooltip={`Apply last used style (${lastUsedBarStyle})`}
+            disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
+            className="split"
+          />
+          <RibbonButton
+            icon={<ChevronDownIcon className='w-3 h-3' />}
+            label=""
+            onClick={handleBarStyleMenuToggle}
+            tooltip="Choose bar style"
+            disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
+            className="split-caret"
+          />
+        </div>
+        
         <RibbonButton
           icon={<PencilIcon className='w-4 h-4' />}
           label='Bar Text'
@@ -1325,7 +1510,7 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
       {/* Color Menu */}
       {showColorMenu && (
         <RibbonMenu
-          items={getColorMenuItems()}
+          items={getAppearanceColorMenuItems()}
           onSelect={(item) => item.action()}
           onClose={handleColorMenuClose}
           position={colorMenuPosition}
@@ -1449,6 +1634,28 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Color Menu */}
+      {showColorMenu && (
+        <RibbonMenu
+          items={getColorMenuItems()}
+          onSelect={(item) => item.action()}
+          onClose={handleColorMenuClose}
+          position={colorMenuPosition}
+          parentRef={colorButtonRef}
+        />
+      )}
+
+      {/* Bar Style Menu */}
+      {showBarStyleMenu && (
+        <RibbonMenu
+          items={getBarStyleMenuItems()}
+          onSelect={(item) => item.action()}
+          onClose={handleBarStyleMenuClose}
+          position={barStyleMenuPosition}
+          parentRef={barStyleButtonRef}
+        />
       )}
 
       {/* Print/Export Dialog */}

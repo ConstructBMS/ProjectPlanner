@@ -281,6 +281,38 @@
   background: var(--rbn-border);
 }
 
+/* Split caret button */
+.pm-ribbon .project-button.split-caret {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: var(--rbn-btn-split-caret);
+  height: 100%;
+  border-left: var(--rbn-btn-split-divider) solid var(--rbn-border);
+  border-radius: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  transition: all 0.15s ease;
+}
+
+.pm-ribbon .project-button.split-caret:hover {
+  background: var(--rbn-hover);
+  border-left-color: var(--rbn-accent);
+}
+
+.pm-ribbon .project-button.split-caret:active {
+  background: var(--rbn-pressed);
+}
+
+/* Split button container */
+.pm-ribbon .relative {
+  position: relative;
+  display: inline-block;
+}
+
 /* Button states */
 .pm-ribbon .project-button:hover {
   background: var(--rbn-hover);

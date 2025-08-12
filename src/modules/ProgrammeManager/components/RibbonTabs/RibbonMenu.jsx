@@ -189,38 +189,48 @@ const RibbonMenu = ({
           }}
         >
       {filteredItems.map((item, index) => (
-                    <div
-              key={item.id || index}
-              className={`ribbon-menu-item ${selectedIndex === index ? 'selected' : ''} ${item.disabled ? 'disabled' : ''}`}
-              role="menuitem"
-              aria-haspopup={item.subMenu ? 'true' : undefined}
-              aria-expanded={openSubMenu === index ? 'true' : undefined}
-              aria-disabled={item.disabled}
-              onClick={() => handleSelect(item)}
-              onMouseEnter={() => handleMouseEnter(index)}
-              tabIndex={0}
-              title={item.label}
-            >
-          {item.icon && (
-            <span className="ribbon-menu-icon">
-              {item.icon}
-            </span>
-          )}
-          
-                        <span className="ribbon-menu-label rbn-ellipsis">
+        <div
+          key={item.id || index}
+          className={`ribbon-menu-item ${selectedIndex === index ? 'selected' : ''} ${item.disabled ? 'disabled' : ''}`}
+          role="menuitem"
+          aria-haspopup={item.subMenu ? 'true' : undefined}
+          aria-expanded={openSubMenu === index ? 'true' : undefined}
+          aria-disabled={item.disabled}
+          onClick={() => handleSelect(item)}
+          onMouseEnter={() => handleMouseEnter(index)}
+          tabIndex={0}
+          title={item.label}
+        >
+          {item.customContent ? (
+            // Render custom content if provided
+            <div className="ribbon-menu-custom-content">
+              {item.customContent}
+            </div>
+          ) : (
+            // Render standard menu item content
+            <>
+              {item.icon && (
+                <span className="ribbon-menu-icon">
+                  {item.icon}
+                </span>
+              )}
+              
+              <span className="ribbon-menu-label rbn-ellipsis">
                 {item.label}
               </span>
-          
-          {item.accelerator && (
-            <span className="ribbon-menu-accelerator">
-              {item.accelerator}
-            </span>
-          )}
-          
-          {item.subMenu && (
-            <span className="ribbon-menu-arrow">
-              ▶
-            </span>
+              
+              {item.accelerator && (
+                <span className="ribbon-menu-accelerator">
+                  {item.accelerator}
+                </span>
+              )}
+              
+              {item.subMenu && (
+                <span className="ribbon-menu-arrow">
+                  ▶
+                </span>
+              )}
+            </>
           )}
           
           {/* Submenu */}
