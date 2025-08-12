@@ -9,6 +9,8 @@ import RibbonDropdown from '../shared/RibbonDropdown';
 import RibbonMenu from '../RibbonMenu';
 import SwatchRow from '../ui/SwatchRow';
 import ExportDialog from '../ui/ExportDialog';
+import MiniModal from '../ui/MiniModal';
+import LinkPicker from '../ui/LinkPicker';
 import PrintExportDialog from '../../../components/PrintExportDialog';
 import {
   exportProject,
@@ -53,6 +55,8 @@ import {
   DocumentArrowUpIcon,
   EyeIcon,
   Cog6ToothIcon,
+  ChatBubbleLeftRightIcon,
+  LinkIcon as LinkIconSolid,
 } from '@heroicons/react/24/outline';
 
 export default function HomeTab({ onExpandAll, onCollapseAll }) {
@@ -1044,6 +1048,11 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
   const [baselinesMenuPosition, setBaselinesMenuPosition] = useState({ x: 0, y: 0 });
   const baselinesButtonRef = useRef(null);
 
+  // Editing group state
+  const [showNoteModal, setShowNoteModal] = useState(false);
+  const [noteText, setNoteText] = useState('');
+  const [showLinkPicker, setShowLinkPicker] = useState(false);
+
   // Status group handlers
   const handleCriticalPathToggle = useCallback(() => {
     // Emit VIEW_CRITICAL_PATH_TOGGLE event
@@ -1121,6 +1130,83 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
       icon: <Cog6ToothIcon className="w-4 h-4" />
     }
   ], [handleBaselineAction, hasDataToExport]);
+
+  // Editing group handlers
+  const handleRename = useCallback(() => {
+    // Emit TASK_RENAME_START event
+    const event = new window.CustomEvent('TASK_RENAME_START', {
+      detail: { 
+        taskId: selectedTaskId,
+        taskIds: selectedTaskIds
+      }
+    });
+    document.dispatchEvent(event);
+    
+    console.info('Task rename started:', { 
+      taskId: selectedTaskId,
+      taskIds: selectedTaskIds
+    });
+  }, [selectedTaskId, selectedTaskIds]);
+
+  const handleNoteOpen = useCallback(() => {
+    setNoteText('');
+    setShowNoteModal(true);
+  }, []);
+
+  const handleNoteSave = useCallback(() => {
+    // Emit TASK_NOTE_SET event
+    const event = new window.CustomEvent('TASK_NOTE_SET', {
+      detail: { 
+        taskId: selectedTaskId,
+        taskIds: selectedTaskIds,
+        note: noteText
+      }
+    });
+    document.dispatchEvent(event);
+    
+    console.info('Task note set:', { 
+      taskId: selectedTaskId,
+      taskIds: selectedTaskIds,
+      note: noteText
+    });
+  }, [selectedTaskId, selectedTaskIds, noteText]);
+
+  const handleLinkOpen = useCallback(() => {
+    if (!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length !== 2)) {
+      console.warn('Need exactly 2 tasks selected for linking');
+      return;
+    }
+    setShowLinkPicker(true);
+  }, [selectedTaskId, selectedTaskIds]);
+
+  const handleLinkConfirm = useCallback((linkData) => {
+    // Emit TASKS_LINK event
+    const event = new window.CustomEvent('TASKS_LINK', {
+      detail: linkData
+    });
+    document.dispatchEvent(event);
+    
+    console.info('Tasks linked:', linkData);
+  }, []);
+
+  const handleUnlink = useCallback(() => {
+    // Emit TASKS_UNLINK_SELECTED event
+    const event = new window.CustomEvent('TASKS_UNLINK_SELECTED', {
+      detail: { 
+        taskId: selectedTaskId,
+        taskIds: selectedTaskIds
+      }
+    });
+    document.dispatchEvent(event);
+    
+    console.info('Tasks unlink selected:', { 
+      taskId: selectedTaskId,
+      taskIds: selectedTaskIds
+    });
+  }, [selectedTaskId, selectedTaskIds]);
+
+  // Check if exactly 2 tasks are selected for linking
+  const canLink = selectedTaskIds && selectedTaskIds.length === 2;
 
   // Legacy Print and Export handlers (for existing PrintExportDialog)
   const handlePrintLegacy = async printSettings => {
@@ -1610,64 +1696,36 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
         />
       </RibbonGroup>
 
-      {/* Editing Group - Asta-style 3x3 grid layout (no labels) */}
+      {/* Editing Group */}
       <RibbonGroup title='Editing'>
-        <div className='grid grid-cols-3 gap-0.5'>
-          <RibbonButton
-            icon={<WrenchScrewdriverIcon className='w-4 h-4' />}
-            onClick={handleTaskDetailsClick}
-            tooltip='Task Details'
-            compact={true}
-          />
-          <RibbonButton
-            icon={<DocumentTextIcon className='w-4 h-4' />}
-            onClick={openTaskNotes}
-            tooltip='Task Notes'
-            compact={true}
-          />
-          <RibbonButton
-            icon={<CodeBracketSquareIcon className='w-4 h-4' />}
-            onClick={addCode}
-            tooltip='Code Library'
-            compact={true}
-          />
-          <RibbonButton
-            icon={<PencilIcon className='w-4 h-4' />}
-            onClick={() => console.log('Edit clicked')}
-            tooltip='Edit'
-            compact={true}
-          />
-          <RibbonButton
-            icon={<ClipboardDocumentIcon className='w-4 h-4' />}
-            onClick={() => console.log('Properties clicked')}
-            tooltip='Properties'
-            compact={true}
-          />
-          <RibbonButton
-            icon={<MagnifyingGlassPlusIcon className='w-4 h-4' />}
-            onClick={() => console.log('Find clicked')}
-            tooltip='Find'
-            compact={true}
-          />
-          <RibbonButton
-            icon={<BoldIcon className='w-4 h-4' />}
-            onClick={() => console.log('Bold clicked')}
-            tooltip='Bold'
-            compact={true}
-          />
-          <RibbonButton
-            icon={<ItalicIcon className='w-4 h-4' />}
-            onClick={() => console.log('Italic clicked')}
-            tooltip='Italic'
-            compact={true}
-          />
-          <RibbonButton
-            icon={<UnderlineIcon className='w-4 h-4' />}
-            onClick={() => console.log('Underline clicked')}
-            tooltip='Underline'
-            compact={true}
-          />
-        </div>
+        <RibbonButton
+          icon={<PencilIcon className='w-4 h-4' />}
+          label='Rename'
+          onClick={handleRename}
+          tooltip='Rename selected task'
+          disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
+        />
+        <RibbonButton
+          icon={<ChatBubbleLeftRightIcon className='w-4 h-4' />}
+          label='Note…'
+          onClick={handleNoteOpen}
+          tooltip='Add or edit task note'
+          disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
+        />
+        <RibbonButton
+          icon={<LinkIconSolid className='w-4 h-4' />}
+          label='Link'
+          onClick={handleLinkOpen}
+          tooltip='Link selected tasks (select exactly 2)'
+          disabled={!canLink}
+        />
+        <RibbonButton
+          icon={<LinkIcon className='w-4 h-4' />}
+          label='Unlink'
+          onClick={handleUnlink}
+          tooltip='Remove links from selected tasks'
+          disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
+        />
       </RibbonGroup>
 
       {/* Project Status Group */}
@@ -1830,6 +1888,32 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
           parentRef={baselinesButtonRef}
         />
       )}
+
+      {/* Note Modal */}
+      <MiniModal
+        isOpen={showNoteModal}
+        onClose={() => setShowNoteModal(false)}
+        title="Task Note"
+        onSave={handleNoteSave}
+        saveLabel="Save Note"
+      >
+        <textarea
+          value={noteText}
+          onChange={(e) => setNoteText(e.target.value)}
+          placeholder="Enter task note..."
+          className="w-full h-32 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+          autoFocus
+        />
+      </MiniModal>
+
+      {/* Link Picker */}
+      <LinkPicker
+        isOpen={showLinkPicker}
+        onClose={() => setShowLinkPicker(false)}
+        onConfirm={handleLinkConfirm}
+        sourceTaskId={selectedTaskIds?.[0]}
+        targetTaskId={selectedTaskIds?.[1]}
+      />
 
       {/* Color Menu */}
       {showColorMenu && (
