@@ -94,6 +94,7 @@ const TaskGrid = React.memo(() => {
     isColumnVisible,
     getAvailableColumns,
     updateColumnWidth,
+    gridOptions,
   } = useLayoutContext();
 
   // Resource calculation functions
@@ -734,7 +735,7 @@ const TaskGrid = React.memo(() => {
 
   // Memoize the grid rows to prevent unnecessary re-renders
   const gridRows = useMemo(() => {
-    return visibleTasks.map(task => {
+    return visibleTasks.map((task, index) => {
       const isTaskSelected = isSelected(task.id);
       const isEditing = editingField?.taskId === task.id && editingField?.field;
 
@@ -743,7 +744,7 @@ const TaskGrid = React.memo(() => {
           key={task.id}
           className={`asta-grid-row flex items-center border-b border-gray-200 hover:bg-opacity-5 hover:bg-white transition-colors duration-150 ${
             isTaskSelected ? 'bg-blue-50 ring-1 ring-blue-300' : ''
-          }`}
+          } ${gridOptions?.rowStripe && index % 2 === 1 ? 'bg-gray-50 dark:bg-gray-800' : ''}`}
           onClick={e => handleRowClick(task.id, e)}
           onContextMenu={e => handleContextMenu(e, task)}
         >
@@ -783,6 +784,13 @@ const TaskGrid = React.memo(() => {
               <div className='w-2 h-2 bg-current rounded' />
             )}
           </div>
+
+          {/* Task ID (when showIds is enabled) */}
+          {gridOptions?.showIds && (
+            <div className='px-2 py-1 text-xs text-gray-500 dark:text-gray-400 font-mono'>
+              {task.id}
+            </div>
+          )}
 
           {/* Dynamic Columns */}
           {gridConfig?.columns
@@ -837,7 +845,9 @@ const TaskGrid = React.memo(() => {
 
   return (
     <>
-      <div className='asta-grid h-full pm-content-dark'>
+      <div className={`asta-grid h-full pm-content-dark ${
+        gridOptions?.freezeFirstColumn ? 'freeze-first-column' : ''
+      } ${gridOptions?.rowStripe ? 'row-stripe' : ''}`}>
         {/* Grid Header */}
         <div className='asta-grid-header flex items-center'>
           <div className='w-8 h-8' />

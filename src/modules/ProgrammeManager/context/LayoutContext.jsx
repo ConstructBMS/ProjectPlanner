@@ -44,6 +44,25 @@ export const LayoutProvider = ({ children }) => {
   });
 
   const [savedPresets, setSavedPresets] = useState([]);
+  
+  // Grid options state
+  const [gridOptions, setGridOptions] = useState(() => {
+    try {
+      const saved = localStorage.getItem('pm.grid.opts');
+      return saved ? JSON.parse(saved) : {
+        freezeFirstColumn: false,
+        rowStripe: true,
+        showIds: false
+      };
+    } catch (error) {
+      console.error('Error loading grid options from localStorage:', error);
+      return {
+        freezeFirstColumn: false,
+        rowStripe: true,
+        showIds: false
+      };
+    }
+  });
 
   // Save grid config to localStorage when it changes
   useEffect(() => {
@@ -72,6 +91,15 @@ export const LayoutProvider = ({ children }) => {
     }
   }, [savedPresets]);
 
+  // Save grid options to localStorage when they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('pm.grid.opts', JSON.stringify(gridOptions));
+    } catch (error) {
+      console.error('Error saving grid options to localStorage:', error);
+    }
+  }, [gridOptions]);
+
   // Update grid configuration
   const updateGridConfig = useCallback(newConfig => {
     const validation = validateGridConfig(newConfig);
@@ -80,6 +108,14 @@ export const LayoutProvider = ({ children }) => {
     } else {
       console.error('Invalid grid configuration:', validation.errors);
     }
+  }, []);
+
+  // Update grid options
+  const updateGridOptions = useCallback((options) => {
+    setGridOptions(prev => ({
+      ...prev,
+      ...options
+    }));
   }, []);
 
   // Update column width
@@ -224,6 +260,7 @@ export const LayoutProvider = ({ children }) => {
     // Current layout state
     currentLayout,
     gridConfig,
+    gridOptions,
 
     // Layout setters
     updateGridConfig,
@@ -231,6 +268,7 @@ export const LayoutProvider = ({ children }) => {
     updatePaneSize,
     toggleColumnVisibility,
     setColumnVisibility,
+    updateGridOptions,
 
     // Preset management
     savedPresets,

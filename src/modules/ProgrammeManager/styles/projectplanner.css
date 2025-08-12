@@ -374,6 +374,55 @@ html, body {
   background: var(--rbn-pressed, rgba(0, 0, 0, 0.22));
 }
 
+/* Grid Options Styling */
+.asta-grid.freeze-first-column {
+  position: relative;
+}
+
+.asta-grid.freeze-first-column .asta-grid-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--rbn-bg-elev, #1b2433);
+}
+
+.asta-grid.freeze-first-column .asta-grid-row > div:first-child,
+.asta-grid.freeze-first-column .asta-grid-row > div:nth-child(2) {
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  background: var(--rbn-bg, #111928);
+  border-right: 1px solid var(--rbn-border, #232a38);
+}
+
+.asta-grid.freeze-first-column .asta-grid-row > div:nth-child(2) {
+  left: 32px; /* 8 * 4 = 32px (w-8) */
+}
+
+.asta-grid.freeze-first-column .asta-grid-row > div:nth-child(3) {
+  left: 64px; /* 8 * 8 = 64px (w-8 + w-8) */
+}
+
+/* Row Stripe Styling */
+.asta-grid.row-stripe .asta-grid-row:nth-child(even) {
+  background: var(--rbn-bg-elev, #1b2433);
+}
+
+.asta-grid.row-stripe .asta-grid-row:nth-child(odd) {
+  background: var(--rbn-bg, #111928);
+}
+
+/* Task ID Styling */
+.asta-grid .task-id {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 11px;
+  color: var(--rbn-text-muted, #9aa3af);
+  padding: 2px 4px;
+  background: var(--rbn-bg-elev, #1b2433);
+  border-radius: 3px;
+  border: 1px solid var(--rbn-border, #232a38);
+}
+
 /* ConstructBMS-Styled Scrollbars - Applied to main scroll area and properties pane */
 
 /* WebKit Scrollbars (Chrome, Safari, Edge) */

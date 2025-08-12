@@ -1425,6 +1425,64 @@ const TodayButton = () => {
   );
 };
 
+// Grid Options Toggle Components
+const FreezeFirstColumnToggle = () => {
+  const { gridOptions, updateGridOptions } = useLayoutContext();
+
+  const handleToggle = () => {
+    updateGridOptions({ freezeFirstColumn: !gridOptions.freezeFirstColumn });
+    console.info('Freeze First Column toggled:', !gridOptions.freezeFirstColumn);
+  };
+
+  return (
+    <RibbonButton
+      icon={<TableCellsIcon className='w-4 h-4' />}
+      label='Freeze First'
+      onClick={handleToggle}
+      tooltip='Freeze the first column in place when scrolling horizontally'
+      active={gridOptions.freezeFirstColumn}
+    />
+  );
+};
+
+const RowStripeToggle = () => {
+  const { gridOptions, updateGridOptions } = useLayoutContext();
+
+  const handleToggle = () => {
+    updateGridOptions({ rowStripe: !gridOptions.rowStripe });
+    console.info('Row Stripe toggled:', !gridOptions.rowStripe);
+  };
+
+  return (
+    <RibbonButton
+      icon={<TableCellsIcon className='w-4 h-4' />}
+      label='Row Stripe'
+      onClick={handleToggle}
+      tooltip='Alternate row colors for better readability'
+      active={gridOptions.rowStripe}
+    />
+  );
+};
+
+const ShowIdsToggle = () => {
+  const { gridOptions, updateGridOptions } = useLayoutContext();
+
+  const handleToggle = () => {
+    updateGridOptions({ showIds: !gridOptions.showIds });
+    console.info('Show IDs toggled:', !gridOptions.showIds);
+  };
+
+  return (
+    <RibbonButton
+      icon={<TableCellsIcon className='w-4 h-4' />}
+      label='Show IDs'
+      onClick={handleToggle}
+      tooltip='Display task IDs in the grid'
+      active={gridOptions.showIds}
+    />
+  );
+};
+
 const ViewTab = ({ contentRef }) => {
   const [showResourceHistogram, setShowResourceHistogram] = useState(false);
   const [showColumnChooser, setShowColumnChooser] = useState(false);
@@ -1523,6 +1581,19 @@ const ViewTab = ({ contentRef }) => {
           <TimeUnitToggle />
           <TimeScaleDropdown />
           <StatusDatePicker />
+        </RibbonGroup>
+
+        {/* Grid Options Group */}
+        <RibbonGroup title='Grid Options'>
+          <RibbonButton
+            icon={<TableCellsIcon className='w-4 h-4 text-blue-600' />}
+            label='Columns...'
+            onClick={() => setShowColumnChooser(true)}
+            tooltip='Configure grid columns and their visibility'
+          />
+          <FreezeFirstColumnToggle />
+          <RowStripeToggle />
+          <ShowIdsToggle />
         </RibbonGroup>
 
         {/* Resource Group */}
