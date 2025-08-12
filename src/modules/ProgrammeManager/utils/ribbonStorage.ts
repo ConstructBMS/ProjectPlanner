@@ -183,10 +183,6 @@ export const getRibbonPrefs = async (userId?: string): Promise<RibbonPrefs | nul
   try {
     const supabase = getSupabaseClient();
     if (!supabase) {
-      if (!fallbackLogged) {
-        console.info('Ribbon preferences saved locally (no Supabase client)');
-        fallbackLogged = true;
-      }
       return getRibbonPrefsFromLocalStorage();
     }
 
@@ -194,10 +190,6 @@ export const getRibbonPrefs = async (userId?: string): Promise<RibbonPrefs | nul
     const schemaOk = await checkDatabaseSchema(supabase);
     if (!schemaOk) {
       useLocalStorageFallback = true;
-      if (!fallbackLogged) {
-        console.info('Ribbon preferences saved locally (ribbon_state column not found)');
-        fallbackLogged = true;
-      }
       return getRibbonPrefsFromLocalStorage();
     }
 
@@ -212,12 +204,7 @@ export const getRibbonPrefs = async (userId?: string): Promise<RibbonPrefs | nul
     // If no DB prefs found, return localStorage prefs (or defaults)
     return getRibbonPrefsFromLocalStorage();
   } catch (error) {
-    console.warn('Failed to get ribbon prefs, falling back to localStorage:', error);
     useLocalStorageFallback = true;
-    if (!fallbackLogged) {
-      console.info('Ribbon preferences saved locally (database error)');
-      fallbackLogged = true;
-    }
     return getRibbonPrefsFromLocalStorage();
   }
 };
@@ -235,10 +222,6 @@ export const setRibbonPrefs = async (prefs: RibbonPrefs, userId?: string): Promi
   try {
     const supabase = getSupabaseClient();
     if (!supabase) {
-      if (!fallbackLogged) {
-        console.info('Ribbon preferences saved locally (no Supabase client)');
-        fallbackLogged = true;
-      }
       return;
     }
 
@@ -246,10 +229,6 @@ export const setRibbonPrefs = async (prefs: RibbonPrefs, userId?: string): Promi
     const schemaOk = await checkDatabaseSchema(supabase);
     if (!schemaOk) {
       useLocalStorageFallback = true;
-      if (!fallbackLogged) {
-        console.info('Ribbon preferences saved locally (ribbon_state column not found)');
-        fallbackLogged = true;
-      }
       return;
     }
 
@@ -257,12 +236,7 @@ export const setRibbonPrefs = async (prefs: RibbonPrefs, userId?: string): Promi
     const currentUserId = userId || getCurrentUserId();
     await setRibbonPrefsInSupabase(supabase, prefs, currentUserId);
   } catch (error) {
-    console.warn('Failed to set ribbon prefs in Supabase, using localStorage only:', error);
     useLocalStorageFallback = true;
-    if (!fallbackLogged) {
-      console.info('Ribbon preferences saved locally (database error)');
-      fallbackLogged = true;
-    }
   }
 };
 

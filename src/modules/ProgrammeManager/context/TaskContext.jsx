@@ -55,6 +55,12 @@ export const TaskProvider = ({ children }) => {
         .order('created_at', { ascending: false });
 
       if (tasksError) {
+        // If table doesn't exist, use mock data instead of throwing error
+        if (tasksError.message.includes('does not exist') || tasksError.code === '42P01') {
+          console.info('Using mock task data (database table not found)');
+          setTasks([]);
+          return;
+        }
         throw new Error(`Error loading tasks: ${tasksError.message}`);
       }
 
@@ -84,12 +90,14 @@ export const TaskProvider = ({ children }) => {
         projectId: task.project_id,
       }));
 
-      console.log(
-        'Loaded tasks from database:',
-        transformedTasks.length,
-        'tasks'
-      );
-      console.log('Sample task data:', transformedTasks[0]);
+      // Only log if we have actual data
+      if (transformedTasks.length > 0) {
+        console.log(
+          'Loaded tasks from database:',
+          transformedTasks.length,
+          'tasks'
+        );
+      }
 
       setTasks(transformedTasks);
     } catch (err) {
@@ -128,6 +136,12 @@ export const TaskProvider = ({ children }) => {
         .select('*');
 
       if (linksError) {
+        // If table doesn't exist, use empty array instead of logging error
+        if (linksError.message.includes('does not exist') || linksError.code === '42P01') {
+          console.info('Using mock task links (database table not found)');
+          setTaskLinks([]);
+          return;
+        }
         console.warn('Error loading task links:', linksError.message);
         return;
       }

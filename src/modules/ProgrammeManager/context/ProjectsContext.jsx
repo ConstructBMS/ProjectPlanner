@@ -51,6 +51,14 @@ export const ProjectsProvider = ({ children }) => {
         .order('created_at', { ascending: false });
 
       if (projectsError) {
+        // If table doesn't exist, use empty array instead of throwing error
+        if (projectsError.message.includes('does not exist') || projectsError.code === '42P01') {
+          console.info('Using mock project data (database table not found)');
+          setProjects([]);
+          setEnhancedProjects([]);
+          calculateMetrics([], []);
+          return;
+        }
         throw new Error(`Error loading projects: ${projectsError.message}`);
       }
 
@@ -71,16 +79,18 @@ export const ProjectsProvider = ({ children }) => {
       const projectsList = projectsData || [];
       const enhancedProjectsList = enhancedData || [];
 
-      console.log(
-        'Loaded projects from database:',
-        projectsList.length,
-        'projects'
-      );
-      console.log('Sample project data:', projectsList[0]);
+      // Only log if we have actual data
+      if (projectsList.length > 0) {
+        console.log(
+          'Loaded projects from database:',
+          projectsList.length,
+          'projects'
+        );
+      }
 
       // If no projects exist, show a message but don't create mock data
       if (projectsList.length === 0) {
-        console.warn(
+        console.info(
           'No projects found in database. Please add some projects to see them here.'
         );
       }
