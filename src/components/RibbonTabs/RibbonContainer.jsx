@@ -3,7 +3,7 @@ import { useUserContext } from '../../modules/ProgrammeManager/context/UserConte
 import { supabase } from '../../supabase/client';
 import RibbonTabs from '../../modules/ProgrammeManager/components/RibbonTabs/RibbonTabs';
 import GlobalSearch from '../GlobalSearch';
-import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+
 
 const RibbonContainer = ({
   onExpandAll,
@@ -164,26 +164,11 @@ const RibbonContainer = ({
         </div>
       </div>
 
-      {/* Ribbon Toggle Button */}
-      <div className='flex items-center justify-between px-4 py-1 bg-gray-50 border-t border-gray-200'>
-        <div className='flex items-center space-x-2'>
-          <button
-            onClick={toggleRibbon}
-            className='inline-flex items-center px-2 py-1 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors duration-150'
-            title={`${isExpanded ? 'Collapse' : 'Expand'} ribbon (Ctrl+F1)`}
-          >
-            {isExpanded ? (
-              <ChevronUpIcon className='w-3 h-3 mr-1' />
-            ) : (
-              <ChevronDownIcon className='w-3 h-3 mr-1' />
-            )}
-            {isExpanded ? 'Collapse' : 'Expand'} Ribbon
-          </button>
-          <span className='text-xs text-gray-400'>Ctrl+F1</span>
+      {error && (
+        <div className='px-4 py-1 bg-red-50 border-t border-red-200'>
+          <div className='text-xs text-red-500'>Error: {error}</div>
         </div>
-
-        {error && <div className='text-xs text-red-500'>Error: {error}</div>}
-      </div>
+      )}
 
       {/* Ribbon Content */}
       <div
