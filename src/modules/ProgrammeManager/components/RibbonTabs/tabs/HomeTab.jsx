@@ -49,6 +49,7 @@ import {
   ChevronDownIcon,
   ArrowsPointingInIcon,
   ArrowsPointingOutIcon,
+  DocumentArrowUpIcon,
 } from '@heroicons/react/24/outline';
 
 export default function HomeTab({ onExpandAll, onCollapseAll }) {
@@ -76,6 +77,10 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
   const [showRescheduleMenu, setShowRescheduleMenu] = useState(false);
   const [rescheduleMenuPosition, setRescheduleMenuPosition] = useState({ x: 0, y: 0 });
   const rescheduleButtonRef = useRef(null);
+  
+  // Hierarchy state
+  const [showBreakSummaryDialog, setShowBreakSummaryDialog] = useState(false);
+  const [breakSummaryTask, setBreakSummaryTask] = useState(null);
 
   const {
     addMilestone,
@@ -544,6 +549,122 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     }
   ], [handleRescheduleToProjectStart, handleRescheduleToNextWorkingDay, handleRescheduleToDate]);
 
+  // Hierarchy functions
+  const handlePromote = useCallback(() => {
+    const selectedTasks = selectedTaskIds || [selectedTaskId].filter(Boolean);
+    
+    if (selectedTasks.length === 0) {
+      console.info('No tasks selected for promotion');
+      return;
+    }
+    
+    // Emit HIERARCHY_PROMOTE event
+    const event = new window.CustomEvent('HIERARCHY_PROMOTE', {
+      detail: { selectedTasks }
+    });
+    document.dispatchEvent(event);
+    
+    console.info('Promote tasks:', { selectedTasks });
+  }, [selectedTaskId, selectedTaskIds]);
+
+  const handleDemote = useCallback(() => {
+    const selectedTasks = selectedTaskIds || [selectedTaskId].filter(Boolean);
+    
+    if (selectedTasks.length === 0) {
+      console.info('No tasks selected for demotion');
+      return;
+    }
+    
+    // Emit HIERARCHY_DEMOTE event
+    const event = new window.CustomEvent('HIERARCHY_DEMOTE', {
+      detail: { selectedTasks }
+    });
+    document.dispatchEvent(event);
+    
+    console.info('Demote tasks:', { selectedTasks });
+  }, [selectedTaskId, selectedTaskIds]);
+
+  const handleMakeSummary = useCallback(() => {
+    const selectedTasks = selectedTaskIds || [selectedTaskId].filter(Boolean);
+    
+    if (selectedTasks.length === 0) {
+      console.info('No tasks selected for summary creation');
+      return;
+    }
+    
+    // Emit HIERARCHY_MAKE_SUMMARY event
+    const event = new window.CustomEvent('HIERARCHY_MAKE_SUMMARY', {
+      detail: { 
+        selectedTasks,
+        insertAboveFirst: true // Insert summary above first selected task
+      }
+    });
+    document.dispatchEvent(event);
+    
+    console.info('Make summary from selected tasks:', { selectedTasks });
+  }, [selectedTaskId, selectedTaskIds]);
+
+  const handleBreakSummary = useCallback(() => {
+    const selectedTasks = selectedTaskIds || [selectedTaskId].filter(Boolean);
+    
+    if (selectedTasks.length === 0) {
+      console.info('No tasks selected for summary breaking');
+      return;
+    }
+    
+    // For now, we'll assume the first selected task is the summary to break
+    const summaryTask = selectedTasks[0];
+    
+    // Check if the task has notes or attributes that would be lost
+    const hasNotes = tasks.find(t => t.id === summaryTask)?.notes;
+    const hasAttributes = tasks.find(t => t.id === summaryTask)?.attributes;
+    
+    if (hasNotes || hasAttributes) {
+      // Show confirmation dialog
+      setBreakSummaryTask(summaryTask);
+      setShowBreakSummaryDialog(true);
+    } else {
+      // Break summary immediately
+      performBreakSummary(summaryTask);
+    }
+  }, [selectedTaskId, selectedTaskIds, tasks]);
+
+  const performBreakSummary = useCallback((summaryTaskId) => {
+    // Emit HIERARCHY_BREAK_SUMMARY event
+    const event = new window.CustomEvent('HIERARCHY_BREAK_SUMMARY', {
+      detail: { 
+        summaryTaskId,
+        liftChildren: true,
+        deleteEmptyParent: true
+      }
+    });
+    document.dispatchEvent(event);
+    
+    console.info('Break summary:', { summaryTaskId });
+    setShowBreakSummaryDialog(false);
+    setBreakSummaryTask(null);
+  }, []);
+
+  const handleBreakSummaryConfirm = useCallback(() => {
+    if (breakSummaryTask) {
+      performBreakSummary(breakSummaryTask);
+    }
+  }, [breakSummaryTask, performBreakSummary]);
+
+  const handleBreakSummaryCancel = useCallback(() => {
+    setShowBreakSummaryDialog(false);
+    setBreakSummaryTask(null);
+  }, []);
+
+  // Helper function to check if selected task is a summary
+  const isSelectedTaskSummary = useCallback(() => {
+    const taskId = selectedTaskId || (selectedTaskIds && selectedTaskIds[0]);
+    if (!taskId) return false;
+    
+    const task = tasks.find(t => t.id === taskId);
+    return task && task.children && task.children.length > 0;
+  }, [selectedTaskId, selectedTaskIds, tasks]);
+
   // Print and Export handlers
   const handlePrint = async printSettings => {
     try {
@@ -688,16 +809,32 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
       {/* Hierarchy Group */}
       <RibbonGroup title='Hierarchy'>
         <RibbonButton
-          icon={<FolderIcon className='w-4 h-4' />}
-          label='Move Bars'
-          onClick={() => console.log('Move Bars clicked')}
-          tooltip='Move bars into the main chart area'
+          icon={<DocumentArrowUpIcon className='w-4 h-4' />}
+          label='Promote'
+          onClick={handlePromote}
+          tooltip='Promote selected tasks (Outdent)'
+          disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
+        />
+        <RibbonButton
+          icon={<DocumentArrowDownIcon className='w-4 h-4' />}
+          label='Demote'
+          onClick={handleDemote}
+          tooltip='Demote selected tasks (Indent)'
+          disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
         />
         <RibbonButton
           icon={<ChartBarIcon className='w-4 h-4' />}
-          label='Summarise'
-          onClick={() => console.log('Summarise clicked')}
-          tooltip='Create summary tasks from selected items'
+          label='Make Summary'
+          onClick={handleMakeSummary}
+          tooltip='Create summary task above selected tasks'
+          disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
+        />
+        <RibbonButton
+          icon={<FolderIcon className='w-4 h-4' />}
+          label='Break Summary'
+          onClick={handleBreakSummary}
+          tooltip='Break summary task and lift children up'
+          disabled={!isSelectedTaskSummary()}
         />
         <RibbonButton
           icon={
@@ -1024,6 +1161,35 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
           position={rescheduleMenuPosition}
           parentRef={rescheduleButtonRef}
         />
+      )}
+
+      {/* Break Summary Confirmation Dialog */}
+      {showBreakSummaryDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Break Summary Task
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              This summary task has notes or attributes that will be lost when breaking the summary. 
+              Are you sure you want to continue?
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={handleBreakSummaryCancel}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBreakSummaryConfirm}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
+              >
+                Break Summary
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Print/Export Dialog */}
