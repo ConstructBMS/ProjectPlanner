@@ -70,13 +70,18 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
   const [showRowHeightMenu, setShowRowHeightMenu] = useState(false);
   const [rowHeightMenuPosition, setRowHeightMenuPosition] = useState({ x: 0, y: 0 });
   const rowHeightButtonRef = useRef(null);
+  
+  // Schedule state
+  const [constraintFlagActive, setConstraintFlagActive] = useState(false);
+  const [showRescheduleMenu, setShowRescheduleMenu] = useState(false);
+  const [rescheduleMenuPosition, setRescheduleMenuPosition] = useState({ x: 0, y: 0 });
+  const rescheduleButtonRef = useRef(null);
 
   const {
     addMilestone,
     insertTaskBelow,
     insertSummaryTask,
     deleteTask,
-    linkTasks,
     openTaskNotes,
     addCode,
   } = useTaskManager();
@@ -372,6 +377,173 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     }
   ], [handleRowHeightChange]);
 
+  // Schedule functions
+  const handleConstraintFlagToggle = useCallback(() => {
+    const newConstraintFlag = !constraintFlagActive;
+    setConstraintFlagActive(newConstraintFlag);
+    
+    // Emit TASK_CONSTRAINT_TOGGLE event
+    const event = new window.CustomEvent('TASK_CONSTRAINT_TOGGLE', {
+      detail: { 
+        active: newConstraintFlag,
+        selectedTasks: selectedTaskIds || [selectedTaskId].filter(Boolean)
+      }
+    });
+    document.dispatchEvent(event);
+    
+    console.info('Constraint flag toggled:', { 
+      active: newConstraintFlag, 
+      selectedTasks: selectedTaskIds || [selectedTaskId].filter(Boolean) 
+    });
+  }, [constraintFlagActive, selectedTaskId, selectedTaskIds]);
+
+  const handleDeleteLinks = useCallback(() => {
+    const selectedTasks = selectedTaskIds || [selectedTaskId].filter(Boolean);
+    
+    if (selectedTasks.length === 0) {
+      console.info('No tasks selected for link deletion');
+      return;
+    }
+    
+    // Emit LINKS_DELETE_SELECTED event
+    const event = new window.CustomEvent('LINKS_DELETE_SELECTED', {
+      detail: { 
+        selectedTasks,
+        linkTypes: ['FS', 'SS', 'FF', 'SF'] // All link types
+      }
+    });
+    document.dispatchEvent(event);
+    
+    console.info('Delete links for selected tasks:', { 
+      selectedTasks, 
+      linkTypes: ['FS', 'SS', 'FF', 'SF'] 
+    });
+  }, [selectedTaskId, selectedTaskIds]);
+
+  const handleRescheduleToProjectStart = useCallback(() => {
+    const selectedTasks = selectedTaskIds || [selectedTaskId].filter(Boolean);
+    
+    if (selectedTasks.length === 0) {
+      console.info('No tasks selected for rescheduling');
+      return;
+    }
+    
+    // Emit RESCHEDULE_SELECTED event
+    const event = new window.CustomEvent('RESCHEDULE_SELECTED', {
+      detail: { 
+        selectedTasks,
+        target: 'project_start',
+        date: null
+      }
+    });
+    document.dispatchEvent(event);
+    
+    console.info('Reschedule to project start:', { selectedTasks });
+    setShowRescheduleMenu(false);
+  }, [selectedTaskId, selectedTaskIds]);
+
+  const handleRescheduleToNextWorkingDay = useCallback(() => {
+    const selectedTasks = selectedTaskIds || [selectedTaskId].filter(Boolean);
+    
+    if (selectedTasks.length === 0) {
+      console.info('No tasks selected for rescheduling');
+      return;
+    }
+    
+    // Emit RESCHEDULE_SELECTED event
+    const event = new window.CustomEvent('RESCHEDULE_SELECTED', {
+      detail: { 
+        selectedTasks,
+        target: 'next_working_day',
+        date: null
+      }
+    });
+    document.dispatchEvent(event);
+    
+    console.info('Reschedule to next working day:', { selectedTasks });
+    setShowRescheduleMenu(false);
+  }, [selectedTaskId, selectedTaskIds]);
+
+  const handleRescheduleToDate = useCallback(() => {
+    const selectedTasks = selectedTaskIds || [selectedTaskId].filter(Boolean);
+    
+    if (selectedTasks.length === 0) {
+      console.info('No tasks selected for rescheduling');
+      return;
+    }
+    
+    // Prompt for date (ISO format for now)
+    const dateInput = window.prompt('Enter target date (YYYY-MM-DD):');
+    
+    if (!dateInput) {
+      console.info('No date entered for rescheduling');
+      return;
+    }
+    
+    // Validate ISO date format
+    const targetDate = new Date(dateInput);
+    if (isNaN(targetDate.getTime())) {
+      console.warn('Invalid date format. Please use YYYY-MM-DD');
+      return;
+    }
+    
+    // Emit RESCHEDULE_SELECTED event
+    const event = new window.CustomEvent('RESCHEDULE_SELECTED', {
+      detail: { 
+        selectedTasks,
+        target: 'specific_date',
+        date: dateInput
+      }
+    });
+    document.dispatchEvent(event);
+    
+    console.info('Reschedule to specific date:', { selectedTasks, date: dateInput });
+    setShowRescheduleMenu(false);
+  }, [selectedTaskId, selectedTaskIds]);
+
+  const handleRescheduleMenuToggle = useCallback(() => {
+    if (showRescheduleMenu) {
+      setShowRescheduleMenu(false);
+    } else {
+      const rect = rescheduleButtonRef.current?.getBoundingClientRect();
+      if (rect) {
+        setRescheduleMenuPosition({
+          x: rect.left,
+          y: rect.bottom + 4
+        });
+        setShowRescheduleMenu(true);
+      }
+    }
+  }, [showRescheduleMenu]);
+
+  const handleRescheduleMenuClose = useCallback(() => {
+    setShowRescheduleMenu(false);
+  }, []);
+
+  const getRescheduleMenuItems = useCallback(() => [
+    {
+      id: 'project_start',
+      label: 'To Project Start',
+      disabled: false,
+      action: handleRescheduleToProjectStart,
+      icon: <ArrowPathIcon className="w-4 h-4" />
+    },
+    {
+      id: 'next_working_day',
+      label: 'To Next Working Day',
+      disabled: false,
+      action: handleRescheduleToNextWorkingDay,
+      icon: <ArrowPathIcon className="w-4 h-4" />
+    },
+    {
+      id: 'specific_date',
+      label: 'To Date...',
+      disabled: false,
+      action: handleRescheduleToDate,
+      icon: <ArrowPathIcon className="w-4 h-4" />
+    }
+  ], [handleRescheduleToProjectStart, handleRescheduleToNextWorkingDay, handleRescheduleToDate]);
+
   // Print and Export handlers
   const handlePrint = async printSettings => {
     try {
@@ -489,20 +661,27 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
         <RibbonButton
           icon={<FlagIcon className='w-4 h-4' />}
           label='Constraint Flag'
-          onClick={() => console.log('Constraint Flag')}
-          tooltip='Add constraint flag'
+          onClick={handleConstraintFlagToggle}
+          tooltip='Toggle constraint flag on selected tasks'
+          active={constraintFlagActive}
+          disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
         />
         <RibbonButton
           icon={<LinkIcon className='w-4 h-4' />}
-          label='Add/Delete Links'
-          onClick={linkTasks}
-          tooltip='Add or delete task links'
+          label='Delete Links'
+          onClick={handleDeleteLinks}
+          tooltip='Delete links between selected tasks (FS/SS/FF/SF)'
+          disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
         />
         <RibbonButton
+          ref={rescheduleButtonRef}
           icon={<ArrowPathIcon className='w-4 h-4' />}
-          label='Auto Reschedule'
-          onClick={() => console.log('Auto Reschedule')}
-          tooltip='Auto reschedule tasks'
+          label='Reschedule'
+          onClick={handleRescheduleMenuToggle}
+          tooltip='Reschedule selected tasks'
+          menuItems={getRescheduleMenuItems()}
+          onMenuSelect={(item) => item.action()}
+          disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
         />
       </RibbonGroup>
 
@@ -833,6 +1012,17 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
           onClose={handleRowHeightMenuClose}
           position={rowHeightMenuPosition}
           parentRef={rowHeightButtonRef}
+        />
+      )}
+
+      {/* Reschedule Menu */}
+      {showRescheduleMenu && (
+        <RibbonMenu
+          items={getRescheduleMenuItems()}
+          onSelect={(item) => item.action()}
+          onClose={handleRescheduleMenuClose}
+          position={rescheduleMenuPosition}
+          parentRef={rescheduleButtonRef}
         />
       )}
 
