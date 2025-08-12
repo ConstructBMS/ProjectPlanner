@@ -1,6 +1,7 @@
-// Ribbon storage adapter with Supabase + localStorage fallback
+// Ribbon storage adapter with persistent database storage
 import { createClient } from '@supabase/supabase-js';
 import { getCachedColumnExists } from './databaseSchema.js';
+import { getStorage, setStorage } from './persistentStorage.js';
 
 export type RibbonPrefs = {
   minimised: boolean;
@@ -11,9 +12,8 @@ export type RibbonPrefs = {
   };
 };
 
-// In-memory flag to track if we should always fallback to localStorage
-let useLocalStorageFallback = false;
-let fallbackLogged = false;
+// In-memory flag to track if we should always fallback to persistent storage
+let usePersistentStorageFallback = false;
 
 // Default ribbon preferences
 const DEFAULT_RIBBON_PREFS: RibbonPrefs = {
@@ -25,8 +25,8 @@ const DEFAULT_RIBBON_PREFS: RibbonPrefs = {
   }
 };
 
-// Local storage key
-const LOCAL_STORAGE_KEY = 'pm.ribbon.prefs';
+// Storage key
+const STORAGE_KEY = 'pm.ribbon.prefs';
 
 // Get Supabase client (if available)
 const getSupabaseClient = () => {
@@ -113,33 +113,30 @@ const setRibbonPrefsInSupabase = async (supabase: any, prefs: RibbonPrefs, userI
   }
 };
 
-// Get ribbon preferences from localStorage
-const getRibbonPrefsFromLocalStorage = (): RibbonPrefs => {
+// Get ribbon preferences from persistent storage
+const getRibbonPrefsFromStorage = async (): Promise<RibbonPrefs> => {
   try {
-    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      if (parsed && typeof parsed === 'object') {
-        return {
-          minimised: parsed.minimised ?? DEFAULT_RIBBON_PREFS.minimised,
-          qatPosition: parsed.qatPosition ?? DEFAULT_RIBBON_PREFS.qatPosition,
-          style: parsed.style ?? DEFAULT_RIBBON_PREFS.style
-        };
-      }
+    const stored = await getStorage(STORAGE_KEY);
+    if (stored && typeof stored === 'object') {
+      return {
+        minimised: stored.minimised ?? DEFAULT_RIBBON_PREFS.minimised,
+        qatPosition: stored.qatPosition ?? DEFAULT_RIBBON_PREFS.qatPosition,
+        style: stored.style ?? DEFAULT_RIBBON_PREFS.style
+      };
     }
   } catch (error) {
-    console.warn('Failed to load ribbon prefs from localStorage:', error);
+    console.warn('Failed to load ribbon prefs from storage:', error);
   }
   
   return DEFAULT_RIBBON_PREFS;
 };
 
-// Set ribbon preferences in localStorage
-const setRibbonPrefsInLocalStorage = (prefs: RibbonPrefs): void => {
+// Set ribbon preferences in persistent storage
+const setRibbonPrefsInStorage = async (prefs: RibbonPrefs): Promise<void> => {
   try {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(prefs));
+    await setStorage(STORAGE_KEY, prefs);
   } catch (error) {
-    console.warn('Failed to save ribbon prefs to localStorage:', error);
+    console.warn('Failed to save ribbon prefs to storage:', error);
   }
 };
 
@@ -162,22 +159,22 @@ const getCurrentUserId = (): string | undefined => {
 
 // Main function to get ribbon preferences
 export const getRibbonPrefs = async (userId?: string): Promise<RibbonPrefs | null> => {
-  // If we're already using localStorage fallback, use it directly
-  if (useLocalStorageFallback) {
-    return getRibbonPrefsFromLocalStorage();
+  // If we're already using persistent storage fallback, use it directly
+  if (usePersistentStorageFallback) {
+    return await getRibbonPrefsFromStorage();
   }
 
   try {
     const supabase = getSupabaseClient();
     if (!supabase) {
-      return getRibbonPrefsFromLocalStorage();
+      return await getRibbonPrefsFromStorage();
     }
 
     // Check if database schema supports ribbon_state using cached result
     const schemaOk = getCachedColumnExists('user_settings', 'ribbon_state');
     if (!schemaOk) {
-      useLocalStorageFallback = true;
-      return getRibbonPrefsFromLocalStorage();
+      usePersistentStorageFallback = true;
+      return await getRibbonPrefsFromStorage();
     }
 
     // Only try Supabase if schema check passed
@@ -189,21 +186,21 @@ export const getRibbonPrefs = async (userId?: string): Promise<RibbonPrefs | nul
       }
     }
 
-    // If no DB prefs found, return localStorage prefs (or defaults)
-    return getRibbonPrefsFromLocalStorage();
+    // If no DB prefs found, return persistent storage prefs (or defaults)
+    return await getRibbonPrefsFromStorage();
   } catch (error) {
-    useLocalStorageFallback = true;
-    return getRibbonPrefsFromLocalStorage();
+    usePersistentStorageFallback = true;
+    return await getRibbonPrefsFromStorage();
   }
 };
 
 // Main function to set ribbon preferences
 export const setRibbonPrefs = async (prefs: RibbonPrefs, userId?: string): Promise<void> => {
-  // Always save to localStorage as backup
-  setRibbonPrefsInLocalStorage(prefs);
+  // Always save to persistent storage as backup
+  await setRibbonPrefsInStorage(prefs);
 
-  // If we're already using localStorage fallback, don't try Supabase
-  if (useLocalStorageFallback) {
+  // If we're already using persistent storage fallback, don't try Supabase
+  if (usePersistentStorageFallback) {
     return;
   }
 
@@ -216,7 +213,7 @@ export const setRibbonPrefs = async (prefs: RibbonPrefs, userId?: string): Promi
     // Check if database schema supports ribbon_state using cached result
     const schemaOk = getCachedColumnExists('user_settings', 'ribbon_state');
     if (!schemaOk) {
-      useLocalStorageFallback = true;
+      usePersistentStorageFallback = true;
       return;
     }
 
@@ -226,12 +223,11 @@ export const setRibbonPrefs = async (prefs: RibbonPrefs, userId?: string): Promi
       await setRibbonPrefsInSupabase(supabase, prefs, currentUserId);
     }
   } catch (error) {
-    useLocalStorageFallback = true;
+    usePersistentStorageFallback = true;
   }
 };
 
 // Reset fallback flag (useful for testing)
 export const resetStorageFallback = (): void => {
-  useLocalStorageFallback = false;
-  fallbackLogged = false;
+  usePersistentStorageFallback = false;
 };

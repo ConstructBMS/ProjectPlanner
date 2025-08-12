@@ -108,7 +108,7 @@ export const initializeSchemaCheck = async () => {
 
   initializationPromise = (async () => {
     try {
-      const requiredTables = ['projects', 'project_tasks', 'project_dependencies', 'user_settings'];
+      const requiredTables = ['projects', 'project_tasks', 'project_dependencies', 'user_settings', 'user_preferences'];
       const requiredColumns = [
         { table: 'user_settings', column: 'ribbon_state' }
       ];
