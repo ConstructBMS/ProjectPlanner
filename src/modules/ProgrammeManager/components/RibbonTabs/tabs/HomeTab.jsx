@@ -378,6 +378,36 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     ];
   }, [handleTextColorApply]);
 
+  // Appearance handlers
+  const handleColorSelect = useCallback((color) => {
+    const selectedTasks = selectedTaskIds || [selectedTaskId].filter(Boolean);
+    
+    if (selectedTasks.length === 0) {
+      console.info('No tasks selected for color change');
+      return;
+    }
+    
+    setLastUsedColor(color);
+    setShowColorMenu(false);
+    
+    // Save to localStorage
+    localStorage.setItem('pm.style.last.color', color);
+    
+    // Emit STYLE_COLOR_APPLY event
+    const event = new window.CustomEvent('STYLE_COLOR_APPLY', {
+      detail: { 
+        taskIds: selectedTasks,
+        color
+      }
+    });
+    document.dispatchEvent(event);
+    
+    console.info('Apply color to tasks:', { 
+      taskIds: selectedTasks, 
+      color
+    });
+  }, [selectedTaskId, selectedTaskIds]);
+
   const getAppearanceColorMenuItems = useCallback(() => [
     {
       id: 'swatches',
@@ -883,38 +913,6 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     // Call the toggle function from ViewContext
     toggleProgressLine();
   }, [toggleProgressLine]);
-
-  // Appearance handlers
-  const handleColorSelect = useCallback((color) => {
-    const selectedTasks = selectedTaskIds || [selectedTaskId].filter(Boolean);
-    
-    if (selectedTasks.length === 0) {
-      console.info('No tasks selected for color change');
-      return;
-    }
-    
-    setLastUsedColor(color);
-    setShowColorMenu(false);
-    
-    // Save to localStorage
-    localStorage.setItem('pm.style.last.color', color);
-    
-    // Emit STYLE_COLOR_APPLY event
-    const event = new window.CustomEvent('STYLE_COLOR_APPLY', {
-      detail: { 
-        taskIds: selectedTasks,
-        color
-      }
-    });
-    document.dispatchEvent(event);
-    
-    console.info('Apply color to tasks:', { 
-      taskIds: selectedTasks, 
-      color
-    });
-  }, [selectedTaskId, selectedTaskIds]);
-
-
 
   const handleBarStyleSelect = useCallback((styleId) => {
     const selectedTasks = selectedTaskIds || [selectedTaskId].filter(Boolean);
