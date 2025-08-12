@@ -2005,9 +2005,9 @@ const GanttChart = () => {
   };
 
   return (
-    <div className='gantt-viewport bg-white'>
+    <div className='gantt-viewport pm-content-dark'>
       {/* Asta-style Timeline Header */}
-      <div className='asta-timeline-header border-b border-gray-300 bg-gray-50 px-4 py-2'>
+      <div className='asta-timeline-header px-4 py-2'>
         <div className='flex items-center justify-between'>
           <div className='flex items-center gap-4'>
             <h3 className='text-sm font-semibold text-gray-700'>Timeline</h3>

@@ -837,9 +837,9 @@ const TaskGrid = React.memo(() => {
 
   return (
     <>
-      <div className='asta-grid h-full'>
+      <div className='asta-grid h-full pm-content-dark'>
         {/* Grid Header */}
-        <div className='asta-grid-header flex items-center border-b-2 border-gray-300 bg-gray-50 sticky top-0 z-10'>
+        <div className='asta-grid-header flex items-center'>
           <div className='w-8 h-8' />
           <div className='w-8 h-8' />
           {gridConfig?.columns
@@ -848,7 +848,7 @@ const TaskGrid = React.memo(() => {
             .map(column => (
               <div
                 key={column.key}
-                className='px-2 py-2 font-semibold text-center'
+                className='asta-grid-header-cell'
                 style={{ width: column.width }}
               >
                 {column.label ||
@@ -856,7 +856,7 @@ const TaskGrid = React.memo(() => {
                     ?.label}
               </div>
             ))}
-          <div className='w-16 px-2 py-2 font-semibold text-center'>
+          <div className='asta-grid-header-cell w-16'>
             Actions
           </div>
         </div>

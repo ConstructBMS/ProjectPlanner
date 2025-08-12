@@ -349,9 +349,9 @@ const TaskPropertiesPane = () => {
 
   return (
     <>
-      <div className='bg-gray-50 border-t border-gray-200 shadow-inner flex flex-col overflow-hidden h-full'>
+      <div className='pm-properties-pane flex flex-col overflow-hidden h-full'>
         {/* Header with Save/Cancel buttons */}
-        <div className='px-4 py-3 border-b border-gray-200 bg-white'>
+        <div className='properties-header'>
           <div className='flex items-center justify-between mb-3'>
             <div>
               <h3 className='text-sm font-semibold text-gray-700'>
@@ -393,43 +393,43 @@ const TaskPropertiesPane = () => {
           </div>
 
           {/* Tab Navigation */}
-          <div className='flex border-b border-gray-200'>
+          <div className='properties-tabs'>
             <button
               onClick={() => setActiveTab('properties')}
-              className={`px-4 py-2 text-xs font-medium border-b-2 transition-colors ${
+              className={`properties-tab ${
                 activeTab === 'properties'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'active'
+                  : ''
               }`}
             >
               Properties
             </button>
             <button
               onClick={() => setActiveTab('history')}
-              className={`px-4 py-2 text-xs font-medium border-b-2 transition-colors ${
+              className={`properties-tab ${
                 activeTab === 'history'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'active'
+                  : ''
               }`}
             >
               History
             </button>
             <button
               onClick={() => setActiveTab('notes')}
-              className={`px-4 py-2 text-xs font-medium border-b-2 transition-colors ${
+              className={`properties-tab ${
                 activeTab === 'notes'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'active'
+                  : ''
               }`}
             >
               Notes
             </button>
             <button
               onClick={() => setActiveTab('attachments')}
-              className={`px-4 py-2 text-xs font-medium border-b-2 transition-colors ${
+              className={`properties-tab ${
                 activeTab === 'attachments'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'active'
+                  : ''
               }`}
             >
               Attachments
@@ -438,11 +438,11 @@ const TaskPropertiesPane = () => {
         </div>
 
         {/* Properties Content */}
-        <div className='flex-1 p-4 space-y-4'>
+        <div className='properties-content'>
           {activeTab === 'properties' && (
             <>
               {/* Task Information Section */}
-              <div className='bg-white border border-gray-200 rounded-lg p-4'>
+              <div className='properties-section'>
                 <div className='flex items-center gap-2 mb-3'>
                   <DocumentTextIcon className='w-4 h-4 text-blue-600' />
                   <h4 className='text-sm font-semibold text-gray-700'>
@@ -495,7 +495,7 @@ const TaskPropertiesPane = () => {
               </div>
 
               {/* Schedule Section */}
-              <div className='bg-white border border-gray-200 rounded-lg p-4'>
+              <div className='properties-section'>
                 <div className='flex items-center gap-2 mb-3'>
                   <CalendarIcon className='w-4 h-4 text-green-600' />
                   <h4 className='text-sm font-semibold text-gray-700'>

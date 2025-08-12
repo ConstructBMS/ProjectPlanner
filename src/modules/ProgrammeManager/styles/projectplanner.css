@@ -133,6 +133,193 @@ html, body {
   color: var(--rbn-text-muted, #9aa3af);
 }
 
+/* Dark Theme Content Areas */
+.pm-content-dark {
+  background: var(--rbn-bg, #111928);
+  color: var(--rbn-text, #e8eef7);
+}
+
+/* Grid Dark Theme */
+.asta-grid {
+  background: var(--rbn-bg, #111928);
+  color: var(--rbn-text, #e8eef7);
+}
+
+.asta-grid-header {
+  background: var(--rbn-bg-elev, #1b2433) !important;
+  border-bottom: 1px solid var(--rbn-border, #232a38) !important;
+  color: var(--rbn-text, #e8eef7);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.asta-grid-header-cell {
+  color: var(--rbn-text, #e8eef7);
+  font-weight: 600;
+  font-size: 12px;
+  padding: 8px 12px;
+  border-right: 1px solid var(--rbn-border, #232a38);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.asta-grid-rows {
+  background: var(--rbn-bg, #111928);
+}
+
+.asta-grid-row {
+  background: var(--rbn-bg, #111928);
+  border-bottom: 1px solid var(--rbn-border, #232a38);
+  color: var(--rbn-text, #e8eef7);
+}
+
+.asta-grid-row:hover {
+  background: var(--rbn-hover, rgba(255, 255, 255, 0.05));
+}
+
+.asta-grid-row.selected {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: var(--rbn-accent, #3880f4);
+}
+
+/* Gantt Dark Theme */
+.gantt-viewport {
+  background: var(--rbn-bg, #111928) !important;
+  color: var(--rbn-text, #e8eef7);
+}
+
+.asta-timeline-header {
+  background: var(--rbn-bg-elev, #1b2433) !important;
+  border-bottom: 1px solid var(--rbn-border, #232a38) !important;
+  color: var(--rbn-text, #e8eef7);
+}
+
+.asta-timeline-header h3 {
+  color: var(--rbn-text, #e8eef7);
+}
+
+.asta-timeline-header .text-gray-500 {
+  color: var(--rbn-text-muted, #9aa3af) !important;
+}
+
+.gantt-timeline-container {
+  background: var(--rbn-bg, #111928);
+}
+
+/* Properties Pane Dark Theme */
+.pm-properties-pane {
+  background: var(--rbn-bg, #111928) !important;
+  color: var(--rbn-text, #e8eef7);
+  border-top: 1px solid var(--rbn-border, #232a38);
+}
+
+.properties-header {
+  background: var(--rbn-bg-elev, #1b2433);
+  border-bottom: 1px solid var(--rbn-border, #232a38);
+  color: var(--rbn-text, #e8eef7);
+  padding: 12px 16px;
+}
+
+.properties-content {
+  background: var(--rbn-bg, #111928);
+  color: var(--rbn-text, #e8eef7);
+  padding: 12px 16px;
+}
+
+.properties-section {
+  background: var(--rbn-bg-elev, #1b2433);
+  border: 1px solid var(--rbn-border, #232a38);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.properties-section h4 {
+  color: var(--rbn-text, #e8eef7);
+}
+
+.properties-section label {
+  color: var(--rbn-text-2, #c6ced9);
+}
+
+.properties-section input,
+.properties-section textarea,
+.properties-section select {
+  background: var(--rbn-bg, #111928);
+  border: 1px solid var(--rbn-border, #232a38);
+  color: var(--rbn-text, #e8eef7);
+  border-radius: 4px;
+  padding: 8px 12px;
+}
+
+.properties-section input:focus,
+.properties-section textarea:focus,
+.properties-section select:focus {
+  border-color: var(--rbn-accent, #3880f4);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(56, 128, 244, 0.2);
+}
+
+.properties-section input::placeholder,
+.properties-section textarea::placeholder {
+  color: var(--rbn-text-muted, #9aa3af);
+}
+
+/* Tab Navigation Dark Theme */
+.properties-tabs {
+  background: var(--rbn-bg-elev, #1b2433);
+  border-bottom: 1px solid var(--rbn-border, #232a38);
+}
+
+.properties-tab {
+  color: var(--rbn-text-2, #c6ced9);
+  border-bottom: 2px solid transparent;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.properties-tab:hover {
+  color: var(--rbn-text, #e8eef7);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.properties-tab.active {
+  color: var(--rbn-accent, #3880f4);
+  border-bottom-color: var(--rbn-accent, #3880f4);
+}
+
+/* Icon Colors */
+.pm-content-dark svg,
+.asta-grid svg,
+.gantt-viewport svg,
+.pm-properties-pane svg {
+  fill: var(--rbn-icon, #cdd6e1);
+}
+
+.pm-content-dark svg:hover,
+.asta-grid svg:hover,
+.gantt-viewport svg:hover,
+.pm-properties-pane svg:hover {
+  fill: var(--rbn-text, #e8eef7);
+}
+
+/* Button Dark Theme */
+.pm-content-dark button {
+  color: var(--rbn-text, #e8eef7);
+}
+
+.pm-content-dark button:hover {
+  background: var(--rbn-hover, rgba(255, 255, 255, 0.05));
+}
+
+.pm-content-dark button:active {
+  background: var(--rbn-pressed, rgba(0, 0, 0, 0.22));
+}
+
 /* ConstructBMS-Styled Scrollbars - Applied to main scroll area and properties pane */
 
 /* WebKit Scrollbars (Chrome, Safari, Edge) */
