@@ -408,6 +408,35 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     });
   }, [selectedTaskId, selectedTaskIds]);
 
+  const handleBarStyleSelect = useCallback((styleId) => {
+    const selectedTasks = selectedTaskIds || [selectedTaskId].filter(Boolean);
+    
+    if (selectedTasks.length === 0) {
+      console.info('No tasks selected for bar style change');
+      return;
+    }
+    
+    setLastUsedBarStyle(styleId);
+    setShowBarStyleMenu(false);
+    
+    // Save to localStorage
+    localStorage.setItem('pm.style.last.barStyle', styleId);
+    
+    // Emit STYLE_BAR_APPLY event
+    const event = new window.CustomEvent('STYLE_BAR_APPLY', {
+      detail: { 
+        taskIds: selectedTasks,
+        styleId
+      }
+    });
+    document.dispatchEvent(event);
+    
+    console.info('Apply bar style to tasks:', { 
+      taskIds: selectedTasks, 
+      styleId
+    });
+  }, [selectedTaskId, selectedTaskIds]);
+
   const getAppearanceColorMenuItems = useCallback(() => [
     {
       id: 'swatches',
@@ -913,35 +942,6 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     // Call the toggle function from ViewContext
     toggleProgressLine();
   }, [toggleProgressLine]);
-
-  const handleBarStyleSelect = useCallback((styleId) => {
-    const selectedTasks = selectedTaskIds || [selectedTaskId].filter(Boolean);
-    
-    if (selectedTasks.length === 0) {
-      console.info('No tasks selected for bar style change');
-      return;
-    }
-    
-    setLastUsedBarStyle(styleId);
-    setShowBarStyleMenu(false);
-    
-    // Save to localStorage
-    localStorage.setItem('pm.style.last.barStyle', styleId);
-    
-    // Emit STYLE_BAR_APPLY event
-    const event = new window.CustomEvent('STYLE_BAR_APPLY', {
-      detail: { 
-        taskIds: selectedTasks,
-        styleId
-      }
-    });
-    document.dispatchEvent(event);
-    
-    console.info('Apply bar style to tasks:', { 
-      taskIds: selectedTasks, 
-      styleId
-    });
-  }, [selectedTaskId, selectedTaskIds]);
 
   const handleBarStyleMenuToggle = useCallback(() => {
     if (barStyleButtonRef.current) {

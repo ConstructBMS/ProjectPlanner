@@ -33,6 +33,7 @@ import {
 import { validateTaskDates, getPredecessors } from '../utils/scheduleUtils';
 import { useCalendarContext } from '../context/CalendarContext';
 import { isWorkday, snapToWorkday } from '../utils/calendarUtils';
+import { isWorkingDay } from './GanttChart/calendar';
 import {
   hasBaselineData,
   getBaselineTooltip,
@@ -609,14 +610,14 @@ const GanttChart = () => {
     return lines;
   }, [tasks, viewState.showGridlines]);
 
-  // Generate non-working day highlighting blocks
+  // Generate working time shading blocks with perfect header alignment
   const nonWorkingDayBlocks = useMemo(() => {
     const blocks = [];
     const start = new Date(dateRange.start);
     const end = new Date(dateRange.end);
     const scaledDayWidth = getScaledWidth; // Use time unit-based scaling
 
-    // Calculate start position offset
+    // Calculate start position offset - same logic as header
     const startOfYear = new Date('2024-01-01');
     const getDateIndex = date => {
       const daysFromStart = Math.floor(
@@ -626,7 +627,7 @@ const GanttChart = () => {
       if (viewState.showWeekends) {
         return daysFromStart;
       } else {
-        // Count only weekdays
+        // Count only weekdays - same logic as header
         let weekdayCount = 0;
         for (
           let d = new Date(startOfYear);
@@ -644,17 +645,18 @@ const GanttChart = () => {
     };
 
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      // Use global calendar for non-working day highlighting
-      if (!isWorkday(d, globalCalendar)) {
+      // Use new calendar utility for working day determination
+      if (!isWorkingDay(d)) {
         const left = getDateIndex(d) * scaledDayWidth;
 
         blocks.push(
           <div
             key={`nonworking-${d.toISOString()}`}
-            className='absolute top-0 bottom-0 bg-gray-200 opacity-60 z-0'
+            className='absolute top-0 bottom-0 z-0'
             style={{
               left: `${left}px`,
               width: `${scaledDayWidth}px`,
+              backgroundColor: 'rgba(255, 255, 255, 0.035)', // Dark theme shading
             }}
           />
         );
@@ -662,7 +664,7 @@ const GanttChart = () => {
     }
 
     return blocks;
-  }, [dateRange, viewState.showWeekends, getScaledWidth, globalCalendar]);
+  }, [dateRange, viewState.showWeekends, getScaledWidth]);
 
   // Update task refs when tasks change or view settings change
   useEffect(() => {
@@ -2058,8 +2060,8 @@ const GanttChart = () => {
       >
         {/* Background Grid */}
         <div className='absolute inset-0 pointer-events-none'>
-          {/* Non-Working Day Highlighting Blocks */}
-          {viewState.showWeekends && nonWorkingDayBlocks}
+          {/* Working Time Shading - Always visible */}
+          {nonWorkingDayBlocks}
 
           {viewState.showGridlines && (
             <>
