@@ -33,7 +33,6 @@ import {
   DocumentTextIcon,
   CodeBracketSquareIcon,
   ExclamationTriangleIcon,
-  CheckIcon,
   Squares2X2Icon,
   PaintBrushIcon,
   PencilIcon,
@@ -86,6 +85,9 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [assignResourceId, setAssignResourceId] = useState('');
   const [assignResourceSearch, setAssignResourceSearch] = useState('');
+  
+  // Progress state
+  const [currentProgressPercent, setCurrentProgressPercent] = useState(100);
 
   const {
     addMilestone,
@@ -110,6 +112,7 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     goToToday,
     viewState,
     toggleCriticalPath,
+    toggleProgressLine,
   } = useViewContext();
 
   // Get expand milestones function and tasks from task context
@@ -773,6 +776,37 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     resource.type.toLowerCase().includes(assignResourceSearch.toLowerCase())
   );
 
+  // Progress functions
+  const handleSetProgressPercent = useCallback((percent) => {
+    const selectedTasks = selectedTaskIds || [selectedTaskId].filter(Boolean);
+    
+    if (selectedTasks.length === 0) {
+      console.info('No tasks selected for progress update');
+      return;
+    }
+    
+    setCurrentProgressPercent(percent);
+    
+    // Emit TASK_SET_PROGRESS event
+    const event = new window.CustomEvent('TASK_SET_PROGRESS', {
+      detail: { 
+        taskIds: selectedTasks,
+        progressPercent: percent
+      }
+    });
+    document.dispatchEvent(event);
+    
+    console.info('Set progress for tasks:', { 
+      taskIds: selectedTasks, 
+      progressPercent: percent 
+    });
+  }, [selectedTaskId, selectedTaskIds]);
+
+  const handleToggleProgressLine = useCallback(() => {
+    // Call the toggle function from ViewContext
+    toggleProgressLine();
+  }, [toggleProgressLine]);
+
   // Print and Export handlers
   const handlePrint = async printSettings => {
     try {
@@ -1055,18 +1089,59 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
 
       {/* Progress Group */}
       <RibbonGroup title='Progress'>
+        {/* Progress Line Toggle */}
         <RibbonButton
           icon={<ChartBarIcon className='w-4 h-4' />}
           label='Progress Line'
-          onClick={() => console.log('Toggle Progress Line clicked')}
+          onClick={handleToggleProgressLine}
           tooltip='Show or hide the progress line'
+          active={viewState.showProgressLine}
         />
-        <RibbonButton
-          icon={<CheckIcon className='w-4 h-4' />}
-          label='Mark % Complete'
-          onClick={() => console.log('Mark % Complete clicked')}
-          tooltip='Mark selected tasks as 100% complete'
-        />
+        
+        {/* Progress Percentage Presets */}
+        <div className='flex gap-1'>
+          <button
+            className={`progress-preset-button ${currentProgressPercent === 0 ? 'active' : ''}`}
+            onClick={() => handleSetProgressPercent(0)}
+            disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
+            title='Set selected tasks to 0% complete'
+          >
+            0%
+          </button>
+          <button
+            className={`progress-preset-button ${currentProgressPercent === 25 ? 'active' : ''}`}
+            onClick={() => handleSetProgressPercent(25)}
+            disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
+            title='Set selected tasks to 25% complete'
+          >
+            25%
+          </button>
+          <button
+            className={`progress-preset-button ${currentProgressPercent === 50 ? 'active' : ''}`}
+            onClick={() => handleSetProgressPercent(50)}
+            disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
+            title='Set selected tasks to 50% complete'
+          >
+            50%
+          </button>
+          <button
+            className={`progress-preset-button ${currentProgressPercent === 75 ? 'active' : ''}`}
+            onClick={() => handleSetProgressPercent(75)}
+            disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
+            title='Set selected tasks to 75% complete'
+          >
+            75%
+          </button>
+          <button
+            className={`progress-preset-button ${currentProgressPercent === 100 ? 'active' : ''}`}
+            onClick={() => handleSetProgressPercent(100)}
+            disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
+            title='Set selected tasks to 100% complete'
+          >
+            100%
+          </button>
+        </div>
+        
         <RibbonButton
           icon={<DocumentTextIcon className='w-4 h-4' />}
           label='Set Status'

@@ -52,6 +52,7 @@ export const ViewProvider = ({ children }) => {
 
     // Progress line
     statusDate: null, // Status date for progress line (defaults to today)
+    showProgressLine: false, // Toggle for showing progress line overlay
 
     // Timestamp
     savedAt: null,
@@ -128,6 +129,17 @@ export const ViewProvider = ({ children }) => {
         setViewState(prev => ({ ...prev, showSlack }));
       } catch (error) {
         console.error('Error loading saved showSlack preference:', error);
+      }
+    }
+
+    // Load saved showProgressLine preference
+    const savedShowProgressLine = window.localStorage.getItem('gantt.showProgressLine');
+    if (savedShowProgressLine !== null) {
+      try {
+        const showProgressLine = JSON.parse(savedShowProgressLine);
+        setViewState(prev => ({ ...prev, showProgressLine }));
+      } catch (error) {
+        console.error('Error loading saved showProgressLine preference:', error);
       }
     }
 
@@ -278,6 +290,18 @@ export const ViewProvider = ({ children }) => {
     console.log('Show Critical Path toggled');
   };
 
+  const toggleProgressLine = () => {
+    setViewState(prev => {
+      const next = !prev.showProgressLine;
+      window.localStorage.setItem(
+        'gantt.showProgressLine',
+        JSON.stringify(next)
+      );
+      return { ...prev, showProgressLine: next };
+    });
+    console.log('Show Progress Line toggled');
+  };
+
   const toggleSlack = () => {
     setViewState(prev => {
       const next = !prev.showSlack;
@@ -422,6 +446,7 @@ export const ViewProvider = ({ children }) => {
     toggleWeekends,
     toggleGridlines,
     toggleCriticalPath,
+    toggleProgressLine,
     toggleSlack,
     toggleBaseline,
     setActiveBaseline,

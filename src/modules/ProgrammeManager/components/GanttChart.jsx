@@ -2152,7 +2152,7 @@ const GanttChart = () => {
         </svg>
 
         {/* Progress Line */}
-        {viewState.statusDate &&
+        {viewState.showProgressLine && viewState.statusDate &&
           (() => {
             const statusDate = new Date(viewState.statusDate);
             const projectStart = new Date('2024-01-01'); // Use same start as timeline
