@@ -1,10 +1,10 @@
 // RibbonButton component
-import { useState, useRef } from 'react';
+import React, { useState, useRef, forwardRef } from 'react';
 import { useUserContext } from '../../../context/UserContext';
 import Tooltip from '../../common/Tooltip';
 import RibbonMenu from '../RibbonMenu';
 
-const RibbonButton = ({
+const RibbonButton = forwardRef(({
   icon,
   label,
   onClick,
@@ -18,7 +18,7 @@ const RibbonButton = ({
   showIfNoPermission = false, // Whether to show button but disabled if no permission
   menuItems = null, // Menu items for dropdown functionality
   onMenuSelect = null, // Callback for menu item selection
-}) => {
+}, ref) => {
   const [showMenu, setShowMenu] = useState(false);
   const buttonRef = useRef(null);
   const { canAccessButton } = useUserContext();
@@ -62,7 +62,8 @@ const RibbonButton = ({
 
   // Close menu when clicking outside
   const handleClickOutside = (e) => {
-    if (buttonRef.current && !buttonRef.current.contains(e.target)) {
+    const currentRef = ref || buttonRef;
+    if (currentRef.current && !currentRef.current.contains(e.target)) {
       setShowMenu(false);
     }
   };
@@ -73,7 +74,7 @@ const RibbonButton = ({
   }
 
   return (
-    <div className="relative" ref={buttonRef}>
+    <div className="relative" ref={ref || buttonRef}>
       <Tooltip content={getTooltip()}>
         <button
           onClick={handleClick}
@@ -137,14 +138,16 @@ const RibbonButton = ({
           onSelect={handleMenuSelect}
           onClose={() => setShowMenu(false)}
           position={{
-            x: buttonRef.current?.getBoundingClientRect().left || 0,
-            y: (buttonRef.current?.getBoundingClientRect().bottom || 0) + 4
+            x: (ref || buttonRef).current?.getBoundingClientRect().left || 0,
+            y: ((ref || buttonRef).current?.getBoundingClientRect().bottom || 0) + 4
           }}
-          parentRef={buttonRef}
+          parentRef={ref || buttonRef}
         />
       )}
     </div>
   );
-};
+});
+
+RibbonButton.displayName = 'RibbonButton';
 
 export default RibbonButton;
