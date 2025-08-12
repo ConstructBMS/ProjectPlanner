@@ -303,6 +303,22 @@
   color: var(--rbn-text-muted);
 }
 
+/* Active state for toggle buttons */
+.pm-ribbon .project-button.active {
+  background: var(--rbn-accent);
+  border-color: var(--rbn-accent);
+  color: white;
+}
+
+.pm-ribbon .project-button.active:hover {
+  background: color-mix(in oklab, var(--rbn-accent), black 10%);
+  border-color: color-mix(in oklab, var(--rbn-accent), black 10%);
+}
+
+.pm-ribbon .project-button.active svg {
+  color: white;
+}
+
 /* Icon styling */
 .pm-ribbon .project-button .text-\[12px\] {
   color: var(--rbn-icon);

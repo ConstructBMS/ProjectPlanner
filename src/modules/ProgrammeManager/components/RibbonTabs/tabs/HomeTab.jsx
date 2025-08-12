@@ -47,6 +47,8 @@ import {
   PrinterIcon,
   DocumentArrowDownIcon,
   ChevronDownIcon,
+  ArrowsPointingInIcon,
+  ArrowsPointingOutIcon,
 } from '@heroicons/react/24/outline';
 
 export default function HomeTab({ onExpandAll, onCollapseAll }) {
@@ -55,6 +57,19 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
   const [showHistoryMenu, setShowHistoryMenu] = useState(false);
   const [historyMenuPosition, setHistoryMenuPosition] = useState({ x: 0, y: 0 });
   const historyButtonRef = useRef(null);
+  
+  // Font formatting state
+  const [fontFormat, setFontFormat] = useState({ bold: false, italic: false });
+  const [lastTextColor, setLastTextColor] = useState('#000000');
+  const [showColorMenu, setShowColorMenu] = useState(false);
+  const [colorMenuPosition, setColorMenuPosition] = useState({ x: 0, y: 0 });
+  const colorButtonRef = useRef(null);
+  
+  // Row height state
+  const [rowHeight, setRowHeight] = useState('normal'); // eslint-disable-line no-unused-vars
+  const [showRowHeightMenu, setShowRowHeightMenu] = useState(false);
+  const [rowHeightMenuPosition, setRowHeightMenuPosition] = useState({ x: 0, y: 0 });
+  const rowHeightButtonRef = useRef(null);
 
   const {
     addMilestone,
@@ -203,6 +218,160 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     return actions.slice(0, 10); // Limit to 10 total actions
   }, [undoStack, redoStack, undo, redo]);
 
+  // Font formatting functions
+  const handleBoldToggle = useCallback(() => {
+    const newBold = !fontFormat.bold;
+    setFontFormat(prev => ({ ...prev, bold: newBold }));
+    
+    // Emit FORMAT_APPLY event
+    const event = new window.CustomEvent('FORMAT_APPLY', {
+      detail: { bold: newBold, italic: fontFormat.italic, color: lastTextColor }
+    });
+    document.dispatchEvent(event);
+    
+    console.info('Font formatting applied:', { bold: newBold, italic: fontFormat.italic, color: lastTextColor });
+  }, [fontFormat.bold, fontFormat.italic, lastTextColor]);
+
+  const handleItalicToggle = useCallback(() => {
+    const newItalic = !fontFormat.italic;
+    setFontFormat(prev => ({ ...prev, italic: newItalic }));
+    
+    // Emit FORMAT_APPLY event
+    const event = new window.CustomEvent('FORMAT_APPLY', {
+      detail: { bold: fontFormat.bold, italic: newItalic, color: lastTextColor }
+    });
+    document.dispatchEvent(event);
+    
+    console.info('Font formatting applied:', { bold: fontFormat.bold, italic: newItalic, color: lastTextColor });
+  }, [fontFormat.bold, fontFormat.italic, lastTextColor]);
+
+  const handleTextColorApply = useCallback((color) => {
+    setLastTextColor(color);
+    
+    // Emit FORMAT_APPLY event
+    const event = new window.CustomEvent('FORMAT_APPLY', {
+      detail: { bold: fontFormat.bold, italic: fontFormat.italic, color }
+    });
+    document.dispatchEvent(event);
+    
+    console.info('Font formatting applied:', { bold: fontFormat.bold, italic: fontFormat.italic, color });
+    setShowColorMenu(false);
+  }, [fontFormat.bold, fontFormat.italic]);
+
+  const handleColorMenuToggle = useCallback(() => {
+    if (showColorMenu) {
+      setShowColorMenu(false);
+    } else {
+      const rect = colorButtonRef.current?.getBoundingClientRect();
+      if (rect) {
+        setColorMenuPosition({
+          x: rect.left,
+          y: rect.bottom + 4
+        });
+        setShowColorMenu(true);
+      }
+    }
+  }, [showColorMenu]);
+
+  const handleColorMenuClose = useCallback(() => {
+    setShowColorMenu(false);
+  }, []);
+
+  const getColorMenuItems = useCallback(() => {
+    const colors = [
+      { id: 'black', label: 'Black', color: '#000000' },
+      { id: 'red', label: 'Red', color: '#dc2626' },
+      { id: 'blue', label: 'Blue', color: '#2563eb' },
+      { id: 'green', label: 'Green', color: '#16a34a' },
+      { id: 'orange', label: 'Orange', color: '#ea580c' },
+      { id: 'purple', label: 'Purple', color: '#9333ea' },
+      { id: 'gray', label: 'Gray', color: '#6b7280' },
+      { id: 'brown', label: 'Brown', color: '#a16207' },
+    ];
+
+    return [
+      ...colors.map(color => ({
+        id: color.id,
+        label: color.label,
+        disabled: false,
+        action: () => handleTextColorApply(color.color),
+        icon: (
+          <div 
+            className="w-4 h-4 rounded border border-gray-300" 
+            style={{ backgroundColor: color.color }}
+          />
+        )
+      })),
+      { id: 'separator', label: '', disabled: true },
+      {
+        id: 'more',
+        label: 'More Colors...',
+        disabled: false,
+        action: () => {
+          console.info('More colors dialog would open');
+          setShowColorMenu(false);
+        }
+      }
+    ];
+  }, [handleTextColorApply]);
+
+  // Row height functions
+  const handleRowHeightChange = useCallback((mode) => {
+    setRowHeight(mode);
+    
+    // Emit GRID_ROW_HEIGHT_SET event
+    const event = new window.CustomEvent('GRID_ROW_HEIGHT_SET', {
+      detail: { mode }
+    });
+    document.dispatchEvent(event);
+    
+    console.info('Row height changed:', mode);
+    setShowRowHeightMenu(false);
+  }, []);
+
+  const handleRowHeightMenuToggle = useCallback(() => {
+    if (showRowHeightMenu) {
+      setShowRowHeightMenu(false);
+    } else {
+      const rect = rowHeightButtonRef.current?.getBoundingClientRect();
+      if (rect) {
+        setRowHeightMenuPosition({
+          x: rect.left,
+          y: rect.bottom + 4
+        });
+        setShowRowHeightMenu(true);
+      }
+    }
+  }, [showRowHeightMenu]);
+
+  const handleRowHeightMenuClose = useCallback(() => {
+    setShowRowHeightMenu(false);
+  }, []);
+
+  const getRowHeightMenuItems = useCallback(() => [
+    {
+      id: 'compact',
+      label: 'Compact',
+      disabled: false,
+      action: () => handleRowHeightChange('compact'),
+      icon: <ArrowsPointingInIcon className="w-4 h-4" />
+    },
+    {
+      id: 'normal',
+      label: 'Normal',
+      disabled: false,
+      action: () => handleRowHeightChange('normal'),
+      icon: <div className="w-4 h-4 flex items-center justify-center">─</div>
+    },
+    {
+      id: 'comfortable',
+      label: 'Comfortable',
+      disabled: false,
+      action: () => handleRowHeightChange('comfortable'),
+      icon: <ArrowsPointingOutIcon className="w-4 h-4" />
+    }
+  ], [handleRowHeightChange]);
+
   // Print and Export handlers
   const handlePrint = async printSettings => {
     try {
@@ -284,20 +453,34 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
         <RibbonButton
           icon={<BoldIcon className='w-4 h-4' />}
           label='Bold'
-          onClick={() => console.log('Bold')}
+          onClick={handleBoldToggle}
           tooltip='Bold (Ctrl+B)'
+          active={fontFormat.bold}
         />
         <RibbonButton
           icon={<ItalicIcon className='w-4 h-4' />}
           label='Italic'
-          onClick={() => console.log('Italic')}
+          onClick={handleItalicToggle}
           tooltip='Italic (Ctrl+I)'
+          active={fontFormat.italic}
         />
         <RibbonButton
-          icon={<UnderlineIcon className='w-4 h-4' />}
-          label='Underline'
-          onClick={() => console.log('Underline')}
-          tooltip='Underline (Ctrl+U)'
+          icon={<PaintBrushIcon className='w-4 h-4' />}
+          label='Text Colour'
+          onClick={() => handleTextColorApply(lastTextColor)}
+          tooltip='Apply last text colour'
+          menuItems={getColorMenuItems()}
+          onMenuSelect={(item) => item.action()}
+          ref={colorButtonRef}
+        />
+        <RibbonButton
+          ref={rowHeightButtonRef}
+          icon={<ArrowsPointingOutIcon className='w-4 h-4' />}
+          label='Row Height'
+          onClick={handleRowHeightMenuToggle}
+          tooltip='Set grid row height'
+          menuItems={getRowHeightMenuItems()}
+          onMenuSelect={(item) => item.action()}
         />
       </RibbonGroup>
 
@@ -628,6 +811,28 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
           onClose={handleHistoryMenuClose}
           position={historyMenuPosition}
           parentRef={historyButtonRef}
+        />
+      )}
+
+      {/* Color Menu */}
+      {showColorMenu && (
+        <RibbonMenu
+          items={getColorMenuItems()}
+          onSelect={(item) => item.action()}
+          onClose={handleColorMenuClose}
+          position={colorMenuPosition}
+          parentRef={colorButtonRef}
+        />
+      )}
+
+      {/* Row Height Menu */}
+      {showRowHeightMenu && (
+        <RibbonMenu
+          items={getRowHeightMenuItems()}
+          onSelect={(item) => item.action()}
+          onClose={handleRowHeightMenuClose}
+          position={rowHeightMenuPosition}
+          parentRef={rowHeightButtonRef}
         />
       )}
 
