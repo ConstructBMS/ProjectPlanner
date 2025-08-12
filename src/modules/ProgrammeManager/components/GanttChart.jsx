@@ -2005,7 +2005,7 @@ const GanttChart = () => {
   };
 
   return (
-    <div className='h-full flex flex-col bg-white'>
+    <div className='gantt-viewport bg-white'>
       {/* Asta-style Timeline Header */}
       <div className='asta-timeline-header border-b border-gray-300 bg-gray-50 px-4 py-2'>
         <div className='flex items-center justify-between'>
@@ -2047,7 +2047,7 @@ const GanttChart = () => {
           timelineContainerRef.current = el;
           smoothScrollRef.current = el;
         }}
-        className={`flex-1 relative gantt-scroll-container ${
+        className={`gantt-timeline-container ${
           viewState.showGridlines ? 'divide-y divide-gray-300' : ''
         }`}
         onClick={handleChartClick}
@@ -2205,8 +2205,9 @@ const GanttChart = () => {
         {/* Timeline Content */}
         <div className='relative z-20'>
           {tasks.length === 0 ? (
-            <div className='text-center text-gray-500 py-8'>
-              No tasks available
+            <div className='gantt-empty-state'>
+              <div className='gantt-empty-state-title'>No tasks available</div>
+              <div className='gantt-empty-state-subtitle'>Add tasks to see them in the timeline</div>
             </div>
           ) : (
             <div className='space-y-1 p-2'>

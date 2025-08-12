@@ -83,7 +83,7 @@ const GanttHeader = ({
             headers.push(
               <div
                 key={`primary-month-${group.month.toISOString()}`}
-                className='text-sm font-semibold text-gray-800 py-2 border-r border-gray-300 flex items-center justify-center bg-blue-50'
+                className='gantt-header-cell text-sm font-semibold'
                 style={{
                   width: `${width}px`,
                   minWidth: `${width}px`,
@@ -300,7 +300,7 @@ const GanttHeader = ({
             headers.push(
               <div
                 key={`secondary-week-${d.toISOString()}`}
-                className='text-xs text-gray-600 py-1 border-r border-gray-200 flex items-center justify-center font-medium bg-gray-100'
+                className='gantt-header-cell text-xs font-medium'
                 style={{
                   width: `${width}px`,
                   minWidth: `${width}px`,
@@ -327,8 +327,8 @@ const GanttHeader = ({
             headers.push(
               <div
                 key={`secondary-day-${d.toISOString()}`}
-                className={`text-xs py-1 border-r border-gray-200 flex items-center justify-center font-medium ${
-                  isWeekend ? 'text-gray-400 bg-gray-50' : 'text-gray-600'
+                className={`gantt-header-cell text-xs font-medium ${
+                  isWeekend ? 'text-gray-400 bg-gray-50' : ''
                 }`}
                 style={{
                   width: `${zoomScale}px`,
@@ -356,8 +356,8 @@ const GanttHeader = ({
         headers.push(
           <div
             key={d.toISOString()}
-            className={`text-xs py-1 border-r border-gray-200 flex items-center justify-center font-medium ${
-              isWeekend ? 'text-gray-400 bg-gray-50' : 'text-gray-600'
+            className={`gantt-header-cell text-xs font-medium ${
+              isWeekend ? 'text-gray-400 bg-gray-50' : ''
             }`}
             style={{
               width: `${zoomScale}px`,
@@ -382,17 +382,17 @@ const GanttHeader = ({
 
   return (
     <div
-      className='sticky top-0 z-50 bg-white border-b border-gray-300 shadow-sm'
+      className='gantt-header sticky top-0 z-50'
       style={{
         transform: `translateX(-${scrollLeft}px)`,
         width: 'fit-content',
       }}
     >
       {/* Primary Headers Row */}
-      <div className='flex border-b border-gray-200'>{primaryHeaders}</div>
+      <div className='gantt-header-primary'>{primaryHeaders}</div>
 
       {/* Secondary Headers Row */}
-      <div className='flex'>{secondaryHeaders}</div>
+      <div className='gantt-header-secondary'>{secondaryHeaders}</div>
     </div>
   );
 };

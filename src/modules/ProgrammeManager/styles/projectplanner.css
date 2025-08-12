@@ -52,24 +52,108 @@ html, body {
   overflow: auto;
 }
 
+/* Gantt Viewport Styling */
+.gantt-viewport {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.gantt-timeline-container {
+  flex: 1;
+  overflow: auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Gantt Header Styling */
+.gantt-header {
+  height: 40px;
+  background: white;
+  border-bottom: 1px solid var(--rbn-border, #232a38);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.gantt-header-primary {
+  height: 20px;
+  background: var(--rbn-bg-elev, #1b2433);
+  border-bottom: 1px solid var(--rbn-border, #232a38);
+  display: flex;
+  align-items: center;
+}
+
+.gantt-header-secondary {
+  height: 20px;
+  background: white;
+  display: flex;
+  align-items: center;
+}
+
+.gantt-header-cell {
+  border-right: 1px solid var(--rbn-border, #232a38);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.gantt-header-primary .gantt-header-cell {
+  color: var(--rbn-text, #e8eef7);
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.gantt-header-secondary .gantt-header-cell {
+  color: var(--rbn-text-2, #c6ced9);
+  font-weight: 500;
+  font-size: 11px;
+}
+
+/* Gantt Empty State */
+.gantt-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--rbn-text-muted, #9aa3af);
+}
+
+.gantt-empty-state-title {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: var(--rbn-text-2, #c6ced9);
+}
+
+.gantt-empty-state-subtitle {
+  font-size: 14px;
+  color: var(--rbn-text-muted, #9aa3af);
+}
+
 /* ConstructBMS-Styled Scrollbars - Applied to main scroll area and properties pane */
 
 /* WebKit Scrollbars (Chrome, Safari, Edge) */
 .pm-main-scroll-area::-webkit-scrollbar,
-.pm-properties-pane::-webkit-scrollbar {
+.pm-properties-pane::-webkit-scrollbar,
+.gantt-timeline-container::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 
 .pm-main-scroll-area::-webkit-scrollbar-track,
-.pm-properties-pane::-webkit-scrollbar-track {
+.pm-properties-pane::-webkit-scrollbar-track,
+.gantt-timeline-container::-webkit-scrollbar-track {
   background: #111928;
   border: 1px inset #232a38;
   border-radius: 8px;
 }
 
 .pm-main-scroll-area::-webkit-scrollbar-thumb,
-.pm-properties-pane::-webkit-scrollbar-thumb {
+.pm-properties-pane::-webkit-scrollbar-thumb,
+.gantt-timeline-container::-webkit-scrollbar-thumb {
   background: #2a3448;
   border: 2px solid transparent;
   border-radius: 8px;
@@ -78,45 +162,52 @@ html, body {
 }
 
 .pm-main-scroll-area::-webkit-scrollbar-thumb:hover,
-.pm-properties-pane::-webkit-scrollbar-thumb:hover {
+.pm-properties-pane::-webkit-scrollbar-thumb:hover,
+.gantt-timeline-container::-webkit-scrollbar-thumb:hover {
   background: #334158;
   background-clip: content-box;
 }
 
 .pm-main-scroll-area::-webkit-scrollbar-thumb:active,
-.pm-properties-pane::-webkit-scrollbar-thumb:active {
+.pm-properties-pane::-webkit-scrollbar-thumb:active,
+.gantt-timeline-container::-webkit-scrollbar-thumb:active {
   background: #3b4a63;
   background-clip: content-box;
 }
 
 .pm-main-scroll-area::-webkit-scrollbar-corner,
-.pm-properties-pane::-webkit-scrollbar-corner {
+.pm-properties-pane::-webkit-scrollbar-corner,
+.gantt-timeline-container::-webkit-scrollbar-corner {
   background: #111928;
   border: 1px inset #232a38;
 }
 
 /* Firefox Scrollbars */
 .pm-main-scroll-area,
-.pm-properties-pane {
+.pm-properties-pane,
+.gantt-timeline-container {
   scrollbar-width: thin;
   scrollbar-color: #2a3448 #111928;
 }
 
 /* Smooth Scrolling */
 .pm-main-scroll-area,
-.pm-properties-pane {
+.pm-properties-pane,
+.gantt-timeline-container {
   scroll-behavior: smooth;
 }
 
 /* Respect reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
   .pm-main-scroll-area,
-  .pm-properties-pane {
+  .pm-properties-pane,
+  .gantt-timeline-container {
     scroll-behavior: auto;
   }
   
   .pm-main-scroll-area::-webkit-scrollbar-thumb,
-  .pm-properties-pane::-webkit-scrollbar-thumb {
+  .pm-properties-pane::-webkit-scrollbar-thumb,
+  .gantt-timeline-container::-webkit-scrollbar-thumb {
     transition: none;
   }
 }
