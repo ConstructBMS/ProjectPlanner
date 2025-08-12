@@ -6,7 +6,7 @@ import {
   useCallback,
 } from 'react';
 import { supabase } from '../../../supabase/client';
-import { checkTableExists } from '../utils/databaseSchema.js';
+import { getCachedTableExists } from '../utils/databaseSchema.js';
 
 const ProjectsContext = createContext();
 
@@ -45,8 +45,8 @@ export const ProjectsProvider = ({ children }) => {
       setLoading(true);
       setError(null);
 
-      // Check if table exists before making request
-      const tableExists = await checkTableExists('projects');
+      // Check if table exists using cached result
+      const tableExists = getCachedTableExists('projects');
       if (!tableExists) {
         console.info('Using mock project data (database table not found)');
         setProjects([]);

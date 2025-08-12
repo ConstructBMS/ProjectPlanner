@@ -27,10 +27,10 @@ function App() {
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
 
-  // Initialize database schema checks on app start
+  // Initialize database schema checks on app start (only once)
   useEffect(() => {
     initializeDatabase();
-  }, []);
+  }, []); // Empty dependency array ensures it only runs once
 
   const handleProjectSelect = projectId => {
     setSelectedProjectId(projectId);

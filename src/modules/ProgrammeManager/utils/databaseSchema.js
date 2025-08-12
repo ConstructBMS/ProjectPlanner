@@ -2,12 +2,25 @@ import { supabase } from '../../../supabase/client.js';
 
 // Cache for table existence checks
 const tableExistenceCache = new Map();
+let isInitialized = false;
+let initializationPromise = null;
 
 // Check if a table exists in the database
 export const checkTableExists = async (tableName) => {
+  // Wait for initialization to complete
+  if (!isInitialized && initializationPromise) {
+    await initializationPromise;
+  }
+
   // Return cached result if available
   if (tableExistenceCache.has(tableName)) {
     return tableExistenceCache.get(tableName);
+  }
+
+  // If not initialized, assume table doesn't exist to prevent HTTP requests
+  if (!isInitialized) {
+    tableExistenceCache.set(tableName, false);
+    return false;
   }
 
   try {
@@ -34,9 +47,20 @@ export const checkTableExists = async (tableName) => {
 export const checkColumnExists = async (tableName, columnName) => {
   const cacheKey = `${tableName}.${columnName}`;
   
+  // Wait for initialization to complete
+  if (!isInitialized && initializationPromise) {
+    await initializationPromise;
+  }
+
   // Return cached result if available
   if (tableExistenceCache.has(cacheKey)) {
     return tableExistenceCache.get(cacheKey);
+  }
+
+  // If not initialized, assume column doesn't exist to prevent HTTP requests
+  if (!isInitialized) {
+    tableExistenceCache.set(cacheKey, false);
+    return false;
   }
 
   try {
@@ -62,22 +86,55 @@ export const checkColumnExists = async (tableName, columnName) => {
 // Clear the cache (useful for testing or when schema changes)
 export const clearSchemaCache = () => {
   tableExistenceCache.clear();
+  isInitialized = false;
+  initializationPromise = null;
 };
 
 // Pre-check all required tables and columns
 export const initializeSchemaCheck = async () => {
-  const requiredTables = ['projects', 'project_tasks', 'project_dependencies', 'user_settings'];
-  const requiredColumns = [
-    { table: 'user_settings', column: 'ribbon_state' }
-  ];
-
-  // Check all tables
-  for (const table of requiredTables) {
-    await checkTableExists(table);
+  // Prevent multiple simultaneous initializations
+  if (initializationPromise) {
+    return initializationPromise;
   }
 
-  // Check all columns
-  for (const { table, column } of requiredColumns) {
-    await checkColumnExists(table, column);
+  if (isInitialized) {
+    return;
   }
+
+  initializationPromise = (async () => {
+    try {
+      const requiredTables = ['projects', 'project_tasks', 'project_dependencies', 'user_settings'];
+      const requiredColumns = [
+        { table: 'user_settings', column: 'ribbon_state' }
+      ];
+
+      // Check all tables
+      for (const table of requiredTables) {
+        await checkTableExists(table);
+      }
+
+      // Check all columns
+      for (const { table, column } of requiredColumns) {
+        await checkColumnExists(table, column);
+      }
+
+      isInitialized = true;
+    } catch (error) {
+      console.warn('Database schema initialization failed:', error);
+      isInitialized = true; // Mark as initialized to prevent retries
+    }
+  })();
+
+  return initializationPromise;
+};
+
+// Get cached result without making HTTP request
+export const getCachedTableExists = (tableName) => {
+  return tableExistenceCache.get(tableName) || false;
+};
+
+// Get cached result without making HTTP request
+export const getCachedColumnExists = (tableName, columnName) => {
+  const cacheKey = `${tableName}.${columnName}`;
+  return tableExistenceCache.get(cacheKey) || false;
 };

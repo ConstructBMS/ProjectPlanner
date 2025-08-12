@@ -22,7 +22,7 @@ import {
 } from '../utils/recurringTaskUtils';
 import { useCalendarContext } from './CalendarContext';
 import { supabase } from '../../../supabase/client';
-import { checkTableExists } from '../utils/databaseSchema.js';
+import { getCachedTableExists } from '../utils/databaseSchema.js';
 
 const TaskContext = createContext();
 
@@ -50,8 +50,8 @@ export const TaskProvider = ({ children }) => {
       setLoading(true);
       setError(null);
 
-      // Check if table exists before making request
-      const tableExists = await checkTableExists('project_tasks');
+      // Check if table exists using cached result
+      const tableExists = getCachedTableExists('project_tasks');
       if (!tableExists) {
         console.info('Using mock task data (database table not found)');
         setTasks([]);
@@ -134,8 +134,8 @@ export const TaskProvider = ({ children }) => {
   // Load task links from ConstructBMS database
   const loadTaskLinks = useCallback(async () => {
     try {
-      // Check if table exists before making request
-      const tableExists = await checkTableExists('project_dependencies');
+      // Check if table exists using cached result
+      const tableExists = getCachedTableExists('project_dependencies');
       if (!tableExists) {
         console.info('Using mock task links (database table not found)');
         setTaskLinks([]);

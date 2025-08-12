@@ -1,6 +1,6 @@
 // Ribbon storage adapter with Supabase + localStorage fallback
 import { createClient } from '@supabase/supabase-js';
-import { checkColumnExists } from './databaseSchema.js';
+import { getCachedColumnExists } from './databaseSchema.js';
 
 export type RibbonPrefs = {
   minimised: boolean;
@@ -48,7 +48,7 @@ const getSupabaseClient = () => {
 // Check if user_settings table and ribbon_state column exist
 const checkDatabaseSchema = async (supabase: any): Promise<boolean> => {
   try {
-    return await checkColumnExists('user_settings', 'ribbon_state');
+    return getCachedColumnExists('user_settings', 'ribbon_state');
   } catch (error) {
     return false;
   }
