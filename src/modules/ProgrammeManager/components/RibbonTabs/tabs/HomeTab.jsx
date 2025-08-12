@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import useTaskManager from '../../../hooks/useTaskManager';
 import { useTaskContext } from '../../../context/TaskContext';
 import { useViewContext } from '../../../context/ViewContext';
@@ -6,6 +6,7 @@ import { useUndoRedoContext } from '../../../context/UndoRedoContext';
 import RibbonButton from '../shared/RibbonButton';
 import RibbonGroup from '../shared/RibbonGroup';
 import RibbonDropdown from '../shared/RibbonDropdown';
+import RibbonMenu from '../RibbonMenu';
 import PrintExportDialog from '../../../components/PrintExportDialog';
 import {
   exportProject,
@@ -45,11 +46,15 @@ import {
   TrashIcon,
   PrinterIcon,
   DocumentArrowDownIcon,
+  ChevronDownIcon,
 } from '@heroicons/react/24/outline';
 
 export default function HomeTab({ onExpandAll, onCollapseAll }) {
   const [isAllExpanded, setIsAllExpanded] = useState(false);
   const [showPrintExportDialog, setShowPrintExportDialog] = useState(false);
+  const [showHistoryMenu, setShowHistoryMenu] = useState(false);
+  const [historyMenuPosition, setHistoryMenuPosition] = useState({ x: 0, y: 0 });
+  const historyButtonRef = useRef(null);
 
   const {
     addMilestone,
@@ -62,7 +67,7 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
   } = useTaskManager();
 
   // Get undo/redo functions from UndoRedoContext
-  const { undo, redo, canUndo, canRedo } = useUndoRedoContext();
+  const { undo, redo, canUndo, canRedo, undoStack, redoStack } = useUndoRedoContext();
 
   // Get the current task context for selection state
   const { selectedTaskId, selectedTaskIds } = useTaskContext();
@@ -142,6 +147,62 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     }
   };
 
+  // History menu functions
+  const handleHistoryMenuToggle = useCallback(() => {
+    if (showHistoryMenu) {
+      setShowHistoryMenu(false);
+    } else {
+      const rect = historyButtonRef.current?.getBoundingClientRect();
+      if (rect) {
+        setHistoryMenuPosition({
+          x: rect.left,
+          y: rect.bottom + 4
+        });
+        setShowHistoryMenu(true);
+      }
+    }
+  }, [showHistoryMenu]);
+
+  const handleHistoryMenuClose = useCallback(() => {
+    setShowHistoryMenu(false);
+  }, []);
+
+  const getRecentActions = useCallback(() => {
+    const actions = [];
+    
+    // Add undo actions (most recent first)
+    for (let i = undoStack.length - 1; i >= Math.max(0, undoStack.length - 10); i--) {
+      const action = undoStack[i];
+      actions.push({
+        id: `undo-${i}`,
+        label: action.label || `Undo: ${action.type || 'Action'}`,
+        disabled: false,
+        action: () => {
+          console.info('History menu: Undo action selected');
+          undo();
+          setShowHistoryMenu(false);
+        }
+      });
+    }
+
+    // Add redo actions (most recent first)
+    for (let i = redoStack.length - 1; i >= Math.max(0, redoStack.length - 10); i--) {
+      const action = redoStack[i];
+      actions.push({
+        id: `redo-${i}`,
+        label: action.label || `Redo: ${action.type || 'Action'}`,
+        disabled: false,
+        action: () => {
+          console.info('History menu: Redo action selected');
+          redo();
+          setShowHistoryMenu(false);
+        }
+      });
+    }
+
+    return actions.slice(0, 10); // Limit to 10 total actions
+  }, [undoStack, redoStack, undo, redo]);
+
   // Print and Export handlers
   const handlePrint = async printSettings => {
     try {
@@ -206,6 +267,15 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
           onClick={redo}
           tooltip='Redo (Ctrl+Y)'
           disabled={!canRedo}
+        />
+        <RibbonButton
+          ref={historyButtonRef}
+          icon={<ChevronDownIcon className='w-4 h-4' />}
+          label=''
+          onClick={handleHistoryMenuToggle}
+          tooltip='History menu'
+          compact={true}
+          disabled={undoStack.length === 0 && redoStack.length === 0}
         />
       </RibbonGroup>
 
@@ -549,6 +619,17 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
           </span>
         </div>
       </RibbonGroup>
+
+      {/* History Menu */}
+      {showHistoryMenu && (
+        <RibbonMenu
+          items={getRecentActions()}
+          onSelect={(item) => item.action()}
+          onClose={handleHistoryMenuClose}
+          position={historyMenuPosition}
+          parentRef={historyButtonRef}
+        />
+      )}
 
       {/* Print/Export Dialog */}
       <PrintExportDialog
