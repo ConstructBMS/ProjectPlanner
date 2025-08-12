@@ -234,7 +234,7 @@ const GlobalSearch = () => {
                       {/* Result Content */}
                       <div className='flex-1 min-w-0'>
                         <div className='flex items-center justify-between'>
-                          <h4 className='text-sm font-medium text-gray-900 truncate'>
+                          <h4 className='text-sm font-medium text-gray-900 truncate' title={result.name}>
                             {result.title}
                           </h4>
                           <div className='flex items-center space-x-2 ml-2'>
@@ -256,7 +256,7 @@ const GlobalSearch = () => {
                           </div>
                         </div>
 
-                        <p className='text-sm text-gray-600 truncate mt-1'>
+                        <p className='text-sm text-gray-600 truncate mt-1' title={result.description || ''}>
                           {result.description}
                         </p>
 

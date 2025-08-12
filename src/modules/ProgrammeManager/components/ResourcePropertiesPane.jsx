@@ -468,7 +468,7 @@ const ResourcePropertiesPane = ({
                     key={task.taskId}
                     className='flex justify-between items-center text-xs p-1 bg-gray-50 rounded'
                   >
-                    <span className='truncate' title={task.taskName}>
+                    <span className='truncate' title={task.taskName || ''}>
                       {task.taskName}
                     </span>
                     <span className='font-medium text-green-600 ml-2'>

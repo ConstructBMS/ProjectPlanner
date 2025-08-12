@@ -173,7 +173,7 @@ const TaskLinkModal = ({ isOpen, onClose, fromTaskId, toTaskId }) => {
                   <div className='text-sm font-medium text-gray-700'>
                     From Task
                   </div>
-                  <div className='text-sm text-gray-600 mt-1 truncate'>
+                  <div className='text-sm text-gray-600 mt-1 truncate' title={fromTask.name}>
                     {fromTask.name}
                   </div>
                 </div>
@@ -186,7 +186,7 @@ const TaskLinkModal = ({ isOpen, onClose, fromTaskId, toTaskId }) => {
                   <div className='text-sm font-medium text-gray-700'>
                     To Task
                   </div>
-                  <div className='text-sm text-gray-600 mt-1 truncate'>
+                  <div className='text-sm text-gray-600 mt-1 truncate' title={toTask.name}>
                     {toTask.name}
                   </div>
                 </div>

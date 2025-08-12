@@ -139,6 +139,33 @@ html, body {
   color: var(--rbn-text, #e8eef7);
 }
 
+/* Ensure all text uses proper contrast tokens */
+.pm-content-dark h1,
+.pm-content-dark h2,
+.pm-content-dark h3,
+.pm-content-dark h4,
+.pm-content-dark h5,
+.pm-content-dark h6 {
+  color: var(--rbn-text, #e8eef7);
+}
+
+.pm-content-dark p,
+.pm-content-dark span,
+.pm-content-dark div {
+  color: var(--rbn-text, #e8eef7);
+}
+
+.pm-content-dark .text-gray-500,
+.pm-content-dark .text-gray-600,
+.pm-content-dark .text-gray-700 {
+  color: var(--rbn-text-2, #c6ced9) !important;
+}
+
+.pm-content-dark .text-gray-400,
+.pm-content-dark .text-gray-300 {
+  color: var(--rbn-text-muted, #9aa3af) !important;
+}
+
 /* Grid Dark Theme */
 .asta-grid {
   background: var(--rbn-bg, #111928);
@@ -306,6 +333,8 @@ html, body {
 .gantt-viewport svg,
 .pm-properties-pane svg {
   fill: var(--rbn-icon, #cdd6e1);
+  stroke: var(--rbn-icon, #cdd6e1);
+  color: var(--rbn-icon, #cdd6e1);
 }
 
 .pm-content-dark svg:hover,
@@ -313,6 +342,23 @@ html, body {
 .gantt-viewport svg:hover,
 .pm-properties-pane svg:hover {
   fill: var(--rbn-text, #e8eef7);
+  stroke: var(--rbn-text, #e8eef7);
+  color: var(--rbn-text, #e8eef7);
+}
+
+/* Ensure SVG elements inherit colors properly */
+.pm-content-dark svg[fill="currentColor"],
+.asta-grid svg[fill="currentColor"],
+.gantt-viewport svg[fill="currentColor"],
+.pm-properties-pane svg[fill="currentColor"] {
+  fill: var(--rbn-icon, #cdd6e1);
+}
+
+.pm-content-dark svg[stroke="currentColor"],
+.asta-grid svg[stroke="currentColor"],
+.gantt-viewport svg[stroke="currentColor"],
+.pm-properties-pane svg[stroke="currentColor"] {
+  stroke: var(--rbn-icon, #cdd6e1);
 }
 
 /* Button Dark Theme */

@@ -632,7 +632,7 @@ const AttachmentsTab = ({ task, onTaskUpdate, supabaseClient }) => {
 
                       <div className='flex-1 min-w-0'>
                         <div className='flex items-center gap-2 mb-1'>
-                          <h5 className='text-sm font-medium text-gray-900 truncate'>
+                          <h5 className='text-sm font-medium text-gray-900 truncate' title={attachment.name}>
                             {attachment.originalName}
                           </h5>
                           <span className='text-xs text-gray-500'>

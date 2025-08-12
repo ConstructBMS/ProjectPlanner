@@ -49,7 +49,7 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
   return (
     <div
       ref={contentRef}
-      className='pm-app-shell bg-gray-100'
+              className='pm-app-shell'
     >
       {/* Header Section - Fixed height, no scroll */}
       <div className='pm-header-section'>

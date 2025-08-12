@@ -171,7 +171,7 @@ const ProjectPlannerFeatures = () => {
                     {project.projectplanner_location && (
                       <div className='flex items-center text-gray-600'>
                         <MapPinIcon className='h-4 w-4 mr-2' />
-                        <span className='truncate'>
+                        <span className='truncate' title={project.projectplanner_location}>
                           {project.projectplanner_location}
                         </span>
                       </div>

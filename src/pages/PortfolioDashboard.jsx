@@ -290,7 +290,7 @@ const PortfolioDashboard = ({ onProjectSelect, onShowTemplates }) => {
                 </div>
                 <div className='ml-5 w-0 flex-1'>
                   <dl>
-                    <dt className='text-sm font-medium text-gray-500 truncate'>
+                    <dt className='text-sm font-medium text-gray-500 truncate' title="Total Projects">
                       Total Projects
                     </dt>
                     <dd className='text-lg font-medium text-gray-900'>
@@ -310,7 +310,7 @@ const PortfolioDashboard = ({ onProjectSelect, onShowTemplates }) => {
                 </div>
                 <div className='ml-5 w-0 flex-1'>
                   <dl>
-                    <dt className='text-sm font-medium text-gray-500 truncate'>
+                    <dt className='text-sm font-medium text-gray-500 truncate' title="Active Projects">
                       Active Projects
                     </dt>
                     <dd className='text-lg font-medium text-gray-900'>
@@ -330,7 +330,7 @@ const PortfolioDashboard = ({ onProjectSelect, onShowTemplates }) => {
                 </div>
                 <div className='ml-5 w-0 flex-1'>
                   <dl>
-                    <dt className='text-sm font-medium text-gray-500 truncate'>
+                    <dt className='text-sm font-medium text-gray-500 truncate' title="Total Budget">
                       Total Budget
                     </dt>
                     <dd className='text-lg font-medium text-gray-900'>
@@ -350,7 +350,7 @@ const PortfolioDashboard = ({ onProjectSelect, onShowTemplates }) => {
                 </div>
                 <div className='ml-5 w-0 flex-1'>
                   <dl>
-                    <dt className='text-sm font-medium text-gray-500 truncate'>
+                    <dt className='text-sm font-medium text-gray-500 truncate' title="Overdue Projects">
                       Overdue Projects
                     </dt>
                     <dd className='text-lg font-medium text-gray-900'>

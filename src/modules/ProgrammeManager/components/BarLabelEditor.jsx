@@ -387,7 +387,7 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
                           }}
                           className='w-3 h-3 text-blue-600 border-gray-300 rounded focus:ring-blue-500'
                         />
-                        <span className='text-sm font-medium text-gray-900 truncate'>
+                        <span className='text-sm font-medium text-gray-900 truncate' title={label.name}>
                           {labelType?.label || label.type}
                         </span>
                       </div>

@@ -196,8 +196,8 @@ const ResourceCalendar = () => {
               {day.tasks.slice(0, 2).map(task => (
                 <div
                   key={task.id}
-                  className='text-xs bg-blue-100 text-blue-800 px-1 py-0.5 rounded truncate'
-                  title={`${task.name} - ${task.assignee}`}
+                              className='text-xs bg-blue-100 text-blue-800 px-1 py-0.5 rounded truncate'
+            title={`${task.name} - ${task.assignee}`}
                 >
                   {task.name}
                 </div>

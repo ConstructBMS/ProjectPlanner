@@ -227,7 +227,7 @@ const TaskGrid = React.memo(() => {
 
       case 'resource':
         return (
-          <div className='truncate'>
+          <div className='truncate' title={task.resource || task.assignedTo || '-'}>
             {task.resource || task.assignedTo || '-'}
           </div>
         );
@@ -307,10 +307,10 @@ const TaskGrid = React.memo(() => {
         return <div className='text-center'>{task.priority || '-'}</div>;
 
       case 'assignedTo':
-        return <div className='truncate'>{task.assignedTo || '-'}</div>;
+        return <div className='truncate' title={task.assignedTo || '-'}>{task.assignedTo || '-'}</div>;
 
       case 'notes':
-        return <div className='truncate'>{task.notes || '-'}</div>;
+        return <div className='truncate' title={task.notes || '-'}>{task.notes || '-'}</div>;
 
       case 'startVariance':
         return (
@@ -481,7 +481,7 @@ const TaskGrid = React.memo(() => {
         );
 
       default:
-        return <div className='truncate'>{task[columnKey] || '-'}</div>;
+        return <div className='truncate' title={task[columnKey] || '-'}>{task[columnKey] || '-'}</div>;
     }
   };
 
@@ -741,7 +741,7 @@ const TaskGrid = React.memo(() => {
       return (
         <div
           key={task.id}
-          className={`asta-grid-row flex items-center border-b border-gray-200 hover:bg-gray-50 transition-colors duration-150 ${
+          className={`asta-grid-row flex items-center border-b border-gray-200 hover:bg-opacity-5 hover:bg-white transition-colors duration-150 ${
             isTaskSelected ? 'bg-blue-50 ring-1 ring-blue-300' : ''
           }`}
           onClick={e => handleRowClick(task.id, e)}
@@ -752,7 +752,7 @@ const TaskGrid = React.memo(() => {
             {task.isGroup && (
               <button
                 onClick={e => handleGroupToggle(task.id, e)}
-                className='p-1 hover:bg-gray-200 rounded transition-colors duration-150'
+                className='p-1 hover:bg-opacity-10 hover:bg-white rounded transition-colors duration-150'
               >
                 {task.isExpanded ? (
                   <ChevronDownIcon className='w-4 h-4 text-gray-600' />
@@ -780,7 +780,7 @@ const TaskGrid = React.memo(() => {
             ) : task.isGroup ? (
               <FolderIcon className='w-4 h-4 text-blue-600' />
             ) : (
-              <div className='w-2 h-2 bg-gray-400 rounded' />
+              <div className='w-2 h-2 bg-current rounded' />
             )}
           </div>
 

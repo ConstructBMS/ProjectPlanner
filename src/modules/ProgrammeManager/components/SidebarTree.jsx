@@ -200,7 +200,7 @@ const TreeNode = React.memo(
           </div>
 
           {/* Label */}
-          <span className='flex-1 truncate'>{task.name || task.label}</span>
+                      <span className='flex-1 truncate' title={task.name || task.label}>{task.name || task.label}</span>
         </div>
       );
     }, [

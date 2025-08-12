@@ -2449,7 +2449,7 @@ const GanttChart = () => {
                               {/* Segment label */}
                               {parseFloat(segmentWidth) > 60 && (
                                 <div className='absolute inset-0 flex items-center justify-center px-1 pointer-events-none'>
-                                  <span className='text-white text-xs font-medium truncate'>
+                                  <span className='text-white text-xs font-medium truncate' title={`${task.name} (${segmentIndex + 1})`}>
                                     {task.name} ({segmentIndex + 1})
                                   </span>
                                 </div>
@@ -2644,7 +2644,7 @@ const GanttChart = () => {
                               if (labels.length === 0) {
                                 return (
                                   <div className='absolute inset-0 flex items-center justify-center px-1 pointer-events-none'>
-                                    <span className='text-white text-xs font-medium truncate'>
+                                    <span className='text-white text-xs font-medium truncate' title={task.name}>
                                       {task.name}
                                     </span>
                                   </div>

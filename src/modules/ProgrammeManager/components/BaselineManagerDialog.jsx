@@ -275,7 +275,7 @@ const BaselineManagerDialog = ({
                         <div className='flex items-start justify-between'>
                           <div className='flex-1 min-w-0'>
                             <div className='flex items-center gap-2 mb-1'>
-                              <h4 className='text-sm font-medium text-gray-900 truncate'>
+                              <h4 className='text-sm font-medium text-gray-900 truncate' title={baseline.name}>
                                 {baseline.name}
                               </h4>
                               {isActive && (
