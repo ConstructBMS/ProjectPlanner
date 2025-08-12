@@ -51,6 +51,8 @@ import {
   ArrowsPointingInIcon,
   ArrowsPointingOutIcon,
   DocumentArrowUpIcon,
+  EyeIcon,
+  Cog6ToothIcon,
 } from '@heroicons/react/24/outline';
 
 export default function HomeTab({ onExpandAll, onCollapseAll }) {
@@ -151,7 +153,6 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     zoomToFit,
     goToToday,
     viewState,
-    toggleCriticalPath,
     toggleProgressLine,
   } = useViewContext();
 
@@ -1038,6 +1039,89 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
   // Check if there's data to export
   const hasDataToExport = tasks && tasks.length > 0;
 
+  // Status group state
+  const [showBaselinesMenu, setShowBaselinesMenu] = useState(false);
+  const [baselinesMenuPosition, setBaselinesMenuPosition] = useState({ x: 0, y: 0 });
+  const baselinesButtonRef = useRef(null);
+
+  // Status group handlers
+  const handleCriticalPathToggle = useCallback(() => {
+    // Emit VIEW_CRITICAL_PATH_TOGGLE event
+    const event = new window.CustomEvent('VIEW_CRITICAL_PATH_TOGGLE', {
+      detail: { 
+        currentState: viewState.showCriticalPath 
+      }
+    });
+    document.dispatchEvent(event);
+    
+    console.info('Critical Path toggle:', { 
+      currentState: viewState.showCriticalPath 
+    });
+  }, [viewState.showCriticalPath]);
+
+  const handleBaselinesMenuToggle = useCallback(() => {
+    if (baselinesButtonRef.current) {
+      const rect = baselinesButtonRef.current.getBoundingClientRect();
+      setBaselinesMenuPosition({
+        x: rect.left,
+        y: rect.bottom + 4
+      });
+    }
+    setShowBaselinesMenu(!showBaselinesMenu);
+  }, [showBaselinesMenu]);
+
+  const handleBaselinesMenuClose = useCallback(() => {
+    setShowBaselinesMenu(false);
+  }, []);
+
+  const handleBaselineAction = useCallback((action) => {
+    setShowBaselinesMenu(false);
+    
+    // Emit appropriate baseline event
+    const event = new window.CustomEvent(action, {
+      detail: { 
+        action,
+        hasTasks: hasDataToExport
+      }
+    });
+    document.dispatchEvent(event);
+    
+    console.info(`Baseline action: ${action}`, { 
+      hasTasks: hasDataToExport 
+    });
+  }, [hasDataToExport]);
+
+  const getBaselinesMenuItems = useCallback(() => [
+    {
+      id: 'set',
+      label: 'Set Baseline',
+      disabled: !hasDataToExport,
+      action: () => handleBaselineAction('BASELINE_SET'),
+      icon: <ChartBarIcon className="w-4 h-4" />
+    },
+    {
+      id: 'clear',
+      label: 'Clear Baseline',
+      disabled: !hasDataToExport,
+      action: () => handleBaselineAction('BASELINE_CLEAR'),
+      icon: <TrashIcon className="w-4 h-4" />
+    },
+    {
+      id: 'show',
+      label: 'Show Baselines',
+      disabled: false,
+      action: () => handleBaselineAction('BASELINE_SHOW_TOGGLE'),
+      icon: <EyeIcon className="w-4 h-4" />
+    },
+    {
+      id: 'manage',
+      label: 'Manage...',
+      disabled: false,
+      action: () => handleBaselineAction('BASELINE_MANAGER_OPEN'),
+      icon: <Cog6ToothIcon className="w-4 h-4" />
+    }
+  ], [handleBaselineAction, hasDataToExport]);
+
   // Legacy Print and Export handlers (for existing PrintExportDialog)
   const handlePrintLegacy = async printSettings => {
     try {
@@ -1467,18 +1551,29 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
         <RibbonButton
           icon={<ExclamationTriangleIcon className='w-4 h-4' />}
           label='Show Critical Path'
-          onClick={toggleCriticalPath}
+          onClick={handleCriticalPathToggle}
           tooltip="Toggle visibility of the project's critical path"
-          className={
-            viewState.showCriticalPath ? 'bg-blue-50 border-blue-500' : ''
-          }
+          active={viewState.showCriticalPath}
         />
-        <RibbonButton
-          icon={<ChartBarIcon className='w-4 h-4' />}
-          label='Baselines'
-          onClick={() => console.log('Manage Baselines clicked')}
-          tooltip='Set or compare project baselines'
-        />
+        
+        {/* Baselines Split Button */}
+        <div className="relative" ref={baselinesButtonRef}>
+          <RibbonButton
+            icon={<ChartBarIcon className='w-4 h-4' />}
+            label='Baselines'
+            onClick={handleBaselinesMenuToggle}
+            tooltip='Set or compare project baselines'
+            className="split"
+          />
+          <RibbonButton
+            icon={<ChevronDownIcon className='w-3 h-3' />}
+            label=""
+            onClick={handleBaselinesMenuToggle}
+            tooltip="Choose baseline action"
+            className="split-caret"
+          />
+        </div>
+        
         <RibbonButton
           icon={<LinkIcon className='w-4 h-4' />}
           label='Constraints'
@@ -1723,6 +1818,17 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Baselines Menu */}
+      {showBaselinesMenu && (
+        <RibbonMenu
+          items={getBaselinesMenuItems()}
+          onSelect={(item) => item.action()}
+          onClose={handleBaselinesMenuClose}
+          position={baselinesMenuPosition}
+          parentRef={baselinesButtonRef}
+        />
       )}
 
       {/* Color Menu */}
