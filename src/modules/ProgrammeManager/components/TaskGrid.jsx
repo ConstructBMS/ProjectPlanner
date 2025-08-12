@@ -837,7 +837,7 @@ const TaskGrid = React.memo(() => {
 
   return (
     <>
-      <div className='asta-grid h-full overflow-auto'>
+      <div className='asta-grid h-full'>
         {/* Grid Header */}
         <div className='asta-grid-header flex items-center border-b-2 border-gray-300 bg-gray-50 sticky top-0 z-10'>
           <div className='w-8 h-8' />

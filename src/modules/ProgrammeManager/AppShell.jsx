@@ -23,7 +23,6 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
   const contentRef = useRef();
   const { getPaneSize } = useLayoutContext();
   const [mainPaneRatios, setMainPaneRatios] = useState([0.2, 0.4, 0.4]);
-  const [propertiesPaneHeight, setPropertiesPaneHeight] = useState(0.25);
 
   const handleExpandAll = () => {
     sidebarRef.current?.expandAll?.();
@@ -50,55 +49,49 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
   return (
     <div
       ref={contentRef}
-      className='h-screen w-screen flex flex-col overflow-hidden bg-gray-100'
+      className='pm-app-shell bg-gray-100'
     >
-      {/* Ribbon Container with persistent state */}
-      <RibbonContainer
-        onExpandAll={handleExpandAll}
-        onCollapseAll={handleCollapseAll}
-        contentRef={contentRef}
-        projectId={projectId}
-        onBackToPortfolio={onBackToPortfolio}
-      />
-
-      {/* Main Content Area - Resizable panes */}
-      <div className='flex-1 overflow-hidden'>
-        <Splitter
-          orientation="vertical"
-          defaultRatios={[0.2, 0.4, 0.4]}
-          minSizes={[220, 420, 480]}
-          storageKey="pm.layout.main-panes"
-          onRatiosChange={handleMainPaneRatiosChange}
-        >
-          {/* SidebarTree - Left pane */}
-          <div className='bg-white border-r border-gray-300 tree-scroll-container'>
-            <SidebarTree ref={sidebarRef} />
-          </div>
-
-          {/* TaskGrid - Middle pane */}
-          <div className='bg-white border-r border-gray-300 grid-scroll-container'>
-            <TaskGrid />
-          </div>
-
-          {/* GanttChart - Right pane */}
-          <div className='bg-white gantt-scroll-container'>
-            <GanttChart />
-          </div>
-        </Splitter>
+      {/* Header Section - Fixed height, no scroll */}
+      <div className='pm-header-section'>
+        <RibbonContainer
+          onExpandAll={handleExpandAll}
+          onCollapseAll={handleCollapseAll}
+          contentRef={contentRef}
+          projectId={projectId}
+          onBackToPortfolio={onBackToPortfolio}
+        />
       </div>
 
-      {/* TaskPropertiesPane - Bottom pane, full width */}
-      <div
-        className='bg-white border-t border-gray-300 properties-scroll-container'
-        style={{
-          height:
-            getPaneSize('properties') === 'flex-1'
-              ? '256px'
-              : getPaneSize('properties'),
-          minHeight: '200px',
-          maxHeight: '400px',
-        }}
-      >
+      {/* Main Scroll Area - Single scroll container */}
+      <div className='pm-main-scroll-area'>
+        <div className='pm-pane-container'>
+          <Splitter
+            orientation="vertical"
+            defaultRatios={[0.2, 0.4, 0.4]}
+            minSizes={[220, 420, 480]}
+            storageKey="pm.layout.main-panes"
+            onRatiosChange={handleMainPaneRatiosChange}
+          >
+            {/* SidebarTree - Left pane */}
+            <div className='pm-pane bg-white border-r border-gray-300'>
+              <SidebarTree ref={sidebarRef} />
+            </div>
+
+            {/* TaskGrid - Middle pane */}
+            <div className='pm-pane bg-white border-r border-gray-300'>
+              <TaskGrid />
+            </div>
+
+            {/* GanttChart - Right pane */}
+            <div className='pm-pane bg-white'>
+              <GanttChart />
+            </div>
+          </Splitter>
+        </div>
+      </div>
+
+      {/* TaskPropertiesPane - Bottom pane, fixed height outside scroll area */}
+      <div className='pm-properties-pane bg-white border-t border-gray-300'>
         <TaskPropertiesPane />
       </div>
     </div>

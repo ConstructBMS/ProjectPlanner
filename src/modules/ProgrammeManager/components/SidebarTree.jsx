@@ -516,7 +516,7 @@ const SidebarTree = forwardRef((props, ref) => {
   ]);
 
   return (
-    <div className='asta-tree h-full overflow-auto'>
+    <div className='asta-tree h-full'>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}

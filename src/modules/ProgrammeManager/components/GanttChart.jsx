@@ -2047,7 +2047,7 @@ const GanttChart = () => {
           timelineContainerRef.current = el;
           smoothScrollRef.current = el;
         }}
-        className={`flex-1 overflow-auto relative gantt-scroll-container ${
+        className={`flex-1 relative gantt-scroll-container ${
           viewState.showGridlines ? 'divide-y divide-gray-300' : ''
         }`}
         onClick={handleChartClick}

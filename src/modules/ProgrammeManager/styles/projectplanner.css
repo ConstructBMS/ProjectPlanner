@@ -1,20 +1,75 @@
 /* ProjectPlanner Shared Styles */
 
-/* ConstructBMS-Styled Scrollbars */
+/* Global height constraints to prevent page-level scrolling */
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+#root {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Single scroll container layout */
+.pm-app-shell {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.pm-header-section {
+  flex-shrink: 0;
+  /* Header: ~60px + Ribbon: ~200px (when expanded) = ~260px total */
+  height: 260px;
+}
+
+.pm-main-scroll-area {
+  flex: 1;
+  overflow: auto;
+  /* Use calc to account for header section */
+  height: calc(100vh - 260px);
+}
+
+.pm-pane-container {
+  height: 100%;
+  overflow: hidden;
+}
+
+.pm-pane {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Properties pane - fixed height outside scroll area */
+.pm-properties-pane {
+  flex-shrink: 0;
+  height: 256px;
+  min-height: 200px;
+  max-height: 400px;
+  overflow: auto;
+}
+
+/* ConstructBMS-Styled Scrollbars - Applied to main scroll area and properties pane */
 
 /* WebKit Scrollbars (Chrome, Safari, Edge) */
-::-webkit-scrollbar {
+.pm-main-scroll-area::-webkit-scrollbar,
+.pm-properties-pane::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 
-::-webkit-scrollbar-track {
+.pm-main-scroll-area::-webkit-scrollbar-track,
+.pm-properties-pane::-webkit-scrollbar-track {
   background: #111928;
   border: 1px inset #232a38;
   border-radius: 8px;
 }
 
-::-webkit-scrollbar-thumb {
+.pm-main-scroll-area::-webkit-scrollbar-thumb,
+.pm-properties-pane::-webkit-scrollbar-thumb {
   background: #2a3448;
   border: 2px solid transparent;
   border-radius: 8px;
@@ -22,207 +77,46 @@
   transition: background-color 0.15s ease;
 }
 
-::-webkit-scrollbar-thumb:hover {
+.pm-main-scroll-area::-webkit-scrollbar-thumb:hover,
+.pm-properties-pane::-webkit-scrollbar-thumb:hover {
   background: #334158;
   background-clip: content-box;
 }
 
-::-webkit-scrollbar-thumb:active {
+.pm-main-scroll-area::-webkit-scrollbar-thumb:active,
+.pm-properties-pane::-webkit-scrollbar-thumb:active {
   background: #3b4a63;
   background-clip: content-box;
 }
 
-::-webkit-scrollbar-corner {
+.pm-main-scroll-area::-webkit-scrollbar-corner,
+.pm-properties-pane::-webkit-scrollbar-corner {
   background: #111928;
   border: 1px inset #232a38;
 }
 
 /* Firefox Scrollbars */
-* {
+.pm-main-scroll-area,
+.pm-properties-pane {
   scrollbar-width: thin;
   scrollbar-color: #2a3448 #111928;
 }
 
 /* Smooth Scrolling */
-.smooth-scroll {
+.pm-main-scroll-area,
+.pm-properties-pane {
   scroll-behavior: smooth;
-}
-
-/* Gantt-specific scroll containers */
-.gantt-scroll-container {
-  overflow: auto;
-  scroll-behavior: smooth;
-}
-
-.gantt-scroll-container::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-
-.gantt-scroll-container::-webkit-scrollbar-track {
-  background: #111928;
-  border: 1px inset #232a38;
-  border-radius: 8px;
-}
-
-.gantt-scroll-container::-webkit-scrollbar-thumb {
-  background: #2a3448;
-  border: 2px solid transparent;
-  border-radius: 8px;
-  background-clip: content-box;
-  transition: background-color 0.15s ease;
-}
-
-.gantt-scroll-container::-webkit-scrollbar-thumb:hover {
-  background: #334158;
-  background-clip: content-box;
-}
-
-.gantt-scroll-container::-webkit-scrollbar-thumb:active {
-  background: #3b4a63;
-  background-clip: content-box;
-}
-
-.gantt-scroll-container::-webkit-scrollbar-corner {
-  background: #111928;
-  border: 1px inset #232a38;
-}
-
-/* Grid-specific scroll containers */
-.grid-scroll-container {
-  overflow: auto;
-  scroll-behavior: smooth;
-}
-
-.grid-scroll-container::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-
-.grid-scroll-container::-webkit-scrollbar-track {
-  background: #111928;
-  border: 1px inset #232a38;
-  border-radius: 8px;
-}
-
-.grid-scroll-container::-webkit-scrollbar-thumb {
-  background: #2a3448;
-  border: 2px solid transparent;
-  border-radius: 8px;
-  background-clip: content-box;
-  transition: background-color 0.15s ease;
-}
-
-.grid-scroll-container::-webkit-scrollbar-thumb:hover {
-  background: #334158;
-  background-clip: content-box;
-}
-
-.grid-scroll-container::-webkit-scrollbar-thumb:active {
-  background: #3b4a63;
-  background-clip: content-box;
-}
-
-.grid-scroll-container::-webkit-scrollbar-corner {
-  background: #111928;
-  border: 1px inset #232a38;
-}
-
-/* Tree-specific scroll containers */
-.tree-scroll-container {
-  overflow: auto;
-  scroll-behavior: smooth;
-}
-
-.tree-scroll-container::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-
-.tree-scroll-container::-webkit-scrollbar-track {
-  background: #111928;
-  border: 1px inset #232a38;
-  border-radius: 8px;
-}
-
-.tree-scroll-container::-webkit-scrollbar-thumb {
-  background: #2a3448;
-  border: 2px solid transparent;
-  border-radius: 8px;
-  background-clip: content-box;
-  transition: background-color 0.15s ease;
-}
-
-.tree-scroll-container::-webkit-scrollbar-thumb:hover {
-  background: #334158;
-  background-clip: content-box;
-}
-
-.tree-scroll-container::-webkit-scrollbar-thumb:active {
-  background: #3b4a63;
-  background-clip: content-box;
-}
-
-.tree-scroll-container::-webkit-scrollbar-corner {
-  background: #111928;
-  border: 1px inset #232a38;
-}
-
-/* Properties pane scroll containers */
-.properties-scroll-container {
-  overflow: auto;
-  scroll-behavior: smooth;
-}
-
-.properties-scroll-container::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-
-.properties-scroll-container::-webkit-scrollbar-track {
-  background: #111928;
-  border: 1px inset #232a38;
-  border-radius: 8px;
-}
-
-.properties-scroll-container::-webkit-scrollbar-thumb {
-  background: #2a3448;
-  border: 2px solid transparent;
-  border-radius: 8px;
-  background-clip: content-box;
-  transition: background-color 0.15s ease;
-}
-
-.properties-scroll-container::-webkit-scrollbar-thumb:hover {
-  background: #334158;
-  background-clip: content-box;
-}
-
-.properties-scroll-container::-webkit-scrollbar-thumb:active {
-  background: #3b4a63;
-  background-clip: content-box;
-}
-
-.properties-scroll-container::-webkit-scrollbar-corner {
-  background: #111928;
-  border: 1px inset #232a38;
 }
 
 /* Respect reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
-  .smooth-scroll,
-  .gantt-scroll-container,
-  .grid-scroll-container,
-  .tree-scroll-container,
-  .properties-scroll-container {
+  .pm-main-scroll-area,
+  .pm-properties-pane {
     scroll-behavior: auto;
   }
   
-  ::-webkit-scrollbar-thumb,
-  .gantt-scroll-container::-webkit-scrollbar-thumb,
-  .grid-scroll-container::-webkit-scrollbar-thumb,
-  .tree-scroll-container::-webkit-scrollbar-thumb,
-  .properties-scroll-container::-webkit-scrollbar-thumb {
+  .pm-main-scroll-area::-webkit-scrollbar-thumb,
+  .pm-properties-pane::-webkit-scrollbar-thumb {
     transition: none;
   }
 }
