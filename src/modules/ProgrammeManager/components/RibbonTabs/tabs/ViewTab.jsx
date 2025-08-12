@@ -3,6 +3,7 @@ import { useViewContext } from '../../../context/ViewContext';
 import { useTaskContext } from '../../../context/TaskContext';
 import { useFilterContext } from '../../../context/FilterContext';
 import { useLayoutContext } from '../../../context/LayoutContext';
+import { getSavedFilters, saveFilter, deleteFilter, getLastFilterId } from '../../../utils/prefs';
 import PrintExportDialog from '../../PrintExportDialog';
 import ResourceHistogram from '../../ResourceHistogram';
 import ColumnChooserDialog from '../../modals/ColumnChooserDialog';
@@ -26,6 +27,7 @@ import {
   TableCellsIcon,
   DocumentArrowDownIcon,
   ArrowPathIcon,
+  FolderIcon,
 } from '@heroicons/react/24/outline';
 
 const TimelineZoomDropdown = () => {
@@ -1483,6 +1485,266 @@ const ShowIdsToggle = () => {
   );
 };
 
+// Filter & Group Components
+const FilterSplitButton = () => {
+  const [savedFilters, setSavedFilters] = useState([]);
+  const [lastFilterId, setLastFilterId] = useState();
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [saveFilterName, setSaveFilterName] = useState('');
+  const [currentFilterQuery] = useState('');
+
+  useEffect(() => {
+    // Load saved filters and last filter ID
+    setSavedFilters(getSavedFilters());
+    setLastFilterId(getLastFilterId());
+  }, []);
+
+  const handleFilterToggle = () => {
+    if (lastFilterId) {
+      const filter = savedFilters.find(f => f.id === lastFilterId);
+      if (filter) {
+        // Emit filter apply event
+        const event = new window.CustomEvent('VIEW_FILTER_APPLY', { 
+          detail: { filterId: lastFilterId, query: filter.query } 
+        });
+        document.dispatchEvent(event);
+        console.info('Applied last filter:', filter.name);
+      }
+    } else {
+      console.info('No last filter to apply');
+    }
+  };
+
+  const handleSaveCurrentFilter = () => {
+    setShowSaveDialog(true);
+    setSaveFilterName('');
+  };
+
+  const handleSaveFilterConfirm = () => {
+    if (saveFilterName.trim()) {
+      const newFilter = {
+        id: `filter_${Date.now()}`,
+        name: saveFilterName.trim(),
+        query: currentFilterQuery,
+        createdAt: new Date().toISOString(),
+        lastUsed: new Date().toISOString()
+      };
+      
+      saveFilter(newFilter);
+      setSavedFilters(getSavedFilters());
+      setLastFilterId(newFilter.id);
+      setLastFilterId(newFilter.id);
+      setShowSaveDialog(false);
+      setSaveFilterName('');
+      console.info('Saved filter:', newFilter.name);
+    }
+  };
+
+  const handleDeleteFilter = (filterId) => {
+    const filter = savedFilters.find(f => f.id === filterId);
+    if (filter && confirm(`Delete filter "${filter.name}"?`)) {
+      deleteFilter(filterId);
+      setSavedFilters(getSavedFilters());
+      if (lastFilterId === filterId) {
+        setLastFilterId(undefined);
+        setLastFilterId(undefined);
+      }
+      console.info('Deleted filter:', filter.name);
+    }
+  };
+
+  const handleClearFilter = () => {
+    const event = new window.CustomEvent('VIEW_FILTER_CLEAR');
+    document.dispatchEvent(event);
+    setLastFilterId(undefined);
+    setLastFilterId(undefined);
+    console.info('Cleared all filters');
+  };
+
+  const handleApplyFilter = (filterId) => {
+    const filter = savedFilters.find(f => f.id === filterId);
+    if (filter) {
+      // Update last used timestamp
+      filter.lastUsed = new Date().toISOString();
+      saveFilter(filter);
+      setLastFilterId(filterId);
+      setLastFilterId(filterId);
+      
+      // Emit filter apply event
+      const event = new window.CustomEvent('VIEW_FILTER_APPLY', { 
+        detail: { filterId, query: filter.query } 
+      });
+      document.dispatchEvent(event);
+      console.info('Applied filter:', filter.name);
+    }
+  };
+
+  const getMenuItems = () => {
+    const items = [
+      ...savedFilters.map(filter => ({
+        id: filter.id,
+        label: filter.name,
+        onClick: () => handleApplyFilter(filter.id),
+        icon: 'filter'
+      })),
+      { id: 'separator1', type: 'separator' },
+      { id: 'save', label: 'Save Current...', onClick: handleSaveCurrentFilter, icon: 'save' },
+      { id: 'clear', label: 'Clear Filter', onClick: handleClearFilter, icon: 'clear' }
+    ];
+
+    // Add delete options for saved filters
+    if (savedFilters.length > 0) {
+      items.push({ id: 'separator2', type: 'separator' });
+      savedFilters.forEach(filter => {
+        items.push({
+          id: `delete_${filter.id}`,
+          label: `Delete "${filter.name}"`,
+          onClick: () => handleDeleteFilter(filter.id),
+          icon: 'delete'
+        });
+      });
+    }
+
+    return items;
+  };
+
+  const lastFilter = savedFilters.find(f => f.id === lastFilterId);
+  const isFilterActive = !!lastFilter;
+
+  return (
+    <>
+      <RibbonButton
+        icon={<FunnelIcon className='w-4 h-4' />}
+        label='Filter'
+        onClick={handleFilterToggle}
+        tooltip={lastFilter ? `Apply ${lastFilter.name}` : 'No saved filters'}
+        active={isFilterActive}
+        menuItems={getMenuItems()}
+        onMenuSelect={(item) => item.onClick()}
+      />
+
+      {/* Save Filter Dialog */}
+      {showSaveDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Save Filter
+            </h3>
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Filter name..."
+                value={saveFilterName}
+                onChange={(e) => setSaveFilterName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') setShowSaveDialog(false);
+                  else if (e.key === 'Enter') handleSaveFilterConfirm();
+                }}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                autoFocus
+              />
+            </div>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowSaveDialog(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveFilterConfirm}
+                disabled={!saveFilterName.trim()}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+const QuickFilterInput = () => {
+  const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const inputRef = useRef();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(query);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  useEffect(() => {
+    if (debouncedQuery !== '') {
+      const event = new window.CustomEvent('VIEW_FILTER_QUERY', { 
+        detail: { query: debouncedQuery } 
+      });
+      document.dispatchEvent(event);
+      console.info('Quick filter query:', debouncedQuery);
+    }
+  }, [debouncedQuery]);
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      setQuery('');
+      setDebouncedQuery('');
+      inputRef.current?.blur();
+    }
+  };
+
+  return (
+    <div className="relative">
+      <input
+        ref={inputRef}
+        type="text"
+        placeholder="Quick filter..."
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        onKeyDown={handleKeyDown}
+        className="w-32 h-8 px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+      />
+      {query && (
+        <button
+          onClick={() => setQuery('')}
+          className="absolute right-1 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+        >
+          ×
+        </button>
+      )}
+    </div>
+  );
+};
+
+const GroupByWBSToggle = () => {
+  const [isGrouped, setIsGrouped] = useState(false);
+
+  const handleToggle = () => {
+    const newState = !isGrouped;
+    setIsGrouped(newState);
+    
+    const event = new window.CustomEvent('VIEW_GROUP_BY_WBS', { 
+      detail: { grouped: newState } 
+    });
+    document.dispatchEvent(event);
+    console.info('Group by WBS toggled:', newState);
+  };
+
+  return (
+    <RibbonButton
+      icon={<FolderIcon className='w-4 h-4' />}
+      label='Group WBS'
+      onClick={handleToggle}
+      tooltip='Group tasks by Work Breakdown Structure'
+      active={isGrouped}
+    />
+  );
+};
+
 const ViewTab = ({ contentRef }) => {
   const [showResourceHistogram, setShowResourceHistogram] = useState(false);
   const [showColumnChooser, setShowColumnChooser] = useState(false);
@@ -1594,6 +1856,13 @@ const ViewTab = ({ contentRef }) => {
           <FreezeFirstColumnToggle />
           <RowStripeToggle />
           <ShowIdsToggle />
+        </RibbonGroup>
+
+        {/* Filter & Group Group */}
+        <RibbonGroup title='Filter & Group'>
+          <FilterSplitButton />
+          <QuickFilterInput />
+          <GroupByWBSToggle />
         </RibbonGroup>
 
         {/* Resource Group */}

@@ -3,10 +3,20 @@ export interface LayoutRatios {
   [key: string]: number[];
 }
 
+export interface SavedFilter {
+  id: string;
+  name: string;
+  query: string;
+  createdAt: string;
+  lastUsed?: string;
+}
+
 export interface UserPreferences {
   layoutRatios: LayoutRatios;
   ribbonMinimised: boolean;
   qatPosition: 'above' | 'below';
+  savedFilters: SavedFilter[];
+  lastFilterId?: string;
 }
 
 const STORAGE_KEY = 'pm.preferences';
@@ -25,7 +35,9 @@ export const loadPreferences = (): UserPreferences => {
   return {
     layoutRatios: {},
     ribbonMinimised: false,
-    qatPosition: 'above'
+    qatPosition: 'above',
+    savedFilters: [],
+    lastFilterId: undefined
   };
 };
 
@@ -80,4 +92,44 @@ export const getQatPosition = (): 'above' | 'below' => {
 // Save QAT position
 export const saveQatPosition = (position: 'above' | 'below'): void => {
   savePreferences({ qatPosition: position });
+};
+
+// Filter management functions
+export const getSavedFilters = (): SavedFilter[] => {
+  const prefs = loadPreferences();
+  return prefs.savedFilters || [];
+};
+
+export const saveFilter = (filter: SavedFilter): void => {
+  const prefs = loadPreferences();
+  const existingIndex = prefs.savedFilters.findIndex(f => f.id === filter.id);
+  
+  if (existingIndex >= 0) {
+    prefs.savedFilters[existingIndex] = filter;
+  } else {
+    prefs.savedFilters.push(filter);
+  }
+  
+  savePreferences(prefs);
+};
+
+export const deleteFilter = (filterId: string): void => {
+  const prefs = loadPreferences();
+  prefs.savedFilters = prefs.savedFilters.filter(f => f.id !== filterId);
+  
+  // If we're deleting the last used filter, clear the lastFilterId
+  if (prefs.lastFilterId === filterId) {
+    prefs.lastFilterId = undefined;
+  }
+  
+  savePreferences(prefs);
+};
+
+export const getLastFilterId = (): string | undefined => {
+  const prefs = loadPreferences();
+  return prefs.lastFilterId;
+};
+
+export const setLastFilterId = (filterId: string | undefined): void => {
+  savePreferences({ lastFilterId: filterId });
 };
