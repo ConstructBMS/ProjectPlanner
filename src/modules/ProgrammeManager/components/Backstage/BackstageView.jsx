@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { getStorage, setStorage } from '../../utils/persistentStorage.js';
 import './Backstage.css';
 
 const BackstageView = ({ isOpen, onClose }) => {
@@ -6,20 +7,23 @@ const BackstageView = ({ isOpen, onClose }) => {
   const overlayRef = useRef(null);
   const contentRef = useRef(null);
 
-  // Load last selected item from localStorage
+  // Load last selected item from persistent storage
   useEffect(() => {
     if (isOpen) {
-      const savedItem = localStorage.getItem('pm.backstage.selected');
-      if (savedItem) {
-        setSelectedItem(savedItem);
-      }
+      const loadSavedItem = async () => {
+        const savedItem = await getStorage('pm.backstage.selected');
+        if (savedItem) {
+          setSelectedItem(savedItem);
+        }
+      };
+      loadSavedItem();
     }
   }, [isOpen]);
 
-  // Save selected item to localStorage
-  const handleItemSelect = (item) => {
+  // Save selected item to persistent storage
+  const handleItemSelect = async (item) => {
     setSelectedItem(item);
-    localStorage.setItem('pm.backstage.selected', item);
+    await setStorage('pm.backstage.selected', item);
   };
 
   // Handle ESC key to close

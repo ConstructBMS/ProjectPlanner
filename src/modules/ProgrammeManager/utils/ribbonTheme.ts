@@ -1,3 +1,5 @@
+import { getStorage, setStorage } from './persistentStorage.js';
+
 // Ribbon theme utility for managing style preferences
 
 export type RibbonMode = 'light' | 'dark';
@@ -14,34 +16,29 @@ const DEFAULT_STYLE: RibbonStyle = {
   accent: 'blue'
 };
 
-// Load ribbon style from storage
-export const loadRibbonStyle = (): RibbonStyle => {
-  // For backward compatibility, try localStorage first
+// Load ribbon style from persistent storage
+export const loadRibbonStyle = async (): Promise<RibbonStyle> => {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      if (parsed.mode && parsed.accent) {
-        return {
-          mode: parsed.mode as RibbonMode,
-          accent: parsed.accent as RibbonAccent
-        };
-      }
+    const stored = await getStorage(STORAGE_KEY);
+    if (stored && stored.mode && stored.accent) {
+      return {
+        mode: stored.mode as RibbonMode,
+        accent: stored.accent as RibbonAccent
+      };
     }
   } catch (error) {
-    console.warn('Failed to load ribbon style from localStorage:', error);
+    console.warn('Failed to load ribbon style from storage:', error);
   }
   
   return DEFAULT_STYLE;
 };
 
-// Save ribbon style to storage
-export const saveRibbonStyle = (style: RibbonStyle): void => {
-  // For backward compatibility, save to localStorage as well
+// Save ribbon style to persistent storage
+export const saveRibbonStyle = async (style: RibbonStyle): Promise<void> => {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(style));
+    await setStorage(STORAGE_KEY, style);
   } catch (error) {
-    console.warn('Failed to save ribbon style to localStorage:', error);
+    console.warn('Failed to save ribbon style to storage:', error);
   }
 };
 

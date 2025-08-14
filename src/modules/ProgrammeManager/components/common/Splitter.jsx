@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { getStorage, setStorage } from '../../utils/persistentStorage.js';
 import './Splitter.css';
 
 const Splitter = ({
@@ -17,28 +18,20 @@ const Splitter = ({
   const containerRef = useRef(null);
   const splitterRefs = useRef([]);
 
-  // Load saved ratios from localStorage
+  // Load saved ratios from persistent storage
   useEffect(() => {
-    const savedRatios = localStorage.getItem(storageKey);
-    if (savedRatios) {
-      try {
-        const parsed = JSON.parse(savedRatios);
-        if (Array.isArray(parsed) && parsed.length === defaultRatios.length) {
-          setRatios(parsed);
-        }
-      } catch (error) {
-        console.warn('Failed to load saved ratios:', error);
+    const loadSavedRatios = async () => {
+      const savedRatios = await getStorage(storageKey);
+      if (savedRatios && Array.isArray(savedRatios) && savedRatios.length === defaultRatios.length) {
+        setRatios(savedRatios);
       }
-    }
+    };
+    loadSavedRatios();
   }, [storageKey, defaultRatios.length]);
 
-  // Save ratios to localStorage
+  // Save ratios to persistent storage
   const saveRatios = useCallback((newRatios) => {
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(newRatios));
-    } catch (error) {
-      console.warn('Failed to save ratios:', error);
-    }
+    setStorage(storageKey, newRatios);
   }, [storageKey]);
 
   // Reset to default ratios

@@ -5,6 +5,7 @@ import React, {
   useCallback,
   useEffect,
 } from 'react';
+import { getStorage, setStorage } from '../utils/persistentStorage.js';
 import {
   DEFAULT_CALENDAR,
   validateCalendar,
@@ -48,67 +49,63 @@ export const CalendarProvider = ({ children }) => {
     }),
   ]);
 
-  // Load calendars from localStorage on mount
+  // Load calendars from persistent storage on mount
   useEffect(() => {
-    try {
-      const savedGlobal = localStorage.getItem('gantt.globalCalendar');
-      if (savedGlobal) {
-        const parsed = JSON.parse(savedGlobal);
-        if (validateCalendar(parsed).isValid) {
-          setGlobalCalendar(parsed);
+    const loadCalendars = async () => {
+      try {
+        const savedGlobal = await getStorage('gantt.globalCalendar');
+        if (savedGlobal && validateCalendar(savedGlobal).isValid) {
+          setGlobalCalendar(savedGlobal);
         }
-      }
 
-      const savedTaskCalendars = localStorage.getItem('gantt.taskCalendars');
-      if (savedTaskCalendars) {
-        const parsed = JSON.parse(savedTaskCalendars);
-        setTaskCalendars(parsed);
-      }
+        const savedTaskCalendars = await getStorage('gantt.taskCalendars');
+        if (savedTaskCalendars) {
+          setTaskCalendars(savedTaskCalendars);
+        }
 
-      const savedProjectCalendars = localStorage.getItem(
-        'gantt.projectCalendars'
-      );
-      if (savedProjectCalendars) {
-        const parsed = JSON.parse(savedProjectCalendars);
-        setProjectCalendars(parsed);
+        const savedProjectCalendars = await getStorage('gantt.projectCalendars');
+        if (savedProjectCalendars) {
+          setProjectCalendars(savedProjectCalendars);
+        }
+      } catch (error) {
+        console.error('Error loading calendars from storage:', error);
       }
-    } catch (error) {
-      console.error('Error loading calendars from localStorage:', error);
-    }
+    };
+    loadCalendars();
   }, []);
 
-  // Save calendars to localStorage when they change
+  // Save calendars to persistent storage when they change
   useEffect(() => {
-    try {
-      localStorage.setItem(
-        'gantt.globalCalendar',
-        JSON.stringify(globalCalendar)
-      );
-    } catch (error) {
-      console.error('Error saving global calendar to localStorage:', error);
-    }
+    const saveGlobalCalendar = async () => {
+      try {
+        await setStorage('gantt.globalCalendar', globalCalendar);
+      } catch (error) {
+        console.error('Error saving global calendar to storage:', error);
+      }
+    };
+    saveGlobalCalendar();
   }, [globalCalendar]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(
-        'gantt.taskCalendars',
-        JSON.stringify(taskCalendars)
-      );
-    } catch (error) {
-      console.error('Error saving task calendars to localStorage:', error);
-    }
+    const saveTaskCalendars = async () => {
+      try {
+        await setStorage('gantt.taskCalendars', taskCalendars);
+      } catch (error) {
+        console.error('Error saving task calendars to storage:', error);
+      }
+    };
+    saveTaskCalendars();
   }, [taskCalendars]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(
-        'gantt.projectCalendars',
-        JSON.stringify(projectCalendars)
-      );
-    } catch (error) {
-      console.error('Error saving project calendars to localStorage:', error);
-    }
+    const saveProjectCalendars = async () => {
+      try {
+        await setStorage('gantt.projectCalendars', projectCalendars);
+      } catch (error) {
+        console.error('Error saving project calendars to storage:', error);
+      }
+    };
+    saveProjectCalendars();
   }, [projectCalendars]);
 
   // Update global calendar

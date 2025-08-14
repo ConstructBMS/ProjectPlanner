@@ -148,7 +148,7 @@ const ColumnChooserDialog = ({
       const newConfig = {
         ...gridConfig,
         columns: currentColumns.map(col =>
-          col.key === columnKey ? { ...col, visible: !col.visible } : col
+          (col.key === columnKey ? { ...col, visible: !col.visible } : col)
         ),
         lastModified: new Date().toISOString(),
       };

@@ -5,6 +5,7 @@ import React, {
   useCallback,
   useEffect,
 } from 'react';
+import { getStorage, setStorage } from '../utils/persistentStorage.js';
 import {
   createDefaultGridConfig,
   loadGridConfigFromStorage,
@@ -46,22 +47,10 @@ export const LayoutProvider = ({ children }) => {
   const [savedPresets, setSavedPresets] = useState([]);
   
   // Grid options state
-  const [gridOptions, setGridOptions] = useState(() => {
-    try {
-      const saved = localStorage.getItem('pm.grid.opts');
-      return saved ? JSON.parse(saved) : {
-        freezeFirstColumn: false,
-        rowStripe: true,
-        showIds: false
-      };
-    } catch (error) {
-      console.error('Error loading grid options from localStorage:', error);
-      return {
-        freezeFirstColumn: false,
-        rowStripe: true,
-        showIds: false
-      };
-    }
+  const [gridOptions, setGridOptions] = useState({
+    freezeFirstColumn: false,
+    rowStripe: true,
+    showIds: false
   });
 
   // Save grid config to localStorage when it changes
@@ -69,35 +58,43 @@ export const LayoutProvider = ({ children }) => {
     saveGridConfigToStorage(gridConfig);
   }, [gridConfig]);
 
-  // Load saved presets from localStorage on mount
+  // Load saved presets from persistent storage on mount
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('gantt.layoutPresets');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setSavedPresets(parsed);
+    const loadSavedPresets = async () => {
+      try {
+        const saved = await getStorage('gantt.layoutPresets');
+        if (saved) {
+          setSavedPresets(saved);
+        }
+      } catch (error) {
+        console.error('Error loading layout presets from storage:', error);
       }
-    } catch (error) {
-      console.error('Error loading layout presets from localStorage:', error);
-    }
+    };
+    loadSavedPresets();
   }, []);
 
-  // Save presets to localStorage when they change
+  // Save presets to persistent storage when they change
   useEffect(() => {
-    try {
-      localStorage.setItem('gantt.layoutPresets', JSON.stringify(savedPresets));
-    } catch (error) {
-      console.error('Error saving layout presets to localStorage:', error);
-    }
+    const savePresets = async () => {
+      try {
+        await setStorage('gantt.layoutPresets', savedPresets);
+      } catch (error) {
+        console.error('Error saving layout presets to storage:', error);
+      }
+    };
+    savePresets();
   }, [savedPresets]);
 
-  // Save grid options to localStorage when they change
+  // Save grid options to persistent storage when they change
   useEffect(() => {
-    try {
-      localStorage.setItem('pm.grid.opts', JSON.stringify(gridOptions));
-    } catch (error) {
-      console.error('Error saving grid options to localStorage:', error);
-    }
+    const saveGridOptions = async () => {
+      try {
+        await setStorage('pm.grid.opts', gridOptions);
+      } catch (error) {
+        console.error('Error saving grid options to storage:', error);
+      }
+    };
+    saveGridOptions();
   }, [gridOptions]);
 
   // Update grid configuration
@@ -153,7 +150,7 @@ export const LayoutProvider = ({ children }) => {
       const newConfig = {
         ...gridConfig,
         columns: gridConfig.columns.map(col =>
-          col.key === columnName ? { ...col, visible: isVisible } : col
+          (col.key === columnName ? { ...col, visible: isVisible } : col)
         ),
         lastModified: new Date().toISOString(),
       };

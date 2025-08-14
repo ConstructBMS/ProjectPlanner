@@ -19,14 +19,16 @@ export interface UserPreferences {
   lastFilterId?: string;
 }
 
+import { getStorage, setStorage } from './persistentStorage.js';
+
 const STORAGE_KEY = 'pm.preferences';
 
-// Load preferences from localStorage
-export const loadPreferences = (): UserPreferences => {
+// Load preferences from persistent storage
+export const loadPreferences = async (): Promise<UserPreferences> => {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = await getStorage(STORAGE_KEY);
     if (stored) {
-      return JSON.parse(stored);
+      return stored;
     }
   } catch (error) {
     console.warn('Failed to load preferences:', error);
@@ -41,12 +43,12 @@ export const loadPreferences = (): UserPreferences => {
   };
 };
 
-// Save preferences to localStorage
-export const savePreferences = (prefs: Partial<UserPreferences>): void => {
+// Save preferences to persistent storage
+export const savePreferences = async (prefs: Partial<UserPreferences>): Promise<void> => {
   try {
-    const current = loadPreferences();
+    const current = await loadPreferences();
     const updated = { ...current, ...prefs };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    await setStorage(STORAGE_KEY, updated);
   } catch (error) {
     console.warn('Failed to save preferences:', error);
   }

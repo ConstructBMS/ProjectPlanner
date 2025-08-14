@@ -330,8 +330,16 @@
 }
 
 .pm-ribbon .project-button:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
+  color: var(--rbn-text-muted);
+}
+
+.pm-ribbon .project-button:disabled:hover,
+.pm-ribbon .project-button:disabled:focus,
+.pm-ribbon .project-button:disabled:active {
+  background: transparent;
+  border-color: transparent;
   color: var(--rbn-text-muted);
 }
 
@@ -536,7 +544,7 @@
 }
 
 .ribbon-menu-item.disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
   color: var(--rbn-text-muted);
 }

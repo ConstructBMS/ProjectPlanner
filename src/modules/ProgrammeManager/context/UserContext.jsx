@@ -78,7 +78,7 @@ export const UserProvider = ({ children }) => {
       } else {
         // No session, create mock user for development
         const mockUser = {
-          id: 'mock-user-id',
+          id: '00000000-0000-0000-0000-000000000001',
           email: 'demo@example.com',
           role: 'manager', // Default to manager for demo
           name: 'Demo User',
@@ -96,7 +96,7 @@ export const UserProvider = ({ children }) => {
 
       // Fallback to mock user for development
       const fallbackUser = {
-        id: 'fallback-user-id',
+        id: '00000000-0000-0000-0000-000000000002',
         email: 'fallback@example.com',
         role: DEFAULT_ROLE,
         name: 'Fallback User',

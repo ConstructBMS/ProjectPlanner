@@ -26,14 +26,14 @@ const RibbonMenu = ({
       case 'ArrowDown':
         e.preventDefault();
         setSelectedIndex(prev => 
-          prev < filteredItems.length - 1 ? prev + 1 : 0
+          (prev < filteredItems.length - 1 ? prev + 1 : 0)
         );
         break;
       
       case 'ArrowUp':
         e.preventDefault();
         setSelectedIndex(prev => 
-          prev > 0 ? prev - 1 : filteredItems.length - 1
+          (prev > 0 ? prev - 1 : filteredItems.length - 1)
         );
         break;
       

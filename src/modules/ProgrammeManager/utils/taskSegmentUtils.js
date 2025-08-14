@@ -157,7 +157,7 @@ export const updateTaskSegment = (task, segmentId, updates) => {
   }
 
   const updatedSegments = task.segments.map(segment =>
-    segment.id === segmentId ? { ...segment, ...updates } : segment
+    (segment.id === segmentId ? { ...segment, ...updates } : segment)
   );
 
   return updateTaskWithSegments(task, updatedSegments);

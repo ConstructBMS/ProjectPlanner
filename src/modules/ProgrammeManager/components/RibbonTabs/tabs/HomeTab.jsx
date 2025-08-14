@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { getStorage, setStorage } from '../../../utils/persistentStorage.js';
 import useTaskManager from '../../../hooks/useTaskManager';
 import { useTaskContext } from '../../../context/TaskContext';
 import { useViewContext } from '../../../context/ViewContext';
@@ -390,8 +391,8 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     setLastUsedColor(color);
     setShowColorMenu(false);
     
-    // Save to localStorage
-    localStorage.setItem('pm.style.last.color', color);
+    // Save to persistent storage
+    setStorage('pm.style.last.color', color);
     
     // Emit STYLE_COLOR_APPLY event
     const event = new window.CustomEvent('STYLE_COLOR_APPLY', {
@@ -419,8 +420,8 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     setLastUsedBarStyle(styleId);
     setShowBarStyleMenu(false);
     
-    // Save to localStorage
-    localStorage.setItem('pm.style.last.barStyle', styleId);
+    // Save to persistent storage
+    setStorage('pm.style.last.barStyle', styleId);
     
     // Emit STYLE_BAR_APPLY event
     const event = new window.CustomEvent('STYLE_BAR_APPLY', {
@@ -962,17 +963,20 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     handleBarStyleSelect(lastUsedBarStyle);
   }, [handleBarStyleSelect, lastUsedBarStyle]);
 
-  // Load last used styles from localStorage on mount
+  // Load last used styles from persistent storage on mount
   useEffect(() => {
-    const savedColor = localStorage.getItem('pm.style.last.color');
-    const savedBarStyle = localStorage.getItem('pm.style.last.barStyle');
-    
-    if (savedColor) {
-      setLastUsedColor(savedColor);
-    }
-    if (savedBarStyle) {
-      setLastUsedBarStyle(savedBarStyle);
-    }
+    const loadSavedStyles = async () => {
+      const savedColor = await getStorage('pm.style.last.color');
+      const savedBarStyle = await getStorage('pm.style.last.barStyle');
+      
+      if (savedColor) {
+        setLastUsedColor(savedColor);
+      }
+      if (savedBarStyle) {
+        setLastUsedBarStyle(savedBarStyle);
+      }
+    };
+    loadSavedStyles();
   }, []);
 
   // Print/Export handlers

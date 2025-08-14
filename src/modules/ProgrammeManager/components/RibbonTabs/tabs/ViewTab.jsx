@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { getStorage, setStorage } from '../../../utils/persistentStorage.js';
 import { useViewContext } from '../../../context/ViewContext';
 import { useTaskContext } from '../../../context/TaskContext';
 import { useFilterContext } from '../../../context/FilterContext';
@@ -976,32 +977,17 @@ const BaselineDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef();
 
-  // Load baselines from localStorage and sync with ProjectTab
+  // Load baselines from persistent storage and sync with ProjectTab
   useEffect(() => {
-    const loadBaselines = () => {
-      const savedBaselines = localStorage.getItem('project.baselines');
+    const loadBaselines = async () => {
+      const savedBaselines = await getStorage('project.baselines');
       if (savedBaselines) {
-        try {
-          const baselines = JSON.parse(savedBaselines);
-          updateBaselines(baselines);
-        } catch (error) {
-          console.error('Error loading baselines:', error);
-        }
+        updateBaselines(savedBaselines);
       }
     };
 
     // Load initially
     loadBaselines();
-
-    // Listen for changes from ProjectTab
-    const handleStorageChange = e => {
-      if (e.key === 'project.baselines') {
-        loadBaselines();
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
   }, [updateBaselines]);
 
   useEffect(() => {

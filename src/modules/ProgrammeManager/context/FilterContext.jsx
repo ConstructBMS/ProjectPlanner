@@ -5,6 +5,7 @@ import React, {
   useCallback,
   useEffect,
 } from 'react';
+import { getStorage, setStorage } from '../utils/persistentStorage.js';
 
 const FilterContext = createContext();
 
@@ -26,26 +27,31 @@ export const FilterProvider = ({ children }) => {
     },
   });
 
-  // Load filters from localStorage on mount
+  // Load filters from persistent storage on mount
   useEffect(() => {
-    try {
-      const savedFilters = localStorage.getItem('gantt.filters');
-      if (savedFilters) {
-        const parsed = JSON.parse(savedFilters);
-        setFilters(parsed);
+    const loadFilters = async () => {
+      try {
+        const savedFilters = await getStorage('gantt.filters');
+        if (savedFilters) {
+          setFilters(savedFilters);
+        }
+      } catch (error) {
+        console.error('Error loading filters from storage:', error);
       }
-    } catch (error) {
-      console.error('Error loading filters from localStorage:', error);
-    }
+    };
+    loadFilters();
   }, []);
 
-  // Save filters to localStorage when they change
+  // Save filters to persistent storage when they change
   useEffect(() => {
-    try {
-      localStorage.setItem('gantt.filters', JSON.stringify(filters));
-    } catch (error) {
-      console.error('Error saving filters to localStorage:', error);
-    }
+    const saveFilters = async () => {
+      try {
+        await setStorage('gantt.filters', filters);
+      } catch (error) {
+        console.error('Error saving filters to storage:', error);
+      }
+    };
+    saveFilters();
   }, [filters]);
 
   // Set status filter

@@ -724,7 +724,7 @@ export const TaskProvider = ({ children }) => {
 
       // Handle recurring task updates
       let updatedTasks = tasks.map(task =>
-        task.id === taskId ? updatedTask : task
+        (task.id === taskId ? updatedTask : task)
       );
       if (updatedTask && isRecurringTask(updatedTask)) {
         // Update all instances in the series
@@ -1061,7 +1061,7 @@ export const TaskProvider = ({ children }) => {
         ];
         setTasks(prev =>
           prev.map(task =>
-            task.id === fromId ? { ...task, history: updatedFromHistory } : task
+            (task.id === fromId ? { ...task, history: updatedFromHistory } : task)
           )
         );
       }
@@ -1079,7 +1079,7 @@ export const TaskProvider = ({ children }) => {
         const updatedToHistory = [...(toTask.history || []), toHistoryEntry];
         setTasks(prev =>
           prev.map(task =>
-            task.id === toId ? { ...task, history: updatedToHistory } : task
+            (task.id === toId ? { ...task, history: updatedToHistory } : task)
           )
         );
       }
@@ -1146,7 +1146,7 @@ export const TaskProvider = ({ children }) => {
         ];
         setTasks(prev =>
           prev.map(task =>
-            task.id === fromId ? { ...task, history: updatedFromHistory } : task
+            (task.id === fromId ? { ...task, history: updatedFromHistory } : task)
           )
         );
       }
@@ -1164,7 +1164,7 @@ export const TaskProvider = ({ children }) => {
         const updatedToHistory = [...(toTask.history || []), toHistoryEntry];
         setTasks(prev =>
           prev.map(task =>
-            task.id === toId ? { ...task, history: updatedToHistory } : task
+            (task.id === toId ? { ...task, history: updatedToHistory } : task)
           )
         );
       }

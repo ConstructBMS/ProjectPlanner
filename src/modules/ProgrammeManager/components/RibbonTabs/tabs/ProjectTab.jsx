@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getStorage, setStorage } from '../../../utils/persistentStorage.js';
 import RibbonButton from '../shared/RibbonButton';
 import RibbonGroup from '../shared/RibbonGroup';
 import { useTaskContext } from '../../../context/TaskContext';
@@ -35,32 +36,30 @@ const ProjectTab = () => {
   const [baselines, setBaselines] = useState([]);
   const [activeBaselineId, setActiveBaselineId] = useState(null);
 
-  // Load baselines from localStorage on mount
+  // Load baselines from persistent storage on mount
   useEffect(() => {
-    const savedBaselines = localStorage.getItem('project.baselines');
-    if (savedBaselines) {
-      try {
-        const baselines = JSON.parse(savedBaselines);
-        setBaselines(baselines);
-      } catch (error) {
-        console.error('Error loading baselines from localStorage:', error);
+    const loadBaselines = async () => {
+      const savedBaselines = await getStorage('project.baselines');
+      if (savedBaselines) {
+        setBaselines(savedBaselines);
       }
-    }
+    };
+    loadBaselines();
   }, []);
 
   // Baseline Manager handlers
-  const handleSaveBaseline = baseline => {
+  const handleSaveBaseline = async (baseline) => {
     setBaselines(prev => {
       const newBaselines = [...prev, baseline];
-      localStorage.setItem('project.baselines', JSON.stringify(newBaselines));
+      setStorage('project.baselines', newBaselines);
       return newBaselines;
     });
   };
 
-  const handleDeleteBaseline = baselineId => {
+  const handleDeleteBaseline = async (baselineId) => {
     setBaselines(prev => {
       const newBaselines = prev.filter(b => b.id !== baselineId);
-      localStorage.setItem('project.baselines', JSON.stringify(newBaselines));
+      setStorage('project.baselines', newBaselines);
       return newBaselines;
     });
     if (activeBaselineId === baselineId) {
@@ -72,10 +71,10 @@ const ProjectTab = () => {
     setActiveBaselineId(baselineId);
   };
 
-  const handleImportBaseline = baseline => {
+  const handleImportBaseline = async (baseline) => {
     setBaselines(prev => {
       const newBaselines = [...prev, baseline];
-      localStorage.setItem('project.baselines', JSON.stringify(newBaselines));
+      setStorage('project.baselines', newBaselines);
       return newBaselines;
     });
   };

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { getStorage, setStorage } from '../utils/persistentStorage.js';
 import { useTaskContext } from '../context/TaskContext';
 import { useCalendarContext } from '../context/CalendarContext';
 import { useUndoRedoContext } from '../context/UndoRedoContext';
@@ -102,17 +103,20 @@ const TaskPropertiesPane = () => {
 
   // Load saved pane height on mount
   useEffect(() => {
-    const savedHeight = localStorage.getItem('pm.layout.props.height');
-    if (savedHeight) {
-      const height = parseInt(savedHeight, 10);
-      if (height >= 180) {
-        setPaneHeight(height);
+    const loadSavedHeight = async () => {
+      const savedHeight = await getStorage('pm.layout.props.height');
+      if (savedHeight) {
+        const height = parseInt(savedHeight, 10);
+        if (height >= 180) {
+          setPaneHeight(height);
+        }
+      } else {
+        // Default to ~28% of main area (assuming 100vh - 260px header)
+        const defaultHeight = Math.round((window.innerHeight - 260) * 0.28);
+        setPaneHeight(Math.max(defaultHeight, 256));
       }
-    } else {
-      // Default to ~28% of main area (assuming 100vh - 260px header)
-      const defaultHeight = Math.round((window.innerHeight - 260) * 0.28);
-      setPaneHeight(Math.max(defaultHeight, 256));
-    }
+    };
+    loadSavedHeight();
   }, []);
 
   // Resize handlers
@@ -126,7 +130,7 @@ const TaskPropertiesPane = () => {
   }, []);
 
   const handleResizeEnd = useCallback(() => {
-    localStorage.setItem('pm.layout.props.height', paneHeight.toString());
+    setStorage('pm.layout.props.height', paneHeight.toString());
   }, [paneHeight]);
 
   // Handle color change

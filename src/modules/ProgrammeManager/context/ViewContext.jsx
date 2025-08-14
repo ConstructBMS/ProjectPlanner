@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { getStorage, setStorage } from '../utils/persistentStorage.js';
 
 const ViewContext = createContext();
 
@@ -60,58 +61,42 @@ export const ViewProvider = ({ children }) => {
 
   // Load saved view state on mount
   useEffect(() => {
-    const savedView = window.localStorage.getItem('plannerView');
-    if (savedView) {
+    const loadSavedState = async () => {
       try {
-        const parsed = JSON.parse(savedView);
-        setViewState(prev => ({ ...prev, ...parsed }));
-      } catch (error) {
-        console.error('Error loading saved view:', error);
-      }
-    }
+        // Load saved view state
+        const savedView = await getStorage('plannerView');
+        if (savedView) {
+          setViewState(prev => ({ ...prev, ...savedView }));
+        }
 
-    // Load saved date markers
-    const savedMarkers = window.localStorage.getItem('dateMarkers');
-    if (savedMarkers) {
-      try {
-        const parsedMarkers = JSON.parse(savedMarkers);
-        setViewState(prev => ({ ...prev, dateMarkers: parsedMarkers }));
-      } catch (error) {
-        console.error('Error loading saved date markers:', error);
-      }
-    }
+        // Load saved date markers
+        const savedMarkers = await getStorage('dateMarkers');
+        if (savedMarkers) {
+          setViewState(prev => ({ ...prev, dateMarkers: savedMarkers }));
+        }
 
-    // Load saved showWeekends preference
-    const savedShowWeekends = window.localStorage.getItem('gantt.showWeekends');
-    if (savedShowWeekends !== null) {
-      try {
-        const showWeekends = JSON.parse(savedShowWeekends);
-        setViewState(prev => ({ ...prev, showWeekends }));
-      } catch (error) {
-        console.error('Error loading saved showWeekends preference:', error);
-      }
-    }
+        // Load saved showWeekends preference
+        const savedShowWeekends = await getStorage('gantt.showWeekends');
+        if (savedShowWeekends !== null) {
+          setViewState(prev => ({ ...prev, showWeekends: savedShowWeekends }));
+        }
 
-    // Load saved showGridlines preference
-    const savedShowGridlines = window.localStorage.getItem(
-      'gantt.showGridlines'
-    );
-    if (savedShowGridlines !== null) {
-      try {
-        const showGridlines = JSON.parse(savedShowGridlines);
-        setViewState(prev => ({ ...prev, showGridlines }));
-      } catch (error) {
-        console.error('Error loading saved showGridlines preference:', error);
-      }
-    }
+        // Load saved showGridlines preference
+        const savedShowGridlines = await getStorage('gantt.showGridlines');
+        if (savedShowGridlines !== null) {
+          try {
+            const showGridlines = savedShowGridlines;
+            setViewState(prev => ({ ...prev, showGridlines }));
+          } catch (error) {
+            console.error('Error loading saved showGridlines preference:', error);
+          }
+        }
 
     // Load saved showCriticalPath preference
-    const savedShowCriticalPath = window.localStorage.getItem(
-      'gantt.showCriticalPath'
-    );
+    const savedShowCriticalPath = await getStorage('gantt.showCriticalPath');
     if (savedShowCriticalPath !== null) {
       try {
-        const showCriticalPath = JSON.parse(savedShowCriticalPath);
+        const showCriticalPath = savedShowCriticalPath;
         setViewState(prev => ({ ...prev, showCriticalPath }));
       } catch (error) {
         console.error(
@@ -122,10 +107,10 @@ export const ViewProvider = ({ children }) => {
     }
 
     // Load saved showSlack preference
-    const savedShowSlack = window.localStorage.getItem('gantt.showSlack');
+    const savedShowSlack = await getStorage('gantt.showSlack');
     if (savedShowSlack !== null) {
       try {
-        const showSlack = JSON.parse(savedShowSlack);
+        const showSlack = savedShowSlack;
         setViewState(prev => ({ ...prev, showSlack }));
       } catch (error) {
         console.error('Error loading saved showSlack preference:', error);
@@ -133,10 +118,10 @@ export const ViewProvider = ({ children }) => {
     }
 
     // Load saved showProgressLine preference
-    const savedShowProgressLine = window.localStorage.getItem('gantt.showProgressLine');
+    const savedShowProgressLine = await getStorage('gantt.showProgressLine');
     if (savedShowProgressLine !== null) {
       try {
-        const showProgressLine = JSON.parse(savedShowProgressLine);
+        const showProgressLine = savedShowProgressLine;
         setViewState(prev => ({ ...prev, showProgressLine }));
       } catch (error) {
         console.error('Error loading saved showProgressLine preference:', error);
@@ -144,10 +129,10 @@ export const ViewProvider = ({ children }) => {
     }
 
     // Load saved time unit preference
-    const savedTimeUnit = window.localStorage.getItem('gantt.timeUnit');
+    const savedTimeUnit = await getStorage('gantt.timeUnit');
     if (savedTimeUnit !== null) {
       try {
-        const timeUnit = JSON.parse(savedTimeUnit);
+        const timeUnit = savedTimeUnit;
         setViewState(prev => ({ ...prev, timeUnit }));
       } catch (error) {
         console.error('Error loading saved time unit preference:', error);
@@ -155,10 +140,10 @@ export const ViewProvider = ({ children }) => {
     }
 
     // Load saved time scale preference
-    const savedTimeScale = window.localStorage.getItem('gantt.timeScale');
+    const savedTimeScale = await getStorage('gantt.timeScale');
     if (savedTimeScale !== null) {
       try {
-        const timeScale = JSON.parse(savedTimeScale);
+        const timeScale = savedTimeScale;
         setViewState(prev => ({ ...prev, timeScale }));
       } catch (error) {
         console.error('Error loading saved time scale preference:', error);
@@ -166,12 +151,10 @@ export const ViewProvider = ({ children }) => {
     }
 
     // Load saved primary time unit preference
-    const savedPrimaryTimeUnit = window.localStorage.getItem(
-      'gantt.primaryTimeUnit'
-    );
+    const savedPrimaryTimeUnit = await getStorage('gantt.primaryTimeUnit');
     if (savedPrimaryTimeUnit !== null) {
       try {
-        const primaryTimeUnit = JSON.parse(savedPrimaryTimeUnit);
+        const primaryTimeUnit = savedPrimaryTimeUnit;
         setViewState(prev => ({ ...prev, primaryTimeUnit }));
       } catch (error) {
         console.error(
@@ -182,12 +165,10 @@ export const ViewProvider = ({ children }) => {
     }
 
     // Load saved secondary time unit preference
-    const savedSecondaryTimeUnit = window.localStorage.getItem(
-      'gantt.secondaryTimeUnit'
-    );
+    const savedSecondaryTimeUnit = await getStorage('gantt.secondaryTimeUnit');
     if (savedSecondaryTimeUnit !== null) {
       try {
-        const secondaryTimeUnit = JSON.parse(savedSecondaryTimeUnit);
+        const secondaryTimeUnit = savedSecondaryTimeUnit;
         setViewState(prev => ({ ...prev, secondaryTimeUnit }));
       } catch (error) {
         console.error(
@@ -198,12 +179,10 @@ export const ViewProvider = ({ children }) => {
     }
 
     // Load saved activeBaselineId preference
-    const savedActiveBaselineId = window.localStorage.getItem(
-      'gantt.activeBaselineId'
-    );
+    const savedActiveBaselineId = await getStorage('gantt.activeBaselineId');
     if (savedActiveBaselineId !== null) {
       try {
-        const activeBaselineId = JSON.parse(savedActiveBaselineId);
+        const activeBaselineId = savedActiveBaselineId;
         setViewState(prev => ({ ...prev, activeBaselineId }));
       } catch (error) {
         console.error(
@@ -214,12 +193,10 @@ export const ViewProvider = ({ children }) => {
     }
 
     // Load saved globalMilestoneShape preference
-    const savedGlobalMilestoneShape = window.localStorage.getItem(
-      'gantt.globalMilestoneShape'
-    );
+    const savedGlobalMilestoneShape = await getStorage('gantt.globalMilestoneShape');
     if (savedGlobalMilestoneShape !== null) {
       try {
-        const globalMilestoneShape = JSON.parse(savedGlobalMilestoneShape);
+        const globalMilestoneShape = savedGlobalMilestoneShape;
         setViewState(prev => ({ ...prev, globalMilestoneShape }));
       } catch (error) {
         console.error(
@@ -228,19 +205,22 @@ export const ViewProvider = ({ children }) => {
         );
       }
     }
+    };
+
+    loadSavedState();
   }, []);
 
   const updateViewState = updates => {
     setViewState(prev => ({ ...prev, ...updates }));
   };
 
-  const saveViewLayout = () => {
+  const saveViewLayout = async () => {
     const currentState = {
       ...viewState,
       savedAt: new Date().toISOString(),
     };
 
-    window.localStorage.setItem('plannerView', JSON.stringify(currentState));
+    await setStorage('plannerView', currentState);
     console.log('View layout saved');
   };
 
@@ -260,77 +240,68 @@ export const ViewProvider = ({ children }) => {
     }, 1000);
   };
 
-  const toggleWeekends = () => {
+  const toggleWeekends = async () => {
     setViewState(prev => {
       const next = !prev.showWeekends;
-      window.localStorage.setItem('gantt.showWeekends', JSON.stringify(next));
+      setStorage('gantt.showWeekends', next);
       return { ...prev, showWeekends: next };
     });
     console.log('Show Weekends toggled');
   };
 
-  const toggleGridlines = () => {
+  const toggleGridlines = async () => {
     setViewState(prev => {
       const next = !prev.showGridlines;
-      window.localStorage.setItem('gantt.showGridlines', JSON.stringify(next));
+      setStorage('gantt.showGridlines', next);
       return { ...prev, showGridlines: next };
     });
     console.log('Show Gridlines toggled');
   };
 
-  const toggleCriticalPath = () => {
+  const toggleCriticalPath = async () => {
     setViewState(prev => {
       const next = !prev.showCriticalPath;
-      window.localStorage.setItem(
-        'gantt.showCriticalPath',
-        JSON.stringify(next)
-      );
+      setStorage('gantt.showCriticalPath', next);
       return { ...prev, showCriticalPath: next };
     });
     console.log('Show Critical Path toggled');
   };
 
-  const toggleProgressLine = () => {
+  const toggleProgressLine = async () => {
     setViewState(prev => {
       const next = !prev.showProgressLine;
-      window.localStorage.setItem(
-        'gantt.showProgressLine',
-        JSON.stringify(next)
-      );
+      setStorage('gantt.showProgressLine', next);
       return { ...prev, showProgressLine: next };
     });
     console.log('Show Progress Line toggled');
   };
 
-  const toggleSlack = () => {
+  const toggleSlack = async () => {
     setViewState(prev => {
       const next = !prev.showSlack;
-      window.localStorage.setItem('gantt.showSlack', JSON.stringify(next));
+      setStorage('gantt.showSlack', next);
       return { ...prev, showSlack: next };
     });
     console.log('Show Slack toggled');
   };
 
-  const toggleBaseline = () => {
+  const toggleBaseline = async () => {
     setViewState(prev => {
       const next = !prev.showBaseline;
-      window.localStorage.setItem('gantt.showBaseline', JSON.stringify(next));
+      setStorage('gantt.showBaseline', next);
       return { ...prev, showBaseline: next };
     });
     console.log('Show Baseline toggled');
   };
 
-  const setActiveBaseline = baselineId => {
+  const setActiveBaseline = async (baselineId) => {
     setViewState(prev => {
       const next = {
         ...prev,
         activeBaselineId: baselineId,
         showBaseline: baselineId !== null, // Auto-show baseline when one is selected
       };
-      window.localStorage.setItem(
-        'gantt.activeBaselineId',
-        JSON.stringify(baselineId)
-      );
+      setStorage('gantt.activeBaselineId', baselineId);
       return next;
     });
     console.log('Active baseline set to:', baselineId);
@@ -344,16 +315,13 @@ export const ViewProvider = ({ children }) => {
     console.log('Baselines updated:', baselines.length);
   };
 
-  const setGlobalMilestoneShape = shapeKey => {
+  const setGlobalMilestoneShape = async (shapeKey) => {
     setViewState(prev => {
       const next = {
         ...prev,
         globalMilestoneShape: shapeKey,
       };
-      window.localStorage.setItem(
-        'gantt.globalMilestoneShape',
-        JSON.stringify(shapeKey)
-      );
+      setStorage('gantt.globalMilestoneShape', shapeKey);
       return next;
     });
     console.log('Global milestone shape set to:', shapeKey);
@@ -396,43 +364,37 @@ export const ViewProvider = ({ children }) => {
     console.log('View scale updated to:', scale);
   };
 
-  const updateTimeUnit = timeUnit => {
+  const updateTimeUnit = async (timeUnit) => {
     setViewState(prev => {
       const newState = { ...prev, timeUnit };
-      window.localStorage.setItem('gantt.timeUnit', JSON.stringify(timeUnit));
+      setStorage('gantt.timeUnit', timeUnit);
       return newState;
     });
     console.log('Time unit updated to:', timeUnit);
   };
 
-  const updateTimeScale = timeScale => {
+  const updateTimeScale = async (timeScale) => {
     setViewState(prev => {
       const newState = { ...prev, timeScale };
-      window.localStorage.setItem('gantt.timeScale', JSON.stringify(timeScale));
+      setStorage('gantt.timeScale', timeScale);
       return newState;
     });
     console.log('Time scale updated to:', timeScale);
   };
 
-  const updatePrimaryTimeUnit = primaryTimeUnit => {
+  const updatePrimaryTimeUnit = async (primaryTimeUnit) => {
     setViewState(prev => {
       const newState = { ...prev, primaryTimeUnit };
-      window.localStorage.setItem(
-        'gantt.primaryTimeUnit',
-        JSON.stringify(primaryTimeUnit)
-      );
+      setStorage('gantt.primaryTimeUnit', primaryTimeUnit);
       return newState;
     });
     console.log('Primary time unit updated to:', primaryTimeUnit);
   };
 
-  const updateSecondaryTimeUnit = secondaryTimeUnit => {
+  const updateSecondaryTimeUnit = async (secondaryTimeUnit) => {
     setViewState(prev => {
       const newState = { ...prev, secondaryTimeUnit };
-      window.localStorage.setItem(
-        'gantt.secondaryTimeUnit',
-        JSON.stringify(secondaryTimeUnit)
-      );
+      setStorage('gantt.secondaryTimeUnit', secondaryTimeUnit);
       return newState;
     });
     console.log('Secondary time unit updated to:', secondaryTimeUnit);

@@ -278,7 +278,7 @@ export const SearchProvider = ({ children }) => {
         case 'ArrowDown':
           event.preventDefault();
           setSelectedResultIndex(prev =>
-            prev < searchResults.length - 1 ? prev + 1 : prev
+            (prev < searchResults.length - 1 ? prev + 1 : prev)
           );
           break;
         case 'ArrowUp':

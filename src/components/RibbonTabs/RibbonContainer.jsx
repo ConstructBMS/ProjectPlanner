@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useUserContext } from '../../modules/ProgrammeManager/context/UserContext';
-import { supabase } from '../../supabase/client';
+import { getRibbonPrefs, setRibbonPrefs } from '../../modules/ProgrammeManager/utils/ribbonStorage';
 import RibbonTabs from '../../modules/ProgrammeManager/components/RibbonTabs/RibbonTabs';
 import GlobalSearch from '../GlobalSearch';
 
@@ -17,32 +17,15 @@ const RibbonContainer = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Load ribbon state from Supabase
+  // Load ribbon state from storage
   const loadRibbonState = useCallback(async () => {
-    if (!user) {
-      setIsLoading(false);
-      return;
-    }
-
     try {
       setIsLoading(true);
       setError(null);
 
-      // Get user settings from Supabase
-      const { data: settings, error: settingsError } = await supabase
-        .from('user_settings')
-        .select('ribbon_state')
-        .eq('user_id', user.id)
-        .single();
-
-      if (settingsError && settingsError.code !== 'PGRST116') {
-        // PGRST116 is "not found" error, which is expected for new users
-        console.debug('User settings not found, using default ribbon state');
-      }
-
-      // Set ribbon state (default to expanded if no settings found)
-      const ribbonState = settings?.ribbon_state || { expanded: true };
-      setIsExpanded(ribbonState.expanded);
+      // Get ribbon preferences from unified storage
+      const ribbonPrefs = await getRibbonPrefs();
+      setIsExpanded(!ribbonPrefs.minimised);
     } catch (err) {
       setError(err.message);
       console.error('Error loading ribbon state:', err);
@@ -51,34 +34,26 @@ const RibbonContainer = ({
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, []);
 
-  // Save ribbon state to Supabase
+  // Save ribbon state to storage
   const saveRibbonState = useCallback(
     async expanded => {
-      if (!user) return;
-
       try {
-        const ribbonState = { expanded };
-
-        // Upsert user settings
-        const { error } = await supabase.from('user_settings').upsert({
-          user_id: user.id,
-          ribbon_state: ribbonState,
-          updated_at: new Date().toISOString(),
-        });
-
-        if (error) {
-          throw new Error(`Error saving ribbon state: ${error.message}`);
-        }
-
-        console.log('Ribbon state saved successfully');
+        // Get current preferences and update minimised state
+        const currentPrefs = await getRibbonPrefs();
+        const updatedPrefs = {
+          ...currentPrefs,
+          minimised: !expanded
+        };
+        
+        await setRibbonPrefs(updatedPrefs);
       } catch (err) {
         setError(err.message);
         console.error('Error saving ribbon state:', err);
       }
     },
-    [user]
+    []
   );
 
   // Toggle ribbon expand/collapse
@@ -173,7 +148,7 @@ const RibbonContainer = ({
       {/* Ribbon Content */}
       <div
         className={`transition-all duration-300 ease-in-out overflow-hidden ${
-          isExpanded ? 'max-h-[200px] opacity-100' : 'max-h-0 opacity-0'
+          isExpanded ? 'max-h-[200px]' : 'max-h-0'
         }`}
       >
         <RibbonTabs

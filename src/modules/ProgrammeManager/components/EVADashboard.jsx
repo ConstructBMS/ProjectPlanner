@@ -217,10 +217,10 @@ const EVADashboard = ({ tasks, statusDate = new Date() }) => {
         }
 
         return prev.map(item =>
-          new Date(item.statusDate).toDateString() ===
+          (new Date(item.statusDate).toDateString() ===
           new Date(statusDate).toDateString()
             ? evaMetrics
-            : item
+            : item)
         );
       });
     }

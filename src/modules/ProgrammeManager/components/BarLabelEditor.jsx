@@ -70,7 +70,7 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
     if (!selectedLabel || !editingLabel || !validation.isValid) return;
 
     const updatedLabels = barLabels.labels.map(label =>
-      label.id === selectedLabel.id ? editingLabel : label
+      (label.id === selectedLabel.id ? editingLabel : label)
     );
 
     const updatedSettings = {
@@ -130,7 +130,7 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
 
   const handleToggleLabel = labelId => {
     const updatedLabels = barLabels.labels.map(label =>
-      label.id === labelId ? { ...label, enabled: !label.enabled } : label
+      (label.id === labelId ? { ...label, enabled: !label.enabled } : label)
     );
 
     const updatedSettings = {

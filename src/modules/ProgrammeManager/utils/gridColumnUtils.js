@@ -1,4 +1,5 @@
 // Grid Column Management Utilities
+import { getStorage, setStorage } from './persistentStorage.js';
 
 // Default column configuration
 export const DEFAULT_COLUMN_CONFIG = {
@@ -580,7 +581,7 @@ export const removeColumnFromGrid = (gridConfig, columnKey) => {
 // Toggle column visibility
 export const toggleColumnVisibility = (gridConfig, columnKey) => {
   const updatedColumns = gridConfig.columns.map(col =>
-    col.key === columnKey ? { ...col, visible: !col.visible } : col
+    (col.key === columnKey ? { ...col, visible: !col.visible } : col)
   );
 
   return {
@@ -598,7 +599,7 @@ export const updateColumnWidth = (gridConfig, columnKey, width) => {
   );
 
   const updatedColumns = gridConfig.columns.map(col =>
-    col.key === columnKey ? { ...col, width: validatedWidth } : col
+    (col.key === columnKey ? { ...col, width: validatedWidth } : col)
   );
 
   return {
@@ -799,29 +800,28 @@ export const resetToDefaultConfig = () => {
   return createDefaultGridConfig();
 };
 
-// Save configuration to localStorage
-export const saveGridConfigToStorage = (
+// Save configuration to persistent storage
+export const saveGridConfigToStorage = async (
   gridConfig,
   key = 'gantt.gridConfig'
 ) => {
   try {
-    localStorage.setItem(key, JSON.stringify(gridConfig));
+    await setStorage(key, gridConfig);
     return true;
   } catch (error) {
-    console.error('Error saving grid configuration to localStorage:', error);
+    console.error('Error saving grid configuration to storage:', error);
     return false;
   }
 };
 
-// Load configuration from localStorage
-export const loadGridConfigFromStorage = (key = 'gantt.gridConfig') => {
+// Load configuration from persistent storage
+export const loadGridConfigFromStorage = async (key = 'gantt.gridConfig') => {
   try {
-    const saved = localStorage.getItem(key);
+    const saved = await getStorage(key);
     if (saved) {
-      const parsed = JSON.parse(saved);
-      const validation = validateGridConfig(parsed);
+      const validation = validateGridConfig(saved);
       if (validation.isValid) {
-        return parsed;
+        return saved;
       } else {
         // Silently use default instead of warning
         console.debug(
