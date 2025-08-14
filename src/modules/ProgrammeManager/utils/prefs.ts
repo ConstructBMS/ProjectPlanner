@@ -392,3 +392,88 @@ export function resetFourDPreferences(): void {
     console.warn('Failed to reset 4D preferences:', error);
   }
 }
+
+export interface GanttZoomPrefs {
+  scale: number;
+  timeUnit: 'day' | 'week' | 'month' | 'quarter' | 'year';
+  timeScale: 'single' | 'dual';
+  centerDate?: string; // ISO date string for zoom center
+}
+
+export interface ProjectPrefs {
+  gantt: {
+    [projectId: string]: GanttZoomPrefs;
+  };
+}
+
+const DEFAULT_ZOOM_PREFS: GanttZoomPrefs = {
+  scale: 1.0,
+  timeUnit: 'day',
+  timeScale: 'single'
+};
+
+/**
+ * Get Gantt zoom preferences for a specific project
+ */
+export const getGanttZoomPrefs = async (projectId: string): Promise<GanttZoomPrefs> => {
+  try {
+    const prefs = await getStorage('pm.gantt') as ProjectPrefs;
+    if (prefs?.gantt?.[projectId]) {
+      return { ...DEFAULT_ZOOM_PREFS, ...prefs.gantt[projectId] };
+    }
+    return { ...DEFAULT_ZOOM_PREFS };
+  } catch (error) {
+    console.warn('Error loading Gantt zoom preferences:', error);
+    return { ...DEFAULT_ZOOM_PREFS };
+  }
+};
+
+/**
+ * Save Gantt zoom preferences for a specific project
+ */
+export const saveGanttZoomPrefs = async (projectId: string, zoomPrefs: Partial<GanttZoomPrefs>): Promise<void> => {
+  try {
+    const existingPrefs = await getStorage('pm.gantt') as ProjectPrefs || { gantt: {} };
+    
+    const updatedPrefs: ProjectPrefs = {
+      gantt: {
+        ...existingPrefs.gantt,
+        [projectId]: {
+          ...(existingPrefs.gantt[projectId] || DEFAULT_ZOOM_PREFS),
+          ...zoomPrefs
+        }
+      }
+    };
+    
+    await setStorage('pm.gantt', updatedPrefs);
+  } catch (error) {
+    console.error('Error saving Gantt zoom preferences:', error);
+  }
+};
+
+/**
+ * Clear Gantt zoom preferences for a specific project
+ */
+export const clearGanttZoomPrefs = async (projectId: string): Promise<void> => {
+  try {
+    const existingPrefs = await getStorage('pm.gantt') as ProjectPrefs;
+    if (existingPrefs?.gantt?.[projectId]) {
+      const { [projectId]: removed, ...remainingPrefs } = existingPrefs.gantt;
+      await setStorage('pm.gantt', { gantt: remainingPrefs });
+    }
+  } catch (error) {
+    console.error('Error clearing Gantt zoom preferences:', error);
+  }
+};
+
+/**
+ * Get all project zoom preferences
+ */
+export const getAllGanttZoomPrefs = async (): Promise<ProjectPrefs> => {
+  try {
+    return (await getStorage('pm.gantt')) as ProjectPrefs || { gantt: {} };
+  } catch (error) {
+    console.warn('Error loading all Gantt zoom preferences:', error);
+    return { gantt: {} };
+  }
+};

@@ -84,6 +84,7 @@ import {
   getBaselineComparisonMode,
 } from '../utils/baselineManagerUtils';
 import { getTaskBarLabels, getLabelTooltip } from '../utils/barLabelUtils';
+import { getGanttZoomPrefs, saveGanttZoomPrefs } from '../utils/prefs';
 import {
   createProgressEditState,
   updateProgressEditState,
@@ -127,26 +128,30 @@ const GanttChart = () => {
     toggleSelection,
     selectRange,
     clearSelection,
+    getSelectedTasks,
   } = usePlannerStore();
   
   const { applyFilters } = useFilterContext();
 
+  const { currentProjectId } = useTaskContext();
+  const { tasks } = useTaskContext();
+
   // Calculate scaled width based on time unit
   const getScaledWidth = useMemo(() => {
-    const baseZoom = viewState.timelineZoom;
+    const baseZoom = zoomScale;
     const timeUnit = viewState.timeUnit || 'day';
 
     switch (timeUnit) {
       case 'day':
-        return baseZoom; // Pixels per day
+        return baseZoom * 50; // 50 pixels per day * zoom scale
       case 'week':
-        return baseZoom * 7; // Pixels per week
+        return baseZoom * 350; // 50 * 7 pixels per week * zoom scale
       case 'month':
-        return baseZoom * 30; // Pixels per month (approximate)
+        return baseZoom * 1500; // 50 * 30 pixels per month * zoom scale
       default:
-        return baseZoom;
+        return baseZoom * 50;
     }
-  }, [viewState.timelineZoom, viewState.timeUnit]);
+  }, [zoomScale, viewState.timeUnit]);
 
   // Get date increment based on time unit
   const getDateIncrement = useMemo(() => {
@@ -241,6 +246,11 @@ const GanttChart = () => {
   const [showDependencyModal, setShowDependencyModal] = useState(false);
   const [selectedLink, setSelectedLink] = useState(null);
   const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
+
+  // Zoom and timescale state
+  const [zoomScale, setZoomScale] = useState(1.0);
+  const [zoomCenterDate, setZoomCenterDate] = useState(null);
+  const [isZooming, setIsZooming] = useState(false);
 
   const allTasks = getVisibleTasks(viewState.taskFilter);
   const tasks = applyFilters(allTasks);
@@ -1055,56 +1065,19 @@ const GanttChart = () => {
   };
 
   // Helper functions for date conversion
-  const getDateFromX = x => {
-    const startOfYear = new Date('2024-01-01');
-    const scaledDayWidth = getScaledWidth;
-    const dayIndex = Math.round(x / scaledDayWidth);
+  const getDateFromX = useCallback((x) => {
+    const baseDate = new Date(dateRange.start);
+    const dayWidth = 50 * zoomScale; // Base day width * zoom scale
+    const daysOffset = x / dayWidth;
+    return new Date(baseDate.getTime() + daysOffset * 24 * 60 * 60 * 1000);
+  }, [dateRange.start, zoomScale]);
 
-    if (viewState.showWeekends) {
-      return addDays(startOfYear, dayIndex);
-    } else {
-      // Count only weekdays
-      const currentDate = new Date(startOfYear);
-      let weekdayCount = 0;
-
-      while (weekdayCount < dayIndex) {
-        currentDate.setDate(currentDate.getDate() + 1);
-        const dayOfWeek = currentDate.getDay();
-        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-          weekdayCount++;
-        }
-      }
-
-      return currentDate;
-    }
-  };
-
-  const getXFromDate = date => {
-    const startOfYear = new Date('2024-01-01');
-    const scaledDayWidth = getScaledWidth;
-
-    if (viewState.showWeekends) {
-      const daysFromStart = Math.floor(
-        (date - startOfYear) / (1000 * 60 * 60 * 24)
-      );
-      return daysFromStart * scaledDayWidth;
-    } else {
-      // Count only weekdays
-      let weekdayCount = 0;
-      for (
-        let d = new Date(startOfYear);
-        d <= date;
-        d.setDate(d.getDate() + 1)
-      ) {
-        const dayOfWeek = d.getDay();
-        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-          weekdayCount++;
-        }
-        if (d >= date) break;
-      }
-      return weekdayCount * scaledDayWidth;
-    }
-  };
+  const getXFromDate = useCallback((date) => {
+    const baseDate = new Date(dateRange.start);
+    const dayWidth = 50 * zoomScale; // Base day width * zoom scale
+    const daysDiff = (date.getTime() - baseDate.getTime()) / (24 * 60 * 60 * 1000);
+    return daysDiff * dayWidth;
+  }, [dateRange.start, zoomScale]);
 
   // Drag event handlers
   const handleTaskDragStart = (e, task) => {
@@ -2053,6 +2026,124 @@ const GanttChart = () => {
     }
   }, [clearSelection]);
 
+  // Zoom functionality
+  const handleWheel = useCallback((e) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      
+      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      const newScale = Math.max(0.1, Math.min(5.0, zoomScale + delta));
+      
+      // Calculate zoom center based on mouse position
+      const rect = e.currentTarget.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const centerDate = getDateFromX(mouseX);
+      
+      setZoomScale(newScale);
+      setZoomCenterDate(centerDate);
+      setIsZooming(true);
+      
+      // Save zoom preferences
+      if (currentProjectId) {
+        saveGanttZoomPrefs(currentProjectId, {
+          scale: newScale,
+          centerDate: centerDate?.toISOString()
+        });
+      }
+      
+      // Debounce zoom end
+      setTimeout(() => setIsZooming(false), 150);
+    }
+  }, [zoomScale, currentProjectId, getDateFromX]);
+
+  const fitProject = useCallback(() => {
+    if (tasks.length === 0) return;
+    
+    const taskDates = tasks.flatMap(task => [
+      new Date(task.start_date || task.startDate),
+      new Date(task.end_date || task.endDate)
+    ]).filter(date => !isNaN(date.getTime()));
+    
+    if (taskDates.length === 0) return;
+    
+    const minDate = new Date(Math.min(...taskDates.map(d => d.getTime())));
+    const maxDate = new Date(Math.max(...taskDates.map(d => d.getTime())));
+    
+    // Add some padding
+    const padding = (maxDate.getTime() - minDate.getTime()) * 0.1;
+    const paddedMin = new Date(minDate.getTime() - padding);
+    const paddedMax = new Date(maxDate.getTime() + padding);
+    
+    // Calculate appropriate scale
+    const containerWidth = timelineContainerRef.current?.clientWidth || 800;
+    const dateRange = paddedMax.getTime() - paddedMin.getTime();
+    const daysRange = dateRange / (1000 * 60 * 60 * 24);
+    const newScale = Math.max(0.1, Math.min(5.0, containerWidth / (daysRange * 50)));
+    
+    setZoomScale(newScale);
+    setZoomCenterDate(new Date((paddedMin.getTime() + paddedMax.getTime()) / 2));
+    
+    // Save zoom preferences
+    if (currentProjectId) {
+      saveGanttZoomPrefs(currentProjectId, {
+        scale: newScale,
+        centerDate: new Date((paddedMin.getTime() + paddedMax.getTime()) / 2).toISOString()
+      });
+    }
+  }, [tasks, currentProjectId]);
+
+  const fitSelection = useCallback(() => {
+    const selectedTasks = getSelectedTasks();
+    if (selectedTasks.length === 0) return;
+    
+    const taskDates = selectedTasks.flatMap(task => [
+      new Date(task.start_date || task.startDate),
+      new Date(task.end_date || task.endDate)
+    ]).filter(date => !isNaN(date.getTime()));
+    
+    if (taskDates.length === 0) return;
+    
+    const minDate = new Date(Math.min(...taskDates.map(d => d.getTime())));
+    const maxDate = new Date(Math.max(...taskDates.map(d => d.getTime())));
+    
+    // Add some padding
+    const padding = (maxDate.getTime() - minDate.getTime()) * 0.2;
+    const paddedMin = new Date(minDate.getTime() - padding);
+    const paddedMax = new Date(maxDate.getTime() + padding);
+    
+    // Calculate appropriate scale
+    const containerWidth = timelineContainerRef.current?.clientWidth || 800;
+    const dateRange = paddedMax.getTime() - paddedMin.getTime();
+    const daysRange = dateRange / (1000 * 60 * 60 * 24);
+    const newScale = Math.max(0.1, Math.min(5.0, containerWidth / (daysRange * 40)));
+    
+    setZoomScale(newScale);
+    setZoomCenterDate(new Date((paddedMin.getTime() + paddedMax.getTime()) / 2));
+    
+    // Save zoom preferences
+    if (currentProjectId) {
+      saveGanttZoomPrefs(currentProjectId, {
+        scale: newScale,
+        centerDate: new Date((paddedMin.getTime() + paddedMax.getTime()) / 2).toISOString()
+      });
+    }
+  }, [getSelectedTasks, currentProjectId]);
+
+  // Load zoom preferences when project changes
+  useEffect(() => {
+    const loadZoomPrefs = async () => {
+      if (currentProjectId) {
+        const prefs = await getGanttZoomPrefs(currentProjectId);
+        setZoomScale(prefs.scale);
+        if (prefs.centerDate) {
+          setZoomCenterDate(new Date(prefs.centerDate));
+        }
+      }
+    };
+    
+    loadZoomPrefs();
+  }, [currentProjectId]);
+
   return (
     <div className='gantt-viewport pm-content-dark'>
       {/* Asta-style Timeline Header */}
@@ -2065,14 +2156,38 @@ const GanttChart = () => {
               {taskLinks.length} link{taskLinks.length !== 1 ? 's' : ''}
             </div>
           </div>
-          <div className='text-xs text-gray-500'>
-            {linkingMode
-              ? '🔗 Linking mode active'
-              : dragToLink.isActive
-                ? '🔗 Drag to link mode active'
-                : selectedTaskId
-                  ? `Selected: ${tasks.find(t => t.id === selectedTaskId)?.name || 'Unknown'}`
-                  : 'No task selected'}
+          <div className='flex items-center gap-2'>
+            {/* Zoom Controls */}
+            <div className='flex items-center gap-1 text-xs'>
+              <button
+                onClick={fitProject}
+                className='px-2 py-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors'
+                title='Fit Project'
+              >
+                Fit Project
+              </button>
+              <button
+                onClick={fitSelection}
+                className='px-2 py-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors'
+                title='Fit Selection'
+                disabled={selectedTaskIds.size === 0}
+              >
+                Fit Selection
+              </button>
+              <span className='text-gray-400 mx-1'>|</span>
+              <span className='text-gray-500'>
+                {Math.round(zoomScale * 100)}%
+              </span>
+            </div>
+            <div className='text-xs text-gray-500'>
+              {linkingMode
+                ? '🔗 Linking mode active'
+                : dragToLink.isActive
+                  ? '🔗 Drag to link mode active'
+                  : selectedTaskId
+                    ? `Selected: ${tasks.find(t => t.id === selectedTaskId)?.name || 'Unknown'}`
+                    : 'No task selected'}
+            </div>
           </div>
         </div>
       </div>
@@ -2081,7 +2196,7 @@ const GanttChart = () => {
       <GanttHeader
         startDate={dateRange.start}
         endDate={dateRange.end}
-        zoomScale={viewState.timelineZoom}
+        zoomScale={zoomScale}
         showWeekends={viewState.showWeekends}
         viewScale={viewState.viewScale}
         timeScale={viewState.timeScale}
@@ -2104,6 +2219,7 @@ const GanttChart = () => {
         onMouseDown={handleMarqueeStart}
         onMouseMove={handleMarqueeMove}
         onMouseUp={handleMarqueeEnd}
+        onWheel={handleWheel}
       >
         {/* Background Grid */}
         <div className='absolute inset-0 pointer-events-none'>
