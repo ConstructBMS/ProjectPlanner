@@ -215,9 +215,10 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
         {/* File Button (Backstage) */}
         <button
           onClick={handleBackstageToggle}
-          className={`project-ribbon-tab ribbon-tab ${isBackstageOpen ? 'active' : ''}`}
+          className={`tab ${isBackstageOpen ? 'active' : ''}`}
           tabIndex={0}
           title="File - Access file operations and settings"
+          aria-selected={isBackstageOpen}
         >
           File
         </button>
@@ -230,9 +231,10 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
             key={tab}
             onClick={() => handleTabChange(tab)}
             onDoubleClick={handleTabDoubleClick}
-            className={`project-ribbon-tab ribbon-tab ${activeTab === tab ? 'active' : ''}`}
+            className={`tab ${activeTab === tab ? 'active' : ''}`}
             tabIndex={0}
             title={`${tab} - Switch to ${tab} tab`}
+            aria-selected={activeTab === tab}
           >
             {tab}
           </button>

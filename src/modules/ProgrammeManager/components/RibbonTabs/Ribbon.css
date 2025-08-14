@@ -1,9 +1,9 @@
-/* ProjectPlanner Ribbon - ConstructBMS Theme */
+/* ProjectPlanner Ribbon - Clean Baseline */
 
 /* Ribbon wrapper container */
 .pm-ribbon-wrap {
   position: sticky;
-  top: var(--app-shell-top, 0);
+  top: var(--shell-top, 0);
   z-index: 10;
   background: var(--rbn-bg);
 }
@@ -13,38 +13,8 @@
   display: flex;
   align-items: center;
   min-height: 40px;
-  padding: 0 8px;
+  padding: 0 10px;
   border-bottom: 1px solid var(--rbn-border);
-  background: var(--rbn-bg);
-  overflow-x: auto;
-  overflow-y: hidden;
-}
-
-/* Tab styling */
-.pm-ribbon__tabs .ribbon-tab {
-  background: transparent;
-  border: none;
-  color: var(--rbn-text-2);
-  font-size: var(--rbn-tab-size);
-  font-weight: var(--rbn-tab-weight);
-  padding: 8px 12px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  border-bottom: 2px solid transparent;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.pm-ribbon__tabs .ribbon-tab:hover {
-  color: var(--rbn-text);
-  background: var(--rbn-hover);
-}
-
-.pm-ribbon__tabs .ribbon-tab.active {
-  color: var(--rbn-text);
-  border-bottom: 2px solid var(--rbn-accent);
-  background: var(--rbn-bg-elev);
 }
 
 /* Groups tray container */
@@ -54,27 +24,6 @@
   overflow-y: hidden;
   padding: 8px 10px;
   background: var(--rbn-bg);
-  border-top: 1px solid var(--rbn-border);
-  transition: max-height 0.2s ease;
-  scrollbar-width: thin;
-  scrollbar-color: var(--rbn-border) var(--rbn-bg);
-}
-
-.pm-ribbon__tray::-webkit-scrollbar {
-  height: 6px;
-}
-
-.pm-ribbon__tray::-webkit-scrollbar-track {
-  background: var(--rbn-bg);
-}
-
-.pm-ribbon__tray::-webkit-scrollbar-thumb {
-  background: var(--rbn-border);
-  border-radius: 3px;
-}
-
-.pm-ribbon__tray::-webkit-scrollbar-thumb:hover {
-  background: var(--rbn-text-muted);
 }
 
 /* Minimised state */
@@ -87,568 +36,150 @@
 /* Groups row container */
 .pm-ribbon__row {
   display: flex;
-  align-items: flex-start;
   gap: 12px;
+  align-items: stretch;
   min-height: 0;
-  width: max-content;
 }
 
-/* Group styling - consistent surface */
-.pm-ribbon .project-group {
-  display: flex;
-  flex-direction: column;
-  min-width: 200px;
-  padding: 10px;
-  gap: 8px;
+/* Group styling */
+.rbn-group {
+  background: var(--rbn-bg-elev);
   border: 1px solid var(--rbn-border);
   border-radius: 8px;
-  background: var(--rbn-bg-elev);
-  flex-shrink: 0;
-  position: relative;
-}
-
-/* Group content alignment */
-.pm-ribbon .project-group > div:not(.project-group-title) {
+  padding: 10px;
+  min-width: 200px;
   display: flex;
-  flex-wrap: wrap;
   gap: 8px;
-  align-items: baseline;
+  align-items: center;
 }
 
-/* Baseline alignment for button rows */
-.pm-ribbon .project-group .button-row {
-  display: flex;
-  align-items: baseline;
+/* Button styling */
+.rbn-btn {
+  display: inline-flex;
   gap: 8px;
-  margin-bottom: 4px;
-}
-
-.pm-ribbon .project-group .button-row:last-child {
-  margin-bottom: 0;
-}
-
-/* Group titles */
-.pm-ribbon .project-group-title {
-  text-transform: uppercase;
-  font-size: var(--rbn-group-title-size);
-  font-weight: var(--rbn-group-title-weight);
-  letter-spacing: var(--rbn-group-title-tracking);
-  color: var(--rbn-text-muted);
-  margin-top: 2px;
-  margin-bottom: var(--rbn-gap);
-  padding-bottom: var(--rbn-gap);
-  border-bottom: 1px solid var(--rbn-border);
-  text-align: center;
-  width: 100%;
-  font-family: var(--rbn-font-sans);
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Button styling - Base */
-.pm-ribbon .project-button {
+  line-height: 1.2;
   background: transparent;
   border: 1px solid transparent;
   color: var(--rbn-text);
-  font-size: var(--rbn-button-label-size);
-  font-weight: var(--rbn-button-label-weight);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
   transition: all 0.15s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 1px;
-  margin: 0.5px;
-  position: relative;
   font-family: var(--rbn-font-sans);
-  line-height: 1.2;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-/* Large buttons (icon above label) */
-.pm-ribbon .project-button.large,
-.pm-ribbon .project-button[data-size="large"] {
-  flex-direction: column;
-  min-width: var(--rbn-btn-large-min-width);
-  min-height: var(--rbn-btn-large-min-height);
-  padding: var(--rbn-btn-large-padding);
-  justify-content: flex-start;
-}
-
-.pm-ribbon .project-button.large .text-\[12px\],
-.pm-ribbon .project-button[data-size="large"] .text-\[12px\] {
-  width: var(--rbn-btn-large-icon);
-  height: var(--rbn-btn-large-icon);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 4px;
-  flex-shrink: 0;
-}
-
-.pm-ribbon .project-button.large .text-\[6px\],
-.pm-ribbon .project-button[data-size="large"] .text-\[6px\] {
-  font-size: var(--rbn-button-label-size);
-  font-weight: var(--rbn-button-label-weight);
-  color: var(--rbn-text);
-  text-align: center;
-  text-transform: none;
-  letter-spacing: normal;
-  line-height: 1.2;
-  font-family: var(--rbn-font-sans);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  width: 100%;
-}
-
-/* Standard buttons (icon and label side by side) */
-.pm-ribbon .project-button.standard,
-.pm-ribbon .project-button[data-size="standard"] {
-  flex-direction: row;
-  min-height: var(--rbn-btn-standard-min-height);
-  padding: var(--rbn-btn-standard-padding);
-  gap: 6px;
-}
-
-.pm-ribbon .project-button.standard .text-\[12px\],
-.pm-ribbon .project-button[data-size="standard"] .text-\[12px\] {
-  width: var(--rbn-btn-standard-icon);
-  height: var(--rbn-btn-standard-icon);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.pm-ribbon .project-button.standard .text-\[6px\],
-.pm-ribbon .project-button[data-size="standard"] .text-\[6px\] {
-  font-size: var(--rbn-button-label-size);
-  font-weight: var(--rbn-button-label-weight);
-  color: var(--rbn-text);
-  text-align: left;
-  text-transform: none;
-  letter-spacing: normal;
-  line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-family: var(--rbn-font-sans);
-  flex: 1;
-  min-width: 0;
-}
-
-/* Split buttons */
-.pm-ribbon .project-button.split {
-  position: relative;
-  padding-right: var(--rbn-btn-split-caret);
-}
-
-.pm-ribbon .project-button.split::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: var(--rbn-btn-split-divider);
-  height: 60%;
-  background: transparent;
-  transition: background-color 0.15s ease;
-}
-
-.pm-ribbon .project-button.split:hover::after {
-  background: var(--rbn-border);
-}
-
-/* Split caret button */
-.pm-ribbon .project-button.split-caret {
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: var(--rbn-btn-split-caret);
-  height: 100%;
-  border-left: var(--rbn-btn-split-divider) solid var(--rbn-border);
-  border-radius: 0;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  transition: all 0.15s ease;
-}
-
-.pm-ribbon .project-button.split-caret:hover {
-  background: var(--rbn-hover);
-  border-left-color: var(--rbn-accent);
-}
-
-.pm-ribbon .project-button.split-caret:active {
-  background: var(--rbn-pressed);
-}
-
-/* Split button container */
-.pm-ribbon .relative {
-  position: relative;
-  display: inline-block;
-}
-
-/* Button states */
-.pm-ribbon .project-button:hover {
+.rbn-btn:hover {
   background: var(--rbn-hover);
   border-color: var(--rbn-accent);
 }
 
-.pm-ribbon .project-button:active {
+.rbn-btn:active {
   background: var(--rbn-pressed);
   box-shadow: var(--rbn-shadow);
 }
 
-.pm-ribbon .project-button:focus {
+.rbn-btn:focus {
   outline: 2px solid color-mix(in oklab, var(--rbn-accent), white 60%);
   outline-offset: 2px;
 }
 
-.pm-ribbon .project-button:disabled {
+.rbn-btn[disabled],
+.rbn-btn[aria-disabled="true"] {
   opacity: 0.45;
   cursor: not-allowed;
-  color: var(--rbn-text-muted);
 }
 
-.pm-ribbon .project-button:disabled:hover,
-.pm-ribbon .project-button:disabled:focus,
-.pm-ribbon .project-button:disabled:active {
+.rbn-btn[disabled]:hover,
+.rbn-btn[aria-disabled="true"]:hover {
   background: transparent;
   border-color: transparent;
-  color: var(--rbn-text-muted);
-  opacity: 0.45;
 }
 
-/* Active state for toggle buttons */
-.pm-ribbon .project-button.active {
-  background: var(--rbn-accent);
-  border-color: var(--rbn-accent);
-  color: white;
-}
-
-.pm-ribbon .project-button.active:hover {
-  background: color-mix(in oklab, var(--rbn-accent), black 10%);
-  border-color: color-mix(in oklab, var(--rbn-accent), black 10%);
-}
-
-.pm-ribbon .project-button.active svg {
-  color: white;
-}
-
-/* Compact pill buttons for progress presets */
-.pm-ribbon .progress-preset-button {
-  min-width: 36px;
-  height: 24px;
-  padding: 4px 8px;
-  font-size: 11px;
-  font-weight: 600;
-  border-radius: 12px;
-  border: 1px solid var(--rbn-border);
-  background: var(--rbn-bg-elev);
-  color: var(--rbn-text-2);
-  transition: all 0.15s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  flex-shrink: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.pm-ribbon .progress-preset-button:hover {
-  background: var(--rbn-hover);
-  border-color: var(--rbn-accent);
-  color: var(--rbn-text);
-}
-
-.pm-ribbon .progress-preset-button:active {
-  background: var(--rbn-pressed);
-  transform: translateY(1px);
-}
-
-.pm-ribbon .progress-preset-button.active {
-  background: var(--rbn-accent);
-  border-color: var(--rbn-accent);
-  color: white;
-}
-
-.pm-ribbon .progress-preset-button.active:hover {
-  background: color-mix(in oklab, var(--rbn-accent), black 10%);
-  border-color: color-mix(in oklab, var(--rbn-accent), black 10%);
-}
-
-/* Icon styling */
-.pm-ribbon .project-button .text-\[12px\] {
-  color: var(--rbn-icon);
-}
-
-.pm-ribbon .project-button:hover .text-\[12px\] {
-  color: var(--rbn-text);
-}
-
-/* Icon clarity improvements */
-.pm-ribbon .project-button svg {
-  vector-effect: non-scaling-stroke;
-  shape-rendering: geometricPrecision;
+/* Icon sizing */
+.rbn-icon-lg {
   width: 28px;
   height: 28px;
-  fill: var(--rbn-icon);
   flex-shrink: 0;
 }
 
-.pm-ribbon .project-button.standard svg,
-.pm-ribbon .project-button[data-size="standard"] svg {
+.rbn-icon-md {
   width: 20px;
   height: 20px;
-  fill: var(--rbn-icon);
   flex-shrink: 0;
 }
 
-.pm-ribbon .project-button:hover svg {
-  fill: var(--rbn-text);
-}
-
-/* Ensure contrast for accessibility */
-.pm-ribbon .project-button[style*="background-color"] {
-  color: var(--rbn-text) !important;
-}
-
-/* Tab border styling */
-.pm-ribbon .flex.border-b {
-  border-bottom-color: var(--rbn-border);
-}
-
-/* Ensure all text has proper contrast */
-.pm-ribbon * {
-  color: inherit;
-}
-
-/* Remove hardcoded colors - use CSS variables only */
-.pm-ribbon .text-gray-500,
-.pm-ribbon .text-gray-600,
-.pm-ribbon .text-gray-700 {
-  color: var(--rbn-text-2) !important;
-}
-
-.pm-ribbon .text-gray-400 {
-  color: var(--rbn-text-muted) !important;
-}
-
-/* Enforce contrast for elements on elevated backgrounds */
-.pm-ribbon .project-group * {
+/* Label styling */
+.rbn-label {
+  font-size: 12px;
+  font-weight: 500;
   color: var(--rbn-text);
-}
-
-.pm-ribbon .project-group .project-group-title {
-  color: var(--rbn-text-muted);
-}
-
-/* Ensure disabled state only applies to individual buttons */
-.pm-ribbon .project-button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-  color: var(--rbn-text-muted);
-}
-
-.pm-ribbon .project-button:disabled svg {
-  fill: var(--rbn-text-muted);
-  opacity: 0.45;
-}
-
-/* Remove any parent opacity/grayscale that might affect the whole ribbon */
-.pm-ribbon-wrap,
-.pm-ribbon__tabs,
-.pm-ribbon__tray,
-.pm-ribbon__row {
-  opacity: 1 !important;
-  filter: none !important;
-}
-
-/* Consistent hit areas and touch targets */
-.pm-ribbon .project-button {
-  min-height: 32px; /* Minimum touch target */
-  cursor: pointer;
-  user-select: none;
-}
-
-/* Ensure proper spacing between groups */
-.pm-ribbon .project-group + .project-group {
-  margin-left: var(--rbn-group-gap);
-}
-
-/* Baseline alignment for mixed button sizes */
-.pm-ribbon .project-group .mixed-row {
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
-  margin-bottom: 6px;
-}
-
-.pm-ribbon .project-group .mixed-row:last-child {
-  margin-bottom: 0;
-}
-
-/* Ensure buttons don't shrink below minimum sizes */
-.pm-ribbon .project-button.large,
-.pm-ribbon .project-button[data-size="large"] {
-  flex-shrink: 0;
-}
-
-.pm-ribbon .project-button.standard,
-.pm-ribbon .project-button[data-size="standard"] {
-  flex-shrink: 0;
-}
-
-/* Focus states for accessibility */
-.pm-ribbon button:focus-visible {
-  outline: 2px solid color-mix(in oklab, var(--rbn-accent), white 60%);
-  outline-offset: 2px;
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  .pm-ribbon {
-    --rbn-text: #ffffff;
-    --rbn-text-2: #e0e0e0;
-    --rbn-text-muted: #c0c0c0;
-    --rbn-border: #404040;
-    --rbn-accent: #0066cc;
-  }
-}
-
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-  .pm-ribbon * {
-    transition: none !important;
-  }
-}
-
-/* Ribbon Menu Styles */
-.ribbon-menu {
-  background: var(--rbn-bg-elev);
-  border: 1px solid var(--rbn-border);
-  box-shadow: 0 8px 28px rgba(0,0,0,.35);
-  border-radius: 10px;
-  padding: 4px 0;
-  min-width: 180px;
-  max-width: 300px;
-  outline: none;
-  font-family: var(--rbn-font-sans);
-  font-size: var(--rbn-button-label-size);
-  color: var(--rbn-text);
-}
-
-.ribbon-menu-item {
-  display: flex;
-  align-items: center;
-  height: 30px;
-  padding: 0 12px;
-  cursor: pointer;
-  position: relative;
-  transition: background-color 0.15s ease;
-  user-select: none;
-}
-
-.ribbon-menu-item:hover,
-.ribbon-menu-item.selected {
-  background: var(--rbn-hover);
-}
-
-.ribbon-menu-item:focus {
-  outline: 2px solid color-mix(in oklab, var(--rbn-accent), white 60%);
-  outline-offset: -2px;
-}
-
-.ribbon-menu-item.disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-  color: var(--rbn-text-muted);
-}
-
-.ribbon-menu-item.disabled:hover {
-  background: transparent;
-}
-
-.ribbon-menu-icon {
-  width: 16px;
-  height: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 8px;
-  flex-shrink: 0;
-  color: var(--rbn-icon);
-}
-
-.ribbon-menu-label {
-  flex: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-weight: var(--rbn-button-label-weight);
 }
 
-.ribbon-menu-accelerator {
-  margin-left: 8px;
-  color: var(--rbn-text-muted);
-  font-size: 11px;
-  font-weight: 500;
-  flex-shrink: 0;
-}
-
-.ribbon-menu-arrow {
-  margin-left: 8px;
-  color: var(--rbn-text-muted);
-  font-size: 10px;
-  flex-shrink: 0;
-}
-
-.ribbon-submenu {
-  position: absolute;
-  left: 100%;
-  top: 0;
-  z-index: 1001;
-}
-
-/* Menu separator */
-.ribbon-menu-separator {
-  height: 1px;
-  background: var(--rbn-border);
-  margin: 4px 0;
-}
-
-/* Menu group header */
-.ribbon-menu-group-header {
-  padding: 4px 12px 2px;
-  font-size: 10px;
+/* Tab styling */
+.pm-ribbon__tabs .tab {
+  padding: 8px 10px;
+  color: var(--rbn-text-2);
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 14px;
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pm-ribbon__tabs .tab:hover {
+  color: var(--rbn-text);
+  background: var(--rbn-hover);
+}
+
+.pm-ribbon__tabs .tab[aria-selected="true"] {
+  color: var(--rbn-text);
+  border-color: var(--rbn-accent);
+}
+
+/* Minimise button */
+.ribbon-minimise-button {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--rbn-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  user-select: none;
+  transition: all 0.15s ease;
+  margin-left: auto;
+  margin-right: 8px;
 }
 
-/* Ensure menus appear above other content */
-.ribbon-menu,
-.ribbon-submenu {
-  z-index: 1000;
+.ribbon-minimise-button:hover {
+  background: var(--rbn-hover);
+  color: var(--rbn-text);
 }
 
-/* Focus ring for keyboard navigation */
-.ribbon-menu:focus-visible {
+.ribbon-minimise-button:focus {
   outline: 2px solid color-mix(in oklab, var(--rbn-accent), white 60%);
   outline-offset: 2px;
 }
 
-/* Quick Access Toolbar Styles */
+/* Quick Access Toolbar */
 .quick-access-toolbar {
   display: flex;
   align-items: center;
@@ -732,326 +263,110 @@
   background: var(--rbn-pressed);
 }
 
-/* QAT separator line */
-.quick-access-toolbar.above::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: var(--rbn-border);
+/* Ribbon Menu */
+.ribbon-menu {
+  background: var(--rbn-bg-elev);
+  border: 1px solid var(--rbn-border);
+  box-shadow: 0 8px 28px rgba(0,0,0,.35);
+  border-radius: 10px;
+  padding: 4px 0;
+  min-width: 180px;
+  max-width: 300px;
+  outline: none;
+  font-family: var(--rbn-font-sans);
+  font-size: 12px;
+  color: var(--rbn-text);
 }
 
-.quick-access-toolbar.below::before {
-  content: '';
-  position: absolute;
-  top: -1px;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: var(--rbn-border);
-}
-
-/* Ensure QAT doesn't overlap with header */
-.quick-access-toolbar {
+.ribbon-menu-item {
+  display: flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 12px;
+  cursor: pointer;
   position: relative;
-  z-index: 10;
+  transition: background-color 0.15s ease;
+  user-select: none;
 }
 
-/* Smooth transitions for position changes */
-.quick-access-toolbar {
-  transition: all 0.2s ease-in-out;
+.ribbon-menu-item:hover,
+.ribbon-menu-item.selected {
+  background: var(--rbn-hover);
 }
 
-/* Group Dialog Launcher Styles */
-.ribbon-group {
-  position: relative;
+.ribbon-menu-item:focus {
+  outline: 2px solid color-mix(in oklab, var(--rbn-accent), white 60%);
+  outline-offset: -2px;
 }
 
-.ribbon-group-launcher {
-  position: absolute;
-  bottom: 2px;
-  right: 2px;
+.ribbon-menu-item.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  color: var(--rbn-text-muted);
+}
+
+.ribbon-menu-item.disabled:hover {
+  background: transparent;
+}
+
+.ribbon-menu-icon {
   width: 16px;
   height: 16px;
-  background: transparent;
-  border: none;
-  border-radius: 2px;
-  cursor: pointer;
-  opacity: 0;
-  transition: all 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 5;
-}
-
-.ribbon-group:hover .ribbon-group-launcher,
-.ribbon-group:focus-within .ribbon-group-launcher {
-  opacity: 1;
-}
-
-.ribbon-group-launcher:hover {
-  background: var(--rbn-hover);
-  opacity: 1;
-}
-
-.ribbon-group-launcher:focus {
-  opacity: 1;
-  outline: 2px solid color-mix(in oklab, var(--rbn-accent), white 60%);
-  outline-offset: 1px;
-}
-
-.ribbon-group-launcher svg {
-  width: 10px;
-  height: 10px;
-  color: var(--rbn-text-muted);
-  transition: color 0.15s ease;
-}
-
-.ribbon-group-launcher:hover svg {
-  color: var(--rbn-text);
-}
-
-/* Ensure launcher doesn't interfere with group content */
-.ribbon-group {
-  padding-bottom: 4px;
-  padding-right: 4px;
-}
-
-/* Ribbon Minimise/Restore Styles */
-.ribbon-minimise-button {
-  position: relative;
-  width: 24px;
-  height: 24px;
-  background: transparent;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--rbn-text-muted);
-  transition: all 0.15s ease;
-  margin-left: auto;
   margin-right: 8px;
+  flex-shrink: 0;
+  color: var(--rbn-icon);
 }
 
-.ribbon-minimise-button:hover {
-  background: var(--rbn-hover);
-  color: var(--rbn-text);
-}
-
-.ribbon-minimise-button:focus {
-  outline: 2px solid color-mix(in oklab, var(--rbn-accent), white 60%);
-  outline-offset: 2px;
-}
-
-/* Ribbon content minimize animation - now handled by pm-ribbon__groups */
-.pm-ribbon__tray {
-  overflow: hidden;
-  transition: max-height 0.2s ease-in-out;
-}
-
-.pm-ribbon--min .pm-ribbon__tray {
-  max-height: 0;
-  padding: 0;
-  border: none;
-}
-
-/* Respect reduced motion preference */
-@media (prefers-reduced-motion: reduce) {
-  .project-ribbon-content {
-    transition: none;
-  }
-  
-  .ribbon-minimise-button svg {
-    transition: none;
-  }
-}
-
-/* Readability Utilities */
-.rbn-strong {
-  color: var(--rbn-text) !important;
-  font-weight: 600;
-}
-
-.rbn-dim {
-  color: var(--rbn-text-2) !important;
-}
-
-/* Ellipsis clamp utilities */
-.rbn-ellipsis {
+.ribbon-menu-label {
+  flex: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-weight: 500;
 }
 
-.rbn-ellipsis-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.ribbon-menu-accelerator {
+  margin-left: 8px;
+  color: var(--rbn-text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  flex-shrink: 0;
 }
 
-.rbn-ellipsis-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.ribbon-menu-arrow {
+  margin-left: 8px;
+  color: var(--rbn-text-muted);
+  font-size: 10px;
+  flex-shrink: 0;
 }
 
-/* SVG icon inheritance */
-.ribbon-button svg,
-.ribbon-group-title svg,
-.ribbon-menu-icon svg {
-  fill: var(--rbn-icon);
-  transition: fill 0.15s ease;
+.ribbon-submenu {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  z-index: 1001;
 }
 
-.ribbon-button:hover svg,
-.ribbon-group-title:hover svg,
-.ribbon-menu-icon:hover svg {
-  fill: var(--rbn-text);
+.ribbon-menu-separator {
+  height: 1px;
+  background: var(--rbn-border);
+  margin: 4px 0;
 }
 
-/* Focus order improvements */
-.ribbon-tab:focus,
-.ribbon-group:focus,
-.ribbon-button:focus,
-.ribbon-menu:focus {
-  outline: 2px solid color-mix(in oklab, var(--rbn-accent), white 60%);
-  outline-offset: 2px;
-  z-index: 1;
+.ribbon-menu-group-header {
+  padding: 4px 12px 2px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--rbn-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  user-select: none;
 }
 
-/* Ensure proper tab order */
-.ribbon-tab {
-  tabindex: 0;
-}
-
-.ribbon-group {
-  tabindex: 0;
-}
-
-.ribbon-button {
-  tabindex: 0;
-}
-
-.ribbon-menu {
-  tabindex: 0;
-}
-
-/* Ribbon Theme Variables */
-.pm-ribbon {
-  /* fonts */
-  --rbn-font-sans: Inter,"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
-  --rbn-tab-size: 14px;
-  --rbn-tab-weight: 600;
-  --rbn-group-title-size: 11px;
-  --rbn-group-title-weight: 600;
-  --rbn-group-title-tracking: 0.04em;
-  --rbn-button-label-size: 12px;
-  --rbn-button-label-weight: 500;
-
-  /* ConstructBMS dark palette */
-  --rbn-bg: #111928;          /* base */
-  --rbn-bg-elev: #1b2433;     /* raised */
-  --rbn-border: #232a38;
-  --rbn-text: #e8eef7;        /* primary */
-  --rbn-text-2: #c6ced9;      /* secondary */
-  --rbn-text-muted: #9aa3af;  /* tertiary */
-  --rbn-icon: #cdd6e1;
-  --rbn-accent: #3880f4;      /* blue */
-  --rbn-hover: rgba(255,255,255,.05);
-  --rbn-pressed: rgba(0,0,0,.22);
-  --rbn-shadow: 0 1px 0 rgba(0,0,0,.12);
-
-  /* spacing */
-  --rbn-pad-x: 12px;
-  --rbn-pad-y: 8px;
-  --rbn-gap: 8px;
-  --rbn-group-gap: 12px;
-  
-  /* button dimensions */
-  --rbn-btn-large-icon: 28px;
-  --rbn-btn-large-min-width: 88px;
-  --rbn-btn-large-min-height: 82px;
-  --rbn-btn-large-padding: 12px 10px;
-  
-  --rbn-btn-standard-icon: 18px;
-  --rbn-btn-standard-min-height: 36px;
-  --rbn-btn-standard-padding: 8px 10px;
-  
-  --rbn-btn-split-caret: 24px;
-  --rbn-btn-split-divider: 1px;
-  
-  /* group dividers */
-  --rbn-divider-width: 1px;
-  --rbn-divider-margin: 0 8px;
-
-  color: var(--rbn-text);
-  background: var(--rbn-bg);
-  font-family: var(--rbn-font-sans);
-}
-
-/* Light Mode Variables */
-.pm-ribbon[data-mode="light"] {
-  --rbn-bg: #ffffff;
-  --rbn-bg-elev: #f8fafc;
-  --rbn-border: #e2e8f0;
-  --rbn-text: #1e293b;
-  --rbn-text-2: #475569;
-  --rbn-text-muted: #64748b;
-  --rbn-icon: #64748b;
-  --rbn-hover: #f1f5f9;
-  --rbn-pressed: #e2e8f0;
-  --rbn-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-/* Dark Mode Variables */
-.pm-ribbon[data-mode="dark"] {
-  --rbn-bg: #1e293b;
-  --rbn-bg-elev: #334155;
-  --rbn-border: #475569;
-  --rbn-text: #f1f5f9;
-  --rbn-text-2: #cbd5e1;
-  --rbn-text-muted: #94a3b8;
-  --rbn-icon: #94a3b8;
-  --rbn-hover: #475569;
-  --rbn-pressed: #64748b;
-  --rbn-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-}
-
-/* Accent Color Variables */
-.pm-ribbon[data-accent="blue"] {
-  --rbn-accent: #3b82f6;
-}
-
-.pm-ribbon[data-accent="cyan"] {
-  --rbn-accent: #06b6d4;
-}
-
-.pm-ribbon[data-accent="teal"] {
-  --rbn-accent: #14b8a6;
-}
-
-.pm-ribbon[data-accent="green"] {
-  --rbn-accent: #10b981;
-}
-
-.pm-ribbon[data-accent="orange"] {
-  --rbn-accent: #f59e0b;
-}
-
-.pm-ribbon[data-accent="magenta"] {
-  --rbn-accent: #ec4899;
-}
-
-/* Style Options Button */
+/* Style Options */
 .ribbon-style-options {
   position: absolute;
   top: 8px;
@@ -1080,7 +395,6 @@
   outline-offset: 2px;
 }
 
-/* Style Options Menu */
 .ribbon-style-menu {
   position: absolute;
   top: 40px;
@@ -1147,7 +461,6 @@
   color: white;
 }
 
-/* Accent Color Swatches */
 .ribbon-accent-swatch {
   width: 12px;
   height: 12px;
@@ -1164,18 +477,129 @@
 .ribbon-accent-swatch.orange { background: #f59e0b; }
 .ribbon-accent-swatch.magenta { background: #ec4899; }
 
-/* QAT Responsive - prevent wrapping */
-@media (max-width: 1280px) {
-  .quick-access-toolbar {
-    flex-wrap: nowrap;
-    overflow: hidden;
+/* Ribbon Theme Variables */
+.pm-ribbon-wrap {
+  /* fonts */
+  --rbn-font-sans: Inter,"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+
+  /* ConstructBMS dark palette */
+  --rbn-bg: #111928;          /* base */
+  --rbn-bg-elev: #1b2433;     /* raised */
+  --rbn-border: #232a38;
+  --rbn-text: #e8eef7;        /* primary */
+  --rbn-text-2: #c6ced9;      /* secondary */
+  --rbn-text-muted: #9aa3af;  /* tertiary */
+  --rbn-icon: #cdd6e1;
+  --rbn-accent: #3880f4;      /* blue */
+  --rbn-hover: rgba(255,255,255,.05);
+  --rbn-pressed: rgba(0,0,0,.22);
+  --rbn-shadow: 0 1px 0 rgba(0,0,0,.12);
+
+  color: var(--rbn-text);
+  background: var(--rbn-bg);
+  font-family: var(--rbn-font-sans);
+}
+
+/* Light Mode Variables */
+.pm-ribbon-wrap[data-mode="light"] {
+  --rbn-bg: #ffffff;
+  --rbn-bg-elev: #f8fafc;
+  --rbn-border: #e2e8f0;
+  --rbn-text: #1e293b;
+  --rbn-text-2: #475569;
+  --rbn-text-muted: #64748b;
+  --rbn-icon: #64748b;
+  --rbn-hover: #f1f5f9;
+  --rbn-pressed: #e2e8f0;
+  --rbn-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark Mode Variables */
+.pm-ribbon-wrap[data-mode="dark"] {
+  --rbn-bg: #1e293b;
+  --rbn-bg-elev: #334155;
+  --rbn-border: #475569;
+  --rbn-text: #f1f5f9;
+  --rbn-text-2: #cbd5e1;
+  --rbn-text-muted: #94a3b8;
+  --rbn-icon: #94a3b8;
+  --rbn-hover: #475569;
+  --rbn-pressed: #64748b;
+  --rbn-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+/* Accent Color Variables */
+.pm-ribbon-wrap[data-accent="blue"] {
+  --rbn-accent: #3b82f6;
+}
+
+.pm-ribbon-wrap[data-accent="cyan"] {
+  --rbn-accent: #06b6d4;
+}
+
+.pm-ribbon-wrap[data-accent="teal"] {
+  --rbn-accent: #14b8a6;
+}
+
+.pm-ribbon-wrap[data-accent="green"] {
+  --rbn-accent: #10b981;
+}
+
+.pm-ribbon-wrap[data-accent="orange"] {
+  --rbn-accent: #f59e0b;
+}
+
+.pm-ribbon-wrap[data-accent="magenta"] {
+  --rbn-accent: #ec4899;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .pm-ribbon-wrap {
+    --rbn-text: #ffffff;
+    --rbn-text-2: #e0e0e0;
+    --rbn-text-muted: #c0c0c0;
+    --rbn-border: #404040;
+    --rbn-accent: #0066cc;
   }
-  
-  .qat-buttons {
-    flex-shrink: 0;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .pm-ribbon-wrap * {
+    transition: none !important;
   }
-  
-  .qat-position-toggle {
-    flex-shrink: 0;
-  }
+}
+
+/* Custom scrollbar for tray */
+.pm-ribbon__tray::-webkit-scrollbar {
+  height: 6px;
+}
+
+.pm-ribbon__tray::-webkit-scrollbar-track {
+  background: var(--rbn-bg);
+}
+
+.pm-ribbon__tray::-webkit-scrollbar-thumb {
+  background: var(--rbn-border);
+  border-radius: 3px;
+}
+
+.pm-ribbon__tray::-webkit-scrollbar-thumb:hover {
+  background: var(--rbn-text-muted);
+}
+
+/* Focus states for accessibility */
+.pm-ribbon-wrap button:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--rbn-accent), white 60%);
+  outline-offset: 2px;
+}
+
+/* Ensure proper stacking */
+.pm-ribbon-wrap,
+.pm-ribbon__tabs,
+.pm-ribbon__tray,
+.pm-ribbon__row {
+  opacity: 1 !important;
+  filter: none !important;
 }
