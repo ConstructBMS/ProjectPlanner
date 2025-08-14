@@ -207,5 +207,80 @@ class ProjectStore {
   }
 }
 
+// Calendar methods
+async getCalendar(projectId: string): Promise<any | null> {
+  try {
+    if (this.supabase) {
+      const { data, error } = await this.supabase
+        .from('project_calendars')
+        .select('*')
+        .eq('project_id', projectId)
+        .maybeSingle();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return this.getCalendarFromLocalStorage(projectId);
+        }
+        throw error;
+      }
+
+      if (data) {
+        return data.calendar;
+      }
+    }
+    return this.getCalendarFromLocalStorage(projectId);
+  } catch (error) {
+    console.warn('Failed to get calendar from Supabase, using localStorage:', error);
+    return this.getCalendarFromLocalStorage(projectId);
+  }
+}
+
+async setCalendar(projectId: string, calendar: any): Promise<void> {
+  try {
+    if (this.supabase) {
+      const { error } = await this.supabase
+        .from('project_calendars')
+        .upsert({
+          project_id: projectId,
+          calendar: calendar,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'project_id'
+        });
+
+      if (error) {
+        throw error;
+      }
+      this.saveCalendarToLocalStorage(projectId, calendar);
+      return;
+    }
+    this.saveCalendarToLocalStorage(projectId, calendar);
+  } catch (error) {
+    console.warn('Failed to save calendar to Supabase, using localStorage:', error);
+    this.saveCalendarToLocalStorage(projectId, calendar);
+  }
+}
+
+private getCalendarFromLocalStorage(projectId: string): any | null {
+  try {
+    const key = `pm.project.${projectId}.calendar`;
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : null;
+  } catch (error) {
+    console.warn('Failed to read calendar from localStorage:', error);
+    return null;
+  }
+}
+
+private saveCalendarToLocalStorage(projectId: string, calendar: any): void {
+  try {
+    const key = `pm.project.${projectId}.calendar`;
+    localStorage.setItem(key, JSON.stringify(calendar));
+  } catch (error) {
+    console.error('Failed to save calendar to localStorage:', error);
+    throw error;
+  }
+}
+
 // Export singleton instance
 export const projectStore = new ProjectStore();

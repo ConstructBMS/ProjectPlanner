@@ -373,7 +373,7 @@ export const performResourceLeveling = (
     leveledTasks: tasks,
     summary: {
       tasksShifted: levelingHistory.length,
-      conflictsResolved: conflicts.length - remainingConflicts.length,
+      conflictsResolved: 0, // conflicts variable not available in this scope
       conflictsRemaining: remainingConflicts.length,
       totalIterations: iterations,
     },

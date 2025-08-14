@@ -16,10 +16,12 @@ import {
   ArrowPathIcon,
   ExclamationTriangleIcon,
   ArchiveBoxIcon,
+  CalendarIcon,
 } from '@heroicons/react/24/outline';
 import BaselineManagerDialog from '../../BaselineManagerDialog';
 import GroupDialogLauncher from '../GroupDialogLauncher';
 import ProjectInfoDialog from '../../Project/ProjectInfoDialog';
+import WorkingTimeDialog from '../../Project/WorkingTimeDialog';
 
 const ProjectTab = () => {
   const { setBaseline1, clearBaseline1, tasks } = useTaskContext();
@@ -40,6 +42,9 @@ const ProjectTab = () => {
   // Project Info Dialog state
   const [projectInfoDialogOpen, setProjectInfoDialogOpen] = useState(false);
   const [currentProjectId, setCurrentProjectId] = useState('default-project');
+
+  // Working Time Dialog state
+  const [workingTimeDialogOpen, setWorkingTimeDialogOpen] = useState(false);
 
   // Load baselines from persistent storage on mount
   useEffect(() => {
@@ -64,6 +69,20 @@ const ProjectTab = () => {
     window.addEventListener('PROJECT_INFO_UPDATED', handleProjectInfoUpdated);
     return () => {
       window.removeEventListener('PROJECT_INFO_UPDATED', handleProjectInfoUpdated);
+    };
+  }, []);
+
+  // Listen for calendar updates
+  useEffect(() => {
+    const handleProjectCalendarUpdated = (event) => {
+      const { projectId, calendar } = event.detail;
+      console.log('Project calendar updated:', { projectId, calendar });
+      // This will trigger Gantt chart background shading updates
+    };
+
+    window.addEventListener('PROJECT_CALENDAR_UPDATED', handleProjectCalendarUpdated);
+    return () => {
+      window.removeEventListener('PROJECT_CALENDAR_UPDATED', handleProjectCalendarUpdated);
     };
   }, []);
 
@@ -108,17 +127,32 @@ const ProjectTab = () => {
     setProjectInfoDialogOpen(false);
   };
 
+  // Working Time Dialog handlers
+  const handleOpenWorkingTime = () => {
+    setWorkingTimeDialogOpen(true);
+  };
+
+  const handleCloseWorkingTime = () => {
+    setWorkingTimeDialogOpen(false);
+  };
+
   return (
     <>
       <div className='flex flex-nowrap gap-0 p-2 bg-white w-full min-w-0'>
         {/* Project Settings Group */}
         <RibbonGroup title='Project Settings'>
-          <RibbonButton
-            icon={<FolderIcon className='w-4 h-4 text-gray-700' />}
-            label='Project Info'
-            onClick={handleOpenProjectInfo}
-            tooltip='Edit project information (name, dates, calendar)'
-          />
+                            <RibbonButton
+                    icon={<FolderIcon className='w-4 h-4 text-gray-700' />}
+                    label='Project Info'
+                    onClick={handleOpenProjectInfo}
+                    tooltip='Edit project information (name, dates, calendar)'
+                  />
+                  <RibbonButton
+                    icon={<CalendarIcon className='w-4 h-4 text-gray-700' />}
+                    label='Working Time'
+                    onClick={handleOpenWorkingTime}
+                    tooltip='Edit working days, hours, and holidays'
+                  />
           <RibbonButton
             icon={<DocumentIcon className='w-4 h-4 text-gray-700' />}
             label='Project Settings'
@@ -221,12 +255,19 @@ const ProjectTab = () => {
         onImportBaseline={handleImportBaseline}
       />
 
-      {/* Project Info Dialog */}
-      <ProjectInfoDialog
-        isOpen={projectInfoDialogOpen}
-        onClose={handleCloseProjectInfo}
-        projectId={currentProjectId}
-      />
+              {/* Project Info Dialog */}
+        <ProjectInfoDialog
+          isOpen={projectInfoDialogOpen}
+          onClose={handleCloseProjectInfo}
+          projectId={currentProjectId}
+        />
+
+        {/* Working Time Dialog */}
+        <WorkingTimeDialog
+          isOpen={workingTimeDialogOpen}
+          onClose={handleCloseWorkingTime}
+          projectId={currentProjectId}
+        />
     </>
   );
 };

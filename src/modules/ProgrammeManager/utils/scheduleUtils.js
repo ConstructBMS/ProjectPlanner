@@ -1,5 +1,48 @@
 import { addDays } from './dateUtils';
 
+// Default calendar configuration
+const DEFAULT_CALENDAR = {
+  workingDays: {
+    monday: true,
+    tuesday: true,
+    wednesday: true,
+    thursday: true,
+    friday: true,
+    saturday: false,
+    sunday: false,
+  },
+  workingHours: {
+    monday: 8,
+    tuesday: 8,
+    wednesday: 8,
+    thursday: 8,
+    friday: 8,
+    saturday: 0,
+    sunday: 0,
+  },
+  holidays: [],
+  exceptions: [],
+};
+
+// Helper functions
+const isWorkday = (date, calendar = DEFAULT_CALENDAR) => {
+  const dayOfWeek = date.getDay();
+  const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const dayName = dayNames[dayOfWeek];
+  return calendar.workingDays[dayName] || false;
+};
+
+const nextWorkday = (date, calendar = DEFAULT_CALENDAR) => {
+  const nextDate = new Date(date);
+  nextDate.setDate(nextDate.getDate() + 1);
+  
+  while (!isWorkday(nextDate, calendar)) {
+    nextDate.setDate(nextDate.getDate() + 1);
+  }
+  
+  return nextDate;
+};
+
 /**
  * Clamp a date to workdays (skip weekends)
  * @param {Date} date - The date to clamp

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   CalendarIcon,
   PlusIcon,
@@ -13,6 +13,7 @@ import {
   validateCalendar,
   isWorkingDay,
   getWorkingHours,
+  updateWorkingDays,
 } from '../utils/calendarUtils';
 
 const CalendarEditor = () => {
@@ -33,6 +34,10 @@ const CalendarEditor = () => {
     warnings: [],
   });
 
+  useEffect(() => {
+    setEditingCalendar(globalCalendar);
+  }, [globalCalendar]);
+
   // Validate calendar when it changes
   React.useEffect(() => {
     const validation = validateCalendar(editingCalendar);
@@ -40,7 +45,7 @@ const CalendarEditor = () => {
   }, [editingCalendar]);
 
   // Handle working days change
-  const handleWorkingDaysChange = useCallback((day, value) => {
+  const handleWorkingDaysChange = (day, value) => {
     setEditingCalendar(prev => ({
       ...prev,
       workingDays: {
@@ -48,10 +53,10 @@ const CalendarEditor = () => {
         [day]: value,
       },
     }));
-  }, []);
+  };
 
   // Handle working hours change
-  const handleWorkingHoursChange = useCallback((day, value) => {
+  const handleWorkingHoursChange = (day, value) => {
     setEditingCalendar(prev => ({
       ...prev,
       workingHours: {
@@ -59,63 +64,54 @@ const CalendarEditor = () => {
         [day]: parseFloat(value) || 0,
       },
     }));
-  }, []);
+  };
 
   // Handle calendar name change
-  const handleNameChange = useCallback(name => {
+  const handleNameChange = (name) => {
     setEditingCalendar(prev => ({
       ...prev,
       name,
     }));
-  }, []);
+  };
 
   // Save calendar changes
-  const handleSave = useCallback(() => {
+  const handleSave = () => {
     if (!validation.isValid) return;
 
     updateGlobalCalendar(editingCalendar);
-  }, [editingCalendar, validation.isValid, updateGlobalCalendar]);
+  };
 
   // Reset to defaults
-  const handleReset = useCallback(() => {
+  const handleReset = () => {
     if (confirm('Are you sure you want to reset the calendar to defaults?')) {
       resetGlobalCalendar();
       setEditingCalendar({ ...globalCalendar });
     }
-  }, [resetGlobalCalendar, globalCalendar]);
+  };
 
   // Add holiday
-  const handleAddHoliday = useCallback(
-    dateString => {
-      addHoliday(dateString);
-      setEditingCalendar(prev => ({
-        ...prev,
-        holidays: [...prev.holidays, dateString].sort(),
-      }));
-    },
-    [addHoliday]
-  );
+  const handleAddHoliday = (dateString) => {
+    addHoliday(dateString);
+    setEditingCalendar(prev => ({
+      ...prev,
+      holidays: [...prev.holidays, dateString].sort(),
+    }));
+  };
 
   // Remove holiday
-  const handleRemoveHoliday = useCallback(
-    dateString => {
-      removeHoliday(dateString);
-      setEditingCalendar(prev => ({
-        ...prev,
-        holidays: prev.holidays.filter(h => h !== dateString),
-      }));
-    },
-    [removeHoliday]
-  );
+  const handleRemoveHoliday = (dateString) => {
+    removeHoliday(dateString);
+    setEditingCalendar(prev => ({
+      ...prev,
+      holidays: prev.holidays.filter(h => h !== dateString),
+    }));
+  };
 
   // Handle calendar update from exception manager
-  const handleCalendarUpdate = useCallback(
-    updatedCalendar => {
-      updateGlobalCalendar(updatedCalendar);
-      setEditingCalendar(updatedCalendar);
-    },
-    [updateGlobalCalendar]
-  );
+  const handleCalendarUpdate = (updatedCalendar) => {
+    updateGlobalCalendar(updatedCalendar);
+    setEditingCalendar(updatedCalendar);
+  };
 
   const daysOfWeek = [
     { key: 'monday', label: 'Monday' },
@@ -226,7 +222,7 @@ const CalendarEditor = () => {
           <h3 className='text-lg font-medium text-gray-900'>Holidays</h3>
           <button
             onClick={() => {
-              const date = prompt('Enter holiday date (YYYY-MM-DD):');
+              const date = window.prompt('Enter holiday date (YYYY-MM-DD):');
               if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
                 handleAddHoliday(date);
               }

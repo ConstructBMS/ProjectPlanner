@@ -6,6 +6,31 @@ export interface Holiday {
   type: 'public' | 'company' | 'custom';
 }
 
+export interface ProjectCalendar {
+  workingDays: {
+    monday: boolean;
+    tuesday: boolean;
+    wednesday: boolean;
+    thursday: boolean;
+    friday: boolean;
+    saturday: boolean;
+    sunday: boolean;
+  };
+  workingHours: {
+    monday: number;
+    tuesday: number;
+    wednesday: number;
+    thursday: number;
+    friday: number;
+    saturday: number;
+    sunday: number;
+  };
+  holidays: Array<{
+    date: string;
+    label: string;
+  }>;
+}
+
 // Default working days: Monday to Friday
 const DEFAULT_WORKING_DAYS = [1, 2, 3, 4, 5]; // Monday = 1, Sunday = 0
 
@@ -16,6 +41,32 @@ const SAMPLE_HOLIDAYS: Holiday[] = [
   { date: '2024-12-26', name: 'Boxing Day', type: 'public' },
   // Add more holidays as needed
 ];
+
+// Project calendar cache
+const projectCalendars = new Map<string, ProjectCalendar>();
+
+// Default calendar
+const DEFAULT_CALENDAR: ProjectCalendar = {
+  workingDays: {
+    monday: true,
+    tuesday: true,
+    wednesday: true,
+    thursday: true,
+    friday: true,
+    saturday: false,
+    sunday: false,
+  },
+  workingHours: {
+    monday: 8,
+    tuesday: 8,
+    wednesday: 8,
+    thursday: 8,
+    friday: 8,
+    saturday: 0,
+    sunday: 0,
+  },
+  holidays: [],
+};
 
 /**
  * Check if a given date is a working day
@@ -104,4 +155,98 @@ export function getWorkingDaysBetween(startDate: Date, endDate: Date): number {
   }
   
   return workingDays;
+}
+
+/**
+ * Set project calendar
+ * @param projectId - Project ID
+ * @param calendar - Calendar configuration
+ */
+export function setProjectCalendar(projectId: string, calendar: ProjectCalendar): void {
+  projectCalendars.set(projectId, calendar);
+  
+  // Emit event for Gantt chart updates
+  window.dispatchEvent(new CustomEvent('PROJECT_CALENDAR_UPDATED', {
+    detail: { projectId, calendar }
+  }));
+}
+
+/**
+ * Get project calendar
+ * @param projectId - Project ID
+ * @returns Project calendar or default calendar
+ */
+export function getProjectCalendar(projectId: string): ProjectCalendar {
+  return projectCalendars.get(projectId) || DEFAULT_CALENDAR;
+}
+
+/**
+ * Check if a given date is a working day for a specific project
+ * @param date - Date to check
+ * @param projectId - Project ID
+ * @returns true if the date is a working day
+ */
+export function isProjectWorkingDay(date: Date, projectId: string): boolean {
+  const calendar = getProjectCalendar(projectId);
+  const dayOfWeek = date.getDay();
+  const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const dayName = dayNames[dayOfWeek];
+  
+  // Check if it's a working day
+  if (!calendar.workingDays[dayName]) {
+    return false;
+  }
+  
+  // Check if it's a holiday
+  const dateString = date.toISOString().split('T')[0];
+  const isHoliday = calendar.holidays.some(holiday => holiday.date === dateString);
+  
+  return !isHoliday;
+}
+
+/**
+ * Get working hours for a specific day and project
+ * @param date - Date to check
+ * @param projectId - Project ID
+ * @returns Working hours for the day
+ */
+export function getProjectWorkingHours(date: Date, projectId: string): number {
+  const calendar = getProjectCalendar(projectId);
+  const dayOfWeek = date.getDay();
+  const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const dayName = dayNames[dayOfWeek];
+  
+  return calendar.workingHours[dayName] || 0;
+}
+
+/**
+ * Get holidays for a specific project
+ * @param projectId - Project ID
+ * @param startDate - Start of date range (optional)
+ * @param endDate - End of date range (optional)
+ * @returns Array of holidays
+ */
+export function getProjectHolidays(projectId: string, startDate?: Date, endDate?: Date): Array<{date: string, label: string}> {
+  const calendar = getProjectCalendar(projectId);
+  
+  if (!startDate || !endDate) {
+    return calendar.holidays;
+  }
+  
+  return calendar.holidays.filter(holiday => {
+    const holidayDate = new Date(holiday.date);
+    return holidayDate >= startDate && holidayDate <= endDate;
+  });
+}
+
+/**
+ * Initialize calendar system and listen for updates
+ */
+export function initializeCalendarSystem(): void {
+  // Listen for calendar updates from the Working Time dialog
+  window.addEventListener('PROJECT_CALENDAR_UPDATED', (event) => {
+    const { projectId, calendar } = event.detail;
+    setProjectCalendar(projectId, calendar);
+    console.log('Calendar updated for project:', projectId, calendar);
+  });
 }

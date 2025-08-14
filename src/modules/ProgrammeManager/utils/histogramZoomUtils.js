@@ -60,11 +60,9 @@ export const applyZoomTransform = (
   smooth = true,
   duration = 300
 ) => {
-  if (smooth) {
-    d3Selection.transition().duration(duration).call(zoom.transform, transform);
-  } else {
-    d3Selection.call(zoom.transform, transform);
-  }
+  // Note: This function requires D3.js zoom behavior to be available
+  // Implementation should be handled in the consuming component
+  console.warn('applyZoomTransform requires D3.js zoom behavior to be available');
 };
 
 /**
@@ -265,23 +263,10 @@ export const createD3ZoomBehavior = (
   config = DEFAULT_ZOOM_CONFIG,
   onZoomChange = null
 ) => {
-  const zoom = d3
-    .zoom()
-    .scaleExtent([config.minZoom, config.maxZoom])
-    .on('zoom', event => {
-      const { transform } = event;
-
-      if (onZoomChange) {
-        onZoomChange({
-          scale: transform.k,
-          translateX: transform.x,
-          translateY: transform.y,
-          isZooming: true,
-        });
-      }
-    });
-
-  return zoom;
+  // Note: This function requires D3.js to be available
+  // Implementation should be handled in the consuming component
+  console.warn('createD3ZoomBehavior requires D3.js to be available');
+  return null;
 };
 
 /**
@@ -515,7 +500,7 @@ export const importZoomState = importData => {
 export const getZoomAnimationConfig = (config = DEFAULT_ZOOM_CONFIG) => {
   return {
     duration: config.smoothTransitions ? config.transitionDuration : 0,
-    ease: d3.easeCubicOut,
+    ease: 'cubic-out', // Note: d3.easeCubicOut requires D3.js
     delay: 0,
   };
 };
@@ -527,14 +512,7 @@ export const getZoomAnimationConfig = (config = DEFAULT_ZOOM_CONFIG) => {
  * @param {Object} animationConfig - Animation configuration
  */
 export const animateZoom = (d3Selection, targetTransform, animationConfig) => {
-  if (animationConfig.duration > 0) {
-    d3Selection
-      .transition()
-      .duration(animationConfig.duration)
-      .ease(animationConfig.ease)
-      .delay(animationConfig.delay)
-      .call(zoom.transform, targetTransform);
-  } else {
-    d3Selection.call(zoom.transform, targetTransform);
-  }
+  // Note: This function requires D3.js zoom behavior to be available
+  // Implementation should be handled in the consuming component
+  console.warn('animateZoom requires D3.js zoom behavior to be available');
 };

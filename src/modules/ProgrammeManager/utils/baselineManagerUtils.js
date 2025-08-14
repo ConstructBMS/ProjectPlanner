@@ -291,7 +291,7 @@ export const formatBaselineChanges = comparison => {
           color: 'red',
         };
 
-      case 'modified':
+      case 'modified': {
         const modificationDescriptions = change.modifications.map(mod => {
           switch (mod.field) {
             case 'startDate':
@@ -323,6 +323,7 @@ export const formatBaselineChanges = comparison => {
           color: 'yellow',
           modifications: change.modifications,
         };
+      }
 
       default:
         return {

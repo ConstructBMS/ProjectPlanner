@@ -539,17 +539,20 @@ export class ExcelExporter {
 export const exportProject = async (settings, tasks, taskLinks, viewState) => {
   try {
     switch (settings.format) {
-      case 'pdf':
+      case 'pdf': {
         const pdfExporter = new PDFExporter(settings);
         return await pdfExporter.exportToPDF(tasks, taskLinks, viewState);
+      }
 
-      case 'png':
+      case 'png': {
         const pngExporter = new PNGExporter(settings);
         return await pngExporter.exportToPNG(tasks, taskLinks, viewState);
+      }
 
-      case 'xlsx':
+      case 'xlsx': {
         const excelExporter = new ExcelExporter(settings);
         return excelExporter.exportToExcel(tasks, taskLinks, viewState);
+      }
 
       default:
         throw new Error('Unsupported export format');

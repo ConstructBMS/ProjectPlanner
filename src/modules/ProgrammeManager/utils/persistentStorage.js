@@ -5,14 +5,9 @@ import { supabase } from '../../../supabase/client.js';
 
 // Get current user ID (consistent with ConstructBMS)
 const getCurrentUserId = () => {
-  try {
-    // For now, return a valid UUID for the demo user
-    // In a real app, this would get the actual user from auth session
-    return '550e8400-e29b-41d4-a716-446655440010';
-  } catch (error) {
-    console.warn('Failed to get current user ID:', error);
-    return undefined;
-  }
+  // For now, return a valid UUID for the demo user
+  // In a real app, this would get the actual user from auth session
+  return '550e8400-e29b-41d4-a716-446655440010';
 };
 
 // Storage service for persistent database storage

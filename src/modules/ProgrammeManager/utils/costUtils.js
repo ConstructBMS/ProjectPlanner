@@ -311,18 +311,21 @@ export const getCostBreakdownByPeriod = (
 
       let periodKey;
       switch (period) {
-        case 'week':
+        case 'week': {
           const weekStart = new Date(startDate);
           weekStart.setDate(startDate.getDate() - startDate.getDay());
           periodKey = weekStart.toISOString().split('T')[0];
           break;
-        case 'month':
+        }
+        case 'month': {
           periodKey = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}`;
           break;
-        case 'quarter':
+        }
+        case 'quarter': {
           const quarter = Math.floor(startDate.getMonth() / 3) + 1;
           periodKey = `${startDate.getFullYear()}-Q${quarter}`;
           break;
+        }
         default:
           periodKey = startDate.toISOString().split('T')[0];
       }

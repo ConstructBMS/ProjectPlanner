@@ -171,7 +171,7 @@ export const sanitizeNotesContent = (
 
   // Only allow specified tags
   const allowedTagsRegex = new RegExp(
-    `<(?!\/?(?:${config.allowedTags.join('|')})\b)[^>]+>`,
+    `<(?!/?)(?:${config.allowedTags.join('|')})\b)[^>]+>`,
     'gi'
   );
   sanitized = sanitized.replace(allowedTagsRegex, '');

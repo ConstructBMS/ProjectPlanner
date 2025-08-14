@@ -165,19 +165,22 @@ export const calculateEAC = (bac, ac, ev, cpi, method = 'cpi') => {
       // EAC = BAC / CPI
       return cpi > 0 ? bac / cpi : bac;
 
-    case 'spi_cpi':
+    case 'spi_cpi': {
       // EAC = AC + (BAC - EV) / (SPI * CPI)
       const spi = ev > 0 ? ev / (ev + (bac - ev)) : 1;
       const combinedIndex = spi * cpi;
       return combinedIndex > 0 ? ac + (bac - ev) / combinedIndex : bac;
+    }
 
-    case 'actual':
+    case 'actual': {
       // EAC = AC + (BAC - EV)
       return ac + (bac - ev);
+    }
 
-    case 'optimistic':
+    case 'optimistic': {
       // EAC = AC + (BAC - EV) / CPI
       return cpi > 0 ? ac + (bac - ev) / cpi : bac;
+    }
 
     default:
       return cpi > 0 ? bac / cpi : bac;

@@ -591,7 +591,7 @@ export const exportExceptions = (exceptions, format = 'json') => {
     case 'json':
       return JSON.stringify(exceptions, null, 2);
 
-    case 'csv':
+    case 'csv': {
       const headers = [
         'Date',
         'Type',
@@ -612,8 +612,9 @@ export const exportExceptions = (exceptions, format = 'json') => {
       return [headers, ...rows]
         .map(row => row.map(field => `"${field}"`).join(','))
         .join('\n');
+    }
 
-    case 'ics':
+    case 'ics': {
       const icsEvents = exceptions.map(exception => {
         const date = new Date(exception.date);
         const nextDate = new Date(date);
@@ -638,6 +639,7 @@ export const exportExceptions = (exceptions, format = 'json') => {
         ...icsEvents,
         'END:VCALENDAR',
       ].join('\r\n');
+    }
 
     default:
       throw new Error(`Unsupported export format: ${format}`);
@@ -656,15 +658,16 @@ export const importExceptions = (data, format = 'json') => {
   }
 
   switch (format.toLowerCase()) {
-    case 'json':
+    case 'json': {
       try {
         const parsed = JSON.parse(data);
         return Array.isArray(parsed) ? parsed : [parsed];
       } catch (error) {
         throw new Error(`Invalid JSON format: ${error.message}`);
       }
+    }
 
-    case 'csv':
+    case 'csv': {
       try {
         const lines = data.trim().split('\n');
         const headers = lines[0]
@@ -718,6 +721,7 @@ export const importExceptions = (data, format = 'json') => {
       } catch (error) {
         throw new Error(`Invalid CSV format: ${error.message}`);
       }
+    }
 
     default:
       throw new Error(`Unsupported import format: ${format}`);
