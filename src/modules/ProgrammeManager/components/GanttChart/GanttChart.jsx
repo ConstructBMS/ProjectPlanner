@@ -71,40 +71,49 @@ const GanttChart = () => {
 
   // Fit project function
   const fitProject = useCallback(() => {
-    if (!currentProjectId) return;
+    if (!currentProjectId || tasks.length === 0) return;
     
-    const fitFlag = `pm.gantt.fitOnce.${currentProjectId}`;
-    const hasFitted = localStorage.getItem(fitFlag);
+    console.log('Fitting project to show all tasks:', currentProjectId);
     
-    if (!hasFitted && tasks.length > 0) {
-      // Auto-fit logic - adjust zoom to fit all tasks
-      const allBars = layoutBars(tasks, scale);
-      if (allBars.length > 0) {
-        // Find the earliest start and latest end
-        const minX = Math.min(...allBars.map(bar => bar.x));
-        const maxX = Math.max(...allBars.map(bar => bar.x + bar.width));
-        
-        // Calculate optimal zoom to fit all bars
-        const totalWidth = maxX - minX;
-        const availableWidth = containerSize.width - 100; // Leave some padding
-        
-        if (totalWidth > 0 && availableWidth > 0) {
-          // This would ideally adjust the scale, but for now we'll just mark as fitted
-          console.log('Auto-fitting project to show all tasks');
-        }
-      }
+    // Auto-fit logic - adjust zoom to fit all tasks
+    const allBars = layoutBars(tasks, scale);
+    if (allBars.length > 0) {
+      // Find the earliest start and latest end
+      const minX = Math.min(...allBars.map(bar => bar.x));
+      const maxX = Math.max(...allBars.map(bar => bar.x + bar.width));
       
-      // Mark as fitted for this project
-      localStorage.setItem(fitFlag, 'true');
+      // Calculate optimal zoom to fit all bars
+      const totalWidth = maxX - minX;
+      const availableWidth = containerSize.width - 100; // Leave some padding
+      
+      if (totalWidth > 0 && availableWidth > 0) {
+        // For now, we'll just log the fit calculation
+        // In a full implementation, this would adjust the scale
+        console.log('Fit calculation:', {
+          minX,
+          maxX,
+          totalWidth,
+          availableWidth,
+          tasksCount: tasks.length
+        });
+      }
     }
   }, [currentProjectId, tasks, scale, containerSize.width]);
 
-  // Auto-fit on first load
+  // Listen for fit project events
   useEffect(() => {
-    if (tasks.length > 0 && currentProjectId) {
-      fitProject();
-    }
-  }, [tasks.length, currentProjectId, fitProject]);
+    const handleFitProject = (event) => {
+      const { projectId, tasksCount } = event.detail;
+      if (projectId === currentProjectId) {
+        console.log('Received FIT_PROJECT event for current project:', projectId, 'with', tasksCount, 'tasks');
+        // Small delay to ensure DOM is ready
+        setTimeout(() => fitProject(), 100);
+      }
+    };
+
+    window.addEventListener('FIT_PROJECT', handleFitProject);
+    return () => window.removeEventListener('FIT_PROJECT', handleFitProject);
+  }, [currentProjectId, fitProject]);
 
   // Set up resize observer
   useEffect(() => {

@@ -880,6 +880,21 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
       get().subscribeProject(projectId);
       set({ hydrationState: 'ready' });
       
+      // Trigger fit project after first successful hydration
+      const fitFlag = `pm.fitOnce.${projectId}`;
+      const hasFitted = localStorage.getItem(fitFlag);
+      
+      if (!hasFitted && tasks.length > 0) {
+        // Dispatch custom event to trigger fit project
+        window.dispatchEvent(new CustomEvent('FIT_PROJECT', { 
+          detail: { projectId, tasksCount: tasks.length } 
+        }));
+        
+        // Mark as fitted for this project
+        localStorage.setItem(fitFlag, 'true');
+        console.log('Fit project triggered for project:', projectId);
+      }
+      
     } catch (error) {
       console.error('Failed to hydrate project:', error);
       set({ 
