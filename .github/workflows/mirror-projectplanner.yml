@@ -1,0 +1,52 @@
+name: Mirror ProjectPlanner
+
+on:
+  push:
+    paths:
+      - 'src/modules/ProgrammeManager/**'
+      - '.github/workflows/mirror-projectplanner.yml'
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.MIRROR_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          printf "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+
+      - name: Prepare mirror working dir
+        run: |
+          rm -rf mirror && mkdir mirror
+          cd mirror
+          git init
+          git remote add origin "${{ secrets.MIRROR_REPO_SSH }}"
+          git checkout -b main || true
+
+      - name: Copy ProjectPlanner code
+        run: |
+          rsync -a --delete --prune-empty-dirs \
+            --include 'src/' \
+            --include 'src/modules/' \
+            --include 'src/modules/ProgrammeManager/***' \
+            --exclude '*' \
+            . mirror/
+
+      - name: Create manifest
+        run: |
+          node -e "const fs=require('fs');const m={repo:process.env.GITHUB_REPOSITORY,sha:process.env.GITHUB_SHA,branch:process.env.GITHUB_REF_NAME,ts:new Date().toISOString(),message:process.env.GITHUB_HEAD_REF?'' : '${{ github.event.head_commit.message || '' }}'};fs.writeFileSync('mirror/pp-manifest.json',JSON.stringify(m,null,2));"
+
+      - name: Commit & push to mirror
+        run: |
+          cd mirror
+          git add -A
+          git -c user.name='PP Mirror Bot' -c user.email='mirror-bot@users.noreply.github.com' \
+            commit -m "Mirror ${GITHUB_SHA} from ${GITHUB_REPOSITORY}" || true
+          git push -f origin main
