@@ -12,10 +12,9 @@ import {
 import './GanttChart.css';
 
 const GanttChart = () => {
-  const { tasks, links } = usePlannerStore();
+  const { tasks, links, selectedTaskIds } = usePlannerStore();
   const containerRef = useRef(null);
   const [containerSize, setContainerSize] = useState({ width: 800, height: 600 });
-  const [showCriticalPath, setShowCriticalPath] = useState(false);
 
   // Calculate timescale based on tasks and container size
   const scale = useMemo(() => {
@@ -70,30 +69,80 @@ const GanttChart = () => {
     handleResize();
   }, [handleResize]);
 
-  // Generate timescale headers
+  // Generate timescale headers (2 rows: Month and Day)
   const renderTimescaleHeaders = () => {
     const headers = [];
     const currentDate = new Date(scale.startDate);
+    let currentMonth = null;
     
     while (currentDate <= scale.endDate) {
       const daysFromStart = Math.floor((currentDate.getTime() - scale.startDate.getTime()) / (1000 * 60 * 60 * 24));
       const x = daysFromStart * scale.pixelsPerDay;
       
+      // Check if we need a new month header
+      const monthKey = `${currentDate.getFullYear()}-${currentDate.getMonth()}`;
+      if (monthKey !== currentMonth) {
+        currentMonth = monthKey;
+        
+        // Calculate month width (span multiple days)
+        const monthEndDate = new Date(currentDate);
+        monthEndDate.setMonth(monthEndDate.getMonth() + 1);
+        monthEndDate.setDate(0); // Last day of current month
+        
+        const monthEndDaysFromStart = Math.floor((monthEndDate.getTime() - scale.startDate.getTime()) / (1000 * 60 * 60 * 24));
+        const monthWidth = Math.min((monthEndDaysFromStart - daysFromStart + 1) * scale.pixelsPerDay, scale.containerWidth - x);
+        
+        headers.push(
+          <div
+            key={`month-${monthKey}`}
+            className="gantt-header-month"
+            style={{
+              left: x,
+              width: monthWidth,
+              position: 'absolute',
+              top: 0,
+              height: '30px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 'bold',
+              fontSize: '0.875rem',
+              color: '#374151',
+              borderRight: '1px solid #e5e7eb',
+              backgroundColor: '#f9fafb'
+            }}
+          >
+            {currentDate.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
+          </div>
+        );
+      }
+      
+      // Day header
       headers.push(
         <div
-          key={currentDate.toISOString()}
-          className="gantt-header-cell"
+          key={`day-${currentDate.toISOString()}`}
+          className="gantt-header-day"
           style={{
             left: x,
             width: scale.pixelsPerDay,
-            position: 'absolute'
+            position: 'absolute',
+            top: '30px',
+            height: '30px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '0.75rem',
+            color: '#6b7280',
+            borderRight: '1px solid #e5e7eb',
+            backgroundColor: '#f9fafb'
           }}
         >
-          <div className="gantt-header-date">
+          <div style={{ fontWeight: '600', color: '#374151' }}>
             {currentDate.getDate()}
           </div>
-          <div className="gantt-header-month">
-            {currentDate.toLocaleDateString('en-GB', { month: 'short' })}
+          <div style={{ fontSize: '0.625rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            {currentDate.toLocaleDateString('en-GB', { weekday: 'short' })}
           </div>
         </div>
       );
@@ -104,30 +153,57 @@ const GanttChart = () => {
     return headers;
   };
 
-  // Render task bars
+  // Render task bars with selection styling
   const renderTaskBars = () => {
     return tasks.map((task, index) => {
       const bar = bars.find(b => b.taskId === task.id);
       if (!bar) return null;
 
       const y = index * scale.rowHeight;
+      const isSelected = selectedTaskIds.has(task.id);
       
       return (
         <div
           key={task.id}
-          className={`gantt-task-bar ${showCriticalPath ? 'critical-path' : ''}`}
+          className={`gantt-task-bar ${isSelected ? 'selected' : ''}`}
           style={{
             left: bar.x,
             top: y + 5, // 5px padding from top of row
             width: bar.width,
             height: scale.rowHeight - 10, // 10px total padding
-            position: 'absolute'
+            position: 'absolute',
+            backgroundColor: isSelected ? '#3b82f6' : '#6b7280',
+            borderRadius: '4px',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            zIndex: 2,
+            minWidth: '4px'
           }}
           title={`${task.name} (${formatDate(bar.start)} - ${formatDate(bar.end)})`}
         >
-          <div className="gantt-bar-label">
-            {task.name}
-          </div>
+          {bar.width > 60 && (
+            <div 
+              className="gantt-bar-label"
+              style={{
+                position: 'absolute',
+                left: '4px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                fontSize: '0.75rem',
+                fontWeight: '500',
+                color: 'white',
+                textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                maxWidth: 'calc(100% - 8px)',
+                pointerEvents: 'none'
+              }}
+            >
+              {task.name}
+            </div>
+          )}
         </div>
       );
     });
@@ -169,6 +245,7 @@ const GanttChart = () => {
             stroke="#666"
             strokeWidth="2"
             fill="none"
+            strokeDasharray="5,5"
             markerEnd="url(#arrowhead)"
           />
         </svg>
@@ -187,7 +264,10 @@ const GanttChart = () => {
           width: shade.width,
           position: 'absolute',
           top: 0,
-          height: '100%'
+          height: '100%',
+          backgroundColor: '#f3f4f6',
+          opacity: 0.5,
+          pointerEvents: 'none'
         }}
       />
     ));
@@ -204,55 +284,143 @@ const GanttChart = () => {
           left: todayPosition,
           position: 'absolute',
           top: 0,
-          height: '100%'
+          height: '100%',
+          backgroundColor: '#ef4444',
+          width: '2px',
+          opacity: 0.8,
+          zIndex: 5,
+          pointerEvents: 'none'
         }}
       />
     );
   };
 
+  // Render vertical grid lines
+  const renderVerticalGridLines = () => {
+    const lines = [];
+    const currentDate = new Date(scale.startDate);
+    
+    while (currentDate <= scale.endDate) {
+      const daysFromStart = Math.floor((currentDate.getTime() - scale.startDate.getTime()) / (1000 * 60 * 60 * 24));
+      const x = daysFromStart * scale.pixelsPerDay;
+      
+      lines.push(
+        <div
+          key={`grid-${currentDate.toISOString()}`}
+          className="gantt-grid-line"
+          style={{
+            left: x,
+            position: 'absolute',
+            top: 0,
+            height: '100%',
+            width: '1px',
+            backgroundColor: '#e5e7eb',
+            pointerEvents: 'none',
+            zIndex: 1
+          }}
+        />
+      );
+      
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    return lines;
+  };
+
+  // Empty state
   if (tasks.length === 0) {
     return (
-      <div className="gantt-empty-state">
-        <div className="gantt-empty-message">
-          <h3>No tasks found</h3>
-          <p>Select a project to view its Gantt chart</p>
+      <div 
+        className="gantt-empty-state"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100%',
+          backgroundColor: '#f9fafb',
+          color: '#6b7280'
+        }}
+      >
+        <div 
+          className="gantt-empty-message"
+          style={{
+            textAlign: 'center'
+          }}
+        >
+          <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.5rem', color: '#374151' }}>
+            No tasks found
+          </h3>
+          <p style={{ fontSize: '0.875rem', margin: 0 }}>
+            Select a project to view its Gantt chart
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="gantt-container" ref={containerRef}>
-      {/* Controls */}
-      <div className="gantt-controls">
-        <label className="gantt-control">
-          <input
-            type="checkbox"
-            checked={showCriticalPath}
-            onChange={(e) => setShowCriticalPath(e.target.checked)}
-          />
-          Show Critical Path
-        </label>
-      </div>
-
+    <div 
+      className="gantt-container" 
+      ref={containerRef}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        backgroundColor: 'white',
+        border: '1px solid #e5e7eb',
+        borderRadius: '0.375rem',
+        overflow: 'hidden'
+      }}
+    >
       {/* Gantt Chart */}
       <div 
         className="gantt-chart"
         style={{
-          width: scale.containerWidth,
-          height: scale.containerHeight
+          flex: 1,
+          overflow: 'auto',
+          position: 'relative',
+          backgroundColor: 'white'
         }}
       >
         {/* Header */}
-        <div className="gantt-header" style={{ height: 60 }}>
+        <div 
+          className="gantt-header" 
+          style={{ 
+            height: '60px',
+            backgroundColor: '#f9fafb',
+            borderBottom: '1px solid #e5e7eb',
+            position: 'sticky',
+            top: 0,
+            zIndex: 10,
+            overflow: 'hidden'
+          }}
+        >
           {renderTimescaleHeaders()}
         </div>
 
         {/* Chart Area */}
-        <div className="gantt-chart-area" style={{ height: scale.containerHeight - 60 }}>
+        <div 
+          className="gantt-chart-area" 
+          style={{ 
+            height: scale.containerHeight - 60,
+            position: 'relative',
+            overflow: 'auto'
+          }}
+        >
           {/* Background Grid */}
-          <div className="gantt-grid">
+          <div 
+            className="gantt-grid"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              pointerEvents: 'none'
+            }}
+          >
             {renderWeekendShading()}
+            {renderVerticalGridLines()}
             {renderTodayLine()}
           </div>
 
@@ -280,22 +448,6 @@ const GanttChart = () => {
               </marker>
             </defs>
           </svg>
-        </div>
-      </div>
-
-      {/* Legend */}
-      <div className="gantt-legend">
-        <div className="gantt-legend-item">
-          <div className="gantt-legend-color task-bar" />
-          <span>Task</span>
-        </div>
-        <div className="gantt-legend-item">
-          <div className="gantt-legend-color link-line" />
-          <span>Dependency (FS)</span>
-        </div>
-        <div className="gantt-legend-item">
-          <div className="gantt-legend-color today-line" />
-          <span>Today</span>
         </div>
       </div>
     </div>

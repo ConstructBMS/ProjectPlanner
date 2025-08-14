@@ -31,7 +31,7 @@ export interface GanttScale {
   rowHeight: number;
 }
 
-// Convert task to date range
+// Convert task to date range with robust fallbacks
 export const toDateRange = (task: Task): DateRange | null => {
   if (!task.start_date) {
     return null;
@@ -42,7 +42,7 @@ export const toDateRange = (task: Task): DateRange | null => {
 
   if (task.end_date) {
     end = new Date(task.end_date);
-  } else if (task.duration_days) {
+  } else if (task.duration_days && task.duration_days > 0) {
     end = new Date(start);
     end.setDate(start.getDate() + task.duration_days);
   } else {
@@ -51,10 +51,16 @@ export const toDateRange = (task: Task): DateRange | null => {
     end.setDate(start.getDate() + 1);
   }
 
+  // Ensure end date is after start date
+  if (end <= start) {
+    end = new Date(start);
+    end.setDate(start.getDate() + 1);
+  }
+
   return { start, end };
 };
 
-// Calculate bar positions for all tasks
+// Calculate bar positions for all tasks with stable keys
 export const layoutBars = (tasks: Task[], scale: GanttScale): BarPosition[] => {
   const bars: BarPosition[] = [];
   
@@ -64,7 +70,7 @@ export const layoutBars = (tasks: Task[], scale: GanttScale): BarPosition[] => {
 
     // Calculate X position based on start date
     const daysFromStart = Math.floor((dateRange.start.getTime() - scale.startDate.getTime()) / (1000 * 60 * 60 * 24));
-    const x = daysFromStart * scale.pixelsPerDay;
+    const x = Math.max(daysFromStart * scale.pixelsPerDay, 0);
 
     // Calculate width based on duration
     const durationDays = Math.ceil((dateRange.end.getTime() - dateRange.start.getTime()) / (1000 * 60 * 60 * 24));
@@ -114,14 +120,20 @@ export const layoutLinks = (links: TaskLink[], bars: BarPosition[], scale: Gantt
   return linkPositions;
 };
 
-// Calculate timescale based on task date ranges
+// Calculate timescale based on task date ranges with better defaults
 export const calculateTimescale = (tasks: Task[], containerWidth: number): GanttScale => {
   if (tasks.length === 0) {
     const today = new Date();
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() - 7); // Start 7 days ago
+    
+    const endDate = new Date(today);
+    endDate.setDate(today.getDate() + 30); // End 30 days from now
+    
     return {
-      pixelsPerDay: 20,
-      startDate: today,
-      endDate: new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000), // 30 days
+      pixelsPerDay: Math.max(containerWidth / 37, 20), // 37 days total, minimum 20px per day
+      startDate,
+      endDate,
       containerWidth,
       containerHeight: 400,
       rowHeight: 40
@@ -137,31 +149,37 @@ export const calculateTimescale = (tasks: Task[], containerWidth: number): Gantt
     const dateRange = toDateRange(task);
     if (dateRange) {
       if (!hasValidDates) {
-        minDate = dateRange.start;
-        maxDate = dateRange.end;
+        minDate = new Date(dateRange.start);
+        maxDate = new Date(dateRange.end);
         hasValidDates = true;
       } else {
-        if (dateRange.start < minDate) minDate = dateRange.start;
-        if (dateRange.end > maxDate) maxDate = dateRange.end;
+        if (dateRange.start < minDate) minDate = new Date(dateRange.start);
+        if (dateRange.end > maxDate) maxDate = new Date(dateRange.end);
       }
     }
   });
 
-  // Add padding
+  // Add padding for better visualization
   const paddingDays = 7;
   minDate.setDate(minDate.getDate() - paddingDays);
   maxDate.setDate(maxDate.getDate() + paddingDays);
 
-  // Calculate pixels per day
+  // Ensure minimum date range
   const totalDays = Math.ceil((maxDate.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24));
-  const pixelsPerDay = Math.max(containerWidth / totalDays, 10); // Minimum 10px per day
+  if (totalDays < 7) {
+    maxDate.setDate(minDate.getDate() + 7);
+  }
+
+  // Calculate pixels per day with reasonable limits
+  const adjustedTotalDays = Math.ceil((maxDate.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24));
+  const pixelsPerDay = Math.max(Math.min(containerWidth / adjustedTotalDays, 50), 10); // Between 10-50px per day
 
   return {
     pixelsPerDay,
     startDate: minDate,
     endDate: maxDate,
     containerWidth,
-    containerHeight: tasks.length * 40 + 100, // 40px per row + header
+    containerHeight: Math.max(tasks.length * 40 + 100, 400), // 40px per row + header, minimum 400px
     rowHeight: 40
   };
 };
@@ -172,7 +190,7 @@ export const isWorkingDay = (date: Date): boolean => {
   return day >= 1 && day <= 5; // Monday = 1, Friday = 5
 };
 
-// Get working day shading positions
+// Get working day shading positions for weekend highlighting
 export const getWorkingDayShading = (scale: GanttScale): { x: number; width: number }[] => {
   const shading: { x: number; width: number }[] = [];
   const currentDate = new Date(scale.startDate);
@@ -193,7 +211,7 @@ export const getWorkingDayShading = (scale: GanttScale): { x: number; width: num
   return shading;
 };
 
-// Format date for display
+// Format date for display with consistent formatting
 export const formatDate = (date: Date): string => {
   return date.toLocaleDateString('en-GB', {
     day: '2-digit',
@@ -202,13 +220,59 @@ export const formatDate = (date: Date): string => {
   });
 };
 
-// Get today's position
+// Get today's position on the timeline
 export const getTodayPosition = (scale: GanttScale): number | null => {
   const today = new Date();
+  today.setHours(0, 0, 0, 0); // Reset to start of day
+  
   if (today < scale.startDate || today > scale.endDate) {
     return null;
   }
   
   const daysFromStart = Math.floor((today.getTime() - scale.startDate.getTime()) / (1000 * 60 * 60 * 24));
   return daysFromStart * scale.pixelsPerDay;
+};
+
+// Helper function to get month boundaries for header rendering
+export const getMonthBoundaries = (startDate: Date, endDate: Date): { month: string; start: Date; end: Date }[] => {
+  const boundaries: { month: string; start: Date; end: Date }[] = [];
+  const current = new Date(startDate);
+  
+  while (current <= endDate) {
+    const monthStart = new Date(current.getFullYear(), current.getMonth(), 1);
+    const monthEnd = new Date(current.getFullYear(), current.getMonth() + 1, 0);
+    
+    const effectiveStart = monthStart < startDate ? startDate : monthStart;
+    const effectiveEnd = monthEnd > endDate ? endDate : monthEnd;
+    
+    boundaries.push({
+      month: current.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }),
+      start: effectiveStart,
+      end: effectiveEnd
+    });
+    
+    current.setMonth(current.getMonth() + 1);
+  }
+  
+  return boundaries;
+};
+
+// Helper function to calculate day positions for grid lines
+export const getDayPositions = (scale: GanttScale): { date: Date; x: number }[] => {
+  const positions: { date: Date; x: number }[] = [];
+  const currentDate = new Date(scale.startDate);
+  
+  while (currentDate <= scale.endDate) {
+    const daysFromStart = Math.floor((currentDate.getTime() - scale.startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const x = daysFromStart * scale.pixelsPerDay;
+    
+    positions.push({
+      date: new Date(currentDate),
+      x
+    });
+    
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+  
+  return positions;
 };

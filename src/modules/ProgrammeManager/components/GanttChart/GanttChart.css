@@ -48,7 +48,19 @@
   overflow: hidden;
 }
 
-.gantt-header-cell {
+.gantt-header-month {
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.875rem;
+  color: #374151;
+  background: #f9fafb;
+  min-width: 40px;
+}
+
+.gantt-header-day {
   border-right: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
@@ -58,17 +70,6 @@
   color: #6b7280;
   background: #f9fafb;
   min-width: 40px;
-}
-
-.gantt-header-date {
-  font-weight: 600;
-  color: #374151;
-}
-
-.gantt-header-month {
-  font-size: 0.625rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
 .gantt-chart-area {
@@ -85,6 +86,11 @@
   pointer-events: none;
 }
 
+.gantt-grid-line {
+  background: #e5e7eb;
+  opacity: 0.5;
+}
+
 .gantt-weekend-shading {
   background: #f3f4f6;
   opacity: 0.5;
@@ -98,7 +104,7 @@
 }
 
 .gantt-task-bar {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
   border-radius: 4px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   cursor: pointer;
@@ -113,9 +119,14 @@
   transform: translateY(-1px);
 }
 
-.gantt-task-bar.critical-path {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-  border: 2px solid #991b1b;
+.gantt-task-bar.selected {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.gantt-task-bar.selected:hover {
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  transform: translateY(-2px);
 }
 
 .gantt-bar-label {
@@ -219,9 +230,14 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .gantt-header-cell {
+  .gantt-header-day {
     min-width: 30px;
     font-size: 0.625rem;
+  }
+  
+  .gantt-header-month {
+    min-width: 30px;
+    font-size: 0.75rem;
   }
   
   .gantt-bar-label {
@@ -281,6 +297,62 @@
   outline-offset: 2px;
 }
 
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+  .gantt-container {
+    background: #1f2937;
+    border-color: #374151;
+  }
+  
+  .gantt-header {
+    background: #111827;
+    border-bottom-color: #374151;
+  }
+  
+  .gantt-header-month,
+  .gantt-header-day {
+    background: #111827;
+    border-right-color: #374151;
+    color: #f9fafb;
+  }
+  
+  .gantt-header-month {
+    color: #f9fafb;
+  }
+  
+  .gantt-header-day {
+    color: #9ca3af;
+  }
+  
+  .gantt-grid-line {
+    background: #374151;
+  }
+  
+  .gantt-weekend-shading {
+    background: #374151;
+  }
+  
+  .gantt-task-bar {
+    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  }
+  
+  .gantt-task-bar.selected {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  }
+  
+  .gantt-empty-state {
+    background: #111827;
+  }
+  
+  .gantt-empty-message h3 {
+    color: #f9fafb;
+  }
+  
+  .gantt-empty-message p {
+    color: #9ca3af;
+  }
+}
+
 /* Print styles */
 @media print {
   .gantt-controls,
@@ -295,5 +367,9 @@
   .gantt-task-bar {
     box-shadow: none;
     border: 1px solid #000;
+  }
+  
+  .gantt-today-line {
+    background: #000;
   }
 }
