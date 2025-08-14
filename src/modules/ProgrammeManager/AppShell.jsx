@@ -14,8 +14,9 @@ import SidebarTree from './components/SidebarTree';
 import TaskGrid from './components/TaskGrid';
 import GanttChart from './components/GanttChart';
 import TaskPropertiesPane from './components/TaskPropertiesPane';
+import ResourcesPane from './components/Resources/ResourcesPane';
 import Splitter from './components/common/Splitter';
-import { getLayoutRatios, saveLayoutRatios } from './utils/prefs';
+import { getLayoutRatios, saveLayoutRatios, loadAllocationPreferences, setPaneVisible, setPaneWidth } from './utils/prefs';
 import './styles/projectplanner.css';
 
 function AppShellContent({ projectId, onBackToPortfolio }) {
@@ -23,6 +24,10 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
   const contentRef = useRef();
   const { getPaneSize } = useLayoutContext();
   const [mainPaneRatios, setMainPaneRatios] = useState([0.2, 0.4, 0.4]);
+  
+  // Resources pane state
+  const [resourcesPaneVisible, setResourcesPaneVisible] = useState(false);
+  const [resourcesPaneWidth, setResourcesPaneWidth] = useState(320);
 
   const handleExpandAll = () => {
     sidebarRef.current?.expandAll?.();
@@ -32,18 +37,53 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
     sidebarRef.current?.collapseAll?.();
   };
 
-  // Load saved layout ratios on mount
+  // Load saved layout ratios and allocation preferences on mount
   useEffect(() => {
     const savedRatios = getLayoutRatios('main-panes');
     if (savedRatios) {
       setMainPaneRatios(savedRatios);
     }
+    
+    // Load allocation preferences
+    const allocationPrefs = loadAllocationPreferences();
+    setResourcesPaneVisible(allocationPrefs.paneVisible);
+    setResourcesPaneWidth(allocationPrefs.paneWidth);
   }, []);
 
   // Handle main pane ratios change
   const handleMainPaneRatiosChange = (ratios) => {
     setMainPaneRatios(ratios);
     saveLayoutRatios('main-panes', ratios);
+  };
+
+  // Handle resources pane events
+  useEffect(() => {
+    const handleResourcesPaneToggle = (event) => {
+      const { visible } = event.detail;
+      setResourcesPaneVisible(visible);
+      setPaneVisible(visible);
+    };
+
+    const handleResourcesPaneWidthChange = (width) => {
+      setResourcesPaneWidth(width);
+      setPaneWidth(width);
+    };
+
+    window.addEventListener('RESOURCES_PANE_TOGGLE', handleResourcesPaneToggle);
+    
+    return () => {
+      window.removeEventListener('RESOURCES_PANE_TOGGLE', handleResourcesPaneToggle);
+    };
+  }, []);
+
+  const handleResourcesPaneClose = () => {
+    setResourcesPaneVisible(false);
+    setPaneVisible(false);
+  };
+
+  const handleResourcesPaneWidthChange = (width) => {
+    setResourcesPaneWidth(width);
+    setPaneWidth(width);
   };
 
   return (
@@ -94,6 +134,14 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
       <div className='pm-properties-pane bg-white border-t border-gray-300'>
         <TaskPropertiesPane />
       </div>
+
+      {/* ResourcesPane - Right dock pane */}
+      <ResourcesPane
+        isVisible={resourcesPaneVisible}
+        onClose={handleResourcesPaneClose}
+        width={resourcesPaneWidth}
+        onWidthChange={handleResourcesPaneWidthChange}
+      />
     </div>
   );
 }

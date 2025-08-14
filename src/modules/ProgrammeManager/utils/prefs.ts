@@ -135,3 +135,121 @@ export const getLastFilterId = (): string | undefined => {
 export const setLastFilterId = (filterId: string | undefined): void => {
   savePreferences({ lastFilterId: filterId });
 };
+
+// Preferences utility for allocation pane settings
+
+export interface AllocationPreferences {
+  paneVisible: boolean;
+  paneWidth: number;
+}
+
+const DEFAULT_PREFERENCES: AllocationPreferences = {
+  paneVisible: false,
+  paneWidth: 320,
+};
+
+const STORAGE_KEYS = {
+  PANE_VISIBLE: 'pm.alloc.pane.visible',
+  PANE_WIDTH: 'pm.alloc.pane.width',
+} as const;
+
+/**
+ * Load allocation preferences from localStorage
+ */
+export function loadAllocationPreferences(): AllocationPreferences {
+  try {
+    const visible = localStorage.getItem(STORAGE_KEYS.PANE_VISIBLE);
+    const width = localStorage.getItem(STORAGE_KEYS.PANE_WIDTH);
+    
+    return {
+      paneVisible: visible !== null ? visible === 'true' : DEFAULT_PREFERENCES.paneVisible,
+      paneWidth: width !== null ? Math.max(260, parseInt(width, 10)) : DEFAULT_PREFERENCES.paneWidth,
+    };
+  } catch (error) {
+    console.warn('Failed to load allocation preferences:', error);
+    return DEFAULT_PREFERENCES;
+  }
+}
+
+/**
+ * Save allocation preferences to localStorage
+ */
+export function saveAllocationPreferences(prefs: Partial<AllocationPreferences>): void {
+  try {
+    if (prefs.paneVisible !== undefined) {
+      localStorage.setItem(STORAGE_KEYS.PANE_VISIBLE, prefs.paneVisible.toString());
+    }
+    
+    if (prefs.paneWidth !== undefined) {
+      const clampedWidth = Math.max(260, Math.min(500, prefs.paneWidth));
+      localStorage.setItem(STORAGE_KEYS.PANE_WIDTH, clampedWidth.toString());
+    }
+  } catch (error) {
+    console.warn('Failed to save allocation preferences:', error);
+  }
+}
+
+/**
+ * Get pane visibility preference
+ */
+export function getPaneVisible(): boolean {
+  try {
+    const visible = localStorage.getItem(STORAGE_KEYS.PANE_VISIBLE);
+    return visible !== null ? visible === 'true' : DEFAULT_PREFERENCES.paneVisible;
+  } catch (error) {
+    console.warn('Failed to get pane visibility preference:', error);
+    return DEFAULT_PREFERENCES.paneVisible;
+  }
+}
+
+/**
+ * Set pane visibility preference
+ */
+export function setPaneVisible(visible: boolean): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.PANE_VISIBLE, visible.toString());
+  } catch (error) {
+    console.warn('Failed to set pane visibility preference:', error);
+  }
+}
+
+/**
+ * Get pane width preference
+ */
+export function getPaneWidth(): number {
+  try {
+    const width = localStorage.getItem(STORAGE_KEYS.PANE_WIDTH);
+    if (width !== null) {
+      const parsedWidth = parseInt(width, 10);
+      return Math.max(260, Math.min(500, parsedWidth));
+    }
+    return DEFAULT_PREFERENCES.paneWidth;
+  } catch (error) {
+    console.warn('Failed to get pane width preference:', error);
+    return DEFAULT_PREFERENCES.paneWidth;
+  }
+}
+
+/**
+ * Set pane width preference
+ */
+export function setPaneWidth(width: number): void {
+  try {
+    const clampedWidth = Math.max(260, Math.min(500, width));
+    localStorage.setItem(STORAGE_KEYS.PANE_WIDTH, clampedWidth.toString());
+  } catch (error) {
+    console.warn('Failed to set pane width preference:', error);
+  }
+}
+
+/**
+ * Reset allocation preferences to defaults
+ */
+export function resetAllocationPreferences(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEYS.PANE_VISIBLE);
+    localStorage.removeItem(STORAGE_KEYS.PANE_WIDTH);
+  } catch (error) {
+    console.warn('Failed to reset allocation preferences:', error);
+  }
+}
