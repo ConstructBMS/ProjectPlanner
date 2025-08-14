@@ -23,6 +23,7 @@ import Splitter from './components/common/Splitter';
 import { getLayoutRatios, saveLayoutRatios, loadAllocationPreferences, setPaneVisible, setPaneWidth, loadFourDPreferences, setFourDPanelVisible, setFourDPanelWidth } from './utils/prefs';
 import { usePlannerStore } from './state/plannerStore';
 import './styles/projectplanner.css';
+import './styles/AppShell.css';
 
 function AppShellContent({ projectId, onBackToPortfolio }) {
   const sidebarRef = useRef();
@@ -191,116 +192,127 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
     setFourDPanelWidth(width);
   };
 
-  return (
-    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Ribbon */}
-      <RibbonContainer 
-        isMinimised={isRibbonMinimised} 
-        onToggleMinimise={() => setIsRibbonMinimised(!isRibbonMinimised)}
-        onExpandAll={handleExpandAll}
-        onCollapseAll={handleCollapseAll}
-      />
-      
-      {/* Loading State */}
-      {hydrationState === 'loadingProjects' && (
-        <div className="flex items-center justify-center p-8 flex-1">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
+  // Loading and error states
+  if (hydrationState === 'loadingProjects') {
+    return (
+      <div className="pm-app-shell">
+        <div className="pm-loading-container">
+          <div className="pm-loading-spinner">
+            <div className="spinner" />
             <p className="text-gray-600 dark:text-gray-400">Loading projects...</p>
           </div>
         </div>
-      )}
-      
-      {hydrationState === 'hydrating' && (
-        <div className="flex items-center justify-center p-8 flex-1">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4" />
+      </div>
+    );
+  }
+  
+  if (hydrationState === 'hydrating') {
+    return (
+      <div className="pm-app-shell">
+        <div className="pm-loading-container">
+          <div className="pm-loading-spinner">
+            <div className="spinner" />
             <p className="text-gray-600 dark:text-gray-400">Loading project data...</p>
           </div>
         </div>
-      )}
-      
-      {hydrationState === 'error' && (
-        <div className="flex items-center justify-center p-8 flex-1">
-          <div className="text-center">
-            <div className="text-red-600 text-2xl mb-4">⚠️</div>
-            <p className="text-red-600 font-medium mb-2">Failed to load project data</p>
-            <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">{hydrationError}</p>
+      </div>
+    );
+  }
+  
+  if (hydrationState === 'error') {
+    return (
+      <div className="pm-app-shell">
+        <div className="pm-error-container">
+          <div className="pm-error-content">
+            <div className="pm-error-icon">⚠️</div>
+            <div className="pm-error-title">Failed to load project data</div>
+            <div className="pm-error-message">{hydrationError}</div>
             <button 
               onClick={() => init()}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              className="pm-error-retry"
             >
               Retry
             </button>
           </div>
         </div>
-      )}
+      </div>
+    );
+  }
+
+  return (
+    <div className={`pm-app-shell ${isRibbonMinimised ? 'ribbon-minimised' : ''}`}>
+      {/* Fixed Header Container - wraps search/breadcrumb/ribbon */}
+      <div className="pm-header-container">
+        <RibbonContainer 
+          isMinimised={isRibbonMinimised} 
+          onToggleMinimise={() => setIsRibbonMinimised(!isRibbonMinimised)}
+          onExpandAll={handleExpandAll}
+          onCollapseAll={handleCollapseAll}
+          projectId={projectId}
+          onBackToPortfolio={onBackToPortfolio}
+        />
+      </div>
       
-      {/* Main Content */}
+      {/* Main Content Area - Single Scroll Container */}
       {hydrationState === 'ready' && (
-        <div
-          ref={contentRef}
-          className={`pm-app-shell flex-1 ${isRibbonMinimised ? 'ribbon-minimised' : ''}`}
-        >
-          {/* Main Scroll Area - Single scroll container */}
-          <div className='pm-main-scroll-area'>
-            <div className='pm-pane-container'>
-              <Splitter
-                orientation="vertical"
-                defaultRatios={[0.2, 0.4, 0.4]}
-                minSizes={[220, 420, 480]}
-                storageKey="main-panes"
-                onRatiosChange={handleMainPaneRatiosChange}
-              >
-                {/* SidebarTree - Left pane */}
-                <div className='pm-pane bg-white border-r border-gray-300'>
-                  <SidebarTree ref={sidebarRef} />
-                </div>
+        <div className="pm-main-content">
+          {/* Pane Row - Tree | Grid | Gantt */}
+          <div className="pm-pane-row">
+            <Splitter
+              orientation="vertical"
+              defaultRatios={[0.2, 0.4, 0.4]}
+              minSizes={[220, 420, 480]}
+              storageKey="main-panes"
+              onRatiosChange={handleMainPaneRatiosChange}
+            >
+              {/* SidebarTree - Left pane */}
+              <div className='pm-pane pm-pane-tree'>
+                <SidebarTree ref={sidebarRef} />
+              </div>
 
-                {/* TaskGrid - Middle pane */}
-                <div className='pm-pane bg-white border-r border-gray-300'>
-                  <TaskGrid />
-                </div>
+              {/* TaskGrid - Middle pane */}
+              <div className='pm-pane pm-pane-grid'>
+                <TaskGrid />
+              </div>
 
-                {/* GanttChart - Right pane */}
-                <div className='pm-pane bg-white'>
-                  <GanttChart />
-                </div>
-              </Splitter>
-            </div>
+              {/* GanttChart - Right pane */}
+              <div className='pm-pane pm-pane-gantt'>
+                <GanttChart />
+              </div>
+            </Splitter>
           </div>
 
           {/* TaskPropertiesPane - Bottom pane, fixed height outside scroll area */}
           <TaskPropertiesPane />
+        </div>
+      )}
 
-          {/* Resources Pane - Right side panel */}
-          {resourcesPaneVisible && (
-            <div
-              className="fixed right-0 top-0 h-full bg-white border-l border-gray-300 shadow-lg z-40"
-              style={{ width: resourcesPaneWidth }}
-            >
-              <ResourcesPane
-                onClose={() => setResourcesPaneVisible(false)}
-                onWidthChange={setResourcesPaneWidth}
-              />
-            </div>
-          )}
+      {/* Resources Pane - Right side panel */}
+      {resourcesPaneVisible && (
+        <div
+          className="pm-side-panel"
+          style={{ width: resourcesPaneWidth }}
+        >
+          <ResourcesPane
+            onClose={handleResourcesPaneClose}
+            onWidthChange={setResourcesPaneWidth}
+          />
+        </div>
+      )}
 
-          {/* Model Panel - Right side panel */}
-          {modelPanelVisible && (
-            <div
-              className="fixed right-0 top-0 h-full bg-white border-l border-gray-300 shadow-lg z-40"
-              style={{ 
-                width: modelPanelWidth,
-                right: resourcesPaneVisible ? resourcesPaneWidth : 0
-              }}
-            >
-              <ModelPanel
-                onClose={() => setModelPanelVisible(false)}
-                onWidthChange={setModelPanelWidth}
-              />
-            </div>
-          )}
+      {/* Model Panel - Right side panel */}
+      {modelPanelVisible && (
+        <div
+          className="pm-side-panel"
+          style={{ 
+            width: modelPanelWidth,
+            right: resourcesPaneVisible ? resourcesPaneWidth : 0
+          }}
+        >
+          <ModelPanel
+            onClose={handleModelPanelClose}
+            onWidthChange={handleModelPanelWidthChange}
+          />
         </div>
       )}
 

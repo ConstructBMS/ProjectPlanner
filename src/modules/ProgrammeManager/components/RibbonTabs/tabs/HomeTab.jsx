@@ -19,6 +19,7 @@ import {
   exportProject,
   printProject,
 } from '../../../../../utils/printExportUtils';
+import Icon from '../ui/Icon';
 
 
 
@@ -454,7 +455,7 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
       label: 'Compact',
       disabled: false,
       action: () => handleRowHeightChange('compact'),
-      icon: <ArrowsPointingInIcon className="w-4 h-4" />
+      icon: <Icon name="arrowsPointingIn" size="md" />
     },
     {
       id: 'normal',
@@ -468,7 +469,7 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
       label: 'Comfortable',
       disabled: false,
       action: () => handleRowHeightChange('comfortable'),
-      icon: <ArrowsPointingOutIcon className="w-4 h-4" />
+      icon: <Icon name="arrowsPointingOut" size="md" />
     }
   ], [handleRowHeightChange]);
 
@@ -621,21 +622,21 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
       label: 'To Project Start',
       disabled: false,
       action: handleRescheduleToProjectStart,
-      icon: <ArrowPathIcon className="w-4 h-4" />
+      icon: <Icon name="arrowPath" size="md" />
     },
     {
       id: 'next_working_day',
       label: 'To Next Working Day',
       disabled: false,
       action: handleRescheduleToNextWorkingDay,
-      icon: <ArrowPathIcon className="w-4 h-4" />
+      icon: <Icon name="arrowPath" size="md" />
     },
     {
       id: 'specific_date',
       label: 'To Date...',
       disabled: false,
       action: handleRescheduleToDate,
-      icon: <ArrowPathIcon className="w-4 h-4" />
+      icon: <Icon name="arrowPath" size="md" />
     }
   ], [handleRescheduleToProjectStart, handleRescheduleToNextWorkingDay, handleRescheduleToDate]);
 
@@ -978,28 +979,28 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
       label: 'PNG (Timeline Only)',
       disabled: false,
       action: () => handleExportOption('PNG (Timeline Only)'),
-      icon: <DocumentArrowDownIcon className="w-4 h-4" />
+      icon: <Icon name="documentArrowDown" size="md" />
     },
     {
       id: 'pdf',
       label: 'PDF (Timeline + Grid)',
       disabled: false,
       action: () => handleExportOption('PDF (Timeline + Grid)'),
-      icon: <DocumentArrowDownIcon className="w-4 h-4" />
+      icon: <Icon name="documentArrowDown" size="md" />
     },
     {
       id: 'csv',
       label: 'CSV (Grid)',
       disabled: false,
       action: () => handleExportOption('CSV (Grid)'),
-      icon: <DocumentArrowDownIcon className="w-4 h-4" />
+      icon: <Icon name="documentArrowDown" size="md" />
     },
     {
       id: 'asta',
       label: 'Asta XML',
       disabled: false,
       action: () => handleExportOption('Asta XML'),
-      icon: <DocumentArrowDownIcon className="w-4 h-4" />
+      icon: <Icon name="documentArrowDown" size="md" />
     }
   ], [handleExportOption]);
 
@@ -1069,28 +1070,28 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
       label: 'Set Baseline',
       disabled: !hasDataToExport,
       action: () => handleBaselineAction('BASELINE_SET'),
-      icon: <ChartBarIcon className="w-4 h-4" />
+      icon: <Icon name="chartBar" size="md" />
     },
     {
       id: 'clear',
       label: 'Clear Baseline',
       disabled: !hasDataToExport,
       action: () => handleBaselineAction('BASELINE_CLEAR'),
-      icon: <TrashIcon className="w-4 h-4" />
+      icon: <Icon name="trash" size="md" />
     },
     {
       id: 'show',
       label: 'Show Baselines',
       disabled: false,
       action: () => handleBaselineAction('BASELINE_SHOW_TOGGLE'),
-      icon: <EyeIcon className="w-4 h-4" />
+      icon: <Icon name="view" size="md" />
     },
     {
       id: 'manage',
       label: 'Manage...',
       disabled: false,
       action: () => handleBaselineAction('BASELINE_MANAGER_OPEN'),
-      icon: <Cog6ToothIcon className="w-4 h-4" />
+      icon: <Icon name="settings" size="md" />
     }
   ], [handleBaselineAction, hasDataToExport]);
 

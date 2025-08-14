@@ -203,6 +203,7 @@ export const iconMap = {
   magnifyingGlassPlus: MagnifyingGlassPlusIcon,
   magnifyingGlassMinus: MagnifyingGlassMinusIcon,
   arrowsPointingOut: ArrowsPointingOutIcon,
+  arrowsPointingIn: ArrowsPointingInIcon,
   
   // View
   view: EyeIcon,
@@ -305,6 +306,7 @@ export const iconMap = {
   reload: ArrowPathIcon,
   reset: ArrowPathIcon,
   arrowPath: ArrowPathIcon,
+  arrowsPointingIn: ArrowsPointingInIcon,
   
   // Directional
   up: ArrowUpIcon,
