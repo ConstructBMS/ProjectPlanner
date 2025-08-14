@@ -41,6 +41,7 @@
   height: calc(100vh - var(--shell-top));
   min-height: 0; /* Allow shrinking */
   transition: height 0.3s ease-in-out;
+  overflow: auto; /* Single scroll container */
 }
 
 .pm-app-shell.ribbon-minimised .pm-content {
@@ -53,7 +54,7 @@
   flex: 1 1 auto;
   min-height: 0; /* Critical: allows shrinking */
   min-width: 0; /* Critical: allows shrinking */
-  overflow: hidden;
+  position: relative; /* For splitter positioning */
 }
 
 /* Individual Panes */
@@ -62,7 +63,7 @@
   flex-direction: column;
   min-width: 0; /* Critical: allows shrinking */
   min-height: 0; /* Critical: allows shrinking */
-  overflow: auto;
+  overflow: hidden; /* No individual scrollbars */
   background: white;
   border-right: 1px solid #e5e7eb;
 }
@@ -91,23 +92,23 @@
   border-right: none;
 }
 
-/* Properties Pane - Fixed height outside scroll area */
+/* Properties Pane - Fixed height, no individual scroll */
 .pm-properties-pane {
   flex-shrink: 0;
   height: 256px;
   min-height: 200px;
   max-height: 400px;
-  overflow: auto;
+  overflow: hidden; /* No individual scrollbar */
   background: white;
   border-top: 1px solid #e5e7eb;
 }
 
-/* Splitter Styling - ensure no overlay issues */
+/* Splitter Styling - ensure proper positioning and interaction */
 .pm-splitter {
   flex-shrink: 0;
   background: #f3f4f6;
   border: 1px solid #d1d5db;
-  z-index: 5;
+  z-index: 2; /* Above content, below modals */
   position: relative;
 }
 
@@ -125,9 +126,16 @@
   cursor: row-resize;
 }
 
-/* Ensure splitters are above content but below modals */
-.pm-splitter {
-  z-index: 5;
+/* Splitter gutter - 12px pointer area */
+.pm-splitter::after {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  right: -6px;
+  bottom: -6px;
+  z-index: 1;
+  pointer-events: auto;
 }
 
 /* Side Panels - Resources and Model */
