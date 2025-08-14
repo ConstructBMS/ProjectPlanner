@@ -13,7 +13,7 @@ import { UserProvider } from './context/UserContext';
 import { ToastContainer } from './components/common/Toast';
 import { useNetworkStatus } from './utils/net';
 import RibbonContainer from '../../components/RibbonTabs/RibbonContainer';
-import SidebarTree from './components/SidebarTree';
+import ProgrammeTree from './components/ProgrammeTree/ProgrammeTree.tsx';
 import TaskGrid from './components/TaskGrid/TaskGrid';
 import GanttChart from './components/GanttChart/GanttChart';
 import TaskPropertiesPane from './components/TaskPropertiesPane';
@@ -26,8 +26,6 @@ import './styles/projectplanner.css';
 import './styles/AppShell.css';
 
 function AppShellContent({ projectId, onBackToPortfolio }) {
-  const sidebarRef = useRef();
-  const contentRef = useRef();
   const [mainPaneRatios, setMainPaneRatios] = useState([0.2, 0.4, 0.4]);
   
   // Resources pane state
@@ -47,13 +45,7 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
   // Network status
   const networkStatus = useNetworkStatus();
 
-  const handleExpandAll = () => {
-    sidebarRef.current?.expandAll?.();
-  };
-
-  const handleCollapseAll = () => {
-    sidebarRef.current?.collapseAll?.();
-  };
+  // Note: ProgrammeTree handles its own expand/collapse functionality
 
   // Load saved layout ratios and allocation preferences on mount
   useEffect(() => {
@@ -246,8 +238,6 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
         <RibbonContainer 
           isMinimised={isRibbonMinimised} 
           onToggleMinimise={() => setIsRibbonMinimised(!isRibbonMinimised)}
-          onExpandAll={handleExpandAll}
-          onCollapseAll={handleCollapseAll}
           projectId={projectId}
           onBackToPortfolio={onBackToPortfolio}
         />
@@ -265,9 +255,9 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
               storageKey="main-panes"
               onRatiosChange={handleMainPaneRatiosChange}
             >
-              {/* SidebarTree - Left pane */}
+              {/* ProgrammeTree - Left pane */}
               <div className='pm-pane pm-pane-tree'>
-                <SidebarTree ref={sidebarRef} />
+                <ProgrammeTree />
               </div>
 
               {/* TaskGrid - Middle pane */}
