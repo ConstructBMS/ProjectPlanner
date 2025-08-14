@@ -100,7 +100,7 @@ const RibbonMenu = ({
         }
         break;
     }
-  }, [filteredItems, selectedIndex, openSubMenu, typeahead, typeaheadTimeout, onClose]);
+  }, [filteredItems, selectedIndex, openSubMenu, typeahead, typeaheadTimeout, onClose, handleSelect]);
 
   // Handle item selection
   const handleSelect = useCallback((item) => {

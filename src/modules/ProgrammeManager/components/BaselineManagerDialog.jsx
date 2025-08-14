@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   XMarkIcon,
   PlusIcon,
@@ -8,8 +8,7 @@ import {
   EyeIcon,
   EyeSlashIcon,
   ChartBarIcon,
-  CalendarIcon,
-  UserIcon,
+
 } from '@heroicons/react/24/outline';
 import {
   createBaseline,
@@ -201,7 +200,7 @@ const BaselineManagerDialog = ({
                       <div className='absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-md shadow-lg z-10 max-h-32 overflow-y-auto'>
                         {nameSuggestions.map((suggestion, index) => (
                           <button
-                            key={index}
+                            key={`suggestion-${index}`}
                             onClick={() => {
                               setNewBaseline(prev => ({
                                 ...prev,
@@ -556,7 +555,7 @@ const BaselineManagerDialog = ({
                                       comparisonResults
                                     ).map((change, index) => (
                                       <div
-                                        key={index}
+                                        key={`change-${index}`}
                                         className='flex items-start gap-2 p-2 bg-gray-50 rounded'
                                       >
                                         <span className='text-lg'>

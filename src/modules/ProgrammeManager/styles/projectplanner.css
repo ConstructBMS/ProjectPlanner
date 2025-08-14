@@ -61,15 +61,24 @@ html, body {
 
 .pm-header-section {
   flex-shrink: 0;
-  /* Header: ~60px + Ribbon: ~200px (when expanded) = ~260px total */
-  height: 260px;
+  /* Header: ~60px + Ribbon: ~120px (when expanded) = ~180px total */
+  height: 180px;
 }
 
 .pm-main-scroll-area {
   flex: 1;
   overflow: auto;
   /* Use calc to account for header section */
-  height: calc(100vh - 260px);
+  height: calc(100vh - 180px);
+}
+
+/* When ribbon is minimised, adjust header height */
+.pm-app-shell.ribbon-minimised .pm-header-section {
+  height: 100px; /* Header: ~60px + Ribbon: ~40px (minimised) = ~100px total */
+}
+
+.pm-app-shell.ribbon-minimised .pm-main-scroll-area {
+  height: calc(100vh - 100px);
 }
 
 .pm-pane-container {

@@ -25,7 +25,7 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
   const [ribbonStyle, setRibbonStyle] = useState(loadRibbonStyle());
   const [isBackstageOpen, setIsBackstageOpen] = useState(false);
   const { viewState, updateViewState } = useViewContext();
-  const { canAccessTab, getAvailableTabs } = useUserContext();
+  const { canAccessTab } = useUserContext();
 
   // Filter tabs based on user permissions
   const tabs = allTabs.filter(tab => canAccessTab(tab));
@@ -51,6 +51,11 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
           if (prefs.style) {
             setRibbonStyle(prefs.style);
           }
+          
+          // Emit initial minimise state for AppShell
+          window.dispatchEvent(new window.CustomEvent('RIBBON_MINIMISE_CHANGE', {
+            detail: { minimised: prefs.minimised }
+          }));
         }
       } catch (error) {
         console.warn('Failed to load ribbon preferences:', error);
@@ -76,7 +81,7 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isMinimised]); // Include isMinimised in dependencies since toggleMinimise uses it
+  }, [isMinimised, toggleMinimise]); // Include isMinimised in dependencies since toggleMinimise uses it
 
   const handleTabChange = tab => {
     setActiveTab(tab);
@@ -123,6 +128,11 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
   const toggleMinimise = useCallback(async () => {
     const newMinimised = !isMinimised;
     setIsMinimised(newMinimised);
+    
+    // Emit event for AppShell to adjust layout
+    window.dispatchEvent(new window.CustomEvent('RIBBON_MINIMISE_CHANGE', {
+      detail: { minimised: newMinimised }
+    }));
     
     try {
       await setRibbonPrefs({
@@ -184,14 +194,14 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
     }
   };
 
-          return (
-          <div 
-            className='pm-ribbon'
-            data-mode={ribbonStyle.mode}
-            data-accent={ribbonStyle.accent}
-          >
-            {/* Quick Access Toolbar - Above */}
-            {qatPosition === 'above' && (
+  return (
+    <div 
+      className='pm-ribbon-wrap'
+      data-mode={ribbonStyle.mode}
+      data-accent={ribbonStyle.accent}
+    >
+      {/* Quick Access Toolbar - Above */}
+      {qatPosition === 'above' && (
         <QuickAccessToolbar
           position="above"
           onPositionChange={handleQatPositionChange}
@@ -201,22 +211,22 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
         />
       )}
 
-                  {/* Tab Buttons */}
-            <div className='flex border-b border-gray-300 overflow-x-auto relative'>
-              {/* File Button (Backstage) */}
-              <button
-                onClick={handleBackstageToggle}
-                className={`project-ribbon-tab ribbon-tab ${isBackstageOpen ? 'active' : ''}`}
-                tabIndex={0}
-                title="File"
-              >
-                File
-              </button>
-              
-              {/* Style Options Button */}
-              <StyleOptions onStyleChange={handleStyleChange} />
-              
-              {tabs.map((tab, index) => (
+      {/* Tab strip */}
+      <div className='pm-ribbon__tabs'>
+        {/* File Button (Backstage) */}
+        <button
+          onClick={handleBackstageToggle}
+          className={`project-ribbon-tab ribbon-tab ${isBackstageOpen ? 'active' : ''}`}
+          tabIndex={0}
+          title="File"
+        >
+          File
+        </button>
+        
+        {/* Style Options Button */}
+        <StyleOptions onStyleChange={handleStyleChange} />
+        
+        {tabs.map((tab) => (
           <button
             key={tab}
             onClick={() => handleTabChange(tab)}
@@ -254,8 +264,8 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
         </button>
       </div>
 
-      {/* Active Tab Tools */}
-      <div className={`project-ribbon-content w-full ${isMinimised ? 'ribbon-minimised' : ''}`}>
+      {/* Groups panel */}
+      <div className={`pm-ribbon__groups ${isMinimised ? 'pm-ribbon--min' : ''}`}>
         {renderTabContent()}
       </div>
 
@@ -270,20 +280,20 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
         />
       )}
 
-                {/* Group Dialog */}
-          <GroupDialog
-            title={groupDialog.title}
-            onClose={closeGroupDialog}
-            isOpen={groupDialog.isOpen}
-          >
-            {groupDialog.content}
-          </GroupDialog>
+      {/* Group Dialog */}
+      <GroupDialog
+        title={groupDialog.title}
+        onClose={closeGroupDialog}
+        isOpen={groupDialog.isOpen}
+      >
+        {groupDialog.content}
+      </GroupDialog>
 
-          {/* Backstage View */}
-          <BackstageView
-            isOpen={isBackstageOpen}
-            onClose={handleBackstageClose}
-          />
-        </div>
-      );
-    }
+      {/* Backstage View */}
+      <BackstageView
+        isOpen={isBackstageOpen}
+        onClose={handleBackstageClose}
+      />
+    </div>
+  );
+}

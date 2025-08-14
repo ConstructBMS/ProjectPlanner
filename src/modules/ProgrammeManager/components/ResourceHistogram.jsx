@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import * as d3 from 'd3';
 import {
   MagnifyingGlassPlusIcon,
@@ -26,11 +26,9 @@ import {
 const ResourceHistogram = ({
   tasks,
   resources,
-  timeScale,
   containerWidth,
   containerHeight = 300,
   onZoomChange = null,
-  syncWithGantt = true,
 }) => {
   const svgRef = useRef(null);
   const containerRef = useRef(null);
@@ -141,7 +139,7 @@ const ResourceHistogram = ({
       visibleStartDate: updatedZoomState.visibleStartDate,
       visibleEndDate: updatedZoomState.visibleEndDate,
     }));
-  }, [zoomState.scale, zoomState.translateX, timeScaleD3, containerWidth]);
+  }, [zoomState, timeScaleD3, containerWidth]);
 
   // Handle zoom controls
   const handleZoomIn = useCallback(() => {

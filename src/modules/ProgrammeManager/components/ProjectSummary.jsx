@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   CurrencyDollarIcon,
   ChartBarIcon,
@@ -37,16 +37,7 @@ const ProjectSummary = ({ tasks, resources }) => {
     { id: 'eva', label: 'EVA', icon: ChartBarIcon },
   ];
 
-  const getTrendIcon = trend => {
-    switch (trend) {
-      case 'increasing':
-        return <TrendingUpIcon className='w-4 h-4 text-red-600' />;
-      case 'decreasing':
-        return <TrendingDownIcon className='w-4 h-4 text-green-600' />;
-      default:
-        return <ChartBarIcon className='w-4 h-4 text-blue-600' />;
-    }
-  };
+
 
   const getEfficiencyColor = score => {
     if (score >= 80) return 'text-green-600';
@@ -374,7 +365,7 @@ const ProjectSummary = ({ tasks, resources }) => {
                   </h5>
                   <ul className='text-xs text-gray-700 space-y-1'>
                     {trendAnalysis.recommendations.map((rec, index) => (
-                      <li key={index} className='flex items-start gap-2'>
+                      <li key={`recommendation-${index}`} className='flex items-start gap-2'>
                         <span className='text-blue-600 mt-0.5'>•</span>
                         <span>{rec}</span>
                       </li>

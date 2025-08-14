@@ -184,7 +184,7 @@ const BackstageView = ({ isOpen, onClose }) => {
         
         <div className="backstage-content-body">
           {content.items.map((item, index) => (
-            <div key={index} className="backstage-content-item">
+            <div key={`backstage-item-${index}`} className="backstage-content-item">
               <div className="backstage-item-header">
                 <h3 className="backstage-item-title">{item.label}</h3>
                 {item.value && (

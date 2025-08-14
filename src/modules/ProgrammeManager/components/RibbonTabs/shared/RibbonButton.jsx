@@ -1,5 +1,5 @@
 // RibbonButton component
-import React, { useState, useRef, forwardRef } from 'react';
+import { useState, useRef, forwardRef } from 'react';
 import { useUserContext } from '../../../context/UserContext';
 import Tooltip from '../../common/Tooltip';
 import RibbonMenu from '../RibbonMenu';

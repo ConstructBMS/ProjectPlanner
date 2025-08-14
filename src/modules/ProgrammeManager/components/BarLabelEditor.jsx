@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { SketchPicker } from 'react-color';
 import {
   TagIcon,
@@ -17,7 +17,6 @@ import {
   getAvailablePositions,
   validateLabelConfig,
   createLabelConfig,
-  getLabelPreview,
   exportBarLabels,
   importBarLabels,
   getSampleTask,
@@ -682,7 +681,7 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
                     </div>
                     <ul className='text-xs text-red-700 space-y-1'>
                       {validation.errors.map((error, index) => (
-                        <li key={index}>• {error}</li>
+                        <li key={`label-error-${index}`}>• {error}</li>
                       ))}
                     </ul>
                   </div>
@@ -698,7 +697,7 @@ const BarLabelEditor = ({ userSettings, onSettingsUpdate }) => {
                     </div>
                     <ul className='text-xs text-yellow-700 space-y-1'>
                       {validation.warnings.map((warning, index) => (
-                        <li key={index}>• {warning}</li>
+                        <li key={`label-warning-${index}`}>• {warning}</li>
                       ))}
                     </ul>
                   </div>

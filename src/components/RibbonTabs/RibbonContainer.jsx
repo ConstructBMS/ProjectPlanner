@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useUserContext } from '../../modules/ProgrammeManager/context/UserContext';
 import { getRibbonPrefs, setRibbonPrefs } from '../../modules/ProgrammeManager/utils/ribbonStorage';
 import RibbonTabs from '../../modules/ProgrammeManager/components/RibbonTabs/RibbonTabs';

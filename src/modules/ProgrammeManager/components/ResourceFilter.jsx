@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useFilterContext } from '../context/FilterContext';
 import { useTaskContext } from '../context/TaskContext';
 import {

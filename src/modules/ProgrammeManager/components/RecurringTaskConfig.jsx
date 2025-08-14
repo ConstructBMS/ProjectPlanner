@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   CalendarIcon,
-  ClockIcon,
   ExclamationTriangleIcon,
   CheckIcon,
 } from '@heroicons/react/24/outline';
@@ -307,7 +306,7 @@ const RecurringTaskConfig = ({ task, onRecurrenceChange }) => {
                   </div>
                   <ul className='text-xs text-red-700 space-y-1'>
                     {validation.errors.map((error, index) => (
-                      <li key={index}>• {error}</li>
+                      <li key={`error-${index}`}>• {error}</li>
                     ))}
                   </ul>
                 </div>
@@ -323,7 +322,7 @@ const RecurringTaskConfig = ({ task, onRecurrenceChange }) => {
                   </div>
                   <ul className='text-xs text-yellow-700 space-y-1'>
                     {validation.warnings.map((warning, index) => (
-                      <li key={index}>• {warning}</li>
+                      <li key={`warning-${index}`}>• {warning}</li>
                     ))}
                   </ul>
                 </div>

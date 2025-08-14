@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import {
   XMarkIcon,
   DocumentArrowDownIcon,
@@ -56,6 +56,8 @@ const PrintExportDialog = ({ isOpen, onClose, contentRef }) => {
     includeProperties,
     margins,
     contentRef,
+    exportToPDF,
+    printContent,
   ]);
 
   const exportToPDF = async () => {

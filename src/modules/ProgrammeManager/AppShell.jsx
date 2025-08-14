@@ -23,7 +23,6 @@ import './styles/projectplanner.css';
 function AppShellContent({ projectId, onBackToPortfolio }) {
   const sidebarRef = useRef();
   const contentRef = useRef();
-  const { getPaneSize } = useLayoutContext();
   const [mainPaneRatios, setMainPaneRatios] = useState([0.2, 0.4, 0.4]);
   
   // Resources pane state
@@ -33,6 +32,9 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
   // Model panel state
   const [modelPanelVisible, setModelPanelVisible] = useState(false);
   const [modelPanelWidth, setModelPanelWidth] = useState(320);
+  
+  // Ribbon minimise state
+  const [isRibbonMinimised, setIsRibbonMinimised] = useState(false);
 
   const handleExpandAll = () => {
     sidebarRef.current?.expandAll?.();
@@ -74,17 +76,18 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
       setPaneVisible(visible);
     };
 
-    const handleResourcesPaneWidthChange = (width) => {
-      setResourcesPaneWidth(width);
-      setPaneWidth(width);
-    };
-
     window.addEventListener('RESOURCES_PANE_TOGGLE', handleResourcesPaneToggle);
     
     return () => {
       window.removeEventListener('RESOURCES_PANE_TOGGLE', handleResourcesPaneToggle);
     };
   }, []);
+
+  // Handle resources pane width changes
+  const handleResourcesPaneWidthChange = (width) => {
+    setResourcesPaneWidth(width);
+    setPaneWidth(width);
+  };
 
   // Handle model panel events
   useEffect(() => {
@@ -101,15 +104,26 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
     };
   }, []);
 
+  // Handle ribbon minimise state changes
+  useEffect(() => {
+    const handleRibbonMinimiseChange = (event) => {
+      const { minimised } = event.detail;
+      setIsRibbonMinimised(minimised);
+    };
+
+    window.addEventListener('RIBBON_MINIMISE_CHANGE', handleRibbonMinimiseChange);
+    
+    return () => {
+      window.removeEventListener('RIBBON_MINIMISE_CHANGE', handleRibbonMinimiseChange);
+    };
+  }, []);
+
   const handleResourcesPaneClose = () => {
     setResourcesPaneVisible(false);
     setPaneVisible(false);
   };
 
-  const handleResourcesPaneWidthChange = (width) => {
-    setResourcesPaneWidth(width);
-    setPaneWidth(width);
-  };
+
 
   const handleModelPanelClose = () => {
     setModelPanelVisible(false);
@@ -124,7 +138,7 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
   return (
     <div
       ref={contentRef}
-              className='pm-app-shell'
+      className={`pm-app-shell ${isRibbonMinimised ? 'ribbon-minimised' : ''}`}
     >
       {/* Header Section - Fixed height, no scroll */}
       <div className='pm-header-section'>

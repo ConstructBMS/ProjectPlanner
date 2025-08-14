@@ -1,4 +1,43 @@
 /* ProjectPlanner Ribbon - ConstructBMS Theme */
+
+/* Ribbon wrapper container */
+.pm-ribbon-wrap {
+  position: sticky;
+  top: var(--app-shell-top, 0);
+  z-index: 10;
+  background: var(--rbn-bg);
+}
+
+/* Tab strip container */
+.pm-ribbon__tabs {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 8px;
+  border-bottom: 1px solid var(--rbn-border);
+  background: var(--rbn-bg);
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* Groups panel container */
+.pm-ribbon__groups {
+  overflow: hidden;
+  transition: max-height 0.2s ease;
+  background: var(--rbn-bg-elev);
+  border: 1px solid var(--rbn-border);
+  border-top: none;
+  padding: var(--rbn-pad-y) var(--rbn-pad-x);
+  max-height: 160px;
+}
+
+/* Minimised state */
+.pm-ribbon--min .pm-ribbon__groups {
+  max-height: 0;
+  padding: 0;
+  border: none;
+}
+
 .pm-ribbon {
   /* fonts */
   --rbn-font-sans: Inter,"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
@@ -51,18 +90,6 @@
   font-family: var(--rbn-font-sans);
 }
 
-/* Tab strip container */
-.pm-ribbon .flex.border-b {
-  min-height: 40px;
-  display: flex;
-  align-items: center;
-  border-bottom: 1px solid var(--rbn-border);
-  background: var(--rbn-bg);
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-}
-
 /* Tab styling */
 .pm-ribbon .project-ribbon-tab {
   font: var(--rbn-tab-weight) var(--rbn-tab-size)/1 var(--rbn-font-sans);
@@ -92,13 +119,8 @@
   background: transparent;
 }
 
-/* Tab content area */
-.pm-ribbon .project-ribbon-content {
-  background: var(--rbn-bg-elev);
-  border: 1px solid var(--rbn-border);
-  border-top: none;
-  padding: var(--rbn-pad-y) var(--rbn-pad-x);
-  min-height: 80px;
+/* Tab content area - now handled by pm-ribbon__groups */
+.pm-ribbon__groups {
   overflow-x: auto;
   overflow-y: auto;
   width: 100%;
@@ -106,20 +128,20 @@
   scrollbar-color: var(--rbn-border) var(--rbn-bg);
 }
 
-.pm-ribbon .project-ribbon-content::-webkit-scrollbar {
+.pm-ribbon__groups::-webkit-scrollbar {
   height: 6px;
 }
 
-.pm-ribbon .project-ribbon-content::-webkit-scrollbar-track {
+.pm-ribbon__groups::-webkit-scrollbar-track {
   background: var(--rbn-bg);
 }
 
-.pm-ribbon .project-ribbon-content::-webkit-scrollbar-thumb {
+.pm-ribbon__groups::-webkit-scrollbar-thumb {
   background: var(--rbn-border);
   border-radius: 3px;
 }
 
-.pm-ribbon .project-ribbon-content::-webkit-scrollbar-thumb:hover {
+.pm-ribbon__groups::-webkit-scrollbar-thumb:hover {
   background: var(--rbn-text-muted);
 }
 
@@ -824,18 +846,16 @@
   outline-offset: 2px;
 }
 
-/* Ribbon content minimize animation */
-.project-ribbon-content {
-  min-height: 80px;
+/* Ribbon content minimize animation - now handled by pm-ribbon__groups */
+.pm-ribbon__groups {
   overflow: hidden;
-  transition: min-height 0.2s ease-in-out;
+  transition: max-height 0.2s ease-in-out;
 }
 
-.ribbon-minimised {
-  min-height: 0 !important;
-  height: 0;
+.pm-ribbon--min .pm-ribbon__groups {
+  max-height: 0;
   padding: 0;
-  overflow: hidden;
+  border: none;
 }
 
 /* Respect reduced motion preference */

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { getStorage, setStorage } from '../../../utils/persistentStorage.js';
 import useTaskManager from '../../../hooks/useTaskManager';
 import { useTaskContext } from '../../../context/TaskContext';
@@ -24,19 +24,16 @@ import {
   ScissorsIcon,
   BoldIcon,
   ItalicIcon,
-  UnderlineIcon,
   FlagIcon,
   LinkIcon,
   ArrowPathIcon,
   FolderIcon,
   ChevronDoubleDownIcon,
   ChevronRightIcon,
-  WrenchScrewdriverIcon,
   UserIcon,
   PlusIcon,
   ChartBarIcon,
   DocumentTextIcon,
-  CodeBracketSquareIcon,
   ExclamationTriangleIcon,
   Squares2X2Icon,
   PaintBrushIcon,
@@ -141,8 +138,6 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     insertTaskBelow,
     insertSummaryTask,
     deleteTask,
-    openTaskNotes,
-    addCode,
   } = useTaskManager();
 
   // Get undo/redo functions from UndoRedoContext
@@ -165,9 +160,7 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
   const { expandMilestones, getVisibleTasks, tasks, taskLinks } =
     useTaskContext();
 
-  const handleTaskDetailsClick = () => {
-    console.log('Task details clicked');
-  };
+
 
   const handleInsertTaskBelow = () => {
     insertTaskBelow(selectedTaskId);

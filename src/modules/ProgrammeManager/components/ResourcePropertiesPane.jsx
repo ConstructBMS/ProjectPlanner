@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   UserIcon,
   CurrencyDollarIcon,
@@ -17,9 +17,7 @@ import {
   getResourceCalendarSummary,
   getAvailableCalendars,
   validateResourceCalendar,
-  updateResourceCalendar,
   calculateResourceAvailability,
-  checkResourceAllocationConflicts,
   DEFAULT_RESOURCE_CALENDAR_CONFIG,
 } from '../utils/resourceCalendarUtils';
 
@@ -60,7 +58,7 @@ const ResourcePropertiesPane = ({
       const validation = validateCostRate(editingResource.costRate);
       setCostRateValidation(validation);
     }
-  }, [editingResource?.costRate]);
+  }, [editingResource]);
 
   // Validate calendar assignment when it changes
   useEffect(() => {
@@ -71,7 +69,7 @@ const ResourcePropertiesPane = ({
       );
       setCalendarValidation(validation);
     }
-  }, [editingResource?.calendarId, projectCalendars]);
+  }, [editingResource, projectCalendars]);
 
   const handleFieldChange = (field, value) => {
     if (!editingResource) return;
@@ -261,7 +259,7 @@ const ResourcePropertiesPane = ({
               </div>
               <ul className='text-xs text-red-700 space-y-1'>
                 {costRateValidation.errors.map((error, index) => (
-                  <li key={index}>• {error}</li>
+                  <li key={`cost-error-${index}`}>• {error}</li>
                 ))}
               </ul>
             </div>
@@ -277,7 +275,7 @@ const ResourcePropertiesPane = ({
               </div>
               <ul className='text-xs text-yellow-700 space-y-1'>
                 {costRateValidation.warnings.map((warning, index) => (
-                  <li key={index}>• {warning}</li>
+                  <li key={`cost-warning-${index}`}>• {warning}</li>
                 ))}
               </ul>
             </div>
@@ -349,7 +347,7 @@ const ResourcePropertiesPane = ({
               </div>
               <ul className='text-xs text-red-700 space-y-1'>
                 {calendarValidation.errors.map((error, index) => (
-                  <li key={index}>• {error}</li>
+                  <li key={`calendar-error-${index}`}>• {error}</li>
                 ))}
               </ul>
             </div>
@@ -365,7 +363,7 @@ const ResourcePropertiesPane = ({
               </div>
               <ul className='text-xs text-yellow-700 space-y-1'>
                 {calendarValidation.warnings.map((warning, index) => (
-                  <li key={index}>• {warning}</li>
+                  <li key={`calendar-warning-${index}`}>• {warning}</li>
                 ))}
               </ul>
             </div>
