@@ -1,8 +1,15 @@
 import { create } from 'zustand';
-import { getProjects, getTasks, getLinks, seedDemoTasks, updateTaskPartial } from '../data/adapter.constructbms';
+import { getProjects, getTasks, getLinks, seedDemoTasks, updateTaskPartial, updateTasksBatch } from '../data/adapter.constructbms';
 import { Project, Task, TaskLink, TaskUpdate } from '../data/types';
+import { networkManager, isOnline } from '../utils/net';
 
 interface MutationQueue {
+  taskId: string;
+  patch: Partial<TaskUpdate>;
+  timestamp: number;
+}
+
+interface OfflineQueue {
   taskId: string;
   patch: Partial<TaskUpdate>;
   timestamp: number;
@@ -21,6 +28,10 @@ interface PlannerState {
   pendingMutations: Map<string, MutationQueue>;
   mutationTimeouts: Map<string, NodeJS.Timeout>;
   
+  // Offline queue
+  offlineQueue: OfflineQueue[];
+  syncPending: boolean;
+  
   // Actions
   loadProjects: () => Promise<void>;
   selectProject: (id: string) => void;
@@ -33,6 +44,11 @@ interface PlannerState {
   mutateTask: (taskId: string, patch: Partial<TaskUpdate>) => Promise<boolean>;
   flushTaskMutations: (taskId: string) => Promise<void>;
   rollbackTask: (taskId: string) => void;
+  
+  // Offline queue management
+  addToOfflineQueue: (taskId: string, patch: Partial<TaskUpdate>) => void;
+  flushOfflineQueue: () => Promise<void>;
+  clearOfflineQueue: () => void;
 }
 
 export const usePlannerStore = create<PlannerState>((set, get) => ({
@@ -45,6 +61,8 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
   error: null,
   pendingMutations: new Map(),
   mutationTimeouts: new Map(),
+  offlineQueue: [],
+  syncPending: false,
 
   // Load all projects from ConstructBMS
   loadProjects: async () => {
@@ -140,7 +158,7 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
   setError: (error: string | null) => set({ error }),
   clearError: () => set({ error: null }),
 
-  // Task mutations with optimistic updates
+  // Task mutations with optimistic updates and batching
   mutateTask: async (taskId: string, patch: Partial<TaskUpdate>): Promise<boolean> => {
     const state = get();
     const currentProjectId = state.currentProjectId;
@@ -167,6 +185,13 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
       )
     }));
 
+    // Check if we're offline
+    if (!isOnline()) {
+      // Add to offline queue
+      get().addToOfflineQueue(taskId, patch);
+      return true;
+    }
+
     // Clear existing timeout for this task
     const existingTimeout = state.mutationTimeouts.get(taskId);
     if (existingTimeout) {
@@ -184,10 +209,10 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
     const newPendingMutations = new Map(state.pendingMutations);
     newPendingMutations.set(taskId, mutation);
     
-    // Set timeout for debounced update (250ms)
+    // Set timeout for debounced update (500ms for batching)
     const timeout = setTimeout(async () => {
       await get().flushTaskMutations(taskId);
-    }, 250);
+    }, 500);
 
     const newMutationTimeouts = new Map(state.mutationTimeouts);
     newMutationTimeouts.set(taskId, timeout);
@@ -210,6 +235,26 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
       return;
     }
 
+    // Check if we're offline
+    if (!isOnline()) {
+      // Move to offline queue
+      get().addToOfflineQueue(taskId, mutation.patch);
+      
+      // Remove from pending mutations
+      const newPendingMutations = new Map(state.pendingMutations);
+      newPendingMutations.delete(taskId);
+      
+      const newMutationTimeouts = new Map(state.mutationTimeouts);
+      newMutationTimeouts.delete(taskId);
+      
+      set({
+        pendingMutations: newPendingMutations,
+        mutationTimeouts: newMutationTimeouts,
+        syncPending: true
+      });
+      return;
+    }
+
     try {
       // Attempt to update the database
       const success = await updateTaskPartial(currentProjectId, taskId, mutation.patch);
@@ -229,8 +274,6 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
       } else {
         // Rollback on failure
         get().rollbackTask(taskId);
-        
-        // Show error toast (this will be handled by the component)
         throw new Error('Failed to save changes');
       }
     } catch (error) {
@@ -276,6 +319,69 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
     set({
       pendingMutations: newPendingMutations,
       mutationTimeouts: newMutationTimeouts
+    });
+  },
+
+  // Offline queue management
+  addToOfflineQueue: (taskId: string, patch: Partial<TaskUpdate>) => {
+    const state = get();
+    const queueEntry: OfflineQueue = {
+      taskId,
+      patch,
+      timestamp: Date.now()
+    };
+
+    set((state) => ({
+      offlineQueue: [...state.offlineQueue, queueEntry],
+      syncPending: true
+    }));
+
+    console.log('Added to offline queue:', queueEntry);
+  },
+
+  flushOfflineQueue: async () => {
+    const state = get();
+    const currentProjectId = state.currentProjectId;
+    
+    if (!currentProjectId || state.offlineQueue.length === 0 || !isOnline()) {
+      return;
+    }
+
+    try {
+      console.log('Flushing offline queue with', state.offlineQueue.length, 'items');
+      
+      // Convert queue to batch format
+      const batchPatches = state.offlineQueue.map(entry => ({
+        taskId: entry.taskId,
+        patch: entry.patch
+      }));
+
+      // Attempt batch update
+      const success = await updateTasksBatch(currentProjectId, batchPatches);
+      
+      if (success) {
+        // Clear the queue on success
+        set({
+          offlineQueue: [],
+          syncPending: false
+        });
+        console.log('Offline queue flushed successfully');
+      } else {
+        console.error('Failed to flush offline queue');
+        // Keep the queue for retry
+        set({ syncPending: true });
+      }
+    } catch (error) {
+      console.error('Error flushing offline queue:', error);
+      // Keep the queue for retry
+      set({ syncPending: true });
+    }
+  },
+
+  clearOfflineQueue: () => {
+    set({
+      offlineQueue: [],
+      syncPending: false
     });
   },
 

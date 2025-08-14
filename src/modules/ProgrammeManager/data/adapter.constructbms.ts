@@ -473,6 +473,36 @@ export const updateTaskPartial = async (projectId: string, taskId: string, patch
   }
 };
 
+// New function for batch task updates
+export const updateTasksBatch = async (projectId: string, patches: Array<{ taskId: string; patch: Partial<TaskUpdate> }>): Promise<boolean> => {
+  try {
+    if (patches.length === 0) {
+      return true;
+    }
+
+    // For now, we'll use individual updates since Supabase doesn't support batch updates
+    // In a production environment, you might want to use a transaction or stored procedure
+    const results = await Promise.allSettled(
+      patches.map(({ taskId, patch }) => updateTaskPartial(projectId, taskId, patch))
+    );
+
+    // Check if all updates succeeded
+    const allSucceeded = results.every(result => 
+      result.status === 'fulfilled' && result.value === true
+    );
+
+    if (!allSucceeded) {
+      console.error('Some batch updates failed:', results);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in batch update:', error);
+    return false;
+  }
+};
+
 export const seedDemoTasks = async (projectId: string): Promise<boolean> => {
   // Only seed if we're in a development environment and have write access
   if (import.meta.env.DEV && import.meta.env.VITE_ALLOW_DEMO_SEED === 'true') {

@@ -11,6 +11,7 @@ import { GanttProvider } from './context/GanttContext';
 import { SearchProvider } from './context/SearchContext';
 import { UserProvider } from './context/UserContext';
 import { ToastContainer } from './components/common/Toast';
+import { useNetworkStatus } from './utils/net';
 import RibbonContainer from '../../components/RibbonTabs/RibbonContainer';
 import SidebarTree from './components/SidebarTree';
 import TaskGrid from './components/TaskGrid/TaskGrid';
@@ -40,7 +41,10 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
   const [isRibbonMinimised, setIsRibbonMinimised] = useState(false);
 
   // Planner store
-  const { loadProjects } = usePlannerStore();
+  const { loadProjects, flushOfflineQueue, syncPending } = usePlannerStore();
+  
+  // Network status
+  const networkStatus = useNetworkStatus();
 
   const handleExpandAll = () => {
     sidebarRef.current?.expandAll?.();
@@ -72,6 +76,16 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
   useEffect(() => {
     loadProjects();
   }, [loadProjects]);
+
+  // Auto-flush offline queue when network comes back online
+  useEffect(() => {
+    if (networkStatus.isOnline && syncPending) {
+      console.log('Network back online, flushing offline queue...');
+      flushOfflineQueue().catch(error => {
+        console.error('Failed to flush offline queue:', error);
+      });
+    }
+  }, [networkStatus.isOnline, syncPending, flushOfflineQueue]);
 
   // Handle main pane ratios change
   const handleMainPaneRatiosChange = (ratios) => {
