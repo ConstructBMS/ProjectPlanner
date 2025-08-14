@@ -135,7 +135,7 @@ const GanttChart = () => {
   
   const { applyFilters } = useFilterContext();
 
-  const { currentProjectId, tasks, selectedTaskId } = useTaskContext();
+  const { currentProjectId, tasks } = useTaskContext();
 
   // Calculate scaled width based on time unit
   const getScaledWidth = useMemo(() => {

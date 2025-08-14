@@ -17,6 +17,29 @@ import { generateDemoTasks, generateDemoLinks, markProjectSeeded } from './demo'
 // Realtime subscription management
 let currentSubscription = null;
 
+// Enhanced logging with consistent format
+const logAdapterError = (tableName: string, operation: string, error: any) => {
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  console.warn(`[PP][adapter] ${tableName}.${operation}: ${errorMessage}`);
+};
+
+// Safe Supabase query wrapper
+const safeSupabaseQuery = async (tableName: string, operation: string, queryFn: () => Promise<any>) => {
+  try {
+    const result = await queryFn();
+    
+    if (result.error) {
+      logAdapterError(tableName, operation, result.error);
+      return { data: [], error: result.error };
+    }
+    
+    return { data: result.data || [], error: null };
+  } catch (error) {
+    logAdapterError(tableName, operation, error);
+    return { data: [], error };
+  }
+};
+
 export const getRealtimeChannel = (projectId: string) => {
   // Unsubscribe from any existing subscription
   if (currentSubscription) {
@@ -346,14 +369,7 @@ const generateDemoTaskLinks = (projectId: string): DemoTaskLink[] => {
 };
 
 // Flag to prevent multiple fallback warnings
-let hasLoggedFallback = false;
 
-const logFallback = (tableName: string, error?: string) => {
-  if (!hasLoggedFallback) {
-    console.warn(`ConstructBMS adapter: Using demo data for ${tableName}${error ? ` (${error})` : ''}`);
-    hasLoggedFallback = true;
-  }
-};
 
 // Transform raw DB data to our interface using safe column access
 const transformProject = (rawData: any): Project => ({
@@ -408,180 +424,117 @@ const transformTaskLink = (rawData: any): TaskLink => ({
 });
 
 // Main adapter functions
-export const getProjects = async (): Promise<ProjectsResult> => {
-  try {
-    const { data, error } = await supabase
+export const getProjects = async (): Promise<Project[]> => {
+  const { data, error } = await safeSupabaseQuery(
+    tableNames.projects,
+    'select',
+    () => supabase
       .from(tableNames.projects)
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+  );
 
-    if (error) {
-      logFallback(tableNames.projects, error.message);
-      return {
-        data: generateDemoProjects(),
-        isDemo: true,
-        error: error.message
-      };
-    }
-
-    if (!data || data.length === 0) {
-      logFallback(tableNames.projects, 'No projects found');
-      return {
-        data: generateDemoProjects(),
-        isDemo: true
-      };
-    }
-
-    return {
-      data: data.map(transformProject),
-      isDemo: false
-    };
-  } catch (error) {
-    logFallback(tableNames.projects, error instanceof Error ? error.message : 'Unknown error');
-    return {
-      data: generateDemoProjects(),
-      isDemo: true,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    };
+  if (error || !data || data.length === 0) {
+    console.warn(`[PP][adapter] ${tableNames.projects}: No data available, using demo projects`);
+    return generateDemoProjects();
   }
+
+  return data.map(transformProject);
 };
 
-export const getTasks = async (projectId: string): Promise<TasksResult> => {
-  try {
-    const { data, error } = await supabase
+export const getTasks = async (projectId: string): Promise<Task[]> => {
+  const { data, error } = await safeSupabaseQuery(
+    tableNames.tasks,
+    'select',
+    () => supabase
       .from(tableNames.tasks)
       .select('*')
       .eq(columns.tasks.project, projectId)
-      .order(columns.tasks.wbs || 'id', { ascending: true });
+      .order(columns.tasks.wbs || 'id', { ascending: true })
+  );
 
-    if (error) {
-      logFallback(tableNames.tasks, error.message);
-      return {
-        data: generateDemoTasks(projectId),
-        isDemo: true,
-        error: error.message
-      };
-    }
-
-    if (!data || data.length === 0) {
-      logFallback(tableNames.tasks, 'No tasks found');
-      return {
-        data: generateDemoTasks(projectId),
-        isDemo: true
-      };
-    }
-
-    return {
-      data: data.map(transformTask),
-      isDemo: false
-    };
-  } catch (error) {
-    logFallback(tableNames.tasks, error instanceof Error ? error.message : 'Unknown error');
-    return {
-      data: generateDemoTasks(projectId),
-      isDemo: true,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    };
+  if (error || !data || data.length === 0) {
+    console.warn(`[PP][adapter] ${tableNames.tasks}: No data available for project ${projectId}, using demo tasks`);
+    return generateDemoTasks(projectId);
   }
+
+  return data.map(transformTask);
 };
 
-export const getLinks = async (projectId: string): Promise<TaskLinksResult> => {
-  try {
-    const { data, error } = await supabase
+export const getLinks = async (projectId: string): Promise<TaskLink[]> => {
+  const { data, error } = await safeSupabaseQuery(
+    'project_dependencies',
+    'select',
+    () => supabase
       .from('project_dependencies')
       .select('*')
-      .eq('project_id', projectId);
+      .eq('project_id', projectId)
+  );
 
-    if (error) {
-      logFallback('project_dependencies', error.message);
-      return {
-        data: generateDemoTaskLinks(projectId),
-        isDemo: true,
-        error: error.message
-      };
-    }
-
-    if (!data || data.length === 0) {
-      logFallback('project_dependencies', 'No task links found');
-      return {
-        data: generateDemoTaskLinks(projectId),
-        isDemo: true
-      };
-    }
-
-    // Transform project_dependencies to TaskLink format
-    const transformedData: TaskLink[] = data.map(dep => ({
-      id: dep.id,
-      project_id: dep.project_id,
-      pred_id: dep.predecessor_task_id,
-      succ_id: dep.successor_task_id,
-      type: dep.dependency_type,
-      lag_days: dep.lag_days,
-      created_at: dep.created_at
-    }));
-
-    return {
-      data: transformedData,
-      isDemo: false
-    };
-  } catch (error) {
-    logFallback('project_dependencies', error instanceof Error ? error.message : 'Unknown error');
-    return {
-      data: generateDemoTaskLinks(projectId),
-      isDemo: true,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    };
+  if (error || !data || data.length === 0) {
+    console.warn(`[PP][adapter] project_dependencies: No data available for project ${projectId}, using demo links`);
+    return generateDemoLinks(projectId, []);
   }
+
+  // Transform project_dependencies to TaskLink format
+  return data.map(dep => ({
+    id: dep.id,
+    project_id: dep.project_id,
+    pred_id: dep.predecessor_task_id,
+    succ_id: dep.successor_task_id,
+    type: dep.dependency_type,
+    lag_days: dep.lag_days,
+    created_at: dep.created_at
+  }));
 };
 
 // New function for partial task updates
 export const updateTaskPartial = async (projectId: string, taskId: string, patch: Partial<TaskUpdate>): Promise<boolean> => {
-  try {
-    // Remove id from patch as it's not updatable
-    const { id, ...updateData } = patch;
-    
-    const { error } = await supabase
+  // Remove id from patch as it's not updatable
+  const { id, ...updateData } = patch;
+  
+  const { error } = await safeSupabaseQuery(
+    tableNames.tasks,
+    'update',
+    () => supabase
       .from(tableNames.tasks)
       .update(updateData)
       .eq(columns.tasks.id, taskId)
-      .eq(columns.tasks.project, projectId);
+      .eq(columns.tasks.project, projectId)
+  );
 
-    if (error) {
-      console.error('Failed to update task:', error.message);
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error('Error updating task:', error);
+  if (error) {
+    console.warn(`[PP][adapter] ${tableNames.tasks}.update: Failed to update task ${taskId}: ${error.message || error}`);
     return false;
   }
+
+  return true;
 };
 
 // New function for batch task updates
 export const updateTasksBatch = async (projectId: string, patches: Array<{taskId: string, patch: Partial<TaskUpdate>}>): Promise<boolean> => {
-  try {
-    // For now, implement as individual updates
-    // TODO: Implement as actual batch update when Supabase supports it
-    const results = await Promise.allSettled(
-      patches.map(({ taskId, patch }) => updateTaskPartial(projectId, taskId, patch))
-    );
-    
-    const successCount = results.filter(result => result.status === 'fulfilled' && result.value).length;
-    const totalCount = patches.length;
-    
-    console.log(`Batch update: ${successCount}/${totalCount} successful`);
-    return successCount === totalCount;
-  } catch (error) {
-    console.error('Error in batch update:', error);
-    return false;
+  // For now, implement as individual updates
+  // TODO: Implement as actual batch update when Supabase supports it
+  const results = await Promise.allSettled(
+    patches.map(({ taskId, patch }) => updateTaskPartial(projectId, taskId, patch))
+  );
+  
+  const successCount = results.filter(result => result.status === 'fulfilled' && result.value).length;
+  const totalCount = patches.length;
+  
+  if (successCount !== totalCount) {
+    console.warn(`[PP][adapter] ${tableNames.tasks}.batchUpdate: ${successCount}/${totalCount} successful`);
   }
+  
+  return successCount === totalCount;
 };
 
 // Link management functions
 export const createLink = async (projectId: string, predecessorId: string, successorId: string, type: string, lagDays: number = 0): Promise<boolean> => {
-  try {
-    const { error } = await supabase
+  const { error } = await safeSupabaseQuery(
+    'project_dependencies',
+    'insert',
+    () => supabase
       .from('project_dependencies')
       .insert({
         project_id: projectId,
@@ -589,80 +542,74 @@ export const createLink = async (projectId: string, predecessorId: string, succe
         successor_task_id: successorId,
         dependency_type: type,
         lag_days: lagDays
-      });
+      })
+  );
 
-    if (error) {
-      console.error('Error creating link:', error);
-      return false;
-    }
-
-    console.log('Link created successfully:', { predecessorId, successorId, type, lagDays });
-    return true;
-  } catch (error) {
-    console.error('Error creating link:', error);
+  if (error) {
+    console.warn(`[PP][adapter] project_dependencies.insert: Failed to create link ${predecessorId}→${successorId}: ${error.message || error}`);
     return false;
   }
+
+  console.log('Link created successfully:', { predecessorId, successorId, type, lagDays });
+  return true;
 };
 
 export const updateLink = async (projectId: string, linkId: string, type: string, lagDays: number): Promise<boolean> => {
-  try {
-    const { error } = await supabase
+  const { error } = await safeSupabaseQuery(
+    'project_dependencies',
+    'update',
+    () => supabase
       .from('project_dependencies')
-      .update({
-        dependency_type: type,
-        lag_days: lagDays
-      })
+      .update({ dependency_type: type, lag_days: lagDays })
       .eq('id', linkId)
-      .eq('project_id', projectId);
+      .eq('project_id', projectId)
+  );
 
-    if (error) {
-      console.error('Error updating link:', error);
-      return false;
-    }
-
-    console.log('Link updated successfully:', { linkId, type, lagDays });
-    return true;
-  } catch (error) {
-    console.error('Error updating link:', error);
+  if (error) {
+    console.warn(`[PP][adapter] project_dependencies.update: Failed to update link ${linkId}: ${error.message || error}`);
     return false;
   }
+
+  console.log('Link updated successfully:', { linkId, type, lagDays });
+  return true;
 };
 
 export const deleteLink = async (projectId: string, linkId: string): Promise<boolean> => {
-  try {
-    const { error } = await supabase
+  const { error } = await safeSupabaseQuery(
+    'project_dependencies',
+    'delete',
+    () => supabase
       .from('project_dependencies')
       .delete()
       .eq('id', linkId)
-      .eq('project_id', projectId);
+      .eq('project_id', projectId)
+  );
 
-    if (error) {
-      console.error('Error deleting link:', error);
-      return false;
-    }
-
-    console.log('Link deleted successfully:', { linkId });
-    return true;
-  } catch (error) {
-    console.error('Error deleting link:', error);
+  if (error) {
+    console.warn(`[PP][adapter] project_dependencies.delete: Failed to delete link ${linkId}: ${error.message || error}`);
     return false;
   }
+
+  console.log('Link deleted successfully:', { linkId });
+  return true;
 };
 
 /**
  * Seed demo tasks and links for a project
  */
 export const seedDemoTasks = async (projectId: string): Promise<boolean> => {
-  try {
-    console.log('Seeding demo tasks for project:', projectId);
-    
-    // Generate demo tasks and links
-    const demoTasks = generateDemoTasks(projectId);
-    const taskIds = demoTasks.map(task => task.id);
-    const demoLinks = generateDemoLinks(projectId, taskIds);
-    
-    // Insert demo tasks
-    const { error: tasksError } = await supabase
+  console.log('Seeding demo tasks for project:', projectId);
+  
+  // Generate demo tasks and links
+  const demoTasks = generateDemoTasks(projectId);
+  const taskIds = demoTasks.map(task => task.id);
+  const demoLinks = generateDemoLinks(projectId, taskIds);
+  
+  // Insert demo tasks
+  const { error: tasksError } = await safeSupabaseQuery(
+    tableNames.tasks,
+    'insert',
+    () => supabase
       .from(tableNames.tasks)
       .insert(demoTasks.map(task => ({
         id: task.id,
@@ -675,15 +622,19 @@ export const seedDemoTasks = async (projectId: string): Promise<boolean> => {
         status: task.status,
         wbs: task.wbs,
         resource_id: task.resource_id
-      })));
+      })))
+  );
 
-    if (tasksError) {
-      console.error('Error seeding demo tasks:', tasksError);
-      return false;
-    }
+  if (tasksError) {
+    console.warn(`[PP][adapter] ${tableNames.tasks}.insert: Failed to seed demo tasks: ${tasksError.message || tasksError}`);
+    return false;
+  }
 
-    // Insert demo links
-    const { error: linksError } = await supabase
+  // Insert demo links
+  const { error: linksError } = await safeSupabaseQuery(
+    'project_dependencies',
+    'insert',
+    () => supabase
       .from('project_dependencies')
       .insert(demoLinks.map(link => ({
         id: link.id,
@@ -692,25 +643,22 @@ export const seedDemoTasks = async (projectId: string): Promise<boolean> => {
         successor_task_id: link.succ_id,
         dependency_type: link.type,
         lag_days: link.lag_days
-      })));
+      })))
+  );
 
-    if (linksError) {
-      console.error('Error seeding demo links:', linksError);
-      return false;
-    }
-
-    // Mark project as seeded
-    markProjectSeeded(projectId);
-    
-    console.log('Demo data seeded successfully:', {
-      projectId,
-      tasksCount: demoTasks.length,
-      linksCount: demoLinks.length
-    });
-    
-    return true;
-  } catch (error) {
-    console.error('Error seeding demo data:', error);
+  if (linksError) {
+    console.warn(`[PP][adapter] project_dependencies.insert: Failed to seed demo links: ${linksError.message || linksError}`);
     return false;
   }
+
+  // Mark project as seeded
+  markProjectSeeded(projectId);
+  
+  console.log('Demo data seeded successfully:', {
+    projectId,
+    tasksCount: demoTasks.length,
+    linksCount: demoLinks.length
+  });
+  
+  return true;
 };
