@@ -4,6 +4,7 @@ import RibbonButton from '../shared/RibbonButton';
 import RibbonGroup from '../shared/RibbonGroup';
 import { useTaskContext } from '../../../context/TaskContext';
 import { useGanttContext } from '../../../context/GanttContext';
+import { useSelectionContext } from '../../../context/SelectionContext';
 import {
   FolderIcon,
   DocumentIcon,
@@ -20,12 +21,15 @@ import {
   ClockIcon,
   ArrowRightIcon,
   CalculatorIcon,
+  LinkIcon,
+  ChevronDownIcon,
 } from '@heroicons/react/24/outline';
 import BaselineManagerDialog from '../../BaselineManagerDialog';
 import GroupDialogLauncher from '../GroupDialogLauncher';
 import ProjectInfoDialog from '../../Project/ProjectInfoDialog';
 import WorkingTimeDialog from '../../Project/WorkingTimeDialog';
 import MiniModal from '../ui/MiniModal';
+import LinkTypeMenu from '../ui/LinkTypeMenu';
 
 const ProjectTab = () => {
   const { setBaseline1, clearBaseline1, tasks } = useTaskContext();
@@ -37,6 +41,7 @@ const ProjectTab = () => {
     clearSchedulingErrors,
     getSchedulingStats,
   } = useGanttContext();
+  const { selectedTasks } = useSelectionContext();
 
   // Baseline Manager state
   const [baselineManagerOpen, setBaselineManagerOpen] = useState(false);
@@ -53,6 +58,13 @@ const ProjectTab = () => {
   // Move Project Dialog state
   const [moveProjectDialogOpen, setMoveProjectDialogOpen] = useState(false);
   const [moveProjectDays, setMoveProjectDays] = useState(0);
+
+  // Dependencies state
+  const [linkTypeMenuOpen, setLinkTypeMenuOpen] = useState(false);
+  const [currentLinkType, setCurrentLinkType] = useState('FS');
+  const [linkTypeMenuPosition, setLinkTypeMenuPosition] = useState({ x: 0, y: 0 });
+  const [lagLeadDialogOpen, setLagLeadDialogOpen] = useState(false);
+  const [lagLeadDays, setLagLeadDays] = useState(0);
 
   // Load baselines from persistent storage on mount
   useEffect(() => {
@@ -96,6 +108,9 @@ const ProjectTab = () => {
 
   // Check if project has tasks
   const hasTasks = tasks && tasks.length > 0;
+
+  // Check if enough tasks are selected for dependencies
+  const hasEnoughSelectedTasks = selectedTasks && selectedTasks.length >= 2;
 
   // Baseline Manager handlers
   const handleSaveBaseline = async (baseline) => {
@@ -186,6 +201,72 @@ const ProjectTab = () => {
     console.log('Project recalculate event emitted');
   };
 
+  // Dependencies handlers
+  const handleLinkTasks = () => {
+    window.dispatchEvent(new window.CustomEvent('TASKS_LINK_SELECTED', {
+      detail: { 
+        projectId: currentProjectId,
+        selectedTasks,
+        linkType: currentLinkType,
+        lag: 0
+      }
+    }));
+    console.log('Tasks link selected event emitted');
+  };
+
+  const handleOpenLinkTypeMenu = (event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    setLinkTypeMenuPosition({
+      x: rect.left,
+      y: rect.bottom + 4
+    });
+    setLinkTypeMenuOpen(true);
+  };
+
+  const handleCloseLinkTypeMenu = () => {
+    setLinkTypeMenuOpen(false);
+  };
+
+  const handleSelectLinkType = (linkType) => {
+    setCurrentLinkType(linkType);
+    window.dispatchEvent(new window.CustomEvent('LINK_TYPE_SET', {
+      detail: { 
+        projectId: currentProjectId,
+        selectedTasks,
+        linkType
+      }
+    }));
+    console.log('Link type set event emitted:', linkType);
+  };
+
+  const handleOpenLagLead = () => {
+    setLagLeadDialogOpen(true);
+  };
+
+  const handleCloseLagLead = () => {
+    setLagLeadDialogOpen(false);
+    setLagLeadDays(0);
+  };
+
+  const handleSetLagLead = () => {
+    const days = parseInt(lagLeadDays, 10);
+    if (isNaN(days)) {
+      console.error('Invalid lag/lead days value:', lagLeadDays);
+      return;
+    }
+    
+    window.dispatchEvent(new window.CustomEvent('LINK_LAG_SET', {
+      detail: { 
+        projectId: currentProjectId,
+        selectedTasks,
+        lag: days
+      }
+    }));
+    console.log('Link lag set event emitted:', days);
+    setLagLeadDialogOpen(false);
+    setLagLeadDays(0);
+  };
+
   return (
     <>
       <div className='flex flex-nowrap gap-0 p-2 bg-white w-full min-w-0'>
@@ -235,6 +316,35 @@ const ProjectTab = () => {
             onClick={handleRecalculate}
             tooltip='Recalculate project schedule'
             disabled={!hasTasks}
+          />
+        </RibbonGroup>
+
+        {/* Dependencies Group */}
+        <RibbonGroup title='Dependencies'>
+          <RibbonButton
+            icon={<LinkIcon className='w-4 h-4 text-gray-700' />}
+            label='Link'
+            onClick={handleLinkTasks}
+            tooltip='Link selected tasks (default: FS 0d)'
+            disabled={!hasEnoughSelectedTasks}
+          />
+          <div className="relative">
+            <button
+              onClick={handleOpenLinkTypeMenu}
+              disabled={!hasEnoughSelectedTasks}
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Select dependency type"
+            >
+              <span>{currentLinkType}</span>
+              <ChevronDownIcon className="w-4 h-4" />
+            </button>
+          </div>
+          <RibbonButton
+            icon={<ClockIcon className='w-4 h-4 text-gray-700' />}
+            label='Lag/Lead'
+            onClick={handleOpenLagLead}
+            tooltip='Set lag/lead time for selected tasks'
+            disabled={!hasEnoughSelectedTasks}
           />
         </RibbonGroup>
 
@@ -379,6 +489,51 @@ const ProjectTab = () => {
             </div>
           </div>
         </MiniModal>
+
+        {/* Lag/Lead Dialog */}
+        <MiniModal
+          isOpen={lagLeadDialogOpen}
+          onClose={handleCloseLagLead}
+          onSave={handleSetLagLead}
+          title="Set Lag/Lead"
+          saveLabel="Set Lag/Lead"
+          maxWidth="sm"
+        >
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Enter the number of days for lag (positive) or lead (negative) time between tasks.
+            </p>
+            <div>
+              <label htmlFor="lagLeadDays" className="block text-sm font-medium text-gray-700 mb-1">
+                Days
+              </label>
+              <input
+                type="number"
+                id="lagLeadDays"
+                value={lagLeadDays}
+                onChange={(e) => setLagLeadDays(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="0"
+                min="-365"
+                max="365"
+                step="1"
+                autoFocus
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Positive = lag (delay), Negative = lead (overlap)
+              </p>
+            </div>
+          </div>
+        </MiniModal>
+
+        {/* Link Type Menu */}
+        <LinkTypeMenu
+          isOpen={linkTypeMenuOpen}
+          onClose={handleCloseLinkTypeMenu}
+          onSelect={handleSelectLinkType}
+          currentType={currentLinkType}
+          position={linkTypeMenuPosition}
+        />
     </>
   );
 };
