@@ -791,20 +791,46 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
     try {
       set({ hydrationState: 'hydrating' });
       
-      // Load tasks and links
-      const [tasks, links] = await Promise.all([
-        getTasks(projectId),
-        getLinks(projectId)
-      ]);
-      
-      // Check if we need to seed demo data
+      // Check if we've already seeded this project to prevent loops
       const seededFlag = `pm.seeded.${projectId}`;
       const isAlreadySeeded = localStorage.getItem(seededFlag);
       
-      if ((tasks.length === 0 || links.length === 0) && !isAlreadySeeded) {
-        console.log('No tasks/links found and not previously seeded, seeding demo data...');
+      let tasks: Task[] = [];
+      let links: TaskLink[] = [];
+      let needsSeeding = false;
+      
+      try {
+        // Load tasks and links
+        const [tasksResult, linksResult] = await Promise.all([
+          getTasks(projectId),
+          getLinks(projectId)
+        ]);
         
+        tasks = tasksResult;
+        links = linksResult;
+        
+        // Check if we need to seed demo data
+        needsSeeding = (tasks.length === 0 || links.length === 0) && !isAlreadySeeded;
+        
+        if (needsSeeding) {
+          console.log('No tasks/links found and not previously seeded, seeding demo data...');
+        } else {
+          console.log('Project hydrated with existing data:', { 
+            tasksCount: tasks.length, 
+            linksCount: links.length,
+            wasSeeded: !!isAlreadySeeded
+          });
+        }
+      } catch (dbError) {
+        console.warn('Database query failed, will attempt demo seeding:', dbError);
+        needsSeeding = !isAlreadySeeded;
+      }
+      
+      // Seed demo data if needed
+      if (needsSeeding) {
         try {
+          console.log('Seeding demo data for project:', projectId);
+          
           // Seed demo data
           const seeded = await seedDemoTasks(projectId);
           if (!seeded) {
@@ -820,10 +846,12 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
             getLinks(projectId)
           ]);
           
-          set({ tasks: seededTasks, links: seededLinks });
+          tasks = seededTasks;
+          links = seededLinks;
+          
           console.log('Demo data seeded and re-hydrated successfully:', { 
-            tasksCount: seededTasks.length, 
-            linksCount: seededLinks.length 
+            tasksCount: tasks.length, 
+            linksCount: links.length 
           });
         } catch (seedError) {
           console.error('Failed to seed demo data:', seedError);
@@ -833,15 +861,20 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
           });
           throw seedError;
         }
-      } else {
-        // Use existing data (either from DB or previously seeded)
-        set({ tasks, links });
-        console.log('Project hydrated with existing data:', { 
-          tasksCount: tasks.length, 
-          linksCount: links.length,
-          wasSeeded: !!isAlreadySeeded
-        });
       }
+      
+      // Ensure we always have some data
+      if (tasks.length === 0 && links.length === 0) {
+        console.warn('No data available after all attempts, setting error state');
+        set({ 
+          hydrationState: 'error',
+          hydrationError: 'No data available from database or demo seeding'
+        });
+        throw new Error('No data available from database or demo seeding');
+      }
+      
+      // Set the data
+      set({ tasks, links });
       
       // Subscribe to realtime updates
       get().subscribeProject(projectId);
