@@ -47,10 +47,10 @@
   border: 1px solid var(--rbn-border);
   border-radius: 8px;
   padding: 10px;
-  min-width: 200px;
-  display: flex;
   gap: 8px;
+  display: flex;
   align-items: center;
+  min-width: 200px;
 }
 
 /* Button styling */
@@ -197,7 +197,9 @@
   color: var(--rbn-text-2);
   border-bottom: 2px solid transparent;
   background: transparent;
-  border: none;
+  border-left: none;
+  border-right: none;
+  border-top: none;
   cursor: pointer;
   transition: all 0.15s ease;
   font-size: 14px;
