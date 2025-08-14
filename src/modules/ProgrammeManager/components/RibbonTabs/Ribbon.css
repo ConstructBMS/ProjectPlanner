@@ -92,7 +92,8 @@
 
 /* Tab styling */
 .pm-ribbon .project-ribbon-tab {
-  font: var(--rbn-tab-weight) var(--rbn-tab-size)/1 var(--rbn-font-sans);
+  font-size: 14px;
+  font-weight: 600;
   color: var(--rbn-text-2);
   height: 40px;
   background: transparent;
@@ -106,11 +107,12 @@
   align-items: center;
   justify-content: center;
   margin: 0;
+  font-family: var(--rbn-font-sans);
 }
 
 .pm-ribbon .project-ribbon-tab:hover {
   background: var(--rbn-hover);
-  color: color-mix(in oklab, var(--rbn-text-2), black 10%);
+  color: var(--rbn-text);
 }
 
 .pm-ribbon .project-ribbon-tab.active {
@@ -195,8 +197,9 @@
 /* Group titles */
 .pm-ribbon .project-group-title {
   text-transform: uppercase;
-  font: var(--rbn-group-title-weight) var(--rbn-group-title-size)/1 var(--rbn-font-sans);
-  letter-spacing: var(--rbn-group-title-tracking);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   color: var(--rbn-text-muted);
   margin-top: 2px;
   margin-bottom: var(--rbn-gap);
@@ -204,6 +207,7 @@
   border-bottom: 1px solid var(--rbn-border);
   text-align: center;
   width: 100%;
+  font-family: var(--rbn-font-sans);
 }
 
 /* Button styling - Base */
@@ -211,7 +215,8 @@
   background: transparent;
   border: 1px solid transparent;
   color: var(--rbn-text);
-  font: var(--rbn-button-label-weight) var(--rbn-button-label-size)/1.1 var(--rbn-font-sans);
+  font-size: 12px;
+  font-weight: 500;
   transition: all 0.15s ease;
   display: flex;
   align-items: center;
@@ -219,6 +224,7 @@
   border-radius: 1px;
   margin: 0.5px;
   position: relative;
+  font-family: var(--rbn-font-sans);
 }
 
 /* Large buttons (icon above label) */
@@ -243,12 +249,14 @@
 
 .pm-ribbon .project-button.large .text-\[6px\],
 .pm-ribbon .project-button[data-size="large"] .text-\[6px\] {
-  font: var(--rbn-button-label-weight) var(--rbn-button-label-size)/1.1 var(--rbn-font-sans);
+  font-size: 12px;
+  font-weight: 500;
   color: var(--rbn-text);
   text-align: center;
   text-transform: none;
   letter-spacing: normal;
   line-height: 1.2;
+  font-family: var(--rbn-font-sans);
 }
 
 /* Standard buttons (icon and label side by side) */
@@ -272,13 +280,15 @@
 
 .pm-ribbon .project-button.standard .text-\[6px\],
 .pm-ribbon .project-button[data-size="standard"] .text-\[6px\] {
-  font: var(--rbn-button-label-weight) var(--rbn-button-label-size)/1.1 var(--rbn-font-sans);
+  font-size: 12px;
+  font-weight: 500;
   color: var(--rbn-text);
   text-align: left;
   text-transform: none;
   letter-spacing: normal;
   line-height: 1.2;
   white-space: nowrap;
+  font-family: var(--rbn-font-sans);
 }
 
 /* Split buttons */
@@ -363,6 +373,7 @@
   background: transparent;
   border-color: transparent;
   color: var(--rbn-text-muted);
+  opacity: 0.45;
 }
 
 /* Active state for toggle buttons */
@@ -428,21 +439,27 @@
 }
 
 .pm-ribbon .project-button:hover .text-\[12px\] {
-  color: var(--rbn-accent);
+  color: var(--rbn-text);
 }
 
 /* Icon clarity improvements */
 .pm-ribbon .project-button svg {
   vector-effect: non-scaling-stroke;
   shape-rendering: geometricPrecision;
-  width: var(--rbn-btn-large-icon);
-  height: var(--rbn-btn-large-icon);
+  width: 28px;
+  height: 28px;
+  fill: var(--rbn-icon);
 }
 
 .pm-ribbon .project-button.standard svg,
 .pm-ribbon .project-button[data-size="standard"] svg {
-  width: var(--rbn-btn-standard-icon);
-  height: var(--rbn-btn-standard-icon);
+  width: 20px;
+  height: 20px;
+  fill: var(--rbn-icon);
+}
+
+.pm-ribbon .project-button:hover svg {
+  fill: var(--rbn-text);
 }
 
 /* Ensure contrast for accessibility */
@@ -468,6 +485,35 @@
 
 .pm-ribbon .text-gray-400 {
   color: var(--rbn-text-muted) !important;
+}
+
+/* Enforce contrast for elements on elevated backgrounds */
+.pm-ribbon .project-group * {
+  color: var(--rbn-text);
+}
+
+.pm-ribbon .project-group .project-group-title {
+  color: var(--rbn-text-muted);
+}
+
+/* Ensure disabled state only applies to individual buttons */
+.pm-ribbon .project-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  color: var(--rbn-text-muted);
+}
+
+.pm-ribbon .project-button:disabled svg {
+  fill: var(--rbn-text-muted);
+  opacity: 0.45;
+}
+
+/* Remove any parent opacity/grayscale that might affect the whole ribbon */
+.pm-ribbon-wrap,
+.pm-ribbon__tabs,
+.pm-ribbon__groups {
+  opacity: 1 !important;
+  filter: none !important;
 }
 
 /* Consistent hit areas and touch targets */
