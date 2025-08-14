@@ -91,15 +91,91 @@
 }
 
 .rbn-btn[disabled],
-.rbn-btn[aria-disabled="true"] {
+.rbn-btn.rbn-btn-disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
 
 .rbn-btn[disabled]:hover,
-.rbn-btn[aria-disabled="true"]:hover {
+.rbn-btn.rbn-btn-disabled:hover {
   background: transparent;
   border-color: transparent;
+}
+
+.rbn-btn.rbn-btn-active {
+  background: var(--rbn-accent);
+  border-color: var(--rbn-accent);
+  color: white;
+}
+
+.rbn-btn.rbn-btn-active:hover {
+  background: color-mix(in oklab, var(--rbn-accent), black 10%);
+  border-color: color-mix(in oklab, var(--rbn-accent), black 10%);
+}
+
+/* Button size variants */
+.rbn-btn-lg {
+  flex-direction: column;
+  min-width: 88px;
+  min-height: 82px;
+  padding: 12px 10px;
+  justify-content: flex-start;
+}
+
+.rbn-btn-lg .rbn-icon {
+  margin-bottom: 4px;
+}
+
+.rbn-btn-lg .rbn-label {
+  text-align: center;
+  width: 100%;
+}
+
+.rbn-btn-md {
+  flex-direction: row;
+  min-height: 36px;
+  padding: 8px 10px;
+  gap: 6px;
+}
+
+.rbn-btn-md .rbn-icon {
+  flex-shrink: 0;
+}
+
+.rbn-btn-md .rbn-label {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+/* Icon styling */
+.rbn-icon {
+  flex-shrink: 0;
+  color: var(--rbn-icon);
+  transition: color 0.15s ease;
+}
+
+.rbn-btn:hover .rbn-icon {
+  color: var(--rbn-text);
+}
+
+.rbn-btn.rbn-btn-active .rbn-icon {
+  color: white;
+}
+
+/* Label styling */
+.rbn-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--rbn-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.15s ease;
+}
+
+.rbn-btn.rbn-btn-active .rbn-label {
+  color: white;
 }
 
 /* Icon sizing */
@@ -113,16 +189,6 @@
   width: 20px;
   height: 20px;
   flex-shrink: 0;
-}
-
-/* Label styling */
-.rbn-label {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--rbn-text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* Tab styling */

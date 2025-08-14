@@ -5,7 +5,7 @@ import useTaskManager from '../../../hooks/useTaskManager';
 import { useTaskContext } from '../../../context/TaskContext';
 import { useViewContext } from '../../../context/ViewContext';
 import { useUndoRedoContext } from '../../../context/UndoRedoContext';
-import RibbonButton from '../shared/RibbonButton';
+import RibbonButton from '../ui/RibbonButton';
 import RibbonGroup from '../shared/RibbonGroup';
 import RibbonDropdown from '../shared/RibbonDropdown';
 import RibbonMenu from '../RibbonMenu';
@@ -1200,99 +1200,91 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
   return (
     <div className='flex flex-nowrap gap-0 p-0.5 w-full min-w-0'>
       {/* Clipboard Group */}
-      <RibbonGroup title='Clipboard'>
+      <div className="rbn-group">
         <RibbonButton
-          iconName="paste"
-          iconSize="md"
+          icon="paste"
+          size="md"
           label='Paste'
           onClick={() => console.log('Paste')}
-          tooltip='Paste (Ctrl+V)'
+          title='Paste (Ctrl+V)'
         />
         <RibbonButton
-          iconName="cut"
-          iconSize="md"
+          icon="cut"
+          size="md"
           label='Cut'
           onClick={() => console.log('Cut')}
-          tooltip='Cut (Ctrl+X)'
+          title='Cut (Ctrl+X)'
         />
         <RibbonButton
-          iconName="copy"
-          iconSize="md"
+          icon="copy"
+          size="md"
           label='Copy'
           onClick={() => console.log('Copy')}
-          tooltip='Copy (Ctrl+C)'
+          title='Copy (Ctrl+C)'
         />
-      </RibbonGroup>
+      </div>
 
       {/* History Group */}
-      <RibbonGroup title='History'>
+      <div className="rbn-group">
         <RibbonButton
-          iconName="undo"
-          iconSize="md"
+          icon="undo"
+          size="md"
           label='Undo'
           onClick={undo}
-          tooltip='Undo (Ctrl+Z)'
+          title='Undo (Ctrl+Z)'
           disabled={!canUndo}
         />
         <RibbonButton
-          iconName="redo"
-          iconSize="md"
+          icon="redo"
+          size="md"
           label='Redo'
           onClick={redo}
-          tooltip='Redo (Ctrl+Y)'
+          title='Redo (Ctrl+Y)'
           disabled={!canRedo}
         />
         <RibbonButton
-          ref={historyButtonRef}
-          iconName="chevronDown"
-          iconSize="md"
-          label=''
+          icon="chevronDown"
+          size="md"
+          label='History'
           onClick={handleHistoryMenuToggle}
-          tooltip='History menu'
-          compact={true}
+          title='History menu'
           disabled={undoStack.length === 0 && redoStack.length === 0}
         />
-      </RibbonGroup>
+      </div>
 
       {/* Font Group */}
-      <RibbonGroup title='Font'>
+      <div className="rbn-group">
         <RibbonButton
-          iconName="bold"
-          iconSize="md"
+          icon="bold"
+          size="md"
           label='Bold'
           onClick={handleBoldToggle}
-          tooltip='Bold (Ctrl+B)'
+          title='Bold (Ctrl+B)'
           active={fontFormat.bold}
         />
         <RibbonButton
-          iconName="italic"
-          iconSize="md"
+          icon="italic"
+          size="md"
           label='Italic'
           onClick={handleItalicToggle}
-          tooltip='Italic (Ctrl+I)'
+          title='Italic (Ctrl+I)'
           active={fontFormat.italic}
         />
         <RibbonButton
-          iconName="textColor"
-          iconSize="md"
+          icon="paintBrush"
+          size="md"
           label='Text Colour'
           onClick={() => handleTextColorApply(lastTextColor)}
-          tooltip='Apply last text colour'
-          menuItems={getColorMenuItems()}
-          onMenuSelect={(item) => item.action()}
-          ref={colorButtonRef}
+          title='Apply last text colour'
         />
         <RibbonButton
-          ref={rowHeightButtonRef}
-          iconName="arrowsPointingOut"
-          iconSize="md"
+          icon="arrowsPointingOut"
+          size="md"
           label='Row Height'
           onClick={handleRowHeightMenuToggle}
-          tooltip='Set grid row height'
-          menuItems={getRowHeightMenuItems()}
-          onMenuSelect={(item) => item.action()}
+          title='Set grid row height'
         />
-      </RibbonGroup>
+      </div>
 
       {/* Schedule Group */}
       <RibbonGroup title='Schedule'>

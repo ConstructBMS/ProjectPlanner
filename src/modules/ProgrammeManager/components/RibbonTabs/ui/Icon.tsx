@@ -4,7 +4,7 @@ import { iconMap } from '../iconMap';
 
 interface IconProps {
   name: string;
-  size: 'lg' | 'md' | 'sm';
+  size: 'lg' | 'md';
   className?: string;
 }
 
@@ -17,16 +17,16 @@ const Icon: React.FC<IconProps> = ({ name, size, className = '' }) => {
     // Return a fallback icon
     return (
       <svg
-        className={`${className}`}
+        className={className}
         style={{
-          width: size === 'lg' ? 28 : size === 'md' ? 20 : 16,
-          height: size === 'lg' ? 28 : size === 'md' ? 20 : 16,
+          width: size === 'lg' ? 28 : 20,
+          height: size === 'lg' ? 28 : 20,
+          strokeWidth: 1.75,
+          vectorEffect: 'non-scaling-stroke'
         }}
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
-        strokeWidth={1.75}
-        vectorEffect="non-scaling-stroke"
       >
         <path
           strokeLinecap="round"
@@ -41,11 +41,11 @@ const Icon: React.FC<IconProps> = ({ name, size, className = '' }) => {
     <IconComponent
       className={className}
       style={{
-        width: size === 'lg' ? 28 : size === 'md' ? 20 : 16,
-        height: size === 'lg' ? 28 : size === 'md' ? 20 : 16,
+        width: size === 'lg' ? 28 : 20,
+        height: size === 'lg' ? 28 : 20,
+        strokeWidth: 1.75,
+        vectorEffect: 'non-scaling-stroke'
       }}
-      strokeWidth={1.75}
-      vectorEffect="non-scaling-stroke"
     />
   );
 };
