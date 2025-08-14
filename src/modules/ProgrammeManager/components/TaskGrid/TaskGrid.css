@@ -26,6 +26,23 @@
   border-right: 1px solid #e5e7eb;
   transition: background-color 0.15s ease;
   user-select: none;
+  overflow: hidden;
+}
+
+.task-grid-header-cell > div {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  width: 100%;
+  overflow: hidden;
+}
+
+.task-grid-header-cell span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
 }
 
 .task-grid-header-cell:last-child {

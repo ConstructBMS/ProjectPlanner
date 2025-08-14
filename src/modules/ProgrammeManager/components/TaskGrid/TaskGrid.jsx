@@ -249,7 +249,12 @@ const TaskGrid = () => {
             onClick={() => handleColumnClick(column.id)}
           >
             <div className="flex items-center space-x-1">
-              <span className="font-medium text-gray-700">{column.label}</span>
+              <span 
+                className="font-medium text-gray-700"
+                title={column.label}
+              >
+                {column.label}
+              </span>
               {column.sortable && renderSortIndicator(column.id)}
             </div>
           </div>
