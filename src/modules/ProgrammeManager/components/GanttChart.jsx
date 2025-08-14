@@ -263,7 +263,7 @@ const GanttChart = () => {
   });
 
   const allTasks = getVisibleTasks(viewState.taskFilter);
-  const tasks = applyFilters(allTasks);
+  const filteredTasks = applyFilters(allTasks);
 
   // Progress update handler
   const progressUpdateHandler = useMemo(() => {
@@ -308,15 +308,15 @@ const GanttChart = () => {
 
   // Calculate critical path when tasks or links change
   const criticalPathTasks = useMemo(() => {
-    return calculateCriticalPath(tasks, taskLinks);
-  }, [tasks, taskLinks]);
+    return calculateCriticalPath(filteredTasks, taskLinks);
+  }, [filteredTasks, taskLinks]);
 
   // Calculate task floats for slack visualization
   const taskFloats = useMemo(() => {
     if (!viewState.showSlack) return {};
 
     const floats = {};
-    tasks.forEach(task => {
+    filteredTasks.forEach(task => {
       // For now, use a simple calculation - in a real implementation,
       // this would use the critical path calculation results
       const duration = task.duration || 1;
@@ -328,15 +328,15 @@ const GanttChart = () => {
     });
 
     return floats;
-  }, [tasks, viewState.showSlack]);
+  }, [filteredTasks, viewState.showSlack]);
 
   // Calculate date range for grid lines
   const dateRange = useMemo(() => {
-    if (tasks.length === 0) {
+    if (filteredTasks.length === 0) {
       return { start: new Date('2024-01-01'), end: new Date('2024-12-31') };
     }
 
-    const taskDates = tasks.flatMap(task => [
+    const taskDates = filteredTasks.flatMap(task => [
       new Date(task.startDate),
       new Date(task.endDate),
     ]);
@@ -350,7 +350,7 @@ const GanttChart = () => {
       start: new Date(minDate.getTime() - padding),
       end: new Date(maxDate.getTime() + padding),
     };
-  }, [tasks]);
+  }, [filteredTasks]);
 
   // Generate vertical grid lines
   const gridLines = useMemo(() => {

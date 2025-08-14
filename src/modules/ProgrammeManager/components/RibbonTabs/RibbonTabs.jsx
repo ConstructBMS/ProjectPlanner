@@ -265,9 +265,11 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
         </button>
       </div>
 
-      {/* Groups panel */}
-      <div className={`pm-ribbon__groups ${isMinimised ? 'pm-ribbon--min' : ''}`}>
-        {renderTabContent()}
+      {/* Groups tray */}
+      <div className={`pm-ribbon__tray ${isMinimised ? 'pm-ribbon--min' : ''}`}>
+        <div className='pm-ribbon__row'>
+          {renderTabContent()}
+        </div>
       </div>
 
       {/* Quick Access Toolbar - Below */}
