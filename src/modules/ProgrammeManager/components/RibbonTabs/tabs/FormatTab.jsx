@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import RibbonGroup from '../shared/RibbonGroup';
 import RibbonButton from '../shared/RibbonButton';
 import GroupDialogLauncher from '../GroupDialogLauncher';
@@ -6,6 +6,7 @@ import {
   PaintBrushIcon,
   TagIcon,
   ChevronDownIcon,
+  DocumentTextIcon,
 } from '@heroicons/react/24/outline';
 import { useViewContext } from '../../../context/ViewContext';
 import { useTaskContext } from '../../../context/TaskContext';
@@ -13,13 +14,187 @@ import {
   getAvailableMilestoneShapes,
   getMilestoneShape,
   createMilestoneShapeComponent,
-  applyGlobalMilestoneShape,
   getMilestoneShapeStats,
 } from '../../../utils/milestoneShapeUtils.jsx';
 
-const FormatTab = ({ tasks, userSettings, onSettingsUpdate, onOpenGroupDialog }) => {
+const FormatTab = ({ onOpenGroupDialog }) => {
+  const [gridFontMode, setGridFontMode] = useState('normal');
+  const [barTextOptions, setBarTextOptions] = useState({
+    taskName: true,
+    id: false,
+    percentComplete: false,
+    start: false,
+    finish: false
+  });
+  const [barTextMenuOpen, setBarTextMenuOpen] = useState(false);
+  const [barTextMenuPosition, setBarTextMenuPosition] = useState({ x: 0, y: 0 });
+  const barTextButtonRef = useRef(null);
+
+  // Load preferences on mount
+  useEffect(() => {
+    const loadPreferences = () => {
+      try {
+        const savedGridFont = localStorage.getItem('pm.format.gridFont');
+        const savedBarText = localStorage.getItem('pm.format.barText');
+        
+        if (savedGridFont) {
+          setGridFontMode(savedGridFont);
+        }
+        
+        if (savedBarText) {
+          setBarTextOptions(JSON.parse(savedBarText));
+        }
+      } catch (error) {
+        console.warn('Failed to load format preferences:', error);
+      }
+    };
+
+    loadPreferences();
+  }, []);
+
+  // Save preferences when they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('pm.format.gridFont', gridFontMode);
+    } catch (error) {
+      console.warn('Failed to save grid font preference:', error);
+    }
+  }, [gridFontMode]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('pm.format.barText', JSON.stringify(barTextOptions));
+    } catch (error) {
+      console.warn('Failed to save bar text preference:', error);
+    }
+  }, [barTextOptions]);
+
+  // Grid font size handlers
+  const handleGridFontChange = (mode) => {
+    setGridFontMode(mode);
+    
+    window.dispatchEvent(new window.CustomEvent('GRID_FONT_SET', {
+      detail: { mode }
+    }));
+    
+    console.log('Grid font mode changed to:', mode);
+  };
+
+  // Bar text menu handlers
+  const handleOpenBarTextMenu = () => {
+    if (barTextButtonRef.current) {
+      const rect = barTextButtonRef.current.getBoundingClientRect();
+      setBarTextMenuPosition({
+        x: rect.left,
+        y: rect.bottom + 4
+      });
+    }
+    setBarTextMenuOpen(true);
+  };
+
+
+
+  // Handle click outside to close menu
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (barTextButtonRef.current && !barTextButtonRef.current.contains(event.target)) {
+        setBarTextMenuOpen(false);
+      }
+    };
+
+    if (barTextMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [barTextMenuOpen]);
+
+  const handleBarTextOptionChange = (option, checked) => {
+    const newOptions = { ...barTextOptions, [option]: checked };
+    setBarTextOptions(newOptions);
+    
+    window.dispatchEvent(new window.CustomEvent('FORMAT_BAR_TEXT_SET', {
+      detail: { options: newOptions }
+    }));
+    
+    console.log('Bar text options updated:', newOptions);
+  };
+
+  // Bar text menu items
+  const barTextMenuItems = [
+    {
+      id: 'taskName',
+      label: 'Task Name',
+      checked: barTextOptions.taskName,
+      onChange: (checked) => handleBarTextOptionChange('taskName', checked)
+    },
+    {
+      id: 'id',
+      label: 'ID',
+      checked: barTextOptions.id,
+      onChange: (checked) => handleBarTextOptionChange('id', checked)
+    },
+    {
+      id: 'percentComplete',
+      label: '% Complete',
+      checked: barTextOptions.percentComplete,
+      onChange: (checked) => handleBarTextOptionChange('percentComplete', checked)
+    },
+    {
+      id: 'start',
+      label: 'Start',
+      checked: barTextOptions.start,
+      onChange: (checked) => handleBarTextOptionChange('start', checked)
+    },
+    {
+      id: 'finish',
+      label: 'Finish',
+      checked: barTextOptions.finish,
+      onChange: (checked) => handleBarTextOptionChange('finish', checked)
+    }
+  ];
+
   return (
     <div className='flex flex-nowrap gap-0 p-2 bg-white w-full min-w-0'>
+      {/* Fonts Group */}
+      <RibbonGroup title='Fonts'>
+        <RibbonButton
+          icon={<span className="text-xs font-bold">A−</span>}
+          label='Compact'
+          onClick={() => handleGridFontChange('compact')}
+          tooltip='Compact grid font size'
+          disabled={gridFontMode === 'compact'}
+        />
+        <RibbonButton
+          icon={<span className="text-sm font-bold">A</span>}
+          label='Normal'
+          onClick={() => handleGridFontChange('normal')}
+          tooltip='Normal grid font size (default)'
+          disabled={gridFontMode === 'normal'}
+        />
+        <RibbonButton
+          icon={<span className="text-base font-bold">A+</span>}
+          label='Comfortable'
+          onClick={() => handleGridFontChange('comfortable')}
+          tooltip='Comfortable grid font size'
+          disabled={gridFontMode === 'comfortable'}
+        />
+      </RibbonGroup>
+
+      {/* Labels Group */}
+      <RibbonGroup title='Labels'>
+        <div className="relative" ref={barTextButtonRef}>
+          <button
+            onClick={handleOpenBarTextMenu}
+            className='flex items-center space-x-2 px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+            title='Configure bar text display options'
+          >
+            <DocumentTextIcon className='w-4 h-4 text-gray-700' />
+            <span className='text-gray-700'>Bar Text</span>
+            <ChevronDownIcon className='w-3 h-3 text-gray-500' />
+          </button>
+        </div>
+      </RibbonGroup>
+
       {/* Bar Styles Group */}
       <RibbonGroup title='Bar Styles' className="ribbon-group">
         <RibbonButton
@@ -84,17 +259,44 @@ const FormatTab = ({ tasks, userSettings, onSettingsUpdate, onOpenGroupDialog })
       <RibbonGroup title='Milestone Shapes'>
         <MilestoneShapeDropdown />
       </RibbonGroup>
+
+      {/* Bar Text Menu */}
+      {barTextMenuOpen && (
+        <div
+          className="absolute z-50 bg-white border border-gray-200 rounded-md shadow-lg py-1 min-w-48"
+          style={{
+            left: barTextMenuPosition.x,
+            top: barTextMenuPosition.y
+          }}
+        >
+          <div className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-200">
+            Bar Text Options
+          </div>
+          {barTextMenuItems.map((item) => (
+            <label
+              key={item.id}
+              className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                checked={item.checked}
+                onChange={(e) => item.onChange(e.target.checked)}
+                className="mr-3 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-700">{item.label}</span>
+            </label>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
 
-// Import the BarStyleEditor component
-import BarStyleEditor from '../../BarStyleEditor';
-import BarLabelEditor from '../../BarLabelEditor';
+
 
 const MilestoneShapeDropdown = () => {
   const { viewState, setGlobalMilestoneShape } = useViewContext();
-  const { tasks, updateTask } = useTaskContext();
+  const { tasks } = useTaskContext();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef();
 

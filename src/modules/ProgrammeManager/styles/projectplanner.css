@@ -1,5 +1,44 @@
 /* ProjectPlanner Shared Styles */
 
+/* Font sizing tokens for grid and UI components */
+:root {
+  /* Grid font size presets */
+  --grid-font-compact: 11px;
+  --grid-font-normal: 13px;
+  --grid-font-comfortable: 15px;
+  
+  /* Bar text font sizes */
+  --bar-text-compact: 10px;
+  --bar-text-normal: 12px;
+  --bar-text-comfortable: 14px;
+}
+
+/* Grid font size classes */
+.grid-font-compact {
+  font-size: var(--grid-font-compact);
+}
+
+.grid-font-normal {
+  font-size: var(--grid-font-normal);
+}
+
+.grid-font-comfortable {
+  font-size: var(--grid-font-comfortable);
+}
+
+/* Bar text font size classes */
+.bar-text-compact {
+  font-size: var(--bar-text-compact);
+}
+
+.bar-text-normal {
+  font-size: var(--bar-text-normal);
+}
+
+.bar-text-comfortable {
+  font-size: var(--bar-text-comfortable);
+}
+
 /* Global height constraints to prevent page-level scrolling */
 html, body {
   height: 100%;
