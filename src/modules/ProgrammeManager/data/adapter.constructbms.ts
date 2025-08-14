@@ -17,10 +17,14 @@ import { generateDemoTasks, generateDemoLinks, markProjectSeeded } from './demo'
 // Realtime subscription management
 let currentSubscription = null;
 
+// Global last error tracking
+let lastError: string | null = null;
+
 // Enhanced logging with consistent format
 const logAdapterError = (tableName: string, operation: string, error: any) => {
   const errorMessage = error instanceof Error ? error.message : String(error);
-  console.warn(`[PP][adapter] ${tableName}.${operation}: ${errorMessage}`);
+  lastError = `${tableName}.${operation}: ${errorMessage}`;
+  console.warn(`[PP][adapter] ${lastError}`);
 };
 
 // Safe Supabase query wrapper
@@ -38,6 +42,63 @@ const safeSupabaseQuery = async (tableName: string, operation: string, queryFn: 
     logAdapterError(tableName, operation, error);
     return { data: [], error };
   }
+};
+
+// Health check interface
+export interface HealthCheckResult {
+  table: string;
+  ok: boolean;
+  count: number;
+  message: string;
+}
+
+// Health check function
+export const healthCheck = async (): Promise<HealthCheckResult[]> => {
+  const results: HealthCheckResult[] = [];
+  
+  for (const [key, tableName] of Object.entries(tables)) {
+    try {
+      const { data, error, count } = await supabase
+        .from(tableName)
+        .select('*', { count: 'exact', head: true });
+
+      if (error) {
+        results.push({
+          table: tableName,
+          ok: false,
+          count: 0,
+          message: error.message
+        });
+      } else {
+        results.push({
+          table: tableName,
+          ok: true,
+          count: count || 0,
+          message: 'OK'
+        });
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      results.push({
+        table: tableName,
+        ok: false,
+        count: 0,
+        message: errorMessage
+      });
+    }
+  }
+  
+  return results;
+};
+
+// Get last error
+export const getLastError = (): string | null => {
+  return lastError;
+};
+
+// Clear last error
+export const clearLastError = (): void => {
+  lastError = null;
 };
 
 export const getRealtimeChannel = (projectId: string) => {

@@ -9,7 +9,7 @@ import { LayoutProvider, useLayoutContext } from './context/LayoutContext';
 import { UndoRedoProvider } from './context/UndoRedoContext';
 import { GanttProvider } from './context/GanttContext';
 import { SearchProvider } from './context/SearchContext';
-import { UserProvider } from './context/UserContext';
+import { UserProvider } from './context/UserProvider';
 import { ToastContainer } from './components/common/Toast';
 import { useNetworkStatus } from './utils/net';
 import RibbonContainer from '../../components/RibbonTabs/RibbonContainer';
@@ -20,6 +20,7 @@ import TaskPropertiesPane from './components/TaskPropertiesPane';
 import ResourcesPane from './components/Resources/ResourcesPane';
 import ModelPanel from './components/FourD/ModelPanel';
 import Splitter from './components/common/Splitter';
+import PlannerDiagnostics from './components/Diagnostics/PlannerDiagnostics';
 import { getLayoutRatios, saveLayoutRatios, loadAllocationPreferences, setPaneVisible, setPaneWidth, loadFourDPreferences, setFourDPanelVisible, setFourDPanelWidth } from './utils/prefs';
 import { usePlannerStore } from './state/plannerStore';
 import './styles/projectplanner.css';
@@ -39,11 +40,19 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
   // Ribbon minimise state
   const [isRibbonMinimised, setIsRibbonMinimised] = useState(false);
 
+  // Diagnostics state
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
+
   // Planner store
   const { loadProjects, flushOfflineQueue, syncPending, init, hydrationState, hydrationError } = usePlannerStore();
   
   // Network status
   const networkStatus = useNetworkStatus();
+
+  // Check if debug mode is enabled
+  const isDebugMode = () => {
+    return new window.URLSearchParams(window.location.search).get('ppDebug') === '1';
+  };
 
   // Note: ProgrammeTree handles its own expand/collapse functionality
 
@@ -308,6 +317,25 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
 
       {/* Toast Container */}
       <ToastContainer />
+
+      {/* Debug Button - only visible in debug mode */}
+      {isDebugMode() && (
+        <button
+          onClick={() => setShowDiagnostics(true)}
+          className="fixed bottom-4 right-4 z-40 bg-gray-800 text-white p-3 rounded-full shadow-lg hover:bg-gray-700 transition-colors"
+          title="Open Diagnostics"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </button>
+      )}
+
+      {/* Diagnostics Panel */}
+      <PlannerDiagnostics
+        isVisible={showDiagnostics}
+        onClose={() => setShowDiagnostics(false)}
+      />
     </div>
   );
 }
