@@ -53,6 +53,11 @@
   min-width: 200px;
 }
 
+/* Diagnostic mode - accent border around groups */
+.pm-ribbon-wrap[data-diag="1"] .rbn-group {
+  box-shadow: 0 0 0 1px var(--rbn-accent) inset;
+}
+
 /* Button styling */
 .rbn-btn {
   display: inline-flex;

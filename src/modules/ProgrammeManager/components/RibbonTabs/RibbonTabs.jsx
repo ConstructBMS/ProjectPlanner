@@ -31,6 +31,11 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
   // Filter tabs based on user permissions
   const tabs = allTabs.filter(tab => canAccessTab(tab));
 
+  // Check if diagnostic mode is enabled
+  const isDiagnosticMode = () => {
+    return window.location.search.includes('ppDiag=1');
+  };
+
   // Load saved active tab on mount and ensure it's accessible
   useEffect(() => {
     if (viewState.activeTab && canAccessTab(viewState.activeTab)) {
@@ -198,6 +203,7 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
       className='pm-ribbon-wrap'
       data-mode={ribbonStyle.mode}
       data-accent={ribbonStyle.accent}
+      data-diag={isDiagnosticMode() ? "1" : undefined}
     >
       {/* Quick Access Toolbar - Above */}
       {qatPosition === 'above' && (
