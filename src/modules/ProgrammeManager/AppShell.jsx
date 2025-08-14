@@ -15,8 +15,9 @@ import TaskGrid from './components/TaskGrid';
 import GanttChart from './components/GanttChart';
 import TaskPropertiesPane from './components/TaskPropertiesPane';
 import ResourcesPane from './components/Resources/ResourcesPane';
+import ModelPanel from './components/FourD/ModelPanel';
 import Splitter from './components/common/Splitter';
-import { getLayoutRatios, saveLayoutRatios, loadAllocationPreferences, setPaneVisible, setPaneWidth } from './utils/prefs';
+import { getLayoutRatios, saveLayoutRatios, loadAllocationPreferences, setPaneVisible, setPaneWidth, loadFourDPreferences, setFourDPanelVisible, setFourDPanelWidth } from './utils/prefs';
 import './styles/projectplanner.css';
 
 function AppShellContent({ projectId, onBackToPortfolio }) {
@@ -28,6 +29,10 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
   // Resources pane state
   const [resourcesPaneVisible, setResourcesPaneVisible] = useState(false);
   const [resourcesPaneWidth, setResourcesPaneWidth] = useState(320);
+  
+  // Model panel state
+  const [modelPanelVisible, setModelPanelVisible] = useState(false);
+  const [modelPanelWidth, setModelPanelWidth] = useState(320);
 
   const handleExpandAll = () => {
     sidebarRef.current?.expandAll?.();
@@ -48,6 +53,11 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
     const allocationPrefs = loadAllocationPreferences();
     setResourcesPaneVisible(allocationPrefs.paneVisible);
     setResourcesPaneWidth(allocationPrefs.paneWidth);
+    
+    // Load 4D preferences
+    const fourDPrefs = loadFourDPreferences();
+    setModelPanelVisible(fourDPrefs.panelVisible);
+    setModelPanelWidth(fourDPrefs.panelWidth);
   }, []);
 
   // Handle main pane ratios change
@@ -76,6 +86,21 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
     };
   }, []);
 
+  // Handle model panel events
+  useEffect(() => {
+    const handleModelPanelToggle = (event) => {
+      const { visible } = event.detail;
+      setModelPanelVisible(visible);
+      setFourDPanelVisible(visible);
+    };
+
+    window.addEventListener('MODEL_PANEL_TOGGLE', handleModelPanelToggle);
+    
+    return () => {
+      window.removeEventListener('MODEL_PANEL_TOGGLE', handleModelPanelToggle);
+    };
+  }, []);
+
   const handleResourcesPaneClose = () => {
     setResourcesPaneVisible(false);
     setPaneVisible(false);
@@ -84,6 +109,16 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
   const handleResourcesPaneWidthChange = (width) => {
     setResourcesPaneWidth(width);
     setPaneWidth(width);
+  };
+
+  const handleModelPanelClose = () => {
+    setModelPanelVisible(false);
+    setFourDPanelVisible(false);
+  };
+
+  const handleModelPanelWidthChange = (width) => {
+    setModelPanelWidth(width);
+    setFourDPanelWidth(width);
   };
 
   return (
@@ -141,6 +176,15 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
         onClose={handleResourcesPaneClose}
         width={resourcesPaneWidth}
         onWidthChange={handleResourcesPaneWidthChange}
+      />
+
+      {/* ModelPanel - Right dock pane (below ResourcesPane if both open) */}
+      <ModelPanel
+        isVisible={modelPanelVisible}
+        onClose={handleModelPanelClose}
+        width={modelPanelWidth}
+        onWidthChange={handleModelPanelWidthChange}
+        position={resourcesPaneVisible ? 'bottom' : 'full'}
       />
     </div>
   );

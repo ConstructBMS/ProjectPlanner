@@ -253,3 +253,121 @@ export function resetAllocationPreferences(): void {
     console.warn('Failed to reset allocation preferences:', error);
   }
 }
+
+// 4D Model Panel preferences
+
+export interface FourDPreferences {
+  panelVisible: boolean;
+  panelWidth: number;
+}
+
+const DEFAULT_FOURD_PREFERENCES: FourDPreferences = {
+  panelVisible: false,
+  panelWidth: 320,
+};
+
+const FOURD_STORAGE_KEYS = {
+  PANEL_VISIBLE: 'pm.4d.panel.visible',
+  PANEL_WIDTH: 'pm.4d.panel.width',
+} as const;
+
+/**
+ * Load 4D preferences from localStorage
+ */
+export function loadFourDPreferences(): FourDPreferences {
+  try {
+    const visible = localStorage.getItem(FOURD_STORAGE_KEYS.PANEL_VISIBLE);
+    const width = localStorage.getItem(FOURD_STORAGE_KEYS.PANEL_WIDTH);
+    
+    return {
+      panelVisible: visible !== null ? visible === 'true' : DEFAULT_FOURD_PREFERENCES.panelVisible,
+      panelWidth: width !== null ? Math.max(260, parseInt(width, 10)) : DEFAULT_FOURD_PREFERENCES.panelWidth,
+    };
+  } catch (error) {
+    console.warn('Failed to load 4D preferences:', error);
+    return DEFAULT_FOURD_PREFERENCES;
+  }
+}
+
+/**
+ * Save 4D preferences to localStorage
+ */
+export function saveFourDPreferences(prefs: Partial<FourDPreferences>): void {
+  try {
+    if (prefs.panelVisible !== undefined) {
+      localStorage.setItem(FOURD_STORAGE_KEYS.PANEL_VISIBLE, prefs.panelVisible.toString());
+    }
+    
+    if (prefs.panelWidth !== undefined) {
+      const clampedWidth = Math.max(260, Math.min(500, prefs.panelWidth));
+      localStorage.setItem(FOURD_STORAGE_KEYS.PANEL_WIDTH, clampedWidth.toString());
+    }
+  } catch (error) {
+    console.warn('Failed to save 4D preferences:', error);
+  }
+}
+
+/**
+ * Get 4D panel visibility preference
+ */
+export function getFourDPanelVisible(): boolean {
+  try {
+    const visible = localStorage.getItem(FOURD_STORAGE_KEYS.PANEL_VISIBLE);
+    return visible !== null ? visible === 'true' : DEFAULT_FOURD_PREFERENCES.panelVisible;
+  } catch (error) {
+    console.warn('Failed to get 4D panel visibility preference:', error);
+    return DEFAULT_FOURD_PREFERENCES.panelVisible;
+  }
+}
+
+/**
+ * Set 4D panel visibility preference
+ */
+export function setFourDPanelVisible(visible: boolean): void {
+  try {
+    localStorage.setItem(FOURD_STORAGE_KEYS.PANEL_VISIBLE, visible.toString());
+  } catch (error) {
+    console.warn('Failed to set 4D panel visibility preference:', error);
+  }
+}
+
+/**
+ * Get 4D panel width preference
+ */
+export function getFourDPanelWidth(): number {
+  try {
+    const width = localStorage.getItem(FOURD_STORAGE_KEYS.PANEL_WIDTH);
+    if (width !== null) {
+      const parsedWidth = parseInt(width, 10);
+      return Math.max(260, Math.min(500, parsedWidth));
+    }
+    return DEFAULT_FOURD_PREFERENCES.panelWidth;
+  } catch (error) {
+    console.warn('Failed to get 4D panel width preference:', error);
+    return DEFAULT_FOURD_PREFERENCES.panelWidth;
+  }
+}
+
+/**
+ * Set 4D panel width preference
+ */
+export function setFourDPanelWidth(width: number): void {
+  try {
+    const clampedWidth = Math.max(260, Math.min(500, width));
+    localStorage.setItem(FOURD_STORAGE_KEYS.PANEL_WIDTH, clampedWidth.toString());
+  } catch (error) {
+    console.warn('Failed to set 4D panel width preference:', error);
+  }
+}
+
+/**
+ * Reset 4D preferences to defaults
+ */
+export function resetFourDPreferences(): void {
+  try {
+    localStorage.removeItem(FOURD_STORAGE_KEYS.PANEL_VISIBLE);
+    localStorage.removeItem(FOURD_STORAGE_KEYS.PANEL_WIDTH);
+  } catch (error) {
+    console.warn('Failed to reset 4D preferences:', error);
+  }
+}
