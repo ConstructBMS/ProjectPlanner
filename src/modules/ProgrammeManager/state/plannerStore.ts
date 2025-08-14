@@ -3,7 +3,6 @@ import { getProjects, getTasks, getLinks, seedDemoTasks, updateTaskPartial, upda
 import { Project, Task, TaskLink, TaskUpdate } from '../data/types';
 import { networkManager, isOnline } from '../utils/net';
 import { safeGetColumn, tableNames, columns } from '../data/adapter.config';
-import { isProjectSeeded } from '../data/demo';
 import { useState } from 'react';
 
 // Transform raw DB data to our interface using safe column access
@@ -125,7 +124,6 @@ interface PlannerState {
   loadProjects: () => Promise<void>;
   selectProject: (id: string) => Promise<void>;
   hydrate: (projectId: string) => Promise<void>;
-  seedAndHydrate: (projectId: string) => Promise<void>;
   
   // Legacy task actions (kept for backward compatibility)
   renameTask: (taskId: string, newName: string) => void;
@@ -799,47 +797,61 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
         getLinks(projectId)
       ]);
       
-      set({ tasks, links });
-      
       // Check if we need to seed demo data
-      if (tasks.length === 0 && !isProjectSeeded(projectId)) {
-        console.log('No tasks found, seeding demo data...');
-        await get().seedAndHydrate(projectId);
+      const seededFlag = `pm.seeded.${projectId}`;
+      const isAlreadySeeded = localStorage.getItem(seededFlag);
+      
+      if ((tasks.length === 0 || links.length === 0) && !isAlreadySeeded) {
+        console.log('No tasks/links found and not previously seeded, seeding demo data...');
+        
+        try {
+          // Seed demo data
+          const seeded = await seedDemoTasks(projectId);
+          if (!seeded) {
+            throw new Error('Failed to seed demo data');
+          }
+          
+          // Set seeded flag to prevent infinite loops
+          localStorage.setItem(seededFlag, 'true');
+          
+          // Re-fetch tasks and links after seeding
+          const [seededTasks, seededLinks] = await Promise.all([
+            getTasks(projectId),
+            getLinks(projectId)
+          ]);
+          
+          set({ tasks: seededTasks, links: seededLinks });
+          console.log('Demo data seeded and re-hydrated successfully:', { 
+            tasksCount: seededTasks.length, 
+            linksCount: seededLinks.length 
+          });
+        } catch (seedError) {
+          console.error('Failed to seed demo data:', seedError);
+          set({ 
+            hydrationState: 'error',
+            hydrationError: `Failed to seed demo data: ${seedError instanceof Error ? seedError.message : 'Unknown error'}`
+          });
+          throw seedError;
+        }
       } else {
-        // Subscribe to realtime updates
-        get().subscribeProject(projectId);
-        set({ hydrationState: 'ready' });
-        console.log('Project hydrated successfully:', { tasksCount: tasks.length, linksCount: links.length });
+        // Use existing data (either from DB or previously seeded)
+        set({ tasks, links });
+        console.log('Project hydrated with existing data:', { 
+          tasksCount: tasks.length, 
+          linksCount: links.length,
+          wasSeeded: !!isAlreadySeeded
+        });
       }
+      
+      // Subscribe to realtime updates
+      get().subscribeProject(projectId);
+      set({ hydrationState: 'ready' });
+      
     } catch (error) {
       console.error('Failed to hydrate project:', error);
       set({ 
         hydrationState: 'error',
         hydrationError: error instanceof Error ? error.message : 'Failed to hydrate project'
-      });
-      throw error;
-    }
-  },
-
-  seedAndHydrate: async (projectId: string) => {
-    try {
-      console.log('Seeding and hydrating project:', projectId);
-      
-      // Seed demo data
-      const seeded = await seedDemoTasks(projectId);
-      if (!seeded) {
-        throw new Error('Failed to seed demo data');
-      }
-      
-      // Re-hydrate with seeded data
-      await get().hydrate(projectId);
-      
-      console.log('Project seeded and hydrated successfully');
-    } catch (error) {
-      console.error('Failed to seed and hydrate project:', error);
-      set({ 
-        hydrationState: 'error',
-        hydrationError: error instanceof Error ? error.message : 'Failed to seed and hydrate project'
       });
       throw error;
     }
