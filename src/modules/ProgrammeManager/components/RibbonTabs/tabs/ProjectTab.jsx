@@ -17,11 +17,15 @@ import {
   ExclamationTriangleIcon,
   ArchiveBoxIcon,
   CalendarIcon,
+  ClockIcon,
+  ArrowRightIcon,
+  CalculatorIcon,
 } from '@heroicons/react/24/outline';
 import BaselineManagerDialog from '../../BaselineManagerDialog';
 import GroupDialogLauncher from '../GroupDialogLauncher';
 import ProjectInfoDialog from '../../Project/ProjectInfoDialog';
 import WorkingTimeDialog from '../../Project/WorkingTimeDialog';
+import MiniModal from '../ui/MiniModal';
 
 const ProjectTab = () => {
   const { setBaseline1, clearBaseline1, tasks } = useTaskContext();
@@ -45,6 +49,10 @@ const ProjectTab = () => {
 
   // Working Time Dialog state
   const [workingTimeDialogOpen, setWorkingTimeDialogOpen] = useState(false);
+
+  // Move Project Dialog state
+  const [moveProjectDialogOpen, setMoveProjectDialogOpen] = useState(false);
+  const [moveProjectDays, setMoveProjectDays] = useState(0);
 
   // Load baselines from persistent storage on mount
   useEffect(() => {
@@ -85,6 +93,9 @@ const ProjectTab = () => {
       window.removeEventListener('PROJECT_CALENDAR_UPDATED', handleProjectCalendarUpdated);
     };
   }, []);
+
+  // Check if project has tasks
+  const hasTasks = tasks && tasks.length > 0;
 
   // Baseline Manager handlers
   const handleSaveBaseline = async (baseline) => {
@@ -136,6 +147,45 @@ const ProjectTab = () => {
     setWorkingTimeDialogOpen(false);
   };
 
+  // Project Dates handlers
+  const handleSetStartToToday = () => {
+    window.dispatchEvent(new window.CustomEvent('PROJECT_SET_START_TODAY', {
+      detail: { projectId: currentProjectId }
+    }));
+    console.log('Project set start to today event emitted');
+  };
+
+  const handleOpenMoveProject = () => {
+    setMoveProjectDialogOpen(true);
+  };
+
+  const handleCloseMoveProject = () => {
+    setMoveProjectDialogOpen(false);
+    setMoveProjectDays(0);
+  };
+
+  const handleMoveProject = () => {
+    const days = parseInt(moveProjectDays, 10);
+    if (isNaN(days)) {
+      console.error('Invalid days value:', moveProjectDays);
+      return;
+    }
+    
+    window.dispatchEvent(new window.CustomEvent('PROJECT_MOVE_BY_DAYS', {
+      detail: { projectId: currentProjectId, days }
+    }));
+    console.log('Project move by days event emitted:', days);
+    setMoveProjectDialogOpen(false);
+    setMoveProjectDays(0);
+  };
+
+  const handleRecalculate = () => {
+    window.dispatchEvent(new window.CustomEvent('PROJECT_RECALCULATE', {
+      detail: { projectId: currentProjectId }
+    }));
+    console.log('Project recalculate event emitted');
+  };
+
   return (
     <>
       <div className='flex flex-nowrap gap-0 p-2 bg-white w-full min-w-0'>
@@ -160,6 +210,31 @@ const ProjectTab = () => {
           <RibbonButton
             icon={<CogIcon className='w-4 h-4 text-gray-700' />}
             label='Preferences'
+          />
+        </RibbonGroup>
+
+        {/* Project Dates Group */}
+        <RibbonGroup title='Dates'>
+          <RibbonButton
+            icon={<ClockIcon className='w-4 h-4 text-gray-700' />}
+            label='Set Start to Today'
+            onClick={handleSetStartToToday}
+            tooltip='Set project start date to today'
+            disabled={!hasTasks}
+          />
+          <RibbonButton
+            icon={<ArrowRightIcon className='w-4 h-4 text-gray-700' />}
+            label='Move Project'
+            onClick={handleOpenMoveProject}
+            tooltip='Move entire project by specified number of days'
+            disabled={!hasTasks}
+          />
+          <RibbonButton
+            icon={<CalculatorIcon className='w-4 h-4 text-gray-700' />}
+            label='Recalculate'
+            onClick={handleRecalculate}
+            tooltip='Recalculate project schedule'
+            disabled={!hasTasks}
           />
         </RibbonGroup>
 
@@ -268,6 +343,42 @@ const ProjectTab = () => {
           onClose={handleCloseWorkingTime}
           projectId={currentProjectId}
         />
+
+        {/* Move Project Dialog */}
+        <MiniModal
+          isOpen={moveProjectDialogOpen}
+          onClose={handleCloseMoveProject}
+          onSave={handleMoveProject}
+          title="Move Project"
+          saveLabel="Move Project"
+          maxWidth="sm"
+        >
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Enter the number of days to move the entire project. Use positive numbers to move forward, negative to move backward.
+            </p>
+            <div>
+              <label htmlFor="moveDays" className="block text-sm font-medium text-gray-700 mb-1">
+                Days to Move
+              </label>
+              <input
+                type="number"
+                id="moveDays"
+                value={moveProjectDays}
+                onChange={(e) => setMoveProjectDays(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="0"
+                min="-365"
+                max="365"
+                step="1"
+                autoFocus
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Range: -365 to +365 days
+              </p>
+            </div>
+          </div>
+        </MiniModal>
     </>
   );
 };
