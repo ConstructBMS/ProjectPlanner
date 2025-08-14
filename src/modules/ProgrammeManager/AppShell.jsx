@@ -233,8 +233,8 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
 
   return (
     <div className={`pm-app-shell ${isRibbonMinimised ? 'ribbon-minimised' : ''}`}>
-      {/* Fixed Header Container - wraps search/breadcrumb/ribbon */}
-      <div className="pm-header-container">
+      {/* Fixed Shell Header - wraps header/search/ribbon */}
+      <div className="pm-shell-header">
         <RibbonContainer 
           isMinimised={isRibbonMinimised} 
           onToggleMinimise={() => setIsRibbonMinimised(!isRibbonMinimised)}
@@ -245,9 +245,9 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
       
       {/* Main Content Area - Single Scroll Container */}
       {hydrationState === 'ready' && (
-        <div className="pm-main-content">
+        <div className="pm-content">
           {/* Pane Row - Tree | Grid | Gantt */}
-          <div className="pm-pane-row">
+          <div className="pm-row">
             <Splitter
               orientation="vertical"
               defaultRatios={[0.2, 0.4, 0.4]}
@@ -256,17 +256,17 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
               onRatiosChange={handleMainPaneRatiosChange}
             >
               {/* ProgrammeTree - Left pane */}
-              <div className='pm-pane pm-pane-tree'>
+              <div className='pane pane-tree'>
                 <ProgrammeTree />
               </div>
 
               {/* TaskGrid - Middle pane */}
-              <div className='pm-pane pm-pane-grid'>
+              <div className='pane pane-grid'>
                 <TaskGrid />
               </div>
 
               {/* GanttChart - Right pane */}
-              <div className='pm-pane pm-pane-gantt'>
+              <div className='pane pane-gantt'>
                 <GanttChart />
               </div>
             </Splitter>

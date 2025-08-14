@@ -1,7 +1,7 @@
 /* AppShell Layout - Single Scroll Area with Proper Flex Math */
 
 :root {
-  /* Header heights - these will be calculated dynamically */
+  /* Header heights - calculated dynamically */
   --shell-header-height: 60px; /* Back to Portfolio + Global Search + Project Picker */
   --shell-ribbon-height: 120px; /* Ribbon when expanded */
   --shell-ribbon-minimised-height: 40px; /* Ribbon when minimised */
@@ -19,8 +19,8 @@
   background-color: #f9fafb;
 }
 
-/* Fixed Header Container - wraps search/breadcrumb/ribbon */
-.pm-header-container {
+/* Fixed Shell Header - wraps header/search/ribbon */
+.pm-shell-header {
   flex-shrink: 0;
   height: var(--shell-top);
   transition: height 0.3s ease-in-out;
@@ -30,12 +30,12 @@
 }
 
 /* When ribbon is minimised */
-.pm-app-shell.ribbon-minimised .pm-header-container {
+.pm-app-shell.ribbon-minimised .pm-shell-header {
   height: var(--shell-top-minimised);
 }
 
 /* Main Content Area - Single Scroll Container */
-.pm-main-content {
+.pm-content {
   display: flex;
   flex-direction: column;
   height: calc(100vh - var(--shell-top));
@@ -43,20 +43,21 @@
   transition: height 0.3s ease-in-out;
 }
 
-.pm-app-shell.ribbon-minimised .pm-main-content {
+.pm-app-shell.ribbon-minimised .pm-content {
   height: calc(100vh - var(--shell-top-minimised));
 }
 
 /* Pane Row Container - Tree | Grid | Gantt */
-.pm-pane-row {
+.pm-row {
   display: flex;
   flex: 1 1 auto;
   min-height: 0; /* Critical: allows shrinking */
+  min-width: 0; /* Critical: allows shrinking */
   overflow: hidden;
 }
 
 /* Individual Panes */
-.pm-pane {
+.pane {
   display: flex;
   flex-direction: column;
   min-width: 0; /* Critical: allows shrinking */
@@ -66,28 +67,27 @@
   border-right: 1px solid #e5e7eb;
 }
 
-/* Tree Pane - Fixed width */
-.pm-pane-tree {
+/* Tree Pane - Fixed min width */
+.pane-tree {
   flex: 0 0 auto;
-  width: 220px; /* Will be controlled by splitter */
-  min-width: 200px;
+  min-width: 220px;
   max-width: 400px;
 }
 
 /* Grid Pane - Flexible */
-.pm-pane-grid {
+.pane-grid {
   flex: 1 1 auto;
-  min-width: 300px;
+  min-width: 420px;
 }
 
 /* Gantt Pane - Flexible, expands to fill space */
-.pm-pane-gantt {
+.pane-gantt {
   flex: 1 1 auto;
-  min-width: 400px;
+  min-width: 480px;
 }
 
 /* Last pane shouldn't have border */
-.pm-pane:last-child {
+.pane:last-child {
   border-right: none;
 }
 
@@ -228,29 +228,29 @@
 
 /* Responsive adjustments */
 @media (max-width: 1024px) {
-  .pm-pane-tree {
+  .pane-tree {
     min-width: 180px;
   }
   
-  .pm-pane-grid {
-    min-width: 250px;
+  .pane-grid {
+    min-width: 350px;
   }
   
-  .pm-pane-gantt {
-    min-width: 300px;
+  .pane-gantt {
+    min-width: 400px;
   }
 }
 
 @media (max-width: 768px) {
-  .pm-pane-tree {
+  .pane-tree {
     min-width: 160px;
   }
   
-  .pm-pane-grid {
-    min-width: 200px;
+  .pane-grid {
+    min-width: 300px;
   }
   
-  .pm-pane-gantt {
-    min-width: 250px;
+  .pane-gantt {
+    min-width: 350px;
   }
 }
