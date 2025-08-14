@@ -5,6 +5,7 @@ import React, {
   useCallback,
   useEffect,
 } from 'react';
+import { useTaskContext } from './TaskContext';
 
 const SelectionContext = createContext();
 
@@ -23,6 +24,9 @@ export const SelectionProvider = ({ children }) => {
   const [selectionAnchorId, setSelectionAnchorId] = useState(null);
   const [lastSelectedId, setLastSelectedId] = useState(null);
 
+  // Get TaskContext functions to sync selection
+  const { selectTask, clearSelection: clearTaskSelection } = useTaskContext();
+
   // Clear selection on Escape key
   useEffect(() => {
     const handleKeyDown = e => {
@@ -40,7 +44,9 @@ export const SelectionProvider = ({ children }) => {
     setSelectedIds(new Set([id]));
     setSelectionAnchorId(id);
     setLastSelectedId(id);
-  }, []);
+    // Also update TaskContext for TaskPropertiesPane
+    selectTask(id);
+  }, [selectTask]);
 
   // Toggle selection of a single task
   const toggleSelection = useCallback(id => {
@@ -55,7 +61,9 @@ export const SelectionProvider = ({ children }) => {
     });
     setSelectionAnchorId(id);
     setLastSelectedId(id);
-  }, []);
+    // Also update TaskContext for TaskPropertiesPane
+    selectTask(id);
+  }, [selectTask]);
 
   // Select a range of tasks
   const selectRange = useCallback(
@@ -79,15 +87,19 @@ export const SelectionProvider = ({ children }) => {
 
       setSelectedIds(new Set(rangeIds));
       setLastSelectedId(targetId);
+      // Also update TaskContext for TaskPropertiesPane (select the last clicked task)
+      selectTask(targetId);
     },
-    [selectSingle]
+    [selectSingle, selectTask]
   );
 
   // Add task to selection
   const addToSelection = useCallback(id => {
     setSelectedIds(prev => new Set([...prev, id]));
     setLastSelectedId(id);
-  }, []);
+    // Also update TaskContext for TaskPropertiesPane
+    selectTask(id);
+  }, [selectTask]);
 
   // Remove task from selection
   const removeFromSelection = useCallback(id => {
@@ -96,14 +108,20 @@ export const SelectionProvider = ({ children }) => {
       newSet.delete(id);
       return newSet;
     });
-  }, []);
+    // If we removed the last selected task, clear TaskContext selection
+    if (selectedIds.size === 1 && selectedIds.has(id)) {
+      clearTaskSelection();
+    }
+  }, [selectedIds, clearTaskSelection]);
 
   // Clear all selection
   const clearSelection = useCallback(() => {
     setSelectedIds(new Set());
     setSelectionAnchorId(null);
     setLastSelectedId(null);
-  }, []);
+    // Also clear TaskContext selection
+    clearTaskSelection();
+  }, [clearTaskSelection]);
 
   // Check if a task is selected
   const isSelected = useCallback(

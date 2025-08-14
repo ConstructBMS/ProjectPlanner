@@ -218,10 +218,10 @@ export default function AppShell({ projectId, onBackToPortfolio }) {
     <UndoRedoProvider>
       <LayoutProvider>
         <FilterProvider>
-          <SelectionProvider>
-            <CalendarProvider>
-              <ViewProvider>
-                <TaskProvider>
+          <CalendarProvider>
+            <ViewProvider>
+              <TaskProvider>
+                <SelectionProvider>
                   <GanttProvider>
                     <SearchProvider>
                       <UserProvider>
@@ -232,10 +232,10 @@ export default function AppShell({ projectId, onBackToPortfolio }) {
                       </UserProvider>
                     </SearchProvider>
                   </GanttProvider>
-                </TaskProvider>
-              </ViewProvider>
-            </CalendarProvider>
-          </SelectionProvider>
+                </SelectionProvider>
+              </TaskProvider>
+            </ViewProvider>
+          </CalendarProvider>
         </FilterProvider>
       </LayoutProvider>
     </UndoRedoProvider>
