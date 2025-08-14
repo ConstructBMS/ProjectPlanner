@@ -83,8 +83,7 @@ import {
   compareWithBaseline,
   getBaselineComparisonMode,
 } from '../utils/baselineManagerUtils';
-import { getTaskBarLabels, getLabelTooltip } from '../utils/barLabelUtils';
-import { getBarTextLabels } from '../utils/barLabelUtils';
+import { getTaskBarLabels, getLabelTooltip, getBarTextLabels } from '../utils/barLabelUtils';
 import { getGanttZoomPrefs, saveGanttZoomPrefs } from '../utils/prefs';
 import {
   createProgressEditState,

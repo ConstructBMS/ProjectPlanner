@@ -4,9 +4,12 @@ import { useState, useRef, forwardRef } from 'react';
 import { useUserContext } from '../../../context/UserContext';
 import Tooltip from '../../common/Tooltip';
 import RibbonMenu from '../RibbonMenu';
+import Icon from '../ui/Icon';
 
 const RibbonButton = forwardRef(({
   icon,
+  iconName,
+  iconSize = 'md',
   label,
   onClick,
   disabled = false,
@@ -74,6 +77,41 @@ const RibbonButton = forwardRef(({
     document.addEventListener('mousedown', handleClickOutside);
   }
 
+  // Render icon content
+  const renderIcon = () => {
+    if (iconType === 'text') {
+      return (
+        <span
+          className={`font-bold transition-colors duration-150 ${
+            isDisabled
+              ? 'text-gray-400'
+              : 'text-gray-700 group-hover:text-blue-600'
+          }`}
+        >
+          {icon}
+        </span>
+      );
+    }
+    
+    // Use new Icon component if iconName is provided
+    if (iconName) {
+      return (
+        <Icon
+          name={iconName}
+          size={iconSize}
+          className={`transition-colors duration-150 ${
+            isDisabled
+              ? 'text-gray-400'
+              : 'text-gray-700 group-hover:text-blue-600'
+          }`}
+        />
+      );
+    }
+    
+    // Fallback to legacy icon prop
+    return icon;
+  };
+
   return (
     <div className="relative" ref={ref || buttonRef}>
       <Tooltip content={getTooltip()}>
@@ -105,19 +143,7 @@ const RibbonButton = forwardRef(({
               : 'text-gray-700 group-hover:text-blue-600'
           }`}
         >
-          {iconType === 'text' ? (
-            <span
-              className={`font-bold transition-colors duration-150 ${
-                isDisabled
-                  ? 'text-gray-400'
-                  : 'text-gray-700 group-hover:text-blue-600'
-              }`}
-            >
-              {icon}
-            </span>
-          ) : (
-            icon
-          )}
+          {renderIcon()}
         </div>
                     {!compact && (
               <div

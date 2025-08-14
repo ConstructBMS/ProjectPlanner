@@ -20,44 +20,7 @@ import {
   printProject,
 } from '../../../../../utils/printExportUtils';
 
-import {
-  ClipboardDocumentIcon,
-  DocumentDuplicateIcon,
-  ScissorsIcon,
-  BoldIcon,
-  ItalicIcon,
-  FlagIcon,
-  LinkIcon,
-  ArrowPathIcon,
-  FolderIcon,
-  ChevronDoubleDownIcon,
-  ChevronRightIcon,
-  UserIcon,
-  PlusIcon,
-  ChartBarIcon,
-  DocumentTextIcon,
-  ExclamationTriangleIcon,
-  Squares2X2Icon,
-  PaintBrushIcon,
-  PencilIcon,
-  MagnifyingGlassPlusIcon,
-  MagnifyingGlassMinusIcon,
-  RectangleStackIcon,
-  ClockIcon,
-  ArrowUturnLeftIcon,
-  ArrowUturnRightIcon,
-  TrashIcon,
-  PrinterIcon,
-  DocumentArrowDownIcon,
-  ChevronDownIcon,
-  ArrowsPointingInIcon,
-  ArrowsPointingOutIcon,
-  DocumentArrowUpIcon,
-  EyeIcon,
-  Cog6ToothIcon,
-  ChatBubbleLeftRightIcon,
-  LinkIcon as LinkIconSolid,
-} from '@heroicons/react/24/outline';
+
 
 export default function HomeTab({ onExpandAll, onCollapseAll }) {
   const [isAllExpanded, setIsAllExpanded] = useState(false);
@@ -1238,19 +1201,22 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
       {/* Clipboard Group */}
       <RibbonGroup title='Clipboard'>
         <RibbonButton
-          icon={<ClipboardDocumentIcon className='w-4 h-4' />}
+          iconName="paste"
+          iconSize="md"
           label='Paste'
           onClick={() => console.log('Paste')}
           tooltip='Paste (Ctrl+V)'
         />
         <RibbonButton
-          icon={<ScissorsIcon className='w-4 h-4' />}
+          iconName="cut"
+          iconSize="md"
           label='Cut'
           onClick={() => console.log('Cut')}
           tooltip='Cut (Ctrl+X)'
         />
         <RibbonButton
-          icon={<DocumentDuplicateIcon className='w-4 h-4' />}
+          iconName="copy"
+          iconSize="md"
           label='Copy'
           onClick={() => console.log('Copy')}
           tooltip='Copy (Ctrl+C)'
@@ -1260,14 +1226,16 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
       {/* History Group */}
       <RibbonGroup title='History'>
         <RibbonButton
-          icon={<ArrowUturnLeftIcon className='w-4 h-4' />}
+          iconName="undo"
+          iconSize="md"
           label='Undo'
           onClick={undo}
           tooltip='Undo (Ctrl+Z)'
           disabled={!canUndo}
         />
         <RibbonButton
-          icon={<ArrowUturnRightIcon className='w-4 h-4' />}
+          iconName="redo"
+          iconSize="md"
           label='Redo'
           onClick={redo}
           tooltip='Redo (Ctrl+Y)'
@@ -1275,7 +1243,8 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
         />
         <RibbonButton
           ref={historyButtonRef}
-          icon={<ChevronDownIcon className='w-4 h-4' />}
+          iconName="chevronDown"
+          iconSize="md"
           label=''
           onClick={handleHistoryMenuToggle}
           tooltip='History menu'
@@ -1287,21 +1256,24 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
       {/* Font Group */}
       <RibbonGroup title='Font'>
         <RibbonButton
-          icon={<BoldIcon className='w-4 h-4' />}
+          iconName="bold"
+          iconSize="md"
           label='Bold'
           onClick={handleBoldToggle}
           tooltip='Bold (Ctrl+B)'
           active={fontFormat.bold}
         />
         <RibbonButton
-          icon={<ItalicIcon className='w-4 h-4' />}
+          iconName="italic"
+          iconSize="md"
           label='Italic'
           onClick={handleItalicToggle}
           tooltip='Italic (Ctrl+I)'
           active={fontFormat.italic}
         />
         <RibbonButton
-          icon={<PaintBrushIcon className='w-4 h-4' />}
+          iconName="textColor"
+          iconSize="md"
           label='Text Colour'
           onClick={() => handleTextColorApply(lastTextColor)}
           tooltip='Apply last text colour'
@@ -1311,7 +1283,8 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
         />
         <RibbonButton
           ref={rowHeightButtonRef}
-          icon={<ArrowsPointingOutIcon className='w-4 h-4' />}
+          iconName="arrowsPointingOut"
+          iconSize="md"
           label='Row Height'
           onClick={handleRowHeightMenuToggle}
           tooltip='Set grid row height'
@@ -1323,7 +1296,8 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
       {/* Schedule Group */}
       <RibbonGroup title='Schedule'>
         <RibbonButton
-          icon={<FlagIcon className='w-4 h-4' />}
+          iconName="milestone"
+          iconSize="md"
           label='Constraint Flag'
           onClick={handleConstraintFlagToggle}
           tooltip='Toggle constraint flag on selected tasks'
@@ -1331,7 +1305,8 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
           disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
         />
         <RibbonButton
-          icon={<LinkIcon className='w-4 h-4' />}
+          iconName="link"
+          iconSize="md"
           label='Delete Links'
           onClick={handleDeleteLinks}
           tooltip='Delete links between selected tasks (FS/SS/FF/SF)'
@@ -1339,7 +1314,8 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
         />
         <RibbonButton
           ref={rescheduleButtonRef}
-          icon={<ArrowPathIcon className='w-4 h-4' />}
+          iconName="arrowPath"
+          iconSize="md"
           label='Reschedule'
           onClick={handleRescheduleMenuToggle}
           tooltip='Reschedule selected tasks'
@@ -1352,41 +1328,40 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
       {/* Hierarchy Group */}
       <RibbonGroup title='Hierarchy'>
         <RibbonButton
-          icon={<DocumentArrowUpIcon className='w-4 h-4' />}
+          iconName="documentArrowUp"
+          iconSize="md"
           label='Promote'
           onClick={handlePromote}
           tooltip='Promote selected tasks (Outdent)'
           disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
         />
         <RibbonButton
-          icon={<DocumentArrowDownIcon className='w-4 h-4' />}
+          iconName="documentArrowDown"
+          iconSize="md"
           label='Demote'
           onClick={handleDemote}
           tooltip='Demote selected tasks (Indent)'
           disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
         />
         <RibbonButton
-          icon={<ChartBarIcon className='w-4 h-4' />}
+          iconName="chartBar"
+          iconSize="md"
           label='Make Summary'
           onClick={handleMakeSummary}
           tooltip='Create summary task above selected tasks'
           disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
         />
         <RibbonButton
-          icon={<FolderIcon className='w-4 h-4' />}
+          iconName="folder"
+          iconSize="md"
           label='Break Summary'
           onClick={handleBreakSummary}
           tooltip='Break summary task and lift children up'
           disabled={!isSelectedTaskSummary()}
         />
         <RibbonButton
-          icon={
-            isAllExpanded ? (
-              <ChevronRightIcon className='w-4 h-4' />
-            ) : (
-              <ChevronDoubleDownIcon className='w-4 h-4' />
-            )
-          }
+          iconName="chevronDoubleDown"
+          iconSize="md"
           label='Expand/Collapse All'
           onClick={handleExpandCollapseToggle}
           tooltip={
@@ -1397,13 +1372,15 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
           className={isAllExpanded ? 'bg-blue-50 border-blue-500' : ''}
         />
         <RibbonButton
-          icon={<FlagIcon className='w-4 h-4' />}
+          iconName="flag"
+          iconSize="md"
           label='Expand Milestones'
           onClick={expandMilestones}
           tooltip='Expand all milestone tasks in the programme tree'
         />
         <RibbonDropdown
-          icon={<ChevronDoubleDownIcon className='w-4 h-4' />}
+          iconName="chevronDoubleDown"
+          iconSize="md"
           label='Show To Level'
           options={[
             { value: 'level1', label: 'Level 1' },
@@ -1419,35 +1396,40 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
       {/* Task Group */}
       <RibbonGroup title='Task'>
         <RibbonButton
-          icon={<FlagIcon className='w-4 h-4' />}
+          iconName="flag"
+          iconSize="md"
           label='Make Milestone'
           onClick={handleMakeMilestone}
           tooltip='Convert selected tasks to milestones'
           disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
         />
         <RibbonButton
-          icon={<ChartBarIcon className='w-4 h-4' />}
+          iconName="chartBar"
+          iconSize="md"
           label='Make Task'
           onClick={handleMakeTask}
           tooltip='Convert selected items to tasks'
           disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
         />
         <RibbonButton
-          icon={<UserIcon className='w-4 h-4' />}
+          iconName="user"
+          iconSize="md"
           label='Assign...'
           onClick={handleAssignResource}
           tooltip='Assign resource to selected tasks'
           disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
         />
         <RibbonButton
-          icon={<TrashIcon className='w-4 h-4' />}
+          iconName="trash"
+          iconSize="md"
           label='Delete Task'
           onClick={handleDeleteTask}
           tooltip='Delete the selected task and its children'
           disabled={!selectedTaskId}
         />
         <RibbonButton
-          icon={<ScissorsIcon className='w-4 h-4' />}
+          iconName="scissors"
+          iconSize="md"
           label='Split/Join'
           onClick={() => console.log('Split/Join clicked')}
           tooltip='Split the task into parts or merge selected tasks'
@@ -1457,31 +1439,36 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
       {/* Insert Group */}
       <RibbonGroup title='Insert'>
         <RibbonButton
-          icon={<PlusIcon className='w-4 h-4' />}
+          iconName="plus"
+          iconSize="md"
           label='Insert Task Below'
           onClick={handleInsertTaskBelow}
           tooltip='Insert a new task below the selected task'
         />
         <RibbonButton
-          icon={<FlagIcon className='w-4 h-4' />}
+          iconName="flag"
+          iconSize="md"
           label='Add Milestone'
           onClick={addMilestone}
           tooltip='Add a milestone task'
         />
         <RibbonButton
-          icon={<ChartBarIcon className='w-4 h-4' />}
+          iconName="chartBar"
+          iconSize="md"
           label='Insert Summary Task'
           onClick={handleInsertSummaryTask}
           tooltip='Insert a summary task and group selected tasks under it'
         />
         <RibbonButton
-          icon={<ChartBarIcon className='w-4 h-4' />}
+          iconName="chartBar"
+          iconSize="md"
           label='Hammock Task'
           onClick={() => console.log('Insert Hammock Task clicked')}
           tooltip='Insert a hammock task'
         />
         <RibbonButton
-          icon={<LinkIcon className='w-4 h-4' />}
+          iconName="link"
+          iconSize="md"
           label='External Link'
           onClick={() => console.log('Insert External Link clicked')}
           tooltip='Link to external project/task'
@@ -1492,7 +1479,8 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
       <RibbonGroup title='Progress'>
         {/* Progress Line Toggle */}
         <RibbonButton
-          icon={<ChartBarIcon className='w-4 h-4' />}
+          iconName="chartBar"
+          iconSize="md"
           label='Progress Line'
           onClick={handleToggleProgressLine}
           tooltip='Show or hide the progress line'
@@ -1544,7 +1532,8 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
         </div>
         
         <RibbonButton
-          icon={<DocumentTextIcon className='w-4 h-4' />}
+          iconName="documentText"
+          iconSize="md"
           label='Set Status'
           onClick={() => console.log('Set Task Status clicked')}
           tooltip='Manually update task progress'
@@ -1556,7 +1545,8 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
         {/* Colour Split Button */}
         <div className="relative" ref={colorButtonRef}>
           <RibbonButton
-            icon={<PaintBrushIcon className='w-4 h-4' />}
+            iconName="paintBrush"
+            iconSize="md"
             label='Colour'
             onClick={handleApplyLastColor}
             tooltip={`Apply last used color (${lastUsedColor})`}
@@ -1564,7 +1554,8 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
             className="split"
           />
           <RibbonButton
-            icon={<ChevronDownIcon className='w-3 h-3' />}
+            iconName="chevronDown"
+            iconSize="sm"
             label=""
             onClick={handleColorMenuToggle}
             tooltip="Choose color from palette"
@@ -1576,7 +1567,8 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
         {/* Bar Style Split Button */}
         <div className="relative" ref={barStyleButtonRef}>
           <RibbonButton
-            icon={<Squares2X2Icon className='w-4 h-4' />}
+            iconName="squares2X2"
+            iconSize="md"
             label='Bar Style'
             onClick={handleApplyLastBarStyle}
             tooltip={`Apply last used style (${lastUsedBarStyle})`}
@@ -1584,7 +1576,8 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
             className="split"
           />
           <RibbonButton
-            icon={<ChevronDownIcon className='w-3 h-3' />}
+            iconName="chevronDown"
+            iconSize="sm"
             label=""
             onClick={handleBarStyleMenuToggle}
             tooltip="Choose bar style"
@@ -1594,7 +1587,8 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
         </div>
         
         <RibbonButton
-          icon={<PencilIcon className='w-4 h-4' />}
+          iconName="pencil"
+          iconSize="md"
           label='Bar Text'
           onClick={() => console.log('Edit Bar Text clicked')}
           tooltip='Modify bar text fields'
@@ -1604,7 +1598,8 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
       {/* Print/Export Group */}
       <RibbonGroup title='Print/Export'>
         <RibbonButton
-          icon={<PrinterIcon className='w-4 h-4' />}
+          iconName="printer"
+          iconSize="md"
           label='Print'
           onClick={handlePrint}
           tooltip='Print project schedule with advanced options'
@@ -1614,7 +1609,8 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
         {/* Export Split Button */}
         <div className="relative" ref={exportButtonRef}>
           <RibbonButton
-            icon={<DocumentArrowDownIcon className='w-4 h-4' />}
+            iconName="documentArrowDown"
+            iconSize="md"
             label='Export'
             onClick={handleExportMenuToggle}
             tooltip='Export to various formats'
@@ -1622,7 +1618,8 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
             className="split"
           />
           <RibbonButton
-            icon={<ChevronDownIcon className='w-3 h-3' />}
+            iconName="chevronDown"
+            iconSize="sm"
             label=""
             onClick={handleExportMenuToggle}
             tooltip="Choose export format"
@@ -1635,7 +1632,8 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
       {/* Status Group */}
       <RibbonGroup title='Status'>
         <RibbonButton
-          icon={<ExclamationTriangleIcon className='w-4 h-4' />}
+          iconName="exclamationTriangle"
+          iconSize="md"
           label='Show Critical Path'
           onClick={handleCriticalPathToggle}
           tooltip="Toggle visibility of the project's critical path"
@@ -1645,14 +1643,16 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
         {/* Baselines Split Button */}
         <div className="relative" ref={baselinesButtonRef}>
           <RibbonButton
-            icon={<ChartBarIcon className='w-4 h-4' />}
+            iconName="chartBar"
+            iconSize="md"
             label='Baselines'
             onClick={handleBaselinesMenuToggle}
             tooltip='Set or compare project baselines'
             className="split"
           />
           <RibbonButton
-            icon={<ChevronDownIcon className='w-3 h-3' />}
+            iconName="chevronDown"
+            iconSize="sm"
             label=""
             onClick={handleBaselinesMenuToggle}
             tooltip="Choose baseline action"
@@ -1661,7 +1661,8 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
         </div>
         
         <RibbonButton
-          icon={<LinkIcon className='w-4 h-4' />}
+          iconName="link"
+          iconSize="md"
           label='Constraints'
           onClick={() => console.log('Apply Constraints clicked')}
           tooltip='Add or manage task constraints'
@@ -1671,25 +1672,29 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
       {/* Zoom Group */}
       <RibbonGroup title='Zoom'>
         <RibbonButton
-          icon={<MagnifyingGlassPlusIcon className='w-4 h-4' />}
+          iconName="magnifyingGlassPlus"
+          iconSize="md"
           label='Zoom In'
           onClick={zoomIn}
           tooltip='Zoom into the Gantt chart'
         />
         <RibbonButton
-          icon={<MagnifyingGlassMinusIcon className='w-4 h-4' />}
+          iconName="magnifyingGlassMinus"
+          iconSize="md"
           label='Zoom Out'
           onClick={zoomOut}
           tooltip='Zoom out of the Gantt chart'
         />
         <RibbonButton
-          icon={<RectangleStackIcon className='w-4 h-4' />}
+          iconName="rectangleStack"
+          iconSize="md"
           label='Fit to View'
           onClick={zoomToFit}
           tooltip='Fit all tasks in view'
         />
         <RibbonButton
-          icon={<ClockIcon className='w-4 h-4' />}
+          iconName="clock"
+          iconSize="md"
           label='Go to Today'
           onClick={goToToday}
           tooltip="Scroll Gantt to today's date"
@@ -1699,28 +1704,32 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
       {/* Editing Group */}
       <RibbonGroup title='Editing'>
         <RibbonButton
-          icon={<PencilIcon className='w-4 h-4' />}
+          iconName="pencil"
+          iconSize="md"
           label='Rename'
           onClick={handleRename}
           tooltip='Rename selected task'
           disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
         />
         <RibbonButton
-          icon={<ChatBubbleLeftRightIcon className='w-4 h-4' />}
+          iconName="chatBubbleLeftRight"
+          iconSize="md"
           label='Note…'
           onClick={handleNoteOpen}
           tooltip='Add or edit task note'
           disabled={!selectedTaskId && (!selectedTaskIds || selectedTaskIds.length === 0)}
         />
         <RibbonButton
-          icon={<LinkIconSolid className='w-4 h-4' />}
+          iconName="link"
+          iconSize="md"
           label='Link'
           onClick={() => setShowLinkEditor(true)}
           tooltip='Create links between selected tasks'
           disabled={selectedTaskIds.size < 2}
         />
         <RibbonButton
-          icon={<LinkIcon className='w-4 h-4' />}
+          iconName="link"
+          iconSize="md"
           label='Unlink'
           onClick={handleUnlink}
           tooltip='Remove links from selected tasks'
