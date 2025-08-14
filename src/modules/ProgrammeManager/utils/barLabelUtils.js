@@ -545,3 +545,147 @@ export const getLabelTooltip = (label, task) => {
 
   return `${labelType.label}: ${fullValue}`;
 };
+
+/**
+ * Get bar labels based on FormatTab bar text options
+ * @param {Object} task - Task object
+ * @param {Object} barTextOptions - Bar text options from FormatTab
+ * @param {number} barWidth - Width of the task bar in pixels
+ * @param {Object} barStyle - Current bar style for theme-aware colors
+ * @returns {Array} Array of label configurations to render
+ */
+export const getBarTextLabels = (task, barTextOptions = {}, barWidth = 0, barStyle = {}) => {
+  const labels = [];
+  
+  if (!barTextOptions || Object.keys(barTextOptions).length === 0) {
+    return labels;
+  }
+
+  // Calculate text width for collision detection
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+
+  // Generate label text based on options
+  const labelParts = [];
+  
+  if (barTextOptions.taskName && task.name) {
+    labelParts.push(task.name);
+  }
+  
+  if (barTextOptions.id && task.id) {
+    labelParts.push(`ID: ${task.id}`);
+  }
+  
+  if (barTextOptions.percentComplete !== undefined) {
+    const progress = task.progress || 0;
+    labelParts.push(`${Math.round(progress)}%`);
+  }
+  
+  if (barTextOptions.start && task.start_date) {
+    const startDate = new Date(task.start_date);
+    labelParts.push(startDate.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short'
+    }));
+  }
+  
+  if (barTextOptions.finish && task.end_date) {
+    const endDate = new Date(task.end_date);
+    labelParts.push(endDate.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short'
+    }));
+  }
+
+  if (labelParts.length === 0) {
+    return labels;
+  }
+
+  const fullText = labelParts.join(' • ');
+  const textWidth = ctx.measureText(fullText).width;
+  
+  // Determine if label should be inside or outside the bar
+  const minBarWidth = 80; // Minimum width to show text inside
+  const textPadding = 8; // Padding around text
+  const connectorWidth = 20; // Width of connector line if outside
+  
+  const labelConfig = {
+    id: `bar-text-${task.id}`,
+    value: fullText,
+    position: 'inside', // or 'outside'
+    className: 'bar-text-label',
+    style: {},
+    showBackground: true,
+    showConnector: false,
+    dataAttributes: {}
+  };
+
+  // Theme-aware color selection
+  const getContrastColor = (backgroundColor) => {
+    // Simple contrast calculation
+    const hex = backgroundColor.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness > 128 ? '#0e1624' : '#eef3fb';
+  };
+
+  const barColor = barStyle.backgroundColor || '#3B82F6';
+  const textColor = getContrastColor(barColor);
+  const bgColor = barStyle.backgroundColor || 'rgba(0, 0, 0, 0.7)';
+
+  if (barWidth >= minBarWidth && textWidth + textPadding * 2 <= barWidth) {
+    // Label fits inside the bar
+    labelConfig.position = 'inside';
+    labelConfig.style = {
+      position: 'absolute',
+      left: '4px',
+      right: '4px',
+      top: '50%',
+      transform: 'translateY(-50%)',
+      fontSize: '11px',
+      fontWeight: '500',
+      color: textColor,
+      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+      padding: '2px 4px',
+      borderRadius: '2px',
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      textAlign: 'center',
+      lineHeight: '1.2',
+      zIndex: 10,
+      pointerEvents: 'none',
+      userSelect: 'none'
+    };
+  } else {
+    // Label goes outside the bar with connector
+    labelConfig.position = 'outside';
+    labelConfig.showConnector = true;
+    labelConfig.style = {
+      position: 'absolute',
+      left: `${barWidth + 4}px`,
+      top: '50%',
+      transform: 'translateY(-50%)',
+      fontSize: '11px',
+      fontWeight: '500',
+      color: textColor,
+      backgroundColor: bgColor,
+      padding: '2px 6px',
+      borderRadius: '3px',
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      maxWidth: '200px',
+      zIndex: 10,
+      pointerEvents: 'none',
+      userSelect: 'none',
+      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)'
+    };
+  }
+
+  labels.push(labelConfig);
+  return labels;
+};

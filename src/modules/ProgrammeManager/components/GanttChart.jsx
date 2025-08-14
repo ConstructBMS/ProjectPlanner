@@ -84,6 +84,7 @@ import {
   getBaselineComparisonMode,
 } from '../utils/baselineManagerUtils';
 import { getTaskBarLabels, getLabelTooltip } from '../utils/barLabelUtils';
+import { getBarTextLabels } from '../utils/barLabelUtils';
 import { getGanttZoomPrefs, saveGanttZoomPrefs } from '../utils/prefs';
 import {
   createProgressEditState,
@@ -133,8 +134,7 @@ const GanttChart = () => {
   
   const { applyFilters } = useFilterContext();
 
-  const { currentProjectId } = useTaskContext();
-  const { tasks } = useTaskContext();
+  const { currentProjectId, tasks, taskLinks, selectedTaskId } = useTaskContext();
 
   // Calculate scaled width based on time unit
   const getScaledWidth = useMemo(() => {
@@ -251,6 +251,15 @@ const GanttChart = () => {
   const [zoomScale, setZoomScale] = useState(1.0);
   const [zoomCenterDate, setZoomCenterDate] = useState(null);
   const [isZooming, setIsZooming] = useState(false);
+  
+  // Bar text options state
+  const [barTextOptions, setBarTextOptions] = useState({
+    taskName: true,
+    id: false,
+    percentComplete: false,
+    start: false,
+    finish: false
+  });
 
   const allTasks = getVisibleTasks(viewState.taskFilter);
   const tasks = applyFilters(allTasks);
@@ -2144,6 +2153,34 @@ const GanttChart = () => {
     loadZoomPrefs();
   }, [currentProjectId]);
 
+  // Load bar text options and listen for changes
+  useEffect(() => {
+    // Load saved bar text options
+    const loadBarTextOptions = () => {
+      try {
+        const savedBarText = localStorage.getItem('pm.format.barText');
+        if (savedBarText) {
+          setBarTextOptions(JSON.parse(savedBarText));
+        }
+      } catch (error) {
+        console.warn('Failed to load bar text options:', error);
+      }
+    };
+
+    // Listen for bar text option changes from FormatTab
+    const handleBarTextChange = (event) => {
+      const { options } = event.detail;
+      setBarTextOptions(options);
+    };
+
+    loadBarTextOptions();
+    window.addEventListener('FORMAT_BAR_TEXT_SET', handleBarTextChange);
+
+    return () => {
+      window.removeEventListener('FORMAT_BAR_TEXT_SET', handleBarTextChange);
+    };
+  }, []);
+
   return (
     <div className='gantt-viewport pm-content-dark'>
       {/* Asta-style Timeline Header */}
@@ -2773,50 +2810,44 @@ const GanttChart = () => {
                             );
                           })()}
 
-                          {/* Custom Bar Labels */}
+                          {/* Bar Text Labels */}
                           {(() => {
                             const barWidth = parseFloat(width);
-                            const labels = getTaskBarLabels(
-                              task,
-                              viewState.userSettings,
-                              barWidth
-                            );
+                            const barStyle = getTaskBarStyle(task);
+                            const labels = getBarTextLabels(task, barTextOptions, barWidth, barStyle);
 
                             return labels.map((label, index) => (
-                              <div
-                                key={label.id}
-                                className={`absolute pointer-events-none ${label.className}`}
-                                style={label.style}
-                                title={getLabelTooltip(label, task)}
-                              >
-                                {label.value}
+                              <div key={label.id}>
+                                {/* Connector line for outside labels */}
+                                {label.showConnector && (
+                                  <div
+                                    className="absolute pointer-events-none bar-text-connector"
+                                    style={{
+                                      left: `${barWidth}px`,
+                                      top: '50%',
+                                      width: '4px',
+                                      height: '1px',
+                                      backgroundColor: label.style.color || '#666',
+                                      transform: 'translateY(-50%)',
+                                      zIndex: 9
+                                    }}
+                                  />
+                                )}
+                                
+                                {/* Label text */}
+                                <div
+                                  className={`absolute pointer-events-none ${label.className}`}
+                                  style={label.style}
+                                  title={label.value}
+                                  data-position={label.position}
+                                >
+                                  {label.value}
+                                </div>
                               </div>
                             ));
                           })()}
 
-                          {/* Fallback Task Name Label */}
-                          {width !== '0px' &&
-                            parseFloat(width) > 60 &&
-                            (() => {
-                              const barWidth = parseFloat(width);
-                              const labels = getTaskBarLabels(
-                                task,
-                                viewState.userSettings,
-                                barWidth
-                              );
 
-                              // Only show fallback if no custom labels are configured or enabled
-                              if (labels.length === 0) {
-                                return (
-                                  <div className='absolute inset-0 flex items-center justify-center px-1 pointer-events-none'>
-                                    <span className='text-white text-xs font-medium truncate' title={task.name}>
-                                      {task.name}
-                                    </span>
-                                  </div>
-                                );
-                              }
-                              return null;
-                            })()}
 
                           {/* Float Labels */}
                           {isFloatDisplayEnabled(viewState) &&

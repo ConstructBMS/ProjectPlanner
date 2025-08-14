@@ -138,3 +138,39 @@
   stroke-width: 2px !important;
   filter: drop-shadow(0 0 4px rgba(139, 92, 246, 0.5));
 }
+
+/* Bar Text Labels */
+.bar-text-label {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  transition: opacity 0.2s ease-out;
+}
+
+.bar-text-label:hover {
+  opacity: 0.9;
+}
+
+/* Inside bar labels */
+.bar-text-label[data-position="inside"] {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Outside bar labels */
+.bar-text-label[data-position="outside"] {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Connector line for outside labels */
+.bar-text-connector {
+  transition: opacity 0.2s ease-out;
+}
+
+/* Dark theme adjustments */
+.dark .bar-text-label {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+.dark .bar-text-label[data-position="outside"] {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
