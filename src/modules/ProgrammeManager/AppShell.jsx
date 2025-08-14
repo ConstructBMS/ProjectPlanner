@@ -87,6 +87,29 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
     }
   }, [networkStatus.isOnline, syncPending, flushOfflineQueue]);
 
+  // Set up realtime event listeners
+  useEffect(() => {
+    const handleTaskRealtimeUpdate = (event) => {
+      const { handleRealtimeUpdate } = usePlannerStore.getState();
+      handleRealtimeUpdate(event);
+    };
+
+    const handleTaskLinkRealtimeUpdate = (event) => {
+      const { handleRealtimeLinkUpdate } = usePlannerStore.getState();
+      handleRealtimeLinkUpdate(event);
+    };
+
+    // Add event listeners
+    window.addEventListener('TASK_REALTIME_UPDATE', handleTaskRealtimeUpdate);
+    window.addEventListener('TASK_LINK_REALTIME_UPDATE', handleTaskLinkRealtimeUpdate);
+
+    // Cleanup on unmount
+    return () => {
+      window.removeEventListener('TASK_REALTIME_UPDATE', handleTaskRealtimeUpdate);
+      window.removeEventListener('TASK_LINK_REALTIME_UPDATE', handleTaskLinkRealtimeUpdate);
+    };
+  }, []);
+
   // Handle main pane ratios change
   const handleMainPaneRatiosChange = (ratios) => {
     setMainPaneRatios(ratios);

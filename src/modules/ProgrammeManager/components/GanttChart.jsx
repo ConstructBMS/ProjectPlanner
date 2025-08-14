@@ -1,4 +1,3 @@
- 
 import React, {
   useRef,
   useEffect,
@@ -201,8 +200,6 @@ const GanttChart = () => {
     taskId: null,
     startX: 0,
     originalStartDate: null,
-    originalEndDate: null,
-    lastDayOffset: 0, // Track last day offset to prevent unnecessary updates
   });
 
   // Drag-to-link state
@@ -1081,8 +1078,6 @@ const GanttChart = () => {
       taskId: task.id,
       startX: e.clientX,
       originalStartDate: new Date(task.startDate),
-      originalEndDate: new Date(task.endDate),
-      lastDayOffset: 0, // Initialize day offset tracking
     });
 
     // Add global mouse event listeners
@@ -1106,7 +1101,6 @@ const GanttChart = () => {
 
       // Calculate new dates using snapped values
       const newStartDate = addDays(dragging.originalStartDate, dayOffset);
-      const newEndDate = addDays(dragging.originalEndDate, dayOffset);
 
       // Get predecessor constraints
       const predecessors = getPredecessors(task.id, taskLinks, tasks);
@@ -1118,14 +1112,13 @@ const GanttChart = () => {
       const validation = validateTaskDates(
         task,
         newStartDate,
-        newEndDate,
+        task.endDate,
         predecessors,
         taskCalendar
       );
 
       // Update task dates with validated values
       task.startDate = validation.startDate.toISOString();
-      task.endDate = validation.endDate.toISOString();
 
       // Show constraint warning if needed
       if (validation.wasConstrained) {
@@ -1153,7 +1146,6 @@ const GanttChart = () => {
         dayOffset,
         snappedDeltaX,
         newStartDate: validation.startDate.toISOString(),
-        newEndDate: validation.endDate.toISOString(),
         wasConstrained: validation.wasConstrained,
       });
     }
@@ -1180,7 +1172,6 @@ const GanttChart = () => {
         console.error('Error updating task dates:', error);
         // Revert to original dates on error
         task.startDate = dragging.originalStartDate.toISOString();
-        task.endDate = dragging.originalEndDate.toISOString();
       }
     }
 
@@ -1196,8 +1187,6 @@ const GanttChart = () => {
       taskId: null,
       startX: 0,
       originalStartDate: null,
-      originalEndDate: null,
-      lastDayOffset: 0,
     });
 
     // Remove global event listeners
@@ -2006,6 +1995,25 @@ const GanttChart = () => {
 
     return baseClasses;
   };
+
+  // Handle Gantt re-layout events from realtime updates
+  useEffect(() => {
+    const handleGanttRelayout = () => {
+      // Force a re-render of the Gantt chart
+      // This will trigger recalculation of task positions and layout
+      if (svgContainerRef.current) {
+        // Trigger a small DOM change to force re-render
+        const currentScrollLeft = svgContainerRef.current.scrollLeft;
+        svgContainerRef.current.scrollLeft = currentScrollLeft;
+      }
+    };
+
+    window.addEventListener('GANTT_RELAYOUT', handleGanttRelayout);
+
+    return () => {
+      window.removeEventListener('GANTT_RELAYOUT', handleGanttRelayout);
+    };
+  }, []);
 
   return (
     <div className='gantt-viewport pm-content-dark'>

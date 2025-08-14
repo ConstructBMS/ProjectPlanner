@@ -1,7 +1,31 @@
 import { create } from 'zustand';
-import { getProjects, getTasks, getLinks, seedDemoTasks, updateTaskPartial, updateTasksBatch } from '../data/adapter.constructbms';
+import { getProjects, getTasks, getLinks, seedDemoTasks, updateTaskPartial, updateTasksBatch, getRealtimeChannel, unsubscribeRealtime } from '../data/adapter.constructbms';
 import { Project, Task, TaskLink, TaskUpdate } from '../data/types';
 import { networkManager, isOnline } from '../utils/net';
+import { safeGetColumn, tableNames, columns } from '../data/adapter.config';
+
+// Transform raw DB data to our interface using safe column access
+const transformTask = (rawData: any): Task => ({
+  id: safeGetColumn(rawData, tableNames.tasks, columns.tasks.id, ''),
+  project_id: safeGetColumn(rawData, tableNames.tasks, columns.tasks.project, ''),
+  name: safeGetColumn(rawData, tableNames.tasks, columns.tasks.name, ''),
+  start_date: safeGetColumn(rawData, tableNames.tasks, columns.tasks.start),
+  end_date: safeGetColumn(rawData, tableNames.tasks, columns.tasks.end),
+  duration_days: safeGetColumn(rawData, tableNames.tasks, columns.tasks.duration),
+  progress: safeGetColumn(rawData, tableNames.tasks, columns.tasks.progress),
+  status: safeGetColumn(rawData, tableNames.tasks, columns.tasks.status),
+  wbs: safeGetColumn(rawData, tableNames.tasks, columns.tasks.wbs),
+  resource_id: safeGetColumn(rawData, tableNames.tasks, columns.tasks.resource),
+  description: safeGetColumn(rawData, tableNames.tasks, 'description'),
+  priority: safeGetColumn(rawData, tableNames.tasks, 'priority'),
+  parent_task_id: safeGetColumn(rawData, tableNames.tasks, 'parent_task_id'),
+  assigned_to: safeGetColumn(rawData, tableNames.tasks, 'assigned_to'),
+  estimated_hours: safeGetColumn(rawData, tableNames.tasks, 'estimated_hours'),
+  actual_hours: safeGetColumn(rawData, tableNames.tasks, 'actual_hours'),
+  cost: safeGetColumn(rawData, tableNames.tasks, 'cost'),
+  created_at: safeGetColumn(rawData, tableNames.tasks, 'created_at'),
+  updated_at: safeGetColumn(rawData, tableNames.tasks, 'updated_at')
+});
 
 interface MutationQueue {
   taskId: string;
@@ -32,6 +56,10 @@ interface PlannerState {
   offlineQueue: OfflineQueue[];
   syncPending: boolean;
   
+  // Realtime subscriptions
+  realtimeSubscribed: boolean;
+  ganttRelayoutTimeout: NodeJS.Timeout | null;
+  
   // Actions
   loadProjects: () => Promise<void>;
   selectProject: (id: string) => void;
@@ -49,6 +77,13 @@ interface PlannerState {
   addToOfflineQueue: (taskId: string, patch: Partial<TaskUpdate>) => void;
   flushOfflineQueue: () => Promise<void>;
   clearOfflineQueue: () => void;
+  
+  // Realtime subscription management
+  subscribeProject: (projectId: string) => void;
+  unsubscribeProject: () => void;
+  handleRealtimeUpdate: (event: CustomEvent) => void;
+  handleRealtimeLinkUpdate: (event: CustomEvent) => void;
+  triggerGanttRelayout: () => void;
 }
 
 export const usePlannerStore = create<PlannerState>((set, get) => ({
@@ -63,6 +98,8 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
   mutationTimeouts: new Map(),
   offlineQueue: [],
   syncPending: false,
+  realtimeSubscribed: false,
+  ganttRelayoutTimeout: null,
 
   // Load all projects from ConstructBMS
   loadProjects: async () => {
@@ -97,7 +134,17 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
 
   // Select a project (doesn't load data yet)
   selectProject: (id: string) => {
+    const state = get();
+    
+    // Unsubscribe from previous project's realtime updates
+    if (state.currentProjectId && state.realtimeSubscribed) {
+      get().unsubscribeProject();
+    }
+    
     set({ currentProjectId: id });
+    
+    // Subscribe to new project's realtime updates
+    get().subscribeProject(id);
   },
 
   // Hydrate planner with project data
@@ -383,6 +430,133 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
       offlineQueue: [],
       syncPending: false
     });
+  },
+
+  // Realtime subscription management
+  subscribeProject: (projectId: string) => {
+    try {
+      getRealtimeChannel(projectId);
+      set({ realtimeSubscribed: true });
+      console.log('Subscribed to realtime updates for project:', projectId);
+    } catch (error) {
+      console.error('Failed to subscribe to realtime updates:', error);
+      set({ realtimeSubscribed: false });
+    }
+  },
+
+  unsubscribeProject: () => {
+    try {
+      unsubscribeRealtime();
+      set({ realtimeSubscribed: false });
+      console.log('Unsubscribed from realtime updates');
+    } catch (error) {
+      console.error('Failed to unsubscribe from realtime updates:', error);
+    }
+  },
+
+  // Handle realtime task updates
+  handleRealtimeUpdate: (event: CustomEvent) => {
+    const { type, data, old } = event.detail;
+    const state = get();
+
+    console.log('Handling realtime task update:', type, data);
+
+    switch (type) {
+      case 'INSERT':
+        if (data) {
+          const transformedTask = transformTask(data);
+          set((state) => ({
+            tasks: [...state.tasks, transformedTask]
+          }));
+          get().triggerGanttRelayout();
+        }
+        break;
+
+      case 'UPDATE':
+        if (data) {
+          const transformedTask = transformTask(data);
+          set((state) => ({
+            tasks: state.tasks.map(task => 
+              task.id === transformedTask.id ? transformedTask : task
+            )
+          }));
+          get().triggerGanttRelayout();
+        }
+        break;
+
+      case 'DELETE':
+        if (old) {
+          set((state) => ({
+            tasks: state.tasks.filter(task => task.id !== old.id)
+          }));
+          get().triggerGanttRelayout();
+        }
+        break;
+
+      default:
+        console.warn('Unknown realtime event type:', type);
+    }
+  },
+
+  // Handle realtime task link updates
+  handleRealtimeLinkUpdate: (event: CustomEvent) => {
+    const { type, data, old } = event.detail;
+    const state = get();
+
+    console.log('Handling realtime task link update:', type, data);
+
+    switch (type) {
+      case 'INSERT':
+        if (data) {
+          set((state) => ({
+            links: [...state.links, data]
+          }));
+          get().triggerGanttRelayout();
+        }
+        break;
+
+      case 'UPDATE':
+        if (data) {
+          set((state) => ({
+            links: state.links.map(link => 
+              link.id === data.id ? data : link
+            )
+          }));
+          get().triggerGanttRelayout();
+        }
+        break;
+
+      case 'DELETE':
+        if (old) {
+          set((state) => ({
+            links: state.links.filter(link => link.id !== old.id)
+          }));
+          get().triggerGanttRelayout();
+        }
+        break;
+
+      default:
+        console.warn('Unknown realtime link event type:', type);
+    }
+  },
+
+  // Debounced Gantt re-layout
+  triggerGanttRelayout: () => {
+    const state = get();
+    
+    // Clear existing timeout
+    if (state.ganttRelayoutTimeout) {
+      clearTimeout(state.ganttRelayoutTimeout);
+    }
+
+    // Set new timeout for debounced re-layout
+    const timeout = setTimeout(() => {
+      // Dispatch event to trigger Gantt re-layout
+      window.dispatchEvent(new CustomEvent('GANTT_RELAYOUT'));
+      set({ ganttRelayoutTimeout: null });
+    }, 100);
+
+    set({ ganttRelayoutTimeout: timeout });
   },
 
   // Legacy task actions (kept for backward compatibility)

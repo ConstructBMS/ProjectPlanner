@@ -13,6 +13,90 @@ import {
 } from './types';
 import { tables, safeGetColumn, tableNames, columns } from './adapter.config';
 
+// Realtime subscription management
+let currentSubscription = null;
+
+export const getRealtimeChannel = (projectId: string) => {
+  // Unsubscribe from any existing subscription
+  if (currentSubscription) {
+    currentSubscription.unsubscribe();
+    currentSubscription = null;
+  }
+
+  // Create new subscription for the project
+  currentSubscription = supabase
+    .channel(`project-${projectId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: tableNames.tasks,
+        filter: `${columns.tasks.project}=eq.${projectId}`
+      },
+      (payload) => {
+        console.log('Task change detected:', payload);
+        // This will be handled by the store
+        window.dispatchEvent(new CustomEvent('TASK_REALTIME_UPDATE', {
+          detail: { type: payload.eventType, data: payload.new, old: payload.old }
+        }));
+      }
+    )
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'project_dependencies', // Using the actual table name for links
+        filter: `project_id=eq.${projectId}`
+      },
+      (payload) => {
+        console.log('Task link change detected:', payload);
+        // Transform the data to match our TaskLink format
+        const transformedData = payload.new ? {
+          id: payload.new.id,
+          project_id: payload.new.project_id,
+          pred_id: payload.new.predecessor_task_id,
+          succ_id: payload.new.successor_task_id,
+          type: payload.new.dependency_type,
+          lag_days: payload.new.lag_days,
+          created_at: payload.new.created_at
+        } : null;
+
+        const transformedOld = payload.old ? {
+          id: payload.old.id,
+          project_id: payload.old.project_id,
+          pred_id: payload.old.predecessor_task_id,
+          succ_id: payload.old.successor_task_id,
+          type: payload.old.dependency_type,
+          lag_days: payload.old.lag_days,
+          created_at: payload.old.created_at
+        } : null;
+
+        window.dispatchEvent(new CustomEvent('TASK_LINK_REALTIME_UPDATE', {
+          detail: { 
+            type: payload.eventType, 
+            data: transformedData, 
+            old: transformedOld 
+          }
+        }));
+      }
+    )
+    .subscribe((status) => {
+      console.log('Realtime subscription status:', status);
+    });
+
+  return currentSubscription;
+};
+
+export const unsubscribeRealtime = () => {
+  if (currentSubscription) {
+    currentSubscription.unsubscribe();
+    currentSubscription = null;
+    console.log('Unsubscribed from realtime updates');
+  }
+};
+
 // Demo data generators
 const generateDemoProjects = (): DemoProject[] => {
   const now = new Date();
