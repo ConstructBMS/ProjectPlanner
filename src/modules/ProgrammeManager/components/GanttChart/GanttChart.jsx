@@ -12,7 +12,7 @@ import {
 import './GanttChart.css';
 
 const GanttChart = () => {
-  const { tasks, links, selectedTaskIds } = usePlannerStore();
+  const { tasks, links, selectedTaskIds, selectOne, toggleSelection, selectRange, lastSelectedTaskId } = usePlannerStore();
   const containerRef = useRef(null);
   const [containerSize, setContainerSize] = useState({ width: 800, height: 600 });
 
@@ -51,6 +51,23 @@ const GanttChart = () => {
       });
     }
   }, []);
+
+  // Handle task bar click for selection
+  const handleTaskClick = useCallback((e, taskId) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (e.shiftKey && lastSelectedTaskId) {
+      // Range selection
+      selectRange(lastSelectedTaskId, taskId);
+    } else if (e.ctrlKey || e.metaKey) {
+      // Toggle selection
+      toggleSelection(taskId);
+    } else {
+      // Single selection
+      selectOne(taskId);
+    }
+  }, [selectOne, toggleSelection, selectRange, lastSelectedTaskId]);
 
   // Set up resize observer
   useEffect(() => {
@@ -181,6 +198,7 @@ const GanttChart = () => {
             minWidth: '4px'
           }}
           title={`${task.name} (${formatDate(bar.start)} - ${formatDate(bar.end)})`}
+          onClick={(e) => handleTaskClick(e, task.id)}
         >
           {bar.width > 60 && (
             <div 
