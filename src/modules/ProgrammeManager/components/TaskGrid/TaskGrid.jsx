@@ -1,16 +1,18 @@
 // eslint-disable-next-line no-unused-vars
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { ChevronUpIcon, ChevronDownIcon, PlusIcon, MinusIcon } from '@heroicons/react/24/outline';
 import { usePlannerStore } from '../../state/plannerStore';
 import { columns, defaultSort } from './columns';
 import './TaskGrid.css';
 
 const TaskGrid = () => {
-  const { tasks, renameTask } = usePlannerStore();
+  const { tasks, mutateTask, selectedTaskIds, selectOne, toggleSelection, selectRange, lastSelectedTaskId } = usePlannerStore();
   const [sortConfig, setSortConfig] = useState(defaultSort);
   const [editingTaskId, setEditingTaskId] = useState(null);
+  const [editingColumn, setEditingColumn] = useState(null);
   const [editValue, setEditValue] = useState('');
   const editInputRef = useRef(null);
+  const progressTimeoutRef = useRef(null);
 
   // Sort tasks based on current sort configuration
   const sortedTasks = useMemo(() => {
@@ -42,29 +44,48 @@ const TaskGrid = () => {
     }));
   }, []);
 
+  // Handle row click for selection
+  const handleRowClick = useCallback((e, taskId) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (e.shiftKey && lastSelectedTaskId) {
+      // Range selection
+      selectRange(lastSelectedTaskId, taskId);
+    } else if (e.ctrlKey || e.metaKey) {
+      // Toggle selection
+      toggleSelection(taskId);
+    } else {
+      // Single selection
+      selectOne(taskId);
+    }
+  }, [selectOne, toggleSelection, selectRange, lastSelectedTaskId]);
+
   // Handle inline rename start
   const handleRenameStart = useCallback((taskId, currentName) => {
     setEditingTaskId(taskId);
-    setEditValue(currentName);
+    setEditingColumn('name');
+    setEditValue(currentName || '');
   }, []);
 
   // Handle inline rename commit
-  const handleRenameCommit = useCallback(() => {
-    if (editingTaskId && editValue.trim()) {
-      renameTask(editingTaskId, editValue.trim());
-      
-      // Emit start event for future backend integration
-      window.dispatchEvent(new window.CustomEvent('TASK_RENAME_START', {
-        detail: { taskId: editingTaskId }
-      }));
+  const handleRenameCommit = useCallback(async () => {
+    if (editingTaskId && editValue.trim() && editingColumn === 'name') {
+      try {
+        await mutateTask(editingTaskId, { name: editValue.trim() });
+      } catch (error) {
+        console.error('Failed to update task name:', error);
+      }
     }
     setEditingTaskId(null);
+    setEditingColumn(null);
     setEditValue('');
-  }, [editingTaskId, editValue, renameTask]);
+  }, [editingTaskId, editValue, editingColumn, mutateTask]);
 
   // Handle inline rename cancel
   const handleRenameCancel = useCallback(() => {
     setEditingTaskId(null);
+    setEditingColumn(null);
     setEditValue('');
   }, []);
 
@@ -77,13 +98,48 @@ const TaskGrid = () => {
     }
   }, [handleRenameCommit, handleRenameCancel]);
 
+  // Handle progress stepper
+  const handleProgressChange = useCallback(async (taskId, newProgress) => {
+    // Clamp progress between 0 and 100
+    const clampedProgress = Math.max(0, Math.min(100, newProgress));
+
+    // Clear existing timeout
+    if (progressTimeoutRef.current) {
+      clearTimeout(progressTimeoutRef.current);
+    }
+
+    // Debounce the save
+    progressTimeoutRef.current = setTimeout(async () => {
+      try {
+        await mutateTask(taskId, { progress: clampedProgress });
+      } catch (error) {
+        console.error('Failed to update task progress:', error);
+      }
+    }, 250);
+  }, [mutateTask]);
+
+  // Handle progress stepper buttons
+  const handleProgressStep = useCallback((taskId, currentProgress, step) => {
+    const newProgress = currentProgress + step;
+    handleProgressChange(taskId, newProgress);
+  }, [handleProgressChange]);
+
   // Focus edit input when editing starts
   useEffect(() => {
-    if (editingTaskId && editInputRef.current) {
+    if (editingTaskId && editingColumn === 'name' && editInputRef.current) {
       editInputRef.current.focus();
       editInputRef.current.select();
     }
-  }, [editingTaskId]);
+  }, [editingTaskId, editingColumn]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (progressTimeoutRef.current) {
+        clearTimeout(progressTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Render sort indicator
   const renderSortIndicator = (columnId) => {
@@ -100,7 +156,8 @@ const TaskGrid = () => {
 
   // Render cell content
   const renderCell = (task, column) => {
-    if (column.id === 'name' && editingTaskId === task.id) {
+    // Handle inline editing for name column
+    if (column.id === 'name' && editingTaskId === task.id && editingColumn === 'name') {
       return (
         <input
           ref={editInputRef}
@@ -114,6 +171,47 @@ const TaskGrid = () => {
       );
     }
     
+    // Handle progress column with stepper
+    if (column.id === 'progress') {
+      const progress = task.progress || 0;
+      return (
+        <div className="flex items-center space-x-2">
+          <div className="flex-1 bg-gray-200 rounded-full h-2">
+            <div 
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <div className="flex items-center space-x-1">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleProgressStep(task.id, progress, -5);
+              }}
+              className="p-1 hover:bg-gray-100 rounded transition-colors"
+              title="Decrease by 5%"
+            >
+              <MinusIcon className="w-3 h-3 text-gray-600" />
+            </button>
+            <span className="text-sm text-gray-600 min-w-[2.5rem] text-right">
+              {progress}%
+            </span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleProgressStep(task.id, progress, 5);
+              }}
+              className="p-1 hover:bg-gray-100 rounded transition-colors"
+              title="Increase by 5%"
+            >
+              <PlusIcon className="w-3 h-3 text-gray-600" />
+            </button>
+          </div>
+        </div>
+      );
+    }
+    
+    // Handle name column with double-click to edit
     if (column.id === 'name') {
       return (
         <div
@@ -160,25 +258,37 @@ const TaskGrid = () => {
 
       {/* Body */}
       <div className="task-grid-body">
-        {sortedTasks.map((task) => (
-          <div key={task.id} className="task-grid-row hover:bg-gray-50">
-            {columns.map((column) => (
-              <div
-                key={`${task.id}-${column.id}`}
-                className="task-grid-cell"
-                style={{ minWidth: column.minWidth }}
-              >
-                {renderCell(task, column)}
-              </div>
-            ))}
-          </div>
-        ))}
+        {sortedTasks.map((task) => {
+          const isSelected = selectedTaskIds.has(task.id);
+          return (
+            <div 
+              key={task.id} 
+              className={`task-grid-row hover:bg-gray-50 ${isSelected ? 'selected' : ''}`}
+              onClick={(e) => handleRowClick(e, task.id)}
+            >
+              {columns.map((column) => (
+                <div
+                  key={`${task.id}-${column.id}`}
+                  className="task-grid-cell"
+                  style={{ minWidth: column.minWidth }}
+                >
+                  {renderCell(task, column)}
+                </div>
+              ))}
+            </div>
+          );
+        })}
       </div>
 
       {/* Footer */}
       <div className="task-grid-footer">
         <div className="text-sm text-gray-500">
           {sortedTasks.length} task{sortedTasks.length !== 1 ? 's' : ''}
+          {selectedTaskIds.size > 0 && (
+            <span className="ml-2 text-blue-600">
+              • {selectedTaskIds.size} selected
+            </span>
+          )}
         </div>
       </div>
     </div>

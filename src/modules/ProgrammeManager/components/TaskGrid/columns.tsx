@@ -13,10 +13,10 @@ export const columns: Column[] = [
   {
     id: 'name',
     label: 'Task Name',
-    minWidth: 200,
+    minWidth: 220,
     sortable: true,
-    render: (task: Task) => task.name,
-    sortValue: (task: Task) => task.name.toLowerCase()
+    render: (task: Task) => task.name || 'Unnamed Task',
+    sortValue: (task: Task) => (task.name || '').toLowerCase()
   },
   {
     id: 'start_date',
@@ -50,30 +50,34 @@ export const columns: Column[] = [
   },
   {
     id: 'duration_days',
-    label: 'Duration (days)',
+    label: 'Duration',
     minWidth: 100,
     sortable: true,
     render: (task: Task) => {
       if (!task.duration_days) return '-';
-      return task.duration_days.toString();
+      return `${task.duration_days} days`;
     },
     sortValue: (task: Task) => task.duration_days || 0
   },
   {
     id: 'resource_id',
     label: 'Resource',
-    minWidth: 120,
+    minWidth: 160,
     sortable: false,
     render: (task: Task) => {
       if (!task.resource_id) return '-';
       // For now, just show the resource ID. In a real app, you'd look up the resource name
-      return task.resource_id.substring(0, 8) + '...';
+      return (
+        <span className="text-sm text-gray-600 font-mono">
+          {task.resource_id.substring(0, 8)}...
+        </span>
+      );
     }
   },
   {
     id: 'status',
     label: 'Status',
-    minWidth: 100,
+    minWidth: 120,
     sortable: true,
     render: (task: Task) => {
       const status = task.status || 'not-started';
@@ -81,7 +85,8 @@ export const columns: Column[] = [
         'not-started': 'bg-gray-100 text-gray-800',
         'in-progress': 'bg-blue-100 text-blue-800',
         'completed': 'bg-green-100 text-green-800',
-        'on-hold': 'bg-yellow-100 text-yellow-800'
+        'on-hold': 'bg-yellow-100 text-yellow-800',
+        'cancelled': 'bg-red-100 text-red-800'
       };
       
       return (
@@ -94,8 +99,8 @@ export const columns: Column[] = [
   },
   {
     id: 'progress',
-    label: 'Progress (%)',
-    minWidth: 100,
+    label: 'Progress',
+    minWidth: 120,
     sortable: true,
     render: (task: Task) => {
       const progress = task.progress || 0;
@@ -107,7 +112,7 @@ export const columns: Column[] = [
               style={{ width: `${progress}%` }}
             />
           </div>
-          <span className="text-sm text-gray-600 min-w-[2rem]">{progress}%</span>
+          <span className="text-sm text-gray-600 min-w-[2.5rem] text-right">{progress}%</span>
         </div>
       );
     },

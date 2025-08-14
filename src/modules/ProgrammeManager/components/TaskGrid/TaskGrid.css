@@ -25,6 +25,7 @@
   color: #374151;
   border-right: 1px solid #e5e7eb;
   transition: background-color 0.15s ease;
+  user-select: none;
 }
 
 .task-grid-header-cell:last-child {
@@ -40,6 +41,7 @@
   display: flex;
   border-bottom: 1px solid #f3f4f6;
   transition: background-color 0.15s ease;
+  cursor: pointer;
 }
 
 .task-grid-row:last-child {
@@ -48,6 +50,15 @@
 
 .task-grid-row:hover {
   background-color: #f9fafb;
+}
+
+.task-grid-row.selected {
+  background-color: #dbeafe;
+  border-left: 3px solid #3b82f6;
+}
+
+.task-grid-row.selected:hover {
+  background-color: #bfdbfe;
 }
 
 .task-grid-cell {
@@ -96,6 +107,20 @@
   background-color: #2563eb;
 }
 
+/* Progress stepper styling */
+.task-grid-cell button {
+  transition: all 0.15s ease;
+}
+
+.task-grid-cell button:hover {
+  background-color: #e5e7eb;
+  transform: scale(1.1);
+}
+
+.task-grid-cell button:active {
+  transform: scale(0.95);
+}
+
 /* Status badge styling */
 .task-grid-cell .inline-flex {
   display: inline-flex;
@@ -105,6 +130,24 @@
   font-size: 0.75rem;
   font-weight: 500;
   text-transform: capitalize;
+}
+
+/* Inline edit input styling */
+.task-grid-cell input {
+  font-size: 0.875rem;
+  font-family: inherit;
+}
+
+/* Resource ID styling */
+.task-grid-cell .font-mono {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.75rem;
+}
+
+/* Selection indicator */
+.task-grid-row.selected .task-grid-cell {
+  color: #1e40af;
+  font-weight: 500;
 }
 
 /* Responsive adjustments */
@@ -121,5 +164,73 @@
   
   .task-grid-cell {
     min-width: 100px;
+  }
+  
+  /* Hide progress stepper buttons on mobile */
+  .task-grid-cell button {
+    padding: 0.25rem;
+  }
+  
+  .task-grid-cell button svg {
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+  .task-grid-container {
+    background: #1f2937;
+    border-color: #374151;
+  }
+  
+  .task-grid-header {
+    background: #111827;
+    border-bottom-color: #374151;
+  }
+  
+  .task-grid-header-cell {
+    color: #f9fafb;
+    border-right-color: #374151;
+  }
+  
+  .task-grid-row {
+    border-bottom-color: #374151;
+  }
+  
+  .task-grid-row:hover {
+    background-color: #374151;
+  }
+  
+  .task-grid-row.selected {
+    background-color: #1e3a8a;
+    border-left-color: #3b82f6;
+  }
+  
+  .task-grid-row.selected:hover {
+    background-color: #1e40af;
+  }
+  
+  .task-grid-cell {
+    color: #f9fafb;
+    border-right-color: #374151;
+  }
+  
+  .task-grid-row.selected .task-grid-cell {
+    color: #93c5fd;
+  }
+  
+  .task-grid-footer {
+    background: #111827;
+    border-top-color: #374151;
+    color: #9ca3af;
+  }
+  
+  .task-grid-cell button:hover {
+    background-color: #374151;
+  }
+  
+  .task-grid-cell .font-mono {
+    color: #9ca3af;
   }
 }
