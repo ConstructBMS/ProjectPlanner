@@ -19,6 +19,7 @@ import {
 } from '@heroicons/react/24/outline';
 import BaselineManagerDialog from '../../BaselineManagerDialog';
 import GroupDialogLauncher from '../GroupDialogLauncher';
+import ProjectInfoDialog from '../../Project/ProjectInfoDialog';
 
 const ProjectTab = () => {
   const { setBaseline1, clearBaseline1, tasks } = useTaskContext();
@@ -36,6 +37,10 @@ const ProjectTab = () => {
   const [baselines, setBaselines] = useState([]);
   const [activeBaselineId, setActiveBaselineId] = useState(null);
 
+  // Project Info Dialog state
+  const [projectInfoDialogOpen, setProjectInfoDialogOpen] = useState(false);
+  const [currentProjectId, setCurrentProjectId] = useState('default-project');
+
   // Load baselines from persistent storage on mount
   useEffect(() => {
     const loadBaselines = async () => {
@@ -45,6 +50,21 @@ const ProjectTab = () => {
       }
     };
     loadBaselines();
+  }, []);
+
+  // Listen for project info updates
+  useEffect(() => {
+    const handleProjectInfoUpdated = (event) => {
+      const { projectId, info } = event.detail;
+      console.log('Project info updated:', { projectId, info });
+      // Here you could trigger Gantt/grid re-read of bounds
+      // For now, just log the event
+    };
+
+    window.addEventListener('PROJECT_INFO_UPDATED', handleProjectInfoUpdated);
+    return () => {
+      window.removeEventListener('PROJECT_INFO_UPDATED', handleProjectInfoUpdated);
+    };
   }, []);
 
   // Baseline Manager handlers
@@ -79,6 +99,15 @@ const ProjectTab = () => {
     });
   };
 
+  // Project Info Dialog handlers
+  const handleOpenProjectInfo = () => {
+    setProjectInfoDialogOpen(true);
+  };
+
+  const handleCloseProjectInfo = () => {
+    setProjectInfoDialogOpen(false);
+  };
+
   return (
     <>
       <div className='flex flex-nowrap gap-0 p-2 bg-white w-full min-w-0'>
@@ -87,6 +116,8 @@ const ProjectTab = () => {
           <RibbonButton
             icon={<FolderIcon className='w-4 h-4 text-gray-700' />}
             label='Project Info'
+            onClick={handleOpenProjectInfo}
+            tooltip='Edit project information (name, dates, calendar)'
           />
           <RibbonButton
             icon={<DocumentIcon className='w-4 h-4 text-gray-700' />}
@@ -188,6 +219,13 @@ const ProjectTab = () => {
         onDeleteBaseline={handleDeleteBaseline}
         onSetActiveBaseline={handleSetActiveBaseline}
         onImportBaseline={handleImportBaseline}
+      />
+
+      {/* Project Info Dialog */}
+      <ProjectInfoDialog
+        isOpen={projectInfoDialogOpen}
+        onClose={handleCloseProjectInfo}
+        projectId={currentProjectId}
       />
     </>
   );

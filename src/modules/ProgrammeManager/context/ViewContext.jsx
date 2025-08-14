@@ -92,119 +92,122 @@ export const ViewProvider = ({ children }) => {
           }
         }
 
-    // Load saved showCriticalPath preference
-    const savedShowCriticalPath = await getStorage('gantt.showCriticalPath');
-    if (savedShowCriticalPath !== null) {
-      try {
-        const showCriticalPath = savedShowCriticalPath;
-        setViewState(prev => ({ ...prev, showCriticalPath }));
-      } catch (error) {
-        console.error(
-          'Error loading saved showCriticalPath preference:',
-          error
-        );
-      }
-    }
+        // Load saved showCriticalPath preference
+        const savedShowCriticalPath = await getStorage('gantt.showCriticalPath');
+        if (savedShowCriticalPath !== null) {
+          try {
+            const showCriticalPath = savedShowCriticalPath;
+            setViewState(prev => ({ ...prev, showCriticalPath }));
+          } catch (error) {
+            console.error(
+              'Error loading saved showCriticalPath preference:',
+              error
+            );
+          }
+        }
 
-    // Load saved showSlack preference
-    const savedShowSlack = await getStorage('gantt.showSlack');
-    if (savedShowSlack !== null) {
-      try {
-        const showSlack = savedShowSlack;
-        setViewState(prev => ({ ...prev, showSlack }));
-      } catch (error) {
-        console.error('Error loading saved showSlack preference:', error);
-      }
-    }
+        // Load saved showSlack preference
+        const savedShowSlack = await getStorage('gantt.showSlack');
+        if (savedShowSlack !== null) {
+          try {
+            const showSlack = savedShowSlack;
+            setViewState(prev => ({ ...prev, showSlack }));
+          } catch (error) {
+            console.error('Error loading saved showSlack preference:', error);
+          }
+        }
 
-    // Load saved showProgressLine preference
-    const savedShowProgressLine = await getStorage('gantt.showProgressLine');
-    if (savedShowProgressLine !== null) {
-      try {
-        const showProgressLine = savedShowProgressLine;
-        setViewState(prev => ({ ...prev, showProgressLine }));
-      } catch (error) {
-        console.error('Error loading saved showProgressLine preference:', error);
-      }
-    }
+        // Load saved showProgressLine preference
+        const savedShowProgressLine = await getStorage('gantt.showProgressLine');
+        if (savedShowProgressLine !== null) {
+          try {
+            const showProgressLine = savedShowProgressLine;
+            setViewState(prev => ({ ...prev, showProgressLine }));
+          } catch (error) {
+            console.error('Error loading saved showProgressLine preference:', error);
+          }
+        }
 
-    // Load saved time unit preference
-    const savedTimeUnit = await getStorage('gantt.timeUnit');
-    if (savedTimeUnit !== null) {
-      try {
-        const timeUnit = savedTimeUnit;
-        setViewState(prev => ({ ...prev, timeUnit }));
-      } catch (error) {
-        console.error('Error loading saved time unit preference:', error);
-      }
-    }
+        // Load saved time unit preference
+        const savedTimeUnit = await getStorage('gantt.timeUnit');
+        if (savedTimeUnit !== null) {
+          try {
+            const timeUnit = savedTimeUnit;
+            setViewState(prev => ({ ...prev, timeUnit }));
+          } catch (error) {
+            console.error('Error loading saved time unit preference:', error);
+          }
+        }
 
-    // Load saved time scale preference
-    const savedTimeScale = await getStorage('gantt.timeScale');
-    if (savedTimeScale !== null) {
-      try {
-        const timeScale = savedTimeScale;
-        setViewState(prev => ({ ...prev, timeScale }));
-      } catch (error) {
-        console.error('Error loading saved time scale preference:', error);
-      }
-    }
+        // Load saved time scale preference
+        const savedTimeScale = await getStorage('gantt.timeScale');
+        if (savedTimeScale !== null) {
+          try {
+            const timeScale = savedTimeScale;
+            setViewState(prev => ({ ...prev, timeScale }));
+          } catch (error) {
+            console.error('Error loading saved time scale preference:', error);
+          }
+        }
 
-    // Load saved primary time unit preference
-    const savedPrimaryTimeUnit = await getStorage('gantt.primaryTimeUnit');
-    if (savedPrimaryTimeUnit !== null) {
-      try {
-        const primaryTimeUnit = savedPrimaryTimeUnit;
-        setViewState(prev => ({ ...prev, primaryTimeUnit }));
-      } catch (error) {
-        console.error(
-          'Error loading saved primary time unit preference:',
-          error
-        );
-      }
-    }
+        // Load saved primary time unit preference
+        const savedPrimaryTimeUnit = await getStorage('gantt.primaryTimeUnit');
+        if (savedPrimaryTimeUnit !== null) {
+          try {
+            const primaryTimeUnit = savedPrimaryTimeUnit;
+            setViewState(prev => ({ ...prev, primaryTimeUnit }));
+          } catch (error) {
+            console.error(
+              'Error loading saved primary time unit preference:',
+              error
+            );
+          }
+        }
 
-    // Load saved secondary time unit preference
-    const savedSecondaryTimeUnit = await getStorage('gantt.secondaryTimeUnit');
-    if (savedSecondaryTimeUnit !== null) {
-      try {
-        const secondaryTimeUnit = savedSecondaryTimeUnit;
-        setViewState(prev => ({ ...prev, secondaryTimeUnit }));
-      } catch (error) {
-        console.error(
-          'Error loading saved secondary time unit preference:',
-          error
-        );
-      }
-    }
+        // Load saved secondary time unit preference
+        const savedSecondaryTimeUnit = await getStorage('gantt.secondaryTimeUnit');
+        if (savedSecondaryTimeUnit !== null) {
+          try {
+            const secondaryTimeUnit = savedSecondaryTimeUnit;
+            setViewState(prev => ({ ...prev, secondaryTimeUnit }));
+          } catch (error) {
+            console.error(
+              'Error loading saved secondary time unit preference:',
+              error
+            );
+          }
+        }
 
-    // Load saved activeBaselineId preference
-    const savedActiveBaselineId = await getStorage('gantt.activeBaselineId');
-    if (savedActiveBaselineId !== null) {
-      try {
-        const activeBaselineId = savedActiveBaselineId;
-        setViewState(prev => ({ ...prev, activeBaselineId }));
-      } catch (error) {
-        console.error(
-          'Error loading saved activeBaselineId preference:',
-          error
-        );
-      }
-    }
+        // Load saved activeBaselineId preference
+        const savedActiveBaselineId = await getStorage('gantt.activeBaselineId');
+        if (savedActiveBaselineId !== null) {
+          try {
+            const activeBaselineId = savedActiveBaselineId;
+            setViewState(prev => ({ ...prev, activeBaselineId }));
+          } catch (error) {
+            console.error(
+              'Error loading saved activeBaselineId preference:',
+              error
+            );
+          }
+        }
 
-    // Load saved globalMilestoneShape preference
-    const savedGlobalMilestoneShape = await getStorage('gantt.globalMilestoneShape');
-    if (savedGlobalMilestoneShape !== null) {
-      try {
-        const globalMilestoneShape = savedGlobalMilestoneShape;
-        setViewState(prev => ({ ...prev, globalMilestoneShape }));
+        // Load saved globalMilestoneShape preference
+        const savedGlobalMilestoneShape = await getStorage('gantt.globalMilestoneShape');
+        if (savedGlobalMilestoneShape !== null) {
+          try {
+            const globalMilestoneShape = savedGlobalMilestoneShape;
+            setViewState(prev => ({ ...prev, globalMilestoneShape }));
+          } catch (error) {
+            console.error(
+              'Error loading saved globalMilestoneShape preference:',
+              error
+            );
+          }
+        }
       } catch (error) {
-        console.error(
-          'Error loading saved globalMilestoneShape preference:',
-          error
-        );
+        console.error('Error loading saved view state:', error);
       }
-    }
     };
 
     loadSavedState();
