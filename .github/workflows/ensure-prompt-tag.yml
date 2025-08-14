@@ -1,0 +1,17 @@
+name: Ensure Prompt Tag
+on: [push]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate commit message
+        run: |
+          MSG="$(git log -1 --pretty=%B)"
+          if ! echo "$MSG" | grep -Eiq 'Prompt[[:space:]]+[0-9]+'; then
+            echo "::warning::Head commit lacks 'Prompt ###' tag. Appending automatically."
+            git config user.name "PromptTag Bot"
+            git config user.email "prompt-bot@users.noreply.github.com"
+            git commit --allow-empty -m "Prompt AUTO-TAG: (append) — previous: $MSG"
+            git push
+          fi
