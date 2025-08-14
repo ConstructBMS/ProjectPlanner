@@ -131,6 +131,23 @@ const TaskPropertiesPane = () => {
     handleFieldChange('color', null);
   };
 
+  // Load saved pane height on mount
+  useEffect(() => {
+    const loadSavedHeight = async () => {
+      const savedHeight = await getStorage('pm.layout.props.height');
+      if (savedHeight) {
+        setPaneHeight(parseInt(savedHeight));
+      }
+    };
+    loadSavedHeight();
+  }, []);
+
+  // Save pane height when it changes
+  const handleHeightChange = useCallback(async (newHeight) => {
+    setPaneHeight(newHeight);
+    await setStorage('pm.layout.props.height', newHeight.toString());
+  }, []);
+
   // Early return if no task is selected
   if (!selectedTask) {
     return (
@@ -194,23 +211,6 @@ const TaskPropertiesPane = () => {
   const getCurrentColor = task => {
     return task.color || getDefaultColor(task);
   };
-
-  // Load saved pane height on mount
-  useEffect(() => {
-    const loadSavedHeight = async () => {
-      const savedHeight = await getStorage('pm.layout.props.height');
-      if (savedHeight) {
-        setPaneHeight(parseInt(savedHeight));
-      }
-    };
-    loadSavedHeight();
-  }, []);
-
-  // Save pane height when it changes
-  const handleHeightChange = useCallback(async (newHeight) => {
-    setPaneHeight(newHeight);
-    await setStorage('pm.layout.props.height', newHeight.toString());
-  }, []);
 
   // Constraint handling functions
   const handleConstraintChange = constraintType => {

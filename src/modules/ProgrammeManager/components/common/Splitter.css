@@ -15,6 +15,35 @@
   user-select: none;
   pointer-events: auto;
   touch-action: none;
+  position: relative;
+  z-index: 2;
+}
+
+/* Enlarge hit area with ::after pseudo-element */
+.splitter-gutter::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 12px;
+  height: 12px;
+  background: transparent;
+  cursor: inherit;
+  z-index: 1;
+}
+
+.splitter-gutter.vertical::after {
+  left: -6px;
+  right: -6px;
+  width: auto;
+}
+
+.splitter-gutter.horizontal::after {
+  top: -6px;
+  bottom: -6px;
+  height: auto;
 }
 
 .splitter-gutter:hover {
@@ -40,6 +69,7 @@
   border-radius: 1px;
   transition: all 0.15s ease;
   pointer-events: none;
+  z-index: 2;
 }
 
 .splitter-gutter.vertical .splitter-handle {
@@ -128,4 +158,27 @@
 
 .splitter-gutter.horizontal {
   transition: background-color 0.15s ease, height 0.15s ease;
+}
+
+/* Double-click feedback */
+.splitter-gutter:active {
+  background: rgba(59, 130, 246, 0.3);
+}
+
+/* Ensure gutters are always above content */
+.splitter-gutter {
+  position: absolute;
+  z-index: 1000;
+}
+
+/* Prevent any content from overlaying gutters */
+.pm-pane {
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure proper stacking context */
+.splitter-container {
+  position: relative;
+  z-index: 1;
 }

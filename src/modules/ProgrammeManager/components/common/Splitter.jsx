@@ -27,13 +27,14 @@ const Splitter = ({
         const savedRatios = getLayoutRatios(storageKey);
         if (savedRatios && Array.isArray(savedRatios) && savedRatios.length === defaultRatios.length) {
           setRatios(savedRatios);
+          onRatiosChange?.(savedRatios);
         }
       } catch (error) {
         console.warn('Failed to load saved ratios:', error);
       }
     };
     loadSavedRatios();
-  }, [storageKey, defaultRatios.length]);
+  }, [storageKey, defaultRatios.length, onRatiosChange]);
 
   // Save ratios to persistent storage
   const saveRatios = useCallback((newRatios) => {
@@ -46,15 +47,18 @@ const Splitter = ({
 
   // Reset to default ratios
   const resetToDefaults = useCallback(() => {
+    console.log(`Resetting splitter ratios to defaults for ${storageKey}:`, defaultRatios);
     setRatios(defaultRatios);
     saveRatios(defaultRatios);
     onRatiosChange?.(defaultRatios);
-  }, [defaultRatios, saveRatios, onRatiosChange]);
+  }, [defaultRatios, saveRatios, onRatiosChange, storageKey]);
 
   // Handle pointer down on splitter
   const handlePointerDown = useCallback((index, e) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    console.log(`Splitter pointer down on index ${index}`);
     
     setIsDragging(true);
     setDragIndex(index);
@@ -127,6 +131,8 @@ const Splitter = ({
   // Handle pointer up to end drag
   const handlePointerUp = useCallback(() => {
     if (isDragging) {
+      console.log('Splitter pointer up, ending drag');
+      
       setIsDragging(false);
       setDragIndex(null);
       
@@ -151,7 +157,11 @@ const Splitter = ({
   }, [isDragging, ratios, saveRatios]);
 
   // Handle double-click on splitter to reset
-  const handleDoubleClick = useCallback((index) => {
+  const handleDoubleClick = useCallback((index, e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    console.log(`Splitter double-click on index ${index}, resetting to defaults`);
     resetToDefaults();
   }, [resetToDefaults]);
 
@@ -212,7 +222,7 @@ const Splitter = ({
           ref={(el) => splitterRefs.current[i] = el}
           className={`splitter-gutter ${orientation} ${isDragging && dragIndex === i ? 'active' : ''}`}
           onPointerDown={(e) => handlePointerDown(i, e)}
-          onDoubleClick={() => handleDoubleClick(i)}
+          onDoubleClick={(e) => handleDoubleClick(i, e)}
           style={{
             width: orientation === 'vertical' ? (isDragging && dragIndex === i ? '12px' : '8px') : '100%',
             height: orientation === 'horizontal' ? (isDragging && dragIndex === i ? '12px' : '8px') : '100%',

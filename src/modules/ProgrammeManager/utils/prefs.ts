@@ -61,7 +61,18 @@ export const getLayoutRatios = (route: string): number[] | null => {
     const stored = localStorage.getItem('pm.preferences');
     if (stored) {
       const prefs = JSON.parse(stored);
-      return prefs.layoutRatios?.[route] || null;
+      const ratios = prefs.layoutRatios?.[route];
+      
+      if (Array.isArray(ratios) && ratios.length > 0) {
+        // Validate that ratios sum to approximately 1.0
+        const total = ratios.reduce((sum, ratio) => sum + ratio, 0);
+        if (Math.abs(total - 1.0) < 0.01) {
+          console.log(`Loaded layout ratios for ${route}:`, ratios);
+          return ratios;
+        } else {
+          console.warn(`Invalid ratios for ${route}, total: ${total}`, ratios);
+        }
+      }
     }
     return null;
   } catch (error) {
@@ -81,8 +92,17 @@ export const saveLayoutRatios = (route: string, ratios: number[]): void => {
       prefs.layoutRatios = {};
     }
     
-    prefs.layoutRatios[route] = ratios;
-    localStorage.setItem('pm.preferences', JSON.stringify(prefs));
+    // Validate ratios before saving
+    if (Array.isArray(ratios) && ratios.length > 0) {
+      const total = ratios.reduce((sum, ratio) => sum + ratio, 0);
+      // Normalize ratios to sum to 1.0
+      const normalizedRatios = ratios.map(ratio => ratio / total);
+      
+      prefs.layoutRatios[route] = normalizedRatios;
+      localStorage.setItem('pm.preferences', JSON.stringify(prefs));
+      
+      console.log(`Saved layout ratios for ${route}:`, normalizedRatios);
+    }
   } catch (error) {
     console.warn('Failed to save layout ratios:', error);
   }
