@@ -3,6 +3,8 @@ import { getProjects, getTasks, getLinks, seedDemoTasks, updateTaskPartial, upda
 import { Project, Task, TaskLink, TaskUpdate } from '../data/types';
 import { networkManager, isOnline } from '../utils/net';
 import { safeGetColumn, tableNames, columns } from '../data/adapter.config';
+import { isProjectSeeded } from '../data/demo';
+import { useState } from 'react';
 
 // Transform raw DB data to our interface using safe column access
 const transformTask = (rawData: any): Task => ({
@@ -40,29 +42,43 @@ interface OfflineQueue {
 }
 
 interface PlannerState {
-  // State
-  currentProjectId: string | null;
+  // Core data
   projects: Project[];
   tasks: Task[];
   links: TaskLink[];
-  loading: boolean;
-  error: string | null;
+  currentProjectId: string | null;
   
-  // Optimistic updates
-  pendingMutations: Map<string, MutationQueue>;
+  // UI state
+  selectedTaskIds: Set<string>;
+  lastSelectedTaskId: string | null;
+  
+  // Mutation state
+  pendingMutations: Map<string, any>;
   mutationTimeouts: Map<string, NodeJS.Timeout>;
-  
-  // Offline queue
-  offlineQueue: OfflineQueue[];
+  offlineQueue: any[];
   syncPending: boolean;
   
-  // Realtime subscriptions
+  // Realtime state
   realtimeSubscribed: boolean;
   ganttRelayoutTimeout: NodeJS.Timeout | null;
   
-  // Unified selection model
-  selectedTaskIds: Set<string>;
-  lastSelectedTaskId: string | null;
+  // Zoom and timescale state
+  zoomScale: number;
+  zoomCenterDate: Date | null;
+  isZooming: boolean;
+  
+  // Bar text options state
+  barTextOptions: {
+    taskName: boolean;
+    id: boolean;
+    percentComplete: boolean;
+    start: boolean;
+    finish: boolean;
+  };
+  
+  // Hydration pipeline state
+  hydrationState: 'idle' | 'loadingProjects' | 'projectsLoaded' | 'hydrating' | 'ready' | 'error';
+  hydrationError: string | null;
   
   // Actions
   loadProjects: () => Promise<void>;
@@ -103,25 +119,57 @@ interface PlannerState {
   updateTaskLink: (linkId: string, type: string, lagDays: number) => Promise<boolean>;
   deleteTaskLink: (linkId: string) => Promise<boolean>;
   createChainLinks: (taskIds: string[], type: string, lagDays: number) => Promise<boolean>;
+  
+  // Hydration pipeline
+  init: () => Promise<void>;
+  loadProjects: () => Promise<void>;
+  selectProject: (id: string) => Promise<void>;
+  hydrate: (projectId: string) => Promise<void>;
+  seedAndHydrate: (projectId: string) => Promise<void>;
+  
+  // Legacy task actions (kept for backward compatibility)
+  renameTask: (taskId: string, newName: string) => void;
 }
 
 export const usePlannerStore = create<PlannerState>((set, get) => ({
-  // Initial state
-  currentProjectId: null,
+  // Core data
   projects: [],
   tasks: [],
   links: [],
-  loading: false,
-  error: null,
+  currentProjectId: null,
+  
+  // UI state
+  selectedTaskIds: new Set(),
+  lastSelectedTaskId: null,
+  
+  // Mutation state
   pendingMutations: new Map(),
   mutationTimeouts: new Map(),
   offlineQueue: [],
   syncPending: false,
+  
+  // Realtime state
   realtimeSubscribed: false,
   ganttRelayoutTimeout: null,
-  selectedTaskIds: new Set(),
-  lastSelectedTaskId: null,
-
+  
+  // Zoom and timescale state
+  zoomScale: 1.0,
+  zoomCenterDate: null,
+  isZooming: false,
+  
+  // Bar text options state
+  barTextOptions: {
+    taskName: true,
+    id: false,
+    percentComplete: false,
+    start: false,
+    finish: false
+  },
+  
+  // Hydration pipeline state
+  hydrationState: 'idle',
+  hydrationError: null,
+  
   // Load all projects from ConstructBMS
   loadProjects: async () => {
     set({ loading: true, error: null });
@@ -758,6 +806,142 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
     } catch (error) {
       console.error('Error creating chain links:', error);
       return false;
+    }
+  },
+
+  // Hydration pipeline
+  init: async () => {
+    const state = get();
+    if (state.hydrationState !== 'idle') {
+      console.log('Hydration already in progress, skipping init');
+      return;
+    }
+
+    try {
+      console.log('Starting hydration pipeline...');
+      set({ hydrationState: 'loadingProjects', hydrationError: null });
+      
+      await get().loadProjects();
+      
+      // Choose default project (last updated or first)
+      const projects = get().projects;
+      if (projects.length === 0) {
+        throw new Error('No projects available');
+      }
+      
+      // Sort by updated_at descending, then by created_at descending
+      const sortedProjects = [...projects].sort((a, b) => {
+        const aDate = new Date(a.updated_at || a.created_at || 0);
+        const bDate = new Date(b.updated_at || b.created_at || 0);
+        return bDate.getTime() - aDate.getTime();
+      });
+      
+      const defaultProjectId = sortedProjects[0].id;
+      console.log('Selected default project:', defaultProjectId);
+      
+      await get().selectProject(defaultProjectId);
+      await get().hydrate(defaultProjectId);
+      
+      set({ hydrationState: 'ready' });
+      console.log('Hydration pipeline completed successfully');
+    } catch (error) {
+      console.error('Hydration pipeline failed:', error);
+      set({ 
+        hydrationState: 'error', 
+        hydrationError: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
+  },
+
+  loadProjects: async () => {
+    try {
+      set({ hydrationState: 'loadingProjects' });
+      
+      const projects = await getProjects();
+      set({ 
+        projects,
+        hydrationState: 'projectsLoaded'
+      });
+      
+      console.log('Projects loaded:', projects.length);
+    } catch (error) {
+      console.error('Failed to load projects:', error);
+      set({ 
+        hydrationState: 'error',
+        hydrationError: error instanceof Error ? error.message : 'Failed to load projects'
+      });
+      throw error;
+    }
+  },
+
+  selectProject: async (projectId: string) => {
+    try {
+      // Unsubscribe from previous project's realtime
+      if (get().realtimeSubscribed) {
+        get().unsubscribeProject();
+      }
+      
+      set({ currentProjectId: projectId });
+      console.log('Project selected:', projectId);
+    } catch (error) {
+      console.error('Failed to select project:', error);
+      throw error;
+    }
+  },
+
+  hydrate: async (projectId: string) => {
+    try {
+      set({ hydrationState: 'hydrating' });
+      
+      // Load tasks and links
+      const [tasks, links] = await Promise.all([
+        getTasks(projectId),
+        getLinks(projectId)
+      ]);
+      
+      set({ tasks, links });
+      
+      // Check if we need to seed demo data
+      if (tasks.length === 0 && !isProjectSeeded(projectId)) {
+        console.log('No tasks found, seeding demo data...');
+        await get().seedAndHydrate(projectId);
+      } else {
+        // Subscribe to realtime updates
+        get().subscribeProject(projectId);
+        set({ hydrationState: 'ready' });
+        console.log('Project hydrated successfully:', { tasksCount: tasks.length, linksCount: links.length });
+      }
+    } catch (error) {
+      console.error('Failed to hydrate project:', error);
+      set({ 
+        hydrationState: 'error',
+        hydrationError: error instanceof Error ? error.message : 'Failed to hydrate project'
+      });
+      throw error;
+    }
+  },
+
+  seedAndHydrate: async (projectId: string) => {
+    try {
+      console.log('Seeding and hydrating project:', projectId);
+      
+      // Seed demo data
+      const seeded = await seedDemoTasks(projectId);
+      if (!seeded) {
+        throw new Error('Failed to seed demo data');
+      }
+      
+      // Re-hydrate with seeded data
+      await get().hydrate(projectId);
+      
+      console.log('Project seeded and hydrated successfully');
+    } catch (error) {
+      console.error('Failed to seed and hydrate project:', error);
+      set({ 
+        hydrationState: 'error',
+        hydrationError: error instanceof Error ? error.message : 'Failed to seed and hydrate project'
+      });
+      throw error;
     }
   },
 

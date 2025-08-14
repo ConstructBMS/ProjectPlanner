@@ -12,6 +12,7 @@ import {
   TaskUpdate
 } from './types';
 import { tables, safeGetColumn, tableNames, columns } from './adapter.config';
+import { generateDemoTasks, generateDemoLinks, markProjectSeeded } from './demo';
 
 // Realtime subscription management
 let currentSubscription = null;
@@ -648,46 +649,68 @@ export const deleteLink = async (projectId: string, linkId: string): Promise<boo
   }
 };
 
+/**
+ * Seed demo tasks and links for a project
+ */
 export const seedDemoTasks = async (projectId: string): Promise<boolean> => {
-  // Only seed if we're in a development environment and have write access
-  if (import.meta.env.DEV && import.meta.env.VITE_ALLOW_DEMO_SEED === 'true') {
-    try {
-      const demoTasks = generateDemoTasks(projectId);
-      const demoLinks = generateDemoTaskLinks(projectId);
+  try {
+    console.log('Seeding demo tasks for project:', projectId);
+    
+    // Generate demo tasks and links
+    const demoTasks = generateDemoTasks(projectId);
+    const taskIds = demoTasks.map(task => task.id);
+    const demoLinks = generateDemoLinks(projectId, taskIds);
+    
+    // Insert demo tasks
+    const { error: tasksError } = await supabase
+      .from(tableNames.tasks)
+      .insert(demoTasks.map(task => ({
+        id: task.id,
+        project_id: task.project_id,
+        name: task.name,
+        start_date: task.start_date,
+        end_date: task.end_date,
+        duration_days: task.duration_days,
+        progress: task.progress,
+        status: task.status,
+        wbs: task.wbs,
+        resource_id: task.resource_id
+      })));
 
-      // Insert demo tasks
-      const { error: tasksError } = await supabase
-        .from(tableNames.tasks)
-        .insert(demoTasks);
-
-      if (tasksError) {
-        console.warn('Failed to seed demo tasks:', tasksError.message);
-        return false;
-      }
-
-      // Insert demo links
-      const { error: linksError } = await supabase
-        .from('project_dependencies')
-        .insert(demoLinks.map(link => ({
-          project_id: link.project_id,
-          predecessor_task_id: link.pred_id,
-          successor_task_id: link.succ_id,
-          dependency_type: link.type,
-          lag_days: link.lag_days
-        })));
-
-      if (linksError) {
-        console.warn('Failed to seed demo links:', linksError.message);
-        return false;
-      }
-
-      console.log('Demo data seeded successfully for project:', projectId);
-      return true;
-    } catch (error) {
-      console.warn('Failed to seed demo data:', error);
+    if (tasksError) {
+      console.error('Error seeding demo tasks:', tasksError);
       return false;
     }
-  }
 
-  return false;
+    // Insert demo links
+    const { error: linksError } = await supabase
+      .from('project_dependencies')
+      .insert(demoLinks.map(link => ({
+        id: link.id,
+        project_id: link.project_id,
+        predecessor_task_id: link.pred_id,
+        successor_task_id: link.succ_id,
+        dependency_type: link.type,
+        lag_days: link.lag_days
+      })));
+
+    if (linksError) {
+      console.error('Error seeding demo links:', linksError);
+      return false;
+    }
+
+    // Mark project as seeded
+    markProjectSeeded(projectId);
+    
+    console.log('Demo data seeded successfully:', {
+      projectId,
+      tasksCount: demoTasks.length,
+      linksCount: demoLinks.length
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error seeding demo data:', error);
+    return false;
+  }
 };

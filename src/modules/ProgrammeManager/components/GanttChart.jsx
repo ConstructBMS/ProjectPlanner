@@ -130,11 +130,12 @@ const GanttChart = () => {
     selectRange,
     clearSelection,
     getSelectedTasks,
+    links,
   } = usePlannerStore();
   
   const { applyFilters } = useFilterContext();
 
-  const { currentProjectId, tasks, taskLinks, selectedTaskId } = useTaskContext();
+  const { currentProjectId, tasks, selectedTaskId } = useTaskContext();
 
   // Calculate scaled width based on time unit
   const getScaledWidth = useMemo(() => {
@@ -1122,7 +1123,7 @@ const GanttChart = () => {
       const newStartDate = addDays(dragging.originalStartDate, dayOffset);
 
       // Get predecessor constraints
-      const predecessors = getPredecessors(task.id, taskLinks, tasks);
+      const predecessors = getPredecessors(task.id, links, tasks);
 
       // Get calendar for this task
       const taskCalendar = getCalendarForTask(task.id, task);

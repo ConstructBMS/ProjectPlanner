@@ -41,7 +41,7 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
   const [isRibbonMinimised, setIsRibbonMinimised] = useState(false);
 
   // Planner store
-  const { loadProjects, flushOfflineQueue, syncPending } = usePlannerStore();
+  const { loadProjects, flushOfflineQueue, syncPending, init, hydrationState, hydrationError } = usePlannerStore();
   
   // Network status
   const networkStatus = useNetworkStatus();
@@ -71,6 +71,14 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
     setModelPanelVisible(fourDPrefs.panelVisible);
     setModelPanelWidth(fourDPrefs.panelWidth);
   }, []);
+
+  // Initialize hydration pipeline on mount
+  useEffect(() => {
+    console.log('AppShell: Initializing hydration pipeline...');
+    init().catch(error => {
+      console.error('AppShell: Failed to initialize hydration pipeline:', error);
+    });
+  }, [init]);
 
   // Initialize planner store on mount
   useEffect(() => {
@@ -184,70 +192,119 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
   };
 
   return (
-    <div
-      ref={contentRef}
-      className={`pm-app-shell ${isRibbonMinimised ? 'ribbon-minimised' : ''}`}
-    >
-      {/* Header Section - Fixed height, no scroll */}
-      <div className='pm-header-section'>
-        <RibbonContainer
-          onExpandAll={handleExpandAll}
-          onCollapseAll={handleCollapseAll}
-          contentRef={contentRef}
-          projectId={projectId}
-          onBackToPortfolio={onBackToPortfolio}
-        />
-      </div>
-
-      {/* Main Scroll Area - Single scroll container */}
-      <div className='pm-main-scroll-area'>
-        <div className='pm-pane-container'>
-          <Splitter
-            orientation="vertical"
-            defaultRatios={[0.2, 0.4, 0.4]}
-            minSizes={[220, 420, 480]}
-            storageKey="main-panes"
-            onRatiosChange={handleMainPaneRatiosChange}
-          >
-            {/* SidebarTree - Left pane */}
-            <div className='pm-pane bg-white border-r border-gray-300'>
-              <SidebarTree ref={sidebarRef} />
-            </div>
-
-            {/* TaskGrid - Middle pane */}
-            <div className='pm-pane bg-white border-r border-gray-300'>
-              <TaskGrid />
-            </div>
-
-            {/* GanttChart - Right pane */}
-            <div className='pm-pane bg-white'>
-              <GanttChart />
-            </div>
-          </Splitter>
+    <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Ribbon */}
+      <RibbonContainer 
+        isMinimised={isRibbonMinimised} 
+        onToggleMinimise={() => setIsRibbonMinimised(!isRibbonMinimised)}
+        onExpandAll={handleExpandAll}
+        onCollapseAll={handleCollapseAll}
+      />
+      
+      {/* Loading State */}
+      {hydrationState === 'loadingProjects' && (
+        <div className="flex items-center justify-center p-8 flex-1">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-gray-400">Loading projects...</p>
+          </div>
         </div>
-      </div>
+      )}
+      
+      {hydrationState === 'hydrating' && (
+        <div className="flex items-center justify-center p-8 flex-1">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-gray-400">Loading project data...</p>
+          </div>
+        </div>
+      )}
+      
+      {hydrationState === 'error' && (
+        <div className="flex items-center justify-center p-8 flex-1">
+          <div className="text-center">
+            <div className="text-red-600 text-2xl mb-4">⚠️</div>
+            <p className="text-red-600 font-medium mb-2">Failed to load project data</p>
+            <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">{hydrationError}</p>
+            <button 
+              onClick={() => init()}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {/* Main Content */}
+      {hydrationState === 'ready' && (
+        <div
+          ref={contentRef}
+          className={`pm-app-shell flex-1 ${isRibbonMinimised ? 'ribbon-minimised' : ''}`}
+        >
+          {/* Main Scroll Area - Single scroll container */}
+          <div className='pm-main-scroll-area'>
+            <div className='pm-pane-container'>
+              <Splitter
+                orientation="vertical"
+                defaultRatios={[0.2, 0.4, 0.4]}
+                minSizes={[220, 420, 480]}
+                storageKey="main-panes"
+                onRatiosChange={handleMainPaneRatiosChange}
+              >
+                {/* SidebarTree - Left pane */}
+                <div className='pm-pane bg-white border-r border-gray-300'>
+                  <SidebarTree ref={sidebarRef} />
+                </div>
 
-      {/* TaskPropertiesPane - Bottom pane, fixed height outside scroll area */}
-      <div className='pm-properties-pane bg-white border-t border-gray-300'>
-        <TaskPropertiesPane />
-      </div>
+                {/* TaskGrid - Middle pane */}
+                <div className='pm-pane bg-white border-r border-gray-300'>
+                  <TaskGrid />
+                </div>
 
-      {/* ResourcesPane - Right dock pane */}
-      <ResourcesPane
-        isVisible={resourcesPaneVisible}
-        onClose={handleResourcesPaneClose}
-        width={resourcesPaneWidth}
-        onWidthChange={handleResourcesPaneWidthChange}
-      />
+                {/* GanttChart - Right pane */}
+                <div className='pm-pane bg-white'>
+                  <GanttChart />
+                </div>
+              </Splitter>
+            </div>
+          </div>
 
-      {/* ModelPanel - Right dock pane (below ResourcesPane if both open) */}
-      <ModelPanel
-        isVisible={modelPanelVisible}
-        onClose={handleModelPanelClose}
-        width={modelPanelWidth}
-        onWidthChange={handleModelPanelWidthChange}
-        position={resourcesPaneVisible ? 'bottom' : 'full'}
-      />
+          {/* TaskPropertiesPane - Bottom pane, fixed height outside scroll area */}
+          <TaskPropertiesPane />
+
+          {/* Resources Pane - Right side panel */}
+          {resourcesPaneVisible && (
+            <div
+              className="fixed right-0 top-0 h-full bg-white border-l border-gray-300 shadow-lg z-40"
+              style={{ width: resourcesPaneWidth }}
+            >
+              <ResourcesPane
+                onClose={() => setResourcesPaneVisible(false)}
+                onWidthChange={setResourcesPaneWidth}
+              />
+            </div>
+          )}
+
+          {/* Model Panel - Right side panel */}
+          {modelPanelVisible && (
+            <div
+              className="fixed right-0 top-0 h-full bg-white border-l border-gray-300 shadow-lg z-40"
+              style={{ 
+                width: modelPanelWidth,
+                right: resourcesPaneVisible ? resourcesPaneWidth : 0
+              }}
+            >
+              <ModelPanel
+                onClose={() => setModelPanelVisible(false)}
+                onWidthChange={setModelPanelWidth}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Toast Container */}
       <ToastContainer />
     </div>
   );
