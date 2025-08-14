@@ -121,5 +121,19 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
   // Utility actions
   setLoading: (loading: boolean) => set({ loading }),
   setError: (error: string | null) => set({ error }),
-  clearError: () => set({ error: null })
+  clearError: () => set({ error: null }),
+
+  // Task actions
+  renameTask: (taskId: string, newName: string) => {
+    set((state) => ({
+      tasks: state.tasks.map(task => 
+        task.id === taskId ? { ...task, name: newName } : task
+      )
+    }));
+    
+    // Emit event for future backend integration
+    window.dispatchEvent(new CustomEvent('TASK_RENAME_COMMIT', {
+      detail: { taskId, newName }
+    }));
+  }
 }));

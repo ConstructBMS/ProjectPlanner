@@ -1,0 +1,125 @@
+.task-grid-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  overflow: hidden;
+}
+
+.task-grid-header {
+  display: flex;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.task-grid-header-cell {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  border-right: 1px solid #e5e7eb;
+  transition: background-color 0.15s ease;
+}
+
+.task-grid-header-cell:last-child {
+  border-right: none;
+}
+
+.task-grid-body {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.task-grid-row {
+  display: flex;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background-color 0.15s ease;
+}
+
+.task-grid-row:last-child {
+  border-bottom: none;
+}
+
+.task-grid-row:hover {
+  background-color: #f9fafb;
+}
+
+.task-grid-cell {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: #374151;
+  border-right: 1px solid #f3f4f6;
+  display: flex;
+  align-items: center;
+  min-height: 3rem;
+}
+
+.task-grid-cell:last-child {
+  border-right: none;
+}
+
+.task-grid-footer {
+  padding: 0.75rem 1rem;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* Custom scrollbar for the grid body */
+.task-grid-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.task-grid-body::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.task-grid-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.task-grid-body::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Progress bar styling */
+.task-grid-cell .bg-blue-600 {
+  background-color: #2563eb;
+}
+
+/* Status badge styling */
+.task-grid-cell .inline-flex {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .task-grid-header-cell,
+  .task-grid-cell {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+  }
+  
+  .task-grid-header-cell {
+    min-width: 100px;
+  }
+  
+  .task-grid-cell {
+    min-width: 100px;
+  }
+}

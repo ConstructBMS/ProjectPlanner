@@ -11,7 +11,7 @@ import { SearchProvider } from './context/SearchContext';
 import { UserProvider } from './context/UserContext';
 import RibbonContainer from '../../components/RibbonTabs/RibbonContainer';
 import SidebarTree from './components/SidebarTree';
-import TaskGrid from './components/TaskGrid';
+import TaskGrid from './components/TaskGrid/TaskGrid';
 import GanttChart from './components/GanttChart';
 import TaskPropertiesPane from './components/TaskPropertiesPane';
 import ResourcesPane from './components/Resources/ResourcesPane';
