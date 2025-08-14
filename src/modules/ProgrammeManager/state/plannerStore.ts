@@ -1,6 +1,12 @@
 import { create } from 'zustand';
-import { getProjects, getTasks, getLinks, seedDemoTasks } from '../data/adapter.constructbms';
-import { Project, Task, TaskLink } from '../data/types';
+import { getProjects, getTasks, getLinks, seedDemoTasks, updateTaskPartial } from '../data/adapter.constructbms';
+import { Project, Task, TaskLink, TaskUpdate } from '../data/types';
+
+interface MutationQueue {
+  taskId: string;
+  patch: Partial<TaskUpdate>;
+  timestamp: number;
+}
 
 interface PlannerState {
   // State
@@ -11,6 +17,10 @@ interface PlannerState {
   loading: boolean;
   error: string | null;
   
+  // Optimistic updates
+  pendingMutations: Map<string, MutationQueue>;
+  mutationTimeouts: Map<string, NodeJS.Timeout>;
+  
   // Actions
   loadProjects: () => Promise<void>;
   selectProject: (id: string) => void;
@@ -18,6 +28,11 @@ interface PlannerState {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
+  
+  // Task mutations
+  mutateTask: (taskId: string, patch: Partial<TaskUpdate>) => Promise<boolean>;
+  flushTaskMutations: (taskId: string) => Promise<void>;
+  rollbackTask: (taskId: string) => void;
 }
 
 export const usePlannerStore = create<PlannerState>((set, get) => ({
@@ -28,6 +43,8 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
   links: [],
   loading: false,
   error: null,
+  pendingMutations: new Map(),
+  mutationTimeouts: new Map(),
 
   // Load all projects from ConstructBMS
   loadProjects: async () => {
@@ -123,17 +140,147 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
   setError: (error: string | null) => set({ error }),
   clearError: () => set({ error: null }),
 
-  // Task actions
-  renameTask: (taskId: string, newName: string) => {
+  // Task mutations with optimistic updates
+  mutateTask: async (taskId: string, patch: Partial<TaskUpdate>): Promise<boolean> => {
+    const state = get();
+    const currentProjectId = state.currentProjectId;
+    
+    if (!currentProjectId) {
+      console.error('No project selected for task mutation');
+      return false;
+    }
+
+    // Find the current task for snapshot
+    const currentTask = state.tasks.find(task => task.id === taskId);
+    if (!currentTask) {
+      console.error('Task not found for mutation:', taskId);
+      return false;
+    }
+
+    // Create optimistic update
+    const optimisticTask = { ...currentTask, ...patch };
+    
+    // Apply optimistic update immediately
     set((state) => ({
       tasks: state.tasks.map(task => 
-        task.id === taskId ? { ...task, name: newName } : task
+        task.id === taskId ? optimisticTask : task
       )
     }));
+
+    // Clear existing timeout for this task
+    const existingTimeout = state.mutationTimeouts.get(taskId);
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+    }
+
+    // Create new mutation queue entry
+    const mutation: MutationQueue = {
+      taskId,
+      patch,
+      timestamp: Date.now()
+    };
+
+    // Update pending mutations
+    const newPendingMutations = new Map(state.pendingMutations);
+    newPendingMutations.set(taskId, mutation);
     
-    // Emit event for future backend integration
-    window.dispatchEvent(new CustomEvent('TASK_RENAME_COMMIT', {
-      detail: { taskId, newName }
-    }));
+    // Set timeout for debounced update (250ms)
+    const timeout = setTimeout(async () => {
+      await get().flushTaskMutations(taskId);
+    }, 250);
+
+    const newMutationTimeouts = new Map(state.mutationTimeouts);
+    newMutationTimeouts.set(taskId, timeout);
+
+    set({
+      pendingMutations: newPendingMutations,
+      mutationTimeouts: newMutationTimeouts
+    });
+
+    return true;
+  },
+
+  // Flush mutations for a specific task
+  flushTaskMutations: async (taskId: string) => {
+    const state = get();
+    const mutation = state.pendingMutations.get(taskId);
+    const currentProjectId = state.currentProjectId;
+    
+    if (!mutation || !currentProjectId) {
+      return;
+    }
+
+    try {
+      // Attempt to update the database
+      const success = await updateTaskPartial(currentProjectId, taskId, mutation.patch);
+      
+      if (success) {
+        // Remove from pending mutations on success
+        const newPendingMutations = new Map(state.pendingMutations);
+        newPendingMutations.delete(taskId);
+        
+        const newMutationTimeouts = new Map(state.mutationTimeouts);
+        newMutationTimeouts.delete(taskId);
+        
+        set({
+          pendingMutations: newPendingMutations,
+          mutationTimeouts: newMutationTimeouts
+        });
+      } else {
+        // Rollback on failure
+        get().rollbackTask(taskId);
+        
+        // Show error toast (this will be handled by the component)
+        throw new Error('Failed to save changes');
+      }
+    } catch (error) {
+      // Rollback on error
+      get().rollbackTask(taskId);
+      throw error;
+    }
+  },
+
+  // Rollback optimistic update
+  rollbackTask: (taskId: string) => {
+    const state = get();
+    const mutation = state.pendingMutations.get(taskId);
+    
+    if (!mutation) {
+      return;
+    }
+
+    // Find the original task data (we'll need to reload from DB or store original)
+    // For now, we'll reload the task from the database
+    if (state.currentProjectId) {
+      getTasks(state.currentProjectId).then(result => {
+        if (!result.error && result.data) {
+          const originalTask = result.data.find(task => task.id === taskId);
+          if (originalTask) {
+            set((state) => ({
+              tasks: state.tasks.map(task => 
+                task.id === taskId ? originalTask : task
+              )
+            }));
+          }
+        }
+      });
+    }
+
+    // Clear pending mutations
+    const newPendingMutations = new Map(state.pendingMutations);
+    newPendingMutations.delete(taskId);
+    
+    const newMutationTimeouts = new Map(state.mutationTimeouts);
+    newMutationTimeouts.delete(taskId);
+    
+    set({
+      pendingMutations: newPendingMutations,
+      mutationTimeouts: newMutationTimeouts
+    });
+  },
+
+  // Legacy task actions (kept for backward compatibility)
+  renameTask: (taskId: string, newName: string) => {
+    get().mutateTask(taskId, { name: newName });
   }
 }));

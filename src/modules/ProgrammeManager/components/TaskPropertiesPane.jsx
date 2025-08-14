@@ -4,6 +4,8 @@ import { getStorage, setStorage } from '../utils/persistentStorage.js';
 import { useTaskContext } from '../context/TaskContext';
 import { useCalendarContext } from '../context/CalendarContext';
 import { useUndoRedoContext } from '../context/UndoRedoContext';
+import { usePlannerStore } from '../state/plannerStore';
+import { useToast } from './common/Toast';
 import { supabase } from '../../../supabase/client';
 import DeleteTaskModal from './modals/DeleteTaskModal';
 import NotesTab from './TaskPropertiesPane/NotesTab';
@@ -59,6 +61,9 @@ const TaskPropertiesPane = () => {
   } = useCalendarContext();
 
   const { isUndoRedoAction } = useUndoRedoContext();
+  const { mutateTask } = usePlannerStore();
+  const { showSuccess, showError } = useToast();
+  
   const [editingTask, setEditingTask] = useState(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [showAddDependencyModal, setShowAddDependencyModal] = useState(false);
@@ -99,32 +104,51 @@ const TaskPropertiesPane = () => {
     const loadSavedHeight = async () => {
       const savedHeight = await getStorage('pm.layout.props.height');
       if (savedHeight) {
-        const height = parseInt(savedHeight, 10);
-        if (height >= 180) {
-          setPaneHeight(height);
-        }
-      } else {
-        // Default to ~28% of main area (assuming 100vh - 260px header)
-        const defaultHeight = Math.round((window.innerHeight - 260) * 0.28);
-        setPaneHeight(Math.max(defaultHeight, 256));
+        setPaneHeight(parseInt(savedHeight));
       }
     };
     loadSavedHeight();
   }, []);
 
-  // Resize handlers
-  const handleResize = useCallback((newHeight) => {
-    const clampedHeight = Math.max(180, Math.min(newHeight, window.innerHeight - 300));
-    setPaneHeight(clampedHeight);
+  // Save pane height when it changes
+  const handleHeightChange = useCallback(async (newHeight) => {
+    setPaneHeight(newHeight);
+    await setStorage('pm.layout.props.height', newHeight.toString());
   }, []);
 
-  const handleResizeStart = useCallback(() => {
-    // Optional: Add visual feedback for resize start
-  }, []);
+  // Initialize editing task when selected task changes
+  useEffect(() => {
+    if (selectedTask && !isUndoRedoAction) {
+      setEditingTask({ ...selectedTask });
+      setHasChanges(false);
+      setConstraintValidation({ isValid: true, errors: [], warnings: [] });
+    }
+  }, [selectedTask]);
 
-  const handleResizeEnd = useCallback(() => {
-    setStorage('pm.layout.props.height', paneHeight.toString());
-  }, [paneHeight]);
+  const handleFieldChange = async (field, value) => {
+    if (!selectedTask) return;
+
+    try {
+      // Create the patch for the mutation
+      const patch = { [field]: value };
+      
+      // Apply optimistic update via the store
+      const success = await mutateTask(selectedTask.id, patch);
+      
+      if (success) {
+        // Update local editing state for immediate UI feedback
+        if (editingTask) {
+          setEditingTask({ ...editingTask, [field]: value });
+        }
+        setHasChanges(true);
+      } else {
+        showError('Update Failed', 'Failed to update task. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error updating task field:', error);
+      showError('Save Failed', 'Changes reverted. Please try again.');
+    }
+  };
 
   // Handle color change
   const handleColorChange = color => {
@@ -193,66 +217,19 @@ const TaskPropertiesPane = () => {
     setConstraintValidation({ isValid: true, errors: [], warnings: [] });
   };
 
-  // Initialize editing task when selection changes
-  useEffect(() => {
-    if (selectedTask) {
-      setEditingTask({ ...selectedTask });
-      setHasChanges(false);
-
-      // Validate constraints
-      if (selectedTask.constraints) {
-        const validation = validateConstraint(selectedTask.constraints);
-        setConstraintValidation(validation);
-      } else {
-        setConstraintValidation({ isValid: true, errors: [], warnings: [] });
-      }
-    } else {
-      setEditingTask(null);
-      setHasChanges(false);
-      setConstraintValidation({ isValid: true, errors: [], warnings: [] });
-    }
-  }, [selectedTask]);
-
-  const handleFieldChange = (field, value) => {
-    if (!editingTask) return;
-
-    const updatedTask = { ...editingTask, [field]: value };
-    setEditingTask(updatedTask);
-    setHasChanges(true);
-  };
-
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!editingTask || !hasChanges || !selectedTask) return;
 
-    // Add history entries for changed fields
-    Object.keys(editingTask).forEach(field => {
-      if (editingTask[field] !== selectedTask[field] && field !== 'history') {
-        const oldValue = selectedTask[field];
-        const newValue = editingTask[field];
-
-        // Format values for display
-        const formatValue = value => {
-          if (value === null || value === undefined) return 'None';
-          if (typeof value === 'boolean') return value ? 'Yes' : 'No';
-          if (field === 'startDate' || field === 'endDate') {
-            return new Date(value).toLocaleDateString();
-          }
-          return String(value);
-        };
-
-        addHistoryEntry(
-          editingTask.id,
-          'Changed',
-          field,
-          formatValue(oldValue),
-          formatValue(newValue)
-        );
-      }
-    });
-
-    updateTask(editingTask.id, editingTask);
-    setHasChanges(false);
-    console.log('Task properties saved:', editingTask);
+    try {
+      // The mutations are already handled by the optimistic update system
+      // We just need to show success and reset the editing state
+      showSuccess('Task Updated', 'Task properties saved successfully.');
+      setHasChanges(false);
+      console.log('Task properties saved:', editingTask);
+    } catch (error) {
+      console.error('Error saving task:', error);
+      showError('Save Failed', 'Failed to save task properties.');
+    }
   };
 
   const handleCancel = () => {
@@ -354,9 +331,9 @@ const TaskPropertiesPane = () => {
       <>
         {/* Resize Handle */}
         <ResizeHandle
-          onResize={handleResize}
-          onResizeStart={handleResizeStart}
-          onResizeEnd={handleResizeEnd}
+          onResize={handleHeightChange}
+          onResizeStart={() => {}}
+          onResizeEnd={() => {}}
         />
         
         {/* Properties Pane */}
@@ -392,9 +369,9 @@ const TaskPropertiesPane = () => {
     <>
       {/* Resize Handle */}
       <ResizeHandle
-        onResize={handleResize}
-        onResizeStart={handleResizeStart}
-        onResizeEnd={handleResizeEnd}
+        onResize={handleHeightChange}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
       />
       
       {/* Properties Pane */}

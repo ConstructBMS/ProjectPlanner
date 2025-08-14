@@ -10,6 +10,7 @@ import { UndoRedoProvider } from './context/UndoRedoContext';
 import { GanttProvider } from './context/GanttContext';
 import { SearchProvider } from './context/SearchContext';
 import { UserProvider } from './context/UserContext';
+import { ToastContainer } from './components/common/Toast';
 import RibbonContainer from '../../components/RibbonTabs/RibbonContainer';
 import SidebarTree from './components/SidebarTree';
 import TaskGrid from './components/TaskGrid/TaskGrid';
@@ -210,6 +211,7 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
         onWidthChange={handleModelPanelWidthChange}
         position={resourcesPaneVisible ? 'bottom' : 'full'}
       />
+      <ToastContainer />
     </div>
   );
 }
