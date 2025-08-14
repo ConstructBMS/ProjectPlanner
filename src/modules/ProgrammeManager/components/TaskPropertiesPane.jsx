@@ -46,7 +46,6 @@ import ResizeHandle from './common/ResizeHandle';
 // Task Properties Pane Component
 const TaskPropertiesPane = () => {
   const {
-    selectedTaskId,
     tasks,
     updateTask,
     taskLinks,
@@ -61,7 +60,7 @@ const TaskPropertiesPane = () => {
   } = useCalendarContext();
 
   const { isUndoRedoAction } = useUndoRedoContext();
-  const { mutateTask } = usePlannerStore();
+  const { mutateTask, selectedTaskIds, getSelectedTasks, getSelectedCount } = usePlannerStore();
   const { showSuccess, showError } = useToast();
   
   const [editingTask, setEditingTask] = useState(null);
@@ -80,8 +79,105 @@ const TaskPropertiesPane = () => {
   });
   const [paneHeight, setPaneHeight] = useState(256);
 
-  // Get the currently selected task
-  const selectedTask = tasks.find(task => task.id === selectedTaskId);
+  // Get the currently selected task(s)
+  const selectedTasks = getSelectedTasks();
+  const selectedCount = getSelectedCount();
+  const selectedTask = selectedCount === 1 ? selectedTasks[0] : null;
+
+  // Initialize editing task when selection changes
+  useEffect(() => {
+    if (selectedTask && !editingTask) {
+      setEditingTask({ ...selectedTask });
+    }
+  }, [selectedTask, editingTask]);
+
+  // Handle field changes
+  const handleFieldChange = useCallback(async (field, value) => {
+    if (!selectedTask) return;
+
+    try {
+      const patch = { [field]: value };
+      const success = await mutateTask(selectedTask.id, patch);
+      
+      if (success) {
+        if (editingTask) {
+          setEditingTask({ ...editingTask, [field]: value });
+        }
+        setHasChanges(true);
+      } else {
+        showError('Update Failed', 'Failed to update task. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error updating task field:', error);
+      showError('Save Failed', 'Changes reverted. Please try again.');
+    }
+  }, [selectedTask, editingTask, mutateTask, showError]);
+
+  // Reset editing task when selection changes
+  useEffect(() => {
+    if (selectedTask) {
+      setEditingTask({ ...selectedTask });
+      setHasChanges(false);
+    }
+  }, [selectedTask]);
+
+  // Handle color change
+  const handleColorChange = color => {
+    handleFieldChange('color', color.hex);
+  };
+
+  // Reset to default color
+  const handleResetColor = () => {
+    handleFieldChange('color', null);
+  };
+
+  // Early return if no task is selected
+  if (!selectedTask) {
+    return (
+      <>
+        {/* Resize Handle */}
+        <ResizeHandle
+          onResize={handleHeightChange}
+          onResizeStart={() => {}}
+          onResizeEnd={() => {}}
+        />
+        
+        {/* Properties Pane */}
+        <div 
+          className='pm-properties-pane flex flex-col overflow-hidden'
+          style={{ height: `${paneHeight}px` }}
+        >
+          <div className='properties-header'>
+            <h3 className='text-sm font-semibold text-gray-700'>
+              {selectedCount === 0 ? 'Task Properties' : 
+               selectedCount === 1 ? 'Task Properties' : 
+               `${selectedCount} Tasks Selected`}
+            </h3>
+            <p className='text-xs text-gray-500 mt-1'>
+              {selectedCount === 0 ? 'Select a task to view properties' :
+               selectedCount === 1 ? 'Select a task to view properties' :
+               'Multiple tasks selected - edit common properties'}
+            </p>
+          </div>
+          <div className='flex-1 flex items-center justify-center'>
+            <div className='text-center'>
+              <PencilIcon className='w-12 h-12 text-gray-300 mx-auto mb-4' />
+              <div className='text-sm font-medium text-gray-500 mb-1'>
+                {selectedCount === 0 ? 'No Task Selected' :
+                 selectedCount === 1 ? 'No Task Selected' :
+                 `${selectedCount} Tasks Selected`}
+              </div>
+              <div className='text-xs text-gray-400'>
+                {selectedCount === 0 ? 'Select a task to edit its properties' :
+                 selectedCount === 1 ? 'Select a task to edit its properties' :
+                 'Edit common properties for selected tasks'}
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   // Default colors for different task types
   const getDefaultColor = task => {
@@ -115,50 +211,6 @@ const TaskPropertiesPane = () => {
     setPaneHeight(newHeight);
     await setStorage('pm.layout.props.height', newHeight.toString());
   }, []);
-
-  // Initialize editing task when selected task changes
-  useEffect(() => {
-    if (selectedTask && !isUndoRedoAction) {
-      setEditingTask({ ...selectedTask });
-      setHasChanges(false);
-      setConstraintValidation({ isValid: true, errors: [], warnings: [] });
-    }
-  }, [selectedTask]);
-
-  const handleFieldChange = async (field, value) => {
-    if (!selectedTask) return;
-
-    try {
-      // Create the patch for the mutation
-      const patch = { [field]: value };
-      
-      // Apply optimistic update via the store
-      const success = await mutateTask(selectedTask.id, patch);
-      
-      if (success) {
-        // Update local editing state for immediate UI feedback
-        if (editingTask) {
-          setEditingTask({ ...editingTask, [field]: value });
-        }
-        setHasChanges(true);
-      } else {
-        showError('Update Failed', 'Failed to update task. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error updating task field:', error);
-      showError('Save Failed', 'Changes reverted. Please try again.');
-    }
-  };
-
-  // Handle color change
-  const handleColorChange = color => {
-    handleFieldChange('color', color.hex);
-  };
-
-  // Reset to default color
-  const handleResetColor = () => {
-    handleFieldChange('color', null);
-  };
 
   // Constraint handling functions
   const handleConstraintChange = constraintType => {
@@ -241,7 +293,7 @@ const TaskPropertiesPane = () => {
 
   // Get task predecessors and successors with link information
   const predecessors = taskLinks
-    .filter(link => link.toId === selectedTaskId)
+    .filter(link => link.toId === selectedTask.id)
     .map(link => {
       const task = tasks.find(task => task.id === link.fromId);
       return task
@@ -251,7 +303,7 @@ const TaskPropertiesPane = () => {
     .filter(Boolean);
 
   const successors = taskLinks
-    .filter(link => link.fromId === selectedTaskId)
+    .filter(link => link.fromId === selectedTask.id)
     .map(link => {
       const task = tasks.find(task => task.id === link.toId);
       return task
@@ -279,16 +331,16 @@ const TaskPropertiesPane = () => {
   };
 
   const handleAddDependency = () => {
-    if (!modalSelectedTaskId || !selectedTaskId) return;
+    if (!modalSelectedTaskId || !selectedTask.id) return;
 
     // Validate that we're not creating a self-link
-    if (modalSelectedTaskId === selectedTaskId) {
+    if (modalSelectedTaskId === selectedTask.id) {
       console.error('Cannot link a task to itself');
       return;
     }
 
     // Create the link based on the selected task and current task
-    linkTasks(modalSelectedTaskId, selectedTaskId, modalLinkType, modalLag);
+    linkTasks(modalSelectedTaskId, selectedTask.id, modalLinkType, modalLag);
 
     // Reset modal state
     setShowAddDependencyModal(false);
@@ -321,49 +373,10 @@ const TaskPropertiesPane = () => {
   // Get available tasks for linking (exclude current task and already linked tasks)
   const availableTasks = tasks.filter(
     task =>
-      task.id !== selectedTaskId &&
+      task.id !== selectedTask.id &&
       !predecessors.some(p => p.id === task.id) &&
       !successors.some(s => s.id === task.id)
   );
-
-  if (!selectedTask || !editingTask) {
-    return (
-      <>
-        {/* Resize Handle */}
-        <ResizeHandle
-          onResize={handleHeightChange}
-          onResizeStart={() => {}}
-          onResizeEnd={() => {}}
-        />
-        
-        {/* Properties Pane */}
-        <div 
-          className='pm-properties-pane flex flex-col overflow-hidden'
-          style={{ height: `${paneHeight}px` }}
-        >
-          <div className='properties-header'>
-            <h3 className='text-sm font-semibold text-gray-700'>
-              Task Properties
-            </h3>
-            <p className='text-xs text-gray-500 mt-1'>
-              Select a task to view properties
-            </p>
-          </div>
-          <div className='flex-1 flex items-center justify-center'>
-            <div className='text-center'>
-              <PencilIcon className='w-12 h-12 text-gray-300 mx-auto mb-4' />
-              <div className='text-sm font-medium text-gray-500 mb-1'>
-                No Task Selected
-              </div>
-              <div className='text-xs text-gray-400'>
-                Select a task to edit its properties
-              </div>
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  }
 
   return (
     <>
@@ -384,10 +397,10 @@ const TaskPropertiesPane = () => {
           <div className='flex items-center justify-between mb-3'>
             <div>
               <h3 className='text-sm font-semibold text-gray-700'>
-                Task Properties
+                {selectedCount === 1 ? 'Task Properties' : `${selectedCount} Tasks Selected`}
               </h3>
               <p className='text-xs text-gray-500 mt-1'>
-                Editing: {editingTask.name}
+                {selectedCount === 1 ? `Editing: ${editingTask.name}` : 'Edit common properties'}
               </p>
             </div>
             <div className='flex gap-2'>
@@ -1607,7 +1620,7 @@ const TaskPropertiesPane = () => {
       <DeleteTaskModal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        taskId={selectedTaskId}
+        taskId={selectedTask.id}
       />
     </>
   );

@@ -60,6 +60,10 @@ interface PlannerState {
   realtimeSubscribed: boolean;
   ganttRelayoutTimeout: NodeJS.Timeout | null;
   
+  // Unified selection model
+  selectedTaskIds: Set<string>;
+  lastSelectedTaskId: string | null;
+  
   // Actions
   loadProjects: () => Promise<void>;
   selectProject: (id: string) => void;
@@ -84,6 +88,15 @@ interface PlannerState {
   handleRealtimeUpdate: (event: CustomEvent) => void;
   handleRealtimeLinkUpdate: (event: CustomEvent) => void;
   triggerGanttRelayout: () => void;
+  
+  // Selection management
+  selectOne: (taskId: string) => void;
+  toggleSelection: (taskId: string) => void;
+  selectRange: (startId: string, endId: string) => void;
+  clearSelection: () => void;
+  selectAll: () => void;
+  getSelectedTasks: () => Task[];
+  getSelectedCount: () => number;
 }
 
 export const usePlannerStore = create<PlannerState>((set, get) => ({
@@ -100,6 +113,8 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
   syncPending: false,
   realtimeSubscribed: false,
   ganttRelayoutTimeout: null,
+  selectedTaskIds: new Set(),
+  lastSelectedTaskId: null,
 
   // Load all projects from ConstructBMS
   loadProjects: async () => {
@@ -557,6 +572,53 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
     }, 100);
 
     set({ ganttRelayoutTimeout: timeout });
+  },
+
+  // Selection management
+  selectOne: (taskId: string) => {
+    set({ selectedTaskIds: new Set([taskId]), lastSelectedTaskId: taskId });
+  },
+  toggleSelection: (taskId: string) => {
+    const newSelected = new Set(get().selectedTaskIds);
+    if (newSelected.has(taskId)) {
+      newSelected.delete(taskId);
+    } else {
+      newSelected.add(taskId);
+    }
+    set({ selectedTaskIds: newSelected, lastSelectedTaskId: taskId });
+  },
+  selectRange: (startId: string, endId: string) => {
+    const state = get();
+    const tasks = state.tasks;
+    const startIndex = tasks.findIndex(task => task.id === startId);
+    const endIndex = tasks.findIndex(task => task.id === endId);
+    
+    if (startIndex === -1 || endIndex === -1) {
+      return;
+    }
+    
+    const newSelected = new Set(state.selectedTaskIds);
+    const minIndex = Math.min(startIndex, endIndex);
+    const maxIndex = Math.max(startIndex, endIndex);
+    
+    // Add all tasks in the range
+    for (let i = minIndex; i <= maxIndex; i++) {
+      newSelected.add(tasks[i].id);
+    }
+    
+    set({ selectedTaskIds: newSelected, lastSelectedTaskId: endId });
+  },
+  clearSelection: () => {
+    set({ selectedTaskIds: new Set(), lastSelectedTaskId: null });
+  },
+  selectAll: () => {
+    set({ selectedTaskIds: new Set(get().tasks.map(task => task.id)), lastSelectedTaskId: null });
+  },
+  getSelectedTasks: () => {
+    return Array.from(get().selectedTaskIds).map(id => get().tasks.find(task => task.id === id));
+  },
+  getSelectedCount: () => {
+    return get().selectedTaskIds.size;
   },
 
   // Legacy task actions (kept for backward compatibility)

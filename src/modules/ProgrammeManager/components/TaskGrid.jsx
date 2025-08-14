@@ -2,10 +2,10 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useTaskContext } from '../context/TaskContext';
 import { useViewContext } from '../context/ViewContext';
-import { useSelectionContext } from '../context/SelectionContext';
 import { useFilterContext } from '../context/FilterContext';
 import { useLayoutContext } from '../context/LayoutContext';
 import { useCalendarContext } from '../context/CalendarContext';
+import { usePlannerStore } from '../state/plannerStore';
 import TaskLinkModal from './modals/TaskLinkModal';
 import ContextMenu from './ContextMenu';
 import { calculateWorkingDays } from '../utils/dateUtils';
@@ -71,11 +71,9 @@ import {
 const TaskGrid = React.memo(() => {
   const {
     selectedTaskId,
-    selectedTaskIds,
     linkingMode,
     deleteTask,
     updateTask,
-    selectMultipleTasks,
     handleTaskClickForLinking,
     getVisibleTasks,
     toggleGroupCollapse,
@@ -84,8 +82,15 @@ const TaskGrid = React.memo(() => {
   const { viewState } = useViewContext();
   const { globalCalendar } = useCalendarContext();
 
-  const { isSelected, handleTaskClick, getSelectedCount } =
-    useSelectionContext();
+  // Use unified selection from plannerStore
+  const {
+    selectedTaskIds,
+    selectOne,
+    toggleSelection,
+    selectRange,
+    clearSelection,
+    getSelectedCount,
+  } = usePlannerStore();
 
   const { applyFilters } = useFilterContext();
 
@@ -716,14 +721,24 @@ const TaskGrid = React.memo(() => {
         return;
       }
 
-      // Use new selection context for multi-select
-      handleTaskClick(
-        taskId,
-        e,
-        visibleTasks.map(t => t.id)
-      );
+      // Handle modifiers for multi-select
+      if (e.ctrlKey || e.metaKey) {
+        // Ctrl/Cmd + click: toggle selection
+        toggleSelection(taskId);
+      } else if (e.shiftKey && selectedTaskIds.size > 0) {
+        // Shift + click: range selection
+        const lastSelected = Array.from(selectedTaskIds).pop();
+        if (lastSelected) {
+          selectRange(lastSelected, taskId);
+        } else {
+          selectOne(taskId);
+        }
+      } else {
+        // Regular click: select one
+        selectOne(taskId);
+      }
     },
-    [linkingMode, handleTaskClickForLinking, handleTaskClick, visibleTasks]
+    [linkingMode, handleTaskClickForLinking, toggleSelection, selectOne, selectRange, selectedTaskIds]
   );
 
   const handleGroupToggle = useCallback(
@@ -737,14 +752,14 @@ const TaskGrid = React.memo(() => {
   // Memoize the grid rows to prevent unnecessary re-renders
   const gridRows = useMemo(() => {
     return visibleTasks.map((task, index) => {
-      const isTaskSelected = isSelected(task.id);
+      const isTaskSelected = selectedTaskIds.has(task.id);
       const isEditing = editingField?.taskId === task.id && editingField?.field;
 
       return (
         <div
           key={task.id}
           className={`asta-grid-row flex items-center border-b border-gray-200 hover:bg-opacity-5 hover:bg-white transition-colors duration-150 ${
-            isTaskSelected ? 'bg-blue-50 ring-1 ring-blue-300' : ''
+            isTaskSelected ? (selectedTaskIds.size > 1 ? 'multi-selected' : 'selected') : ''
           } ${gridOptions?.rowStripe && index % 2 === 1 ? 'bg-gray-50 dark:bg-gray-800' : ''}`}
           onClick={e => handleRowClick(task.id, e)}
           onContextMenu={e => handleContextMenu(e, task)}

@@ -19,8 +19,9 @@ import {
 } from '../utils/milestoneShapeUtils.jsx';
 import { useTaskContext } from '../context/TaskContext';
 import { useViewContext } from '../context/ViewContext';
-import { useSelectionContext } from '../context/SelectionContext';
 import { useFilterContext } from '../context/FilterContext';
+import { useCalendarContext } from '../context/CalendarContext';
+import { usePlannerStore } from '../state/plannerStore';
 import DateMarkersOverlay from './DateMarkersOverlay';
 import GanttHeader from './GanttHeader';
 import { calculateCriticalPath } from '../utils/criticalPath';
@@ -31,7 +32,6 @@ import {
   getWeek,
 } from '../utils/dateUtils';
 import { validateTaskDates, getPredecessors } from '../utils/scheduleUtils';
-import { useCalendarContext } from '../context/CalendarContext';
 import { isWorkday, snapToWorkday } from '../utils/calendarUtils';
 import { isWorkingDay } from './GanttChart/calendar';
 import {
@@ -119,13 +119,16 @@ const GanttChart = () => {
 
   const { viewState, updateViewState } = useViewContext();
   const { getCalendarForTask, globalCalendar } = useCalendarContext();
+  
+  // Use unified selection from plannerStore
   const {
-    isSelected,
-    handleTaskClick,
+    selectedTaskIds,
+    selectOne,
+    toggleSelection,
+    selectRange,
     clearSelection,
-    addToSelection,
-    selectAll,
-  } = useSelectionContext();
+  } = usePlannerStore();
+  
   const { applyFilters } = useFilterContext();
 
   // Calculate scaled width based on time unit
@@ -971,33 +974,67 @@ const GanttChart = () => {
     });
   }, [taskLinks, tasks]);
 
-  const handleGanttTaskClick = (taskId, event) => {
+  // Handle Gantt re-layout events from realtime updates
+  useEffect(() => {
+    const handleGanttRelayout = () => {
+      // Force a re-render of the Gantt chart
+      // This will trigger recalculation of task positions and layout
+      if (svgContainerRef.current) {
+        // Trigger a small DOM change to force re-render
+        const currentScrollLeft = svgContainerRef.current.scrollLeft;
+        svgContainerRef.current.scrollLeft = currentScrollLeft;
+      }
+    };
+
+    window.addEventListener('GANTT_RELAYOUT', handleGanttRelayout);
+
+    return () => {
+      window.removeEventListener('GANTT_RELAYOUT', handleGanttRelayout);
+    };
+  }, []);
+
+  // Handle task click in Gantt chart
+  const handleGanttTaskClick = useCallback((taskId, e) => {
+    // If in linking mode, handle linking logic
     if (linkingMode) {
       handleTaskClickForLinking(taskId);
+      return;
+    }
+
+    // Handle modifiers for multi-select
+    if (e.ctrlKey || e.metaKey) {
+      // Ctrl/Cmd + click: toggle selection
+      toggleSelection(taskId);
+    } else if (e.shiftKey && selectedTaskIds.size > 0) {
+      // Shift + click: range selection
+      const lastSelected = Array.from(selectedTaskIds).pop();
+      if (lastSelected) {
+        selectRange(lastSelected, taskId);
+      } else {
+        selectOne(taskId);
+      }
     } else {
-      // Use new selection context for multi-select
-      handleTaskClick(
-        taskId,
-        event,
-        tasks.map(t => t.id)
-      );
+      // Regular click: select one
+      selectOne(taskId);
     }
-  };
+  }, [linkingMode, handleTaskClickForLinking, toggleSelection, selectOne, selectRange, selectedTaskIds]);
 
-  const handleChartClick = e => {
-    // Only clear selection if clicking on empty space and not in linking mode
-    if (e.target === e.currentTarget && !linkingMode) {
-      selectTask(null);
+  // Handle chart click to clear selection
+  const handleChartClick = useCallback((e) => {
+    // Only clear selection if clicking on empty space
+    if (e.target === e.currentTarget) {
+      clearSelection();
     }
-  };
+  }, [clearSelection]);
 
+  // Handle task hover
   const handleTaskHover = taskId => {
     setHoveredTask(taskId);
   };
 
+  // Handle task leave
   const handleTaskLeave = () => {
     clearHoveredTask();
-    setTooltip({ visible: false, x: 0, y: 0, task: null });
   };
 
   // Grid snapping helper functions
@@ -1878,9 +1915,22 @@ const GanttChart = () => {
   };
 
   const getTaskBarStyle = task => {
-    const isTaskSelected = isSelected(task.id);
+    const isTaskSelected = selectedTaskIds.has(task.id);
     const isHovered = hoveredTaskId === task.id;
     const isLinkStart = linkingMode && linkStartTaskId === task.id;
+    const isMultiSelected = selectedTaskIds.size > 1;
+
+    let baseClasses = 'gantt-task-bar';
+    if (isTaskSelected) {
+      baseClasses += isMultiSelected ? ' multi-selected' : ' selected';
+    }
+    if (isHovered) {
+      baseClasses += ' hovered';
+    }
+    if (isLinkStart) {
+      baseClasses += ' link-start';
+    }
+
     const isCritical =
       task.isCritical && isCriticalPathHighlightingEnabled(viewState);
     const isDragging = dragging.taskId === task.id;
@@ -1919,11 +1969,8 @@ const GanttChart = () => {
       ? getCriticalPathStyling(true)
       : null;
 
-    let baseClasses =
-      'rounded-sm transition-all duration-200 cursor-move border';
-
     if (isMilestone) {
-      baseClasses = 'transition-all duration-200 cursor-move'; // Remove border and rounded for diamond
+      baseClasses += ' transition-all duration-200 cursor-move'; // Remove border and rounded for diamond
     } else if (isCritical) {
       baseClasses += ' bg-red-600 border-red-600 text-white shadow-md';
     } else {
@@ -1996,24 +2043,12 @@ const GanttChart = () => {
     return baseClasses;
   };
 
-  // Handle Gantt re-layout events from realtime updates
-  useEffect(() => {
-    const handleGanttRelayout = () => {
-      // Force a re-render of the Gantt chart
-      // This will trigger recalculation of task positions and layout
-      if (svgContainerRef.current) {
-        // Trigger a small DOM change to force re-render
-        const currentScrollLeft = svgContainerRef.current.scrollLeft;
-        svgContainerRef.current.scrollLeft = currentScrollLeft;
-      }
-    };
-
-    window.addEventListener('GANTT_RELAYOUT', handleGanttRelayout);
-
-    return () => {
-      window.removeEventListener('GANTT_RELAYOUT', handleGanttRelayout);
-    };
-  }, []);
+  // Handle keyboard navigation
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === 'Escape') {
+      clearSelection();
+    }
+  }, [clearSelection]);
 
   return (
     <div className='gantt-viewport pm-content-dark'>
@@ -2381,7 +2416,7 @@ const GanttChart = () => {
                             getMilestoneColor(
                               {
                                 ...task,
-                                selected: selectedTaskId === task.id,
+                                selected: selectedTaskIds.has(task.id),
                                 hovered: hoveredTaskId === task.id,
                               },
                               getTaskMilestoneShape(
@@ -2696,7 +2731,7 @@ const GanttChart = () => {
                             })()}
 
                           {/* Resize Handles */}
-                          {(selectedTaskId === task.id ||
+                          {(selectedTaskIds.has(task.id) ||
                             hoveredTaskId === task.id) && (
                             <>
                               <div
