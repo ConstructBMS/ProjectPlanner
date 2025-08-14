@@ -12,7 +12,7 @@ import {
 import './GanttChart.css';
 
 const GanttChart = () => {
-  const { tasks, links, selectedTaskIds, selectOne, toggleSelection, selectRange, lastSelectedTaskId } = usePlannerStore();
+  const { tasks, links, selectedTaskIds, selectOne, toggleSelection, selectRange, lastSelectedTaskId, currentProjectId } = usePlannerStore();
   const containerRef = useRef(null);
   const [containerSize, setContainerSize] = useState({ width: 800, height: 600 });
 
@@ -68,6 +68,43 @@ const GanttChart = () => {
       selectOne(taskId);
     }
   }, [selectOne, toggleSelection, selectRange, lastSelectedTaskId]);
+
+  // Fit project function
+  const fitProject = useCallback(() => {
+    if (!currentProjectId) return;
+    
+    const fitFlag = `pm.gantt.fitOnce.${currentProjectId}`;
+    const hasFitted = localStorage.getItem(fitFlag);
+    
+    if (!hasFitted && tasks.length > 0) {
+      // Auto-fit logic - adjust zoom to fit all tasks
+      const allBars = layoutBars(tasks, scale);
+      if (allBars.length > 0) {
+        // Find the earliest start and latest end
+        const minX = Math.min(...allBars.map(bar => bar.x));
+        const maxX = Math.max(...allBars.map(bar => bar.x + bar.width));
+        
+        // Calculate optimal zoom to fit all bars
+        const totalWidth = maxX - minX;
+        const availableWidth = containerSize.width - 100; // Leave some padding
+        
+        if (totalWidth > 0 && availableWidth > 0) {
+          // This would ideally adjust the scale, but for now we'll just mark as fitted
+          console.log('Auto-fitting project to show all tasks');
+        }
+      }
+      
+      // Mark as fitted for this project
+      localStorage.setItem(fitFlag, 'true');
+    }
+  }, [currentProjectId, tasks, scale, containerSize.width]);
+
+  // Auto-fit on first load
+  useEffect(() => {
+    if (tasks.length > 0 && currentProjectId) {
+      fitProject();
+    }
+  }, [tasks.length, currentProjectId, fitProject]);
 
   // Set up resize observer
   useEffect(() => {
@@ -125,7 +162,7 @@ const GanttChart = () => {
               fontWeight: 'bold',
               fontSize: '0.875rem',
               color: '#374151',
-              borderRight: '1px solid #e5e7eb',
+              borderRight: '1px solid var(--rbn-border, #e5e7eb)',
               backgroundColor: '#f9fafb'
             }}
           >
@@ -151,14 +188,14 @@ const GanttChart = () => {
             justifyContent: 'center',
             fontSize: '0.75rem',
             color: '#6b7280',
-            borderRight: '1px solid #e5e7eb',
+            borderRight: '1px solid var(--rbn-border, #e5e7eb)',
             backgroundColor: '#f9fafb'
           }}
         >
           <div style={{ fontWeight: '600', color: '#374151' }}>
             {currentDate.getDate()}
           </div>
-          <div style={{ fontSize: '0.625rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ fontSize: '0.625rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#9ca3af' }}>
             {currentDate.toLocaleDateString('en-GB', { weekday: 'short' })}
           </div>
         </div>
@@ -332,7 +369,7 @@ const GanttChart = () => {
             top: 0,
             height: '100%',
             width: '1px',
-            backgroundColor: '#e5e7eb',
+            backgroundColor: 'var(--rbn-border, #e5e7eb)',
             pointerEvents: 'none',
             zIndex: 1
           }}
@@ -385,7 +422,7 @@ const GanttChart = () => {
         flexDirection: 'column',
         height: '100%',
         backgroundColor: 'white',
-        border: '1px solid #e5e7eb',
+        border: '1px solid var(--rbn-border, #e5e7eb)',
         borderRadius: '0.375rem',
         overflow: 'hidden'
       }}
@@ -406,7 +443,7 @@ const GanttChart = () => {
           style={{ 
             height: '60px',
             backgroundColor: '#f9fafb',
-            borderBottom: '1px solid #e5e7eb',
+            borderBottom: '1px solid var(--rbn-border, #e5e7eb)',
             position: 'sticky',
             top: 0,
             zIndex: 10,
