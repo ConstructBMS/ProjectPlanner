@@ -18,6 +18,7 @@ import ResourcesPane from './components/Resources/ResourcesPane';
 import ModelPanel from './components/FourD/ModelPanel';
 import Splitter from './components/common/Splitter';
 import { getLayoutRatios, saveLayoutRatios, loadAllocationPreferences, setPaneVisible, setPaneWidth, loadFourDPreferences, setFourDPanelVisible, setFourDPanelWidth } from './utils/prefs';
+import { usePlannerStore } from './state/plannerStore';
 import './styles/projectplanner.css';
 
 function AppShellContent({ projectId, onBackToPortfolio }) {
@@ -35,6 +36,9 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
   
   // Ribbon minimise state
   const [isRibbonMinimised, setIsRibbonMinimised] = useState(false);
+
+  // Planner store
+  const { loadProjects } = usePlannerStore();
 
   const handleExpandAll = () => {
     sidebarRef.current?.expandAll?.();
@@ -61,6 +65,11 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
     setModelPanelVisible(fourDPrefs.panelVisible);
     setModelPanelWidth(fourDPrefs.panelWidth);
   }, []);
+
+  // Initialize planner store on mount
+  useEffect(() => {
+    loadProjects();
+  }, [loadProjects]);
 
   // Handle main pane ratios change
   const handleMainPaneRatiosChange = (ratios) => {

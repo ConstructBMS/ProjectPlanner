@@ -23,6 +23,7 @@ import {
 import { useCalendarContext } from './CalendarContext';
 import { supabase } from '../../../supabase/client';
 import { getCachedTableExists } from '../utils/databaseSchema.js';
+import { usePlannerStore } from '../state/plannerStore';
 
 const TaskContext = createContext();
 
@@ -39,43 +40,26 @@ export const TaskProvider = ({ children }) => {
   // Get global calendar for rollup calculations
   const { globalCalendar } = useCalendarContext();
 
-  // Task data - will be loaded from ConstructBMS database
+  // Get data from planner store
+  const { tasks: plannerTasks, links: plannerLinks, loading: plannerLoading, error: plannerError } = usePlannerStore();
+
+  // Task data - will be loaded from planner store
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Load tasks from ConstructBMS database
-  const loadTasks = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Check if table exists using cached result
-      const tableExists = getCachedTableExists('project_tasks');
-      if (!tableExists) {
-        console.info('Using mock task data (database table not found)');
-        setTasks([]);
-        return;
-      }
-
-      const { data: tasksData, error: tasksError } = await supabase
-        .from('project_tasks')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (tasksError) {
-        throw new Error(`Error loading tasks: ${tasksError.message}`);
-      }
-
-      // Transform ConstructBMS task data to ProjectPlanner format
-      const transformedTasks = (tasksData || []).map(task => ({
+  // Sync planner store data with TaskContext
+  useEffect(() => {
+    if (plannerTasks.length > 0) {
+      // Transform planner tasks to ProjectPlanner format
+      const transformedTasks = plannerTasks.map(task => ({
         id: task.id,
         name: task.name,
         startDate: task.start_date
           ? new Date(task.start_date).toISOString()
           : null,
         endDate: task.end_date ? new Date(task.end_date).toISOString() : null,
-        duration: task.duration || 1,
+        duration: task.duration_days || 1,
         status: task.status || 'not-started',
         priority: task.priority || 'medium',
         assignee: task.assigned_to || null,
@@ -89,32 +73,132 @@ export const TaskProvider = ({ children }) => {
         isExpanded: true,
         baselineStart: null,
         baselineEnd: null,
-        predecessors: [], // Will be populated from dependencies
+        predecessors: [], // Will be populated from links
         projectId: task.project_id,
       }));
 
-      // Only log if we have actual data
-      if (transformedTasks.length > 0) {
-        console.log(
-          'Loaded tasks from database:',
-          transformedTasks.length,
-          'tasks'
-        );
-      }
+      // Add predecessors from links
+      transformedTasks.forEach(task => {
+        const taskLinks = plannerLinks.filter(link => link.succ_id === task.id);
+        task.predecessors = taskLinks.map(link => ({
+          id: link.pred_id,
+          type: link.type,
+          lag: link.lag_days || 0
+        }));
+      });
 
       setTasks(transformedTasks);
-    } catch (err) {
-      setError(err.message);
-      console.error('Error loading tasks:', err);
-    } finally {
+      setLoading(false);
+      setError(null);
+    } else if (plannerLoading) {
+      setLoading(true);
+      setError(null);
+    } else if (plannerError) {
+      setError(plannerError);
+      setLoading(false);
+    } else {
+      setTasks([]);
       setLoading(false);
     }
-  }, []);
+  }, [plannerTasks, plannerLinks, plannerLoading, plannerError]);
 
-  // Load tasks on mount
+  // Sync planner links with taskLinks state
   useEffect(() => {
-    loadTasks();
-  }, [loadTasks]);
+    if (plannerLinks.length > 0) {
+      // Transform planner links to ProjectPlanner format
+      const transformedLinks = plannerLinks.map(link => ({
+        id: link.id,
+        fromId: link.pred_id,
+        toId: link.succ_id,
+        type:
+          link.type === 'finish-to-start'
+            ? 'FS'
+            : link.type === 'start-to-start'
+              ? 'SS'
+              : link.type === 'finish-to-finish'
+                ? 'FF'
+                : 'SF',
+        lag: link.lag_days || 0,
+        projectId: link.project_id,
+      }));
+
+      setTaskLinks(transformedLinks);
+    } else {
+      setTaskLinks([]);
+    }
+  }, [plannerLinks]);
+
+  // Load tasks from ConstructBMS database (legacy - now handled by planner store)
+  // const loadTasks = useCallback(async () => {
+  //   try {
+  //     setLoading(true);
+  //     setError(null);
+
+  //     // Check if table exists using cached result
+  //     const tableExists = getCachedTableExists('project_tasks');
+  //     if (!tableExists) {
+  //       console.info('Using mock task data (database table not found)');
+  //       setTasks([]);
+  //       return;
+  //     }
+
+  //     const { data: tasksData, error: tasksError } = await supabase
+  //       .from('project_tasks')
+  //       .select('*')
+  //       .order('created_at', { ascending: false });
+
+  //     if (tasksError) {
+  //       throw new Error(`Error loading tasks: ${tasksError.message}`);
+  //     }
+
+  //     // Transform ConstructBMS task data to ProjectPlanner format
+  //     const transformedTasks = (tasksData || []).map(task => ({
+  //       id: task.id,
+  //       name: task.name,
+  //       startDate: task.start_date
+  //         ? new Date(task.start_date).toISOString()
+  //         : null,
+  //       endDate: task.end_date ? new Date(task.end_date).toISOString() : null,
+  //       duration: task.duration || 1,
+  //       status: task.status || 'not-started',
+  //       priority: task.priority || 'medium',
+  //       assignee: task.assigned_to || null,
+  //       progress: task.progress || 0,
+  //       color: '#3B82F6', // Default color
+  //       type: 'task',
+  //       isMilestone: false,
+  //       notes: task.description || '',
+  //       parentId: task.parent_task_id || null,
+  //       isGroup: false,
+  //       isExpanded: true,
+  //       baselineStart: null,
+  //       baselineEnd: null,
+  //       predecessors: [], // Will be populated from dependencies
+  //       projectId: task.project_id,
+  //     }));
+
+  //     // Only log if we have actual data
+  //     if (transformedTasks.length > 0) {
+  //       console.log(
+  //         'Loaded tasks from database:',
+  //         transformedTasks.length,
+  //         'tasks'
+  //       );
+  //     }
+
+  //     setTasks(transformedTasks);
+  //   } catch (err) {
+  //     setError(err.message);
+  //     console.error('Error loading tasks:', err);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, []);
+
+  // Load tasks on mount (now handled by planner store)
+  // useEffect(() => {
+  //   loadTasks();
+  // }, [loadTasks]);
 
   const [nextId, setNextId] = useState(1);
 
@@ -131,58 +215,58 @@ export const TaskProvider = ({ children }) => {
   // Task links/dependencies - will be loaded from ConstructBMS database
   const [taskLinks, setTaskLinks] = useState([]);
 
-  // Load task links from ConstructBMS database
-  const loadTaskLinks = useCallback(async () => {
-    try {
-      // Check if table exists using cached result
-      const tableExists = getCachedTableExists('project_dependencies');
-      if (!tableExists) {
-        console.info('Using mock task links (database table not found)');
-        setTaskLinks([]);
-        return;
-      }
+  // Load task links from ConstructBMS database (legacy - now handled by planner store)
+  // const loadTaskLinks = useCallback(async () => {
+  //   try {
+  //     // Check if table exists using cached result
+  //     const tableExists = getCachedTableExists('project_dependencies');
+  //     if (!tableExists) {
+  //       console.info('Using mock task links (database table not found)');
+  //       setTaskLinks([]);
+  //       return;
+  //     }
 
-      const { data: linksData, error: linksError } = await supabase
-        .from('project_dependencies')
-        .select('*');
+  //     const { data: linksData, error: linksError } = await supabase
+  //       .from('project_dependencies')
+  //       .select('*');
 
-      if (linksError) {
-        console.warn('Error loading task links:', linksError.message);
-        return;
-      }
+  //     if (linksError) {
+  //       console.warn('Error loading task links:', linksError.message);
+  //       return;
+  //     }
 
-      // Transform ConstructBMS task links to ProjectPlanner format
-      const transformedLinks = (linksData || []).map(link => ({
-        id: link.id,
-        fromId: link.predecessor_task_id,
-        toId: link.successor_task_id,
-        type:
-          link.dependency_type === 'finish-to-start'
-            ? 'FS'
-            : link.dependency_type === 'start-to-start'
-              ? 'SS'
-              : link.dependency_type === 'finish-to-finish'
-                ? 'FF'
-                : 'SF',
-        lag: link.lag_days || 0,
-        projectId: link.project_id,
-      }));
+  //     // Transform ConstructBMS task links to ProjectPlanner format
+  //     const transformedLinks = (linksData || []).map(link => ({
+  //       id: link.id,
+  //       fromId: link.predecessor_task_id,
+  //       toId: link.successor_task_id,
+  //       type:
+  //         link.dependency_type === 'finish-to-start'
+  //           ? 'FS'
+  //           : link.dependency_type === 'start-to-start'
+  //             ? 'SS'
+  //             : link.dependency_type === 'finish-to-finish'
+  //               ? 'FF'
+  //               : 'SF',
+  //       lag: link.lag_days || 0,
+  //       projectId: link.project_id,
+  //     }));
 
-      console.log(
-        'Loaded task links from database:',
-        transformedLinks.length,
-        'links'
-      );
-      setTaskLinks(transformedLinks);
-    } catch (err) {
-      console.error('Error loading task links:', err);
-    }
-  }, []);
+  //     console.log(
+  //       'Loaded task links from database:',
+  //       transformedLinks.length,
+  //       'links'
+  //     );
+  //     setTaskLinks(transformedLinks);
+  //   } catch (err) {
+  //     console.error('Error loading task links:', err);
+  //   }
+  // }, []);
 
-  // Load task links on mount
-  useEffect(() => {
-    loadTaskLinks();
-  }, [loadTaskLinks]);
+  // Load task links on mount (now handled by planner store)
+  // useEffect(() => {
+  //   loadTaskLinks();
+  // }, [loadTaskLinks]);
 
   // Linking mode state
   const [linkingMode, setLinkingMode] = useState(false);

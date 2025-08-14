@@ -3,6 +3,7 @@ import { useUserContext } from '../../modules/ProgrammeManager/context/UserConte
 import { getRibbonPrefs, setRibbonPrefs } from '../../modules/ProgrammeManager/utils/ribbonStorage';
 import RibbonTabs from '../../modules/ProgrammeManager/components/RibbonTabs/RibbonTabs';
 import GlobalSearch from '../GlobalSearch';
+import ProjectPicker from '../../modules/ProgrammeManager/components/ProjectPicker';
 
 
 const RibbonContainer = ({
@@ -118,8 +119,11 @@ const RibbonContainer = ({
           ← Back to Portfolio
         </button>
 
-        {/* Global Search */}
-        <GlobalSearch />
+        {/* Global Search and Project Picker */}
+        <div className='flex items-center space-x-4'>
+          <GlobalSearch />
+          <ProjectPicker />
+        </div>
 
         <div className='flex items-center space-x-4 text-sm text-gray-500'>
           <div>
