@@ -1,4 +1,4 @@
-import React from 'react';
+ 
 import { ChartBarIcon, TableCellsIcon } from '@heroicons/react/24/outline';
 
 const Navigation = ({ currentView, onViewChange }) => {

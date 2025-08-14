@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-unused-vars
 import React, { useRef, useEffect } from 'react';
 import { useSearchContext } from '../modules/ProgrammeManager/context/SearchContext';
 import {

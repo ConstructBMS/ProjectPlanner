@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-unused-vars
 import React, { useState } from 'react';
 import { useCalendarContext } from '../../context/CalendarContext';
 import { createCalendar } from '../../utils/calendarUtils';

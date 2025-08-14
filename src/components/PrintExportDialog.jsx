@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-unused-vars
 import React, { useState, useEffect, useRef } from 'react';
 import { useTaskContext } from '../modules/ProgrammeManager/context/TaskContext';
 import { useViewContext } from '../modules/ProgrammeManager/context/ViewContext';

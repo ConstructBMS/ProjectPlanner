@@ -8,8 +8,10 @@ import {
   TaskLinksResult,
   DemoProject,
   DemoTask,
-  DemoTaskLink
+  DemoTaskLink,
+  TaskUpdate
 } from './types';
+import { tables, safeGetColumn, tableNames, columns } from './adapter.config';
 
 // Demo data generators
 const generateDemoProjects = (): DemoProject[] => {
@@ -268,16 +270,68 @@ const logFallback = (tableName: string, error?: string) => {
   }
 };
 
+// Transform raw DB data to our interface using safe column access
+const transformProject = (rawData: any): Project => ({
+  id: safeGetColumn(rawData, tableNames.projects, columns.projects.id, ''),
+  name: safeGetColumn(rawData, tableNames.projects, columns.projects.name, ''),
+  code: safeGetColumn(rawData, tableNames.projects, columns.projects.code),
+  start_date: safeGetColumn(rawData, tableNames.projects, columns.projects.start),
+  end_date: safeGetColumn(rawData, tableNames.projects, columns.projects.end),
+  description: safeGetColumn(rawData, tableNames.projects, 'description'),
+  status: safeGetColumn(rawData, tableNames.projects, 'status'),
+  progress: safeGetColumn(rawData, tableNames.projects, 'progress'),
+  budget: safeGetColumn(rawData, tableNames.projects, 'budget'),
+  actual_cost: safeGetColumn(rawData, tableNames.projects, 'actual_cost'),
+  manager_id: safeGetColumn(rawData, tableNames.projects, 'manager_id'),
+  client_id: safeGetColumn(rawData, tableNames.projects, 'client_id'),
+  location: safeGetColumn(rawData, tableNames.projects, 'location'),
+  priority: safeGetColumn(rawData, tableNames.projects, 'priority'),
+  created_at: safeGetColumn(rawData, tableNames.projects, 'created_at'),
+  updated_at: safeGetColumn(rawData, tableNames.projects, 'updated_at')
+});
+
+const transformTask = (rawData: any): Task => ({
+  id: safeGetColumn(rawData, tableNames.tasks, columns.tasks.id, ''),
+  project_id: safeGetColumn(rawData, tableNames.tasks, columns.tasks.project, ''),
+  name: safeGetColumn(rawData, tableNames.tasks, columns.tasks.name, ''),
+  start_date: safeGetColumn(rawData, tableNames.tasks, columns.tasks.start),
+  end_date: safeGetColumn(rawData, tableNames.tasks, columns.tasks.end),
+  duration_days: safeGetColumn(rawData, tableNames.tasks, columns.tasks.duration),
+  progress: safeGetColumn(rawData, tableNames.tasks, columns.tasks.progress),
+  status: safeGetColumn(rawData, tableNames.tasks, columns.tasks.status),
+  wbs: safeGetColumn(rawData, tableNames.tasks, columns.tasks.wbs),
+  resource_id: safeGetColumn(rawData, tableNames.tasks, columns.tasks.resource),
+  description: safeGetColumn(rawData, tableNames.tasks, 'description'),
+  priority: safeGetColumn(rawData, tableNames.tasks, 'priority'),
+  parent_task_id: safeGetColumn(rawData, tableNames.tasks, 'parent_task_id'),
+  assigned_to: safeGetColumn(rawData, tableNames.tasks, 'assigned_to'),
+  estimated_hours: safeGetColumn(rawData, tableNames.tasks, 'estimated_hours'),
+  actual_hours: safeGetColumn(rawData, tableNames.tasks, 'actual_hours'),
+  cost: safeGetColumn(rawData, tableNames.tasks, 'cost'),
+  created_at: safeGetColumn(rawData, tableNames.tasks, 'created_at'),
+  updated_at: safeGetColumn(rawData, tableNames.tasks, 'updated_at')
+});
+
+const transformTaskLink = (rawData: any): TaskLink => ({
+  id: safeGetColumn(rawData, tableNames.links, columns.links.id, ''),
+  project_id: safeGetColumn(rawData, tableNames.links, columns.links.project, ''),
+  pred_id: safeGetColumn(rawData, tableNames.links, columns.links.pred),
+  succ_id: safeGetColumn(rawData, tableNames.links, columns.links.succ),
+  type: safeGetColumn(rawData, tableNames.links, columns.links.type),
+  lag_days: safeGetColumn(rawData, tableNames.links, columns.links.lag),
+  created_at: safeGetColumn(rawData, tableNames.links, 'created_at')
+});
+
 // Main adapter functions
 export const getProjects = async (): Promise<ProjectsResult> => {
   try {
     const { data, error } = await supabase
-      .from('projects')
+      .from(tableNames.projects)
       .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
-      logFallback('projects', error.message);
+      logFallback(tableNames.projects, error.message);
       return {
         data: generateDemoProjects(),
         isDemo: true,
@@ -286,7 +340,7 @@ export const getProjects = async (): Promise<ProjectsResult> => {
     }
 
     if (!data || data.length === 0) {
-      logFallback('projects', 'No projects found');
+      logFallback(tableNames.projects, 'No projects found');
       return {
         data: generateDemoProjects(),
         isDemo: true
@@ -294,11 +348,11 @@ export const getProjects = async (): Promise<ProjectsResult> => {
     }
 
     return {
-      data: data as Project[],
+      data: data.map(transformProject),
       isDemo: false
     };
   } catch (error) {
-    logFallback('projects', error instanceof Error ? error.message : 'Unknown error');
+    logFallback(tableNames.projects, error instanceof Error ? error.message : 'Unknown error');
     return {
       data: generateDemoProjects(),
       isDemo: true,
@@ -310,13 +364,13 @@ export const getProjects = async (): Promise<ProjectsResult> => {
 export const getTasks = async (projectId: string): Promise<TasksResult> => {
   try {
     const { data, error } = await supabase
-      .from('project_tasks')
+      .from(tableNames.tasks)
       .select('*')
-      .eq('project_id', projectId)
-      .order('wbs', { ascending: true });
+      .eq(columns.tasks.project, projectId)
+      .order(columns.tasks.wbs || 'id', { ascending: true });
 
     if (error) {
-      logFallback('project_tasks', error.message);
+      logFallback(tableNames.tasks, error.message);
       return {
         data: generateDemoTasks(projectId),
         isDemo: true,
@@ -325,7 +379,7 @@ export const getTasks = async (projectId: string): Promise<TasksResult> => {
     }
 
     if (!data || data.length === 0) {
-      logFallback('project_tasks', 'No tasks found');
+      logFallback(tableNames.tasks, 'No tasks found');
       return {
         data: generateDemoTasks(projectId),
         isDemo: true
@@ -333,11 +387,11 @@ export const getTasks = async (projectId: string): Promise<TasksResult> => {
     }
 
     return {
-      data: data as Task[],
+      data: data.map(transformTask),
       isDemo: false
     };
   } catch (error) {
-    logFallback('project_tasks', error instanceof Error ? error.message : 'Unknown error');
+    logFallback(tableNames.tasks, error instanceof Error ? error.message : 'Unknown error');
     return {
       data: generateDemoTasks(projectId),
       isDemo: true,
@@ -395,6 +449,30 @@ export const getLinks = async (projectId: string): Promise<TaskLinksResult> => {
   }
 };
 
+// New function for partial task updates
+export const updateTaskPartial = async (projectId: string, taskId: string, patch: Partial<TaskUpdate>): Promise<boolean> => {
+  try {
+    // Remove id from patch as it's not updatable
+    const { id, ...updateData } = patch;
+    
+    const { error } = await supabase
+      .from(tableNames.tasks)
+      .update(updateData)
+      .eq(columns.tasks.id, taskId)
+      .eq(columns.tasks.project, projectId);
+
+    if (error) {
+      console.error('Failed to update task:', error.message);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error updating task:', error);
+    return false;
+  }
+};
+
 export const seedDemoTasks = async (projectId: string): Promise<boolean> => {
   // Only seed if we're in a development environment and have write access
   if (import.meta.env.DEV && import.meta.env.VITE_ALLOW_DEMO_SEED === 'true') {
@@ -404,7 +482,7 @@ export const seedDemoTasks = async (projectId: string): Promise<boolean> => {
 
       // Insert demo tasks
       const { error: tasksError } = await supabase
-        .from('project_tasks')
+        .from(tableNames.tasks)
         .insert(demoTasks);
 
       if (tasksError) {

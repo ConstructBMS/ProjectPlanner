@@ -1,3 +1,4 @@
+ 
 import {
   createContext,
   useContext,
@@ -8,21 +9,11 @@ import {
 } from 'react';
 import { useUndoRedoContext } from './UndoRedoContext';
 import {
-  updateAllSummaryTasks,
-  getVisibleTasks,
-  getHierarchicalTasks,
-  getTaskDescendants,
-  getTaskAncestors,
-  isTaskVisible,
-} from '../utils/rollupUtils';
-import {
   generateRecurringTasks,
   isRecurringTask,
   updateRecurringSeries,
 } from '../utils/recurringTaskUtils';
 import { useCalendarContext } from './CalendarContext';
-import { supabase } from '../../../supabase/client';
-import { getCachedTableExists } from '../utils/databaseSchema.js';
 import { usePlannerStore } from '../state/plannerStore';
 
 const TaskContext = createContext();
@@ -37,9 +28,6 @@ export const useTaskContext = () => {
 };
 
 export const TaskProvider = ({ children }) => {
-  // Get global calendar for rollup calculations
-  const { globalCalendar } = useCalendarContext();
-
   // Get data from planner store
   const { tasks: plannerTasks, links: plannerLinks, loading: plannerLoading, error: plannerError } = usePlannerStore();
 

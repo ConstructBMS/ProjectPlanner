@@ -1,8 +1,9 @@
 // Data types for ConstructBMS integration
+// All fields are optional except id and project_id to handle DB schema variations
 
 export interface Project {
   id: string;
-  name: string;
+  name?: string;
   code?: string;
   start_date?: string; // ISO date string
   end_date?: string; // ISO date string
@@ -22,7 +23,7 @@ export interface Project {
 export interface Task {
   id: string;
   project_id: string;
-  name: string;
+  name?: string;
   start_date?: string; // ISO date string
   end_date?: string; // ISO date string
   duration_days?: number;
@@ -44,21 +45,23 @@ export interface Task {
 export interface TaskLink {
   id: string;
   project_id: string;
-  pred_id: string; // Predecessor task ID
-  succ_id: string; // Successor task ID
-  type: 'finish-to-start' | 'start-to-start' | 'finish-to-finish' | 'start-to-finish';
+  pred_id?: string; // Predecessor task ID
+  succ_id?: string; // Successor task ID
+  type?: 'finish-to-start' | 'start-to-start' | 'finish-to-finish' | 'start-to-finish';
   lag_days?: number;
   created_at?: string;
 }
 
-// Demo data interfaces for fallback
+// Demo data interfaces for fallback (these have required fields for demo generation)
 export interface DemoProject extends Project {
+  name: string;
   code: string;
   start_date: string;
   end_date: string;
 }
 
 export interface DemoTask extends Task {
+  name: string;
   start_date: string;
   end_date: string;
   duration_days: number;
@@ -68,6 +71,8 @@ export interface DemoTask extends Task {
 }
 
 export interface DemoTaskLink extends TaskLink {
+  pred_id: string;
+  succ_id: string;
   type: 'finish-to-start';
   lag_days: number;
 }
@@ -82,3 +87,41 @@ export interface AdapterResult<T> {
 export interface ProjectsResult extends AdapterResult<Project> {}
 export interface TasksResult extends AdapterResult<Task> {}
 export interface TaskLinksResult extends AdapterResult<TaskLink> {}
+
+// Partial update types for optimistic updates
+export interface TaskUpdate {
+  id: string;
+  project_id?: string;
+  name?: string;
+  start_date?: string;
+  end_date?: string;
+  duration_days?: number;
+  progress?: number;
+  status?: string;
+  wbs?: string;
+  resource_id?: string;
+  description?: string;
+  priority?: string;
+  parent_task_id?: string;
+  assigned_to?: string;
+  estimated_hours?: number;
+  actual_hours?: number;
+  cost?: number;
+}
+
+export interface ProjectUpdate {
+  id: string;
+  name?: string;
+  code?: string;
+  start_date?: string;
+  end_date?: string;
+  description?: string;
+  status?: string;
+  progress?: number;
+  budget?: number;
+  actual_cost?: number;
+  manager_id?: string;
+  client_id?: string;
+  location?: string;
+  priority?: string;
+}

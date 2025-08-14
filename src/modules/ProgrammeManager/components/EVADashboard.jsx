@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-unused-vars
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Chart as ChartJS,

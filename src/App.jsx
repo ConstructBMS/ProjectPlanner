@@ -1,3 +1,4 @@
+ 
 import { Suspense, lazy, useState, useEffect } from 'react';
 import ErrorBoundary from './components/ErrorBoundary';
 import { ProjectsProvider } from './modules/ProgrammeManager/context/ProjectsContext';
@@ -25,7 +26,6 @@ const LoadingSpinner = () => (
 function App() {
   const [currentView, setCurrentView] = useState('project'); // Default to the Asta replica
   const [selectedProjectId, setSelectedProjectId] = useState(null);
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
 
   // Initialize database schema checks on app start (only once)
   useEffect(() => {
@@ -43,7 +43,6 @@ function App() {
   };
 
   const handleTemplateSelect = template => {
-    setSelectedTemplate(template);
     setCurrentView('project');
   };
 

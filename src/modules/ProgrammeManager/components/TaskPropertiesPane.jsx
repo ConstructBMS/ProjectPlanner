@@ -1,3 +1,4 @@
+ 
 import { useState, useEffect, useCallback } from 'react';
 import { getStorage, setStorage } from '../utils/persistentStorage.js';
 import { useTaskContext } from '../context/TaskContext';
@@ -29,10 +30,7 @@ import {
   CONSTRAINT_TYPES,
   getConstraintLabel,
   getConstraintDescription,
-  getConstraintStyling,
   validateConstraint,
-  checkConstraintConflicts,
-  getConstraintTooltip,
   getAvailableConstraintTypes,
 } from '../utils/constraintUtils';
 import RecurringTaskConfig from './RecurringTaskConfig';
@@ -56,11 +54,6 @@ const TaskPropertiesPane = () => {
   } = useTaskContext();
 
   const {
-    getCalendarForTask,
-    setTaskCalendar,
-    removeTaskCalendar,
-    hasTaskCalendar,
-    globalCalendar,
     projectCalendars,
     getProjectCalendarById,
   } = useCalendarContext();
@@ -694,9 +687,9 @@ const TaskPropertiesPane = () => {
                               const workingDays = Object.entries(
                                 selectedCalendar.workingDays
                               )
-                                .filter(([_, isWorking]) => isWorking)
+                                .filter(([, isWorking]) => isWorking)
                                 .map(
-                                  ([day, _]) =>
+                                  ([day]) =>
                                     day.charAt(0).toUpperCase() + day.slice(1)
                                 )
                                 .join(', ');
@@ -725,9 +718,9 @@ const TaskPropertiesPane = () => {
                             <div>
                               <span className='font-medium'>Working Days:</span>{' '}
                               {Object.entries(selectedCalendar.workingDays)
-                                .filter(([_, isWorking]) => isWorking)
+                                .filter(([, isWorking]) => isWorking)
                                 .map(
-                                  ([day, _]) =>
+                                  ([day]) =>
                                     day.charAt(0).toUpperCase() + day.slice(1)
                                 )
                                 .join(', ')}
@@ -1208,7 +1201,7 @@ const TaskPropertiesPane = () => {
                       </div>
                       <ul className='text-xs text-red-600 space-y-1'>
                         {constraintValidation.errors.map((error, index) => (
-                          <li key={index}>• {error}</li>
+                          <li key={`error-${index}`}>• {error}</li>
                         ))}
                       </ul>
                     </div>
@@ -1224,7 +1217,7 @@ const TaskPropertiesPane = () => {
                       </div>
                       <ul className='text-xs text-yellow-600 space-y-1'>
                         {constraintValidation.warnings.map((warning, index) => (
-                          <li key={index}>• {warning}</li>
+                          <li key={`warning-${index}`}>• {warning}</li>
                         ))}
                       </ul>
                     </div>

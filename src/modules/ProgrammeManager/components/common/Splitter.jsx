@@ -1,3 +1,4 @@
+ 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { getLayoutRatios, saveLayoutRatios } from '../../utils/prefs';
 import './Splitter.css';
