@@ -13,6 +13,7 @@ import SwatchRow from '../ui/SwatchRow';
 import ExportDialog from '../ui/ExportDialog';
 import MiniModal from '../ui/MiniModal';
 import LinkPicker from '../ui/LinkPicker';
+import LinkEditor from '../ui/LinkEditor';
 import PrintExportDialog from '../../../components/PrintExportDialog';
 import {
   exportProject,
@@ -95,6 +96,9 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
   
   // Progress state
   const [currentProgressPercent, setCurrentProgressPercent] = useState(100);
+  
+  // Link Editor state
+  const [showLinkEditor, setShowLinkEditor] = useState(false);
   
   // Appearance state
   const [lastUsedColor, setLastUsedColor] = useState('#3b82f6'); // Default blue
@@ -1711,9 +1715,9 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
         <RibbonButton
           icon={<LinkIconSolid className='w-4 h-4' />}
           label='Link'
-          onClick={handleLinkOpen}
-          tooltip='Link selected tasks (select exactly 2)'
-          disabled={!canLink}
+          onClick={() => setShowLinkEditor(true)}
+          tooltip='Create links between selected tasks'
+          disabled={selectedTaskIds.size < 2}
         />
         <RibbonButton
           icon={<LinkIcon className='w-4 h-4' />}
@@ -1957,6 +1961,13 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
         onClose={() => setShowPrintExportDialog(false)}
         onPrint={handlePrintLegacy}
         onExport={handleExportLegacy}
+      />
+
+      {/* Link Editor */}
+      <LinkEditor
+        isOpen={showLinkEditor}
+        onClose={() => setShowLinkEditor(false)}
+        mode="create"
       />
     </div>
   );

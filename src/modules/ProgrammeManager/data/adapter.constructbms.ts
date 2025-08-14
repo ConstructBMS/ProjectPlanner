@@ -558,31 +558,92 @@ export const updateTaskPartial = async (projectId: string, taskId: string, patch
 };
 
 // New function for batch task updates
-export const updateTasksBatch = async (projectId: string, patches: Array<{ taskId: string; patch: Partial<TaskUpdate> }>): Promise<boolean> => {
+export const updateTasksBatch = async (projectId: string, patches: Array<{taskId: string, patch: Partial<TaskUpdate>}>): Promise<boolean> => {
   try {
-    if (patches.length === 0) {
-      return true;
-    }
-
-    // For now, we'll use individual updates since Supabase doesn't support batch updates
-    // In a production environment, you might want to use a transaction or stored procedure
+    // For now, implement as individual updates
+    // TODO: Implement as actual batch update when Supabase supports it
     const results = await Promise.allSettled(
       patches.map(({ taskId, patch }) => updateTaskPartial(projectId, taskId, patch))
     );
+    
+    const successCount = results.filter(result => result.status === 'fulfilled' && result.value).length;
+    const totalCount = patches.length;
+    
+    console.log(`Batch update: ${successCount}/${totalCount} successful`);
+    return successCount === totalCount;
+  } catch (error) {
+    console.error('Error in batch update:', error);
+    return false;
+  }
+};
 
-    // Check if all updates succeeded
-    const allSucceeded = results.every(result => 
-      result.status === 'fulfilled' && result.value === true
-    );
+// Link management functions
+export const createLink = async (projectId: string, predecessorId: string, successorId: string, type: string, lagDays: number = 0): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('project_dependencies')
+      .insert({
+        project_id: projectId,
+        predecessor_task_id: predecessorId,
+        successor_task_id: successorId,
+        dependency_type: type,
+        lag_days: lagDays
+      });
 
-    if (!allSucceeded) {
-      console.error('Some batch updates failed:', results);
+    if (error) {
+      console.error('Error creating link:', error);
       return false;
     }
 
+    console.log('Link created successfully:', { predecessorId, successorId, type, lagDays });
     return true;
   } catch (error) {
-    console.error('Error in batch update:', error);
+    console.error('Error creating link:', error);
+    return false;
+  }
+};
+
+export const updateLink = async (projectId: string, linkId: string, type: string, lagDays: number): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('project_dependencies')
+      .update({
+        dependency_type: type,
+        lag_days: lagDays
+      })
+      .eq('id', linkId)
+      .eq('project_id', projectId);
+
+    if (error) {
+      console.error('Error updating link:', error);
+      return false;
+    }
+
+    console.log('Link updated successfully:', { linkId, type, lagDays });
+    return true;
+  } catch (error) {
+    console.error('Error updating link:', error);
+    return false;
+  }
+};
+
+export const deleteLink = async (projectId: string, linkId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('project_dependencies')
+      .delete()
+      .eq('id', linkId)
+      .eq('project_id', projectId);
+
+    if (error) {
+      console.error('Error deleting link:', error);
+      return false;
+    }
+
+    console.log('Link deleted successfully:', { linkId });
+    return true;
+  } catch (error) {
+    console.error('Error deleting link:', error);
     return false;
   }
 };

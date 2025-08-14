@@ -31,6 +31,7 @@ import ProjectInfoDialog from '../../Project/ProjectInfoDialog';
 import WorkingTimeDialog from '../../Project/WorkingTimeDialog';
 import MiniModal from '../ui/MiniModal';
 import LinkTypeMenu from '../ui/LinkTypeMenu';
+import LinkEditor from '../ui/LinkEditor';
 
 const ProjectTab = () => {
   const { setBaseline1, clearBaseline1, tasks } = useTaskContext();
@@ -66,6 +67,7 @@ const ProjectTab = () => {
   const [linkTypeMenuPosition, setLinkTypeMenuPosition] = useState({ x: 0, y: 0 });
   const [lagLeadDialogOpen, setLagLeadDialogOpen] = useState(false);
   const [lagLeadDays, setLagLeadDays] = useState(0);
+  const [showLinkEditor, setShowLinkEditor] = useState(false);
 
   // Load baselines from persistent storage on mount
   useEffect(() => {
@@ -325,8 +327,8 @@ const ProjectTab = () => {
           <RibbonButton
             icon={<LinkIcon className='w-4 h-4 text-gray-700' />}
             label='Link'
-            onClick={handleLinkTasks}
-            tooltip='Link selected tasks (default: FS 0d)'
+            onClick={() => setShowLinkEditor(true)}
+            tooltip='Create links between selected tasks'
             disabled={!hasEnoughSelectedTasks}
           />
           <div className="relative">
@@ -534,6 +536,13 @@ const ProjectTab = () => {
           onSelect={handleSelectLinkType}
           currentType={currentLinkType}
           position={linkTypeMenuPosition}
+        />
+
+        {/* Link Editor */}
+        <LinkEditor
+          isOpen={showLinkEditor}
+          onClose={() => setShowLinkEditor(false)}
+          mode="create"
         />
     </>
   );

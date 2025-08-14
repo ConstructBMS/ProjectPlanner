@@ -1540,12 +1540,15 @@ const GanttChart = () => {
       if (e.shiftKey || e.ctrlKey || e.metaKey) {
         // Add to existing selection
         intersectingTasks.forEach(task => {
-          addToSelection(task.id);
+          toggleSelection(task.id);
         });
       } else {
         // Replace selection
         if (intersectingTasks.length > 0) {
-          selectAll(intersectingTasks.map(task => task.id));
+          clearSelection();
+          intersectingTasks.forEach(task => {
+            selectOne(task.id);
+          });
         }
       }
 

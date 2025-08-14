@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getProjects, getTasks, getLinks, seedDemoTasks, updateTaskPartial, updateTasksBatch, getRealtimeChannel, unsubscribeRealtime } from '../data/adapter.constructbms';
+import { getProjects, getTasks, getLinks, seedDemoTasks, updateTaskPartial, updateTasksBatch, getRealtimeChannel, unsubscribeRealtime, createLink, updateLink, deleteLink } from '../data/adapter.constructbms';
 import { Project, Task, TaskLink, TaskUpdate } from '../data/types';
 import { networkManager, isOnline } from '../utils/net';
 import { safeGetColumn, tableNames, columns } from '../data/adapter.config';
@@ -97,6 +97,12 @@ interface PlannerState {
   selectAll: () => void;
   getSelectedTasks: () => Task[];
   getSelectedCount: () => number;
+  
+  // Link management
+  createTaskLink: (predecessorId: string, successorId: string, type: string, lagDays: number) => Promise<boolean>;
+  updateTaskLink: (linkId: string, type: string, lagDays: number) => Promise<boolean>;
+  deleteTaskLink: (linkId: string) => Promise<boolean>;
+  createChainLinks: (taskIds: string[], type: string, lagDays: number) => Promise<boolean>;
 }
 
 export const usePlannerStore = create<PlannerState>((set, get) => ({
@@ -619,6 +625,140 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
   },
   getSelectedCount: () => {
     return get().selectedTaskIds.size;
+  },
+
+  // Link management
+  createTaskLink: async (predecessorId: string, successorId: string, type: string, lagDays: number): Promise<boolean> => {
+    const state = get();
+    const currentProjectId = state.currentProjectId;
+    
+    if (!currentProjectId) {
+      console.error('No project selected for link creation');
+      return false;
+    }
+
+    try {
+      const success = await createLink(currentProjectId, predecessorId, successorId, type, lagDays);
+      
+      if (success) {
+        // Optimistic update - add the new link to the store
+        const newLink: TaskLink = {
+          id: `temp-${Date.now()}`, // Temporary ID until we get the real one from DB
+          project_id: currentProjectId,
+          pred_id: predecessorId,
+          succ_id: successorId,
+          type: type,
+          lag_days: lagDays,
+          created_at: new Date().toISOString()
+        };
+        
+        set((state) => ({
+          links: [...state.links, newLink]
+        }));
+        
+        // Trigger Gantt re-layout
+        get().triggerGanttRelayout();
+      }
+      
+      return success;
+    } catch (error) {
+      console.error('Error creating task link:', error);
+      return false;
+    }
+  },
+
+  updateTaskLink: async (linkId: string, type: string, lagDays: number): Promise<boolean> => {
+    const state = get();
+    const currentProjectId = state.currentProjectId;
+    
+    if (!currentProjectId) {
+      console.error('No project selected for link update');
+      return false;
+    }
+
+    try {
+      const success = await updateLink(currentProjectId, linkId, type, lagDays);
+      
+      if (success) {
+        // Optimistic update - update the link in the store
+        set((state) => ({
+          links: state.links.map(link => 
+            link.id === linkId 
+              ? { ...link, type, lag_days: lagDays }
+              : link
+          )
+        }));
+        
+        // Trigger Gantt re-layout
+        get().triggerGanttRelayout();
+      }
+      
+      return success;
+    } catch (error) {
+      console.error('Error updating task link:', error);
+      return false;
+    }
+  },
+
+  deleteTaskLink: async (linkId: string): Promise<boolean> => {
+    const state = get();
+    const currentProjectId = state.currentProjectId;
+    
+    if (!currentProjectId) {
+      console.error('No project selected for link deletion');
+      return false;
+    }
+
+    try {
+      const success = await deleteLink(currentProjectId, linkId);
+      
+      if (success) {
+        // Optimistic update - remove the link from the store
+        set((state) => ({
+          links: state.links.filter(link => link.id !== linkId)
+        }));
+        
+        // Trigger Gantt re-layout
+        get().triggerGanttRelayout();
+      }
+      
+      return success;
+    } catch (error) {
+      console.error('Error deleting task link:', error);
+      return false;
+    }
+  },
+
+  createChainLinks: async (taskIds: string[], type: string, lagDays: number): Promise<boolean> => {
+    if (taskIds.length < 2) {
+      console.error('Need at least 2 tasks to create chain links');
+      return false;
+    }
+
+    try {
+      const results = [];
+      
+      // Create links in chain order: A→B, B→C, C→D, etc.
+      for (let i = 0; i < taskIds.length - 1; i++) {
+        const predecessorId = taskIds[i];
+        const successorId = taskIds[i + 1];
+        const success = await get().createTaskLink(predecessorId, successorId, type, lagDays);
+        results.push(success);
+      }
+      
+      const allSuccess = results.every(result => result === true);
+      
+      if (allSuccess) {
+        console.log(`Created ${taskIds.length - 1} chain links successfully`);
+      } else {
+        console.error('Some chain links failed to create');
+      }
+      
+      return allSuccess;
+    } catch (error) {
+      console.error('Error creating chain links:', error);
+      return false;
+    }
   },
 
   // Legacy task actions (kept for backward compatibility)
