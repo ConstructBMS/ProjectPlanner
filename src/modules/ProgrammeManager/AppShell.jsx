@@ -158,7 +158,7 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
             orientation="vertical"
             defaultRatios={[0.2, 0.4, 0.4]}
             minSizes={[220, 420, 480]}
-            storageKey="pm.layout.main-panes"
+            storageKey="main-panes"
             onRatiosChange={handleMainPaneRatiosChange}
           >
             {/* SidebarTree - Left pane */}

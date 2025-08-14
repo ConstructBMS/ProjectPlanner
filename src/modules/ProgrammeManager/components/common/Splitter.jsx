@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { getStorage, setStorage } from '../../utils/persistentStorage.js';
+import { getLayoutRatios, saveLayoutRatios } from '../../utils/prefs';
 import './Splitter.css';
 
 const Splitter = ({
@@ -7,7 +7,7 @@ const Splitter = ({
   children,
   defaultRatios = [0.2, 0.4, 0.4],
   minSizes = [220, 420, 480],
-  storageKey = 'pm.layout.ratios',
+  storageKey = 'main-panes',
   onRatiosChange
 }) => {
   const [ratios, setRatios] = useState(defaultRatios);
@@ -17,13 +17,18 @@ const Splitter = ({
   const [startRatios, setStartRatios] = useState([]);
   const containerRef = useRef(null);
   const splitterRefs = useRef([]);
+  const animationFrameRef = useRef(null);
 
   // Load saved ratios from persistent storage
   useEffect(() => {
     const loadSavedRatios = async () => {
-      const savedRatios = await getStorage(storageKey);
-      if (savedRatios && Array.isArray(savedRatios) && savedRatios.length === defaultRatios.length) {
-        setRatios(savedRatios);
+      try {
+        const savedRatios = getLayoutRatios(storageKey);
+        if (savedRatios && Array.isArray(savedRatios) && savedRatios.length === defaultRatios.length) {
+          setRatios(savedRatios);
+        }
+      } catch (error) {
+        console.warn('Failed to load saved ratios:', error);
       }
     };
     loadSavedRatios();
@@ -31,7 +36,11 @@ const Splitter = ({
 
   // Save ratios to persistent storage
   const saveRatios = useCallback((newRatios) => {
-    setStorage(storageKey, newRatios);
+    try {
+      saveLayoutRatios(storageKey, newRatios);
+    } catch (error) {
+      console.warn('Failed to save ratios:', error);
+    }
   }, [storageKey]);
 
   // Reset to default ratios
@@ -41,9 +50,11 @@ const Splitter = ({
     onRatiosChange?.(defaultRatios);
   }, [defaultRatios, saveRatios, onRatiosChange]);
 
-  // Handle mouse down on splitter
-  const handleMouseDown = useCallback((index, e) => {
+  // Handle pointer down on splitter
+  const handlePointerDown = useCallback((index, e) => {
     e.preventDefault();
+    e.stopPropagation();
+    
     setIsDragging(true);
     setDragIndex(index);
     
@@ -51,60 +62,87 @@ const Splitter = ({
     setStartPos(pos);
     setStartRatios([...ratios]);
     
+    // Set body styles for smooth dragging
     document.body.style.cursor = orientation === 'vertical' ? 'col-resize' : 'row-resize';
     document.body.style.userSelect = 'none';
+    
+    // Add dragging class to container
+    if (containerRef.current) {
+      containerRef.current.classList.add('dragging');
+    }
   }, [orientation, ratios]);
 
-  // Handle mouse move during drag
-  const handleMouseMove = useCallback((e) => {
+  // Handle pointer move during drag with requestAnimationFrame
+  const handlePointerMove = useCallback((e) => {
     if (!isDragging || dragIndex === null) return;
 
-    const currentPos = orientation === 'vertical' ? e.clientX : e.clientY;
-    const delta = currentPos - startPos;
-    
-    if (containerRef.current) {
-      const containerSize = orientation === 'vertical' 
-        ? containerRef.current.offsetWidth 
-        : containerRef.current.offsetHeight;
-      
-      const deltaRatio = delta / containerSize;
-      
-      // Calculate new ratios
-      const newRatios = [...startRatios];
-      const leftRatio = newRatios[dragIndex];
-      const rightRatio = newRatios[dragIndex + 1];
-      
-      // Calculate minimum ratios based on min sizes
-      const minLeftRatio = minSizes[dragIndex] / containerSize;
-      const minRightRatio = minSizes[dragIndex + 1] / containerSize;
-      
-      // Apply constraints
-      const maxDelta = Math.min(
-        leftRatio - minLeftRatio,
-        rightRatio - minRightRatio
-      );
-      
-      const constrainedDelta = Math.max(
-        -maxDelta,
-        Math.min(deltaRatio, maxDelta)
-      );
-      
-      newRatios[dragIndex] = leftRatio - constrainedDelta;
-      newRatios[dragIndex + 1] = rightRatio + constrainedDelta;
-      
-      // Update ratios
-      setRatios(newRatios);
-      onRatiosChange?.(newRatios);
+    // Cancel any pending animation frame
+    if (animationFrameRef.current) {
+      window.cancelAnimationFrame(animationFrameRef.current);
     }
+
+    // Schedule the update for the next frame
+    animationFrameRef.current = window.requestAnimationFrame(() => {
+      const currentPos = orientation === 'vertical' ? e.clientX : e.clientY;
+      const delta = currentPos - startPos;
+      
+      if (containerRef.current) {
+        const containerSize = orientation === 'vertical' 
+          ? containerRef.current.offsetWidth 
+          : containerRef.current.offsetHeight;
+        
+        const deltaRatio = delta / containerSize;
+        
+        // Calculate new ratios
+        const newRatios = [...startRatios];
+        const leftRatio = newRatios[dragIndex];
+        const rightRatio = newRatios[dragIndex + 1];
+        
+        // Calculate minimum ratios based on min sizes
+        const minLeftRatio = minSizes[dragIndex] / containerSize;
+        const minRightRatio = minSizes[dragIndex + 1] / containerSize;
+        
+        // Apply constraints
+        const maxDelta = Math.min(
+          leftRatio - minLeftRatio,
+          rightRatio - minRightRatio
+        );
+        
+        const constrainedDelta = Math.max(
+          -maxDelta,
+          Math.min(deltaRatio, maxDelta)
+        );
+        
+        newRatios[dragIndex] = leftRatio - constrainedDelta;
+        newRatios[dragIndex + 1] = rightRatio + constrainedDelta;
+        
+        // Update ratios
+        setRatios(newRatios);
+        onRatiosChange?.(newRatios);
+      }
+    });
   }, [isDragging, dragIndex, startPos, startRatios, orientation, minSizes, onRatiosChange]);
 
-  // Handle mouse up to end drag
-  const handleMouseUp = useCallback(() => {
+  // Handle pointer up to end drag
+  const handlePointerUp = useCallback(() => {
     if (isDragging) {
       setIsDragging(false);
       setDragIndex(null);
+      
+      // Clean up body styles
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
+      
+      // Remove dragging class from container
+      if (containerRef.current) {
+        containerRef.current.classList.remove('dragging');
+      }
+      
+      // Cancel any pending animation frame
+      if (animationFrameRef.current) {
+        window.cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
       
       // Save current ratios
       saveRatios(ratios);
@@ -119,21 +157,24 @@ const Splitter = ({
   // Add/remove event listeners
   useEffect(() => {
     if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('pointermove', handlePointerMove, { passive: false });
+      window.addEventListener('pointerup', handlePointerUp, { passive: false });
       
       return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
+        window.removeEventListener('pointermove', handlePointerMove);
+        window.removeEventListener('pointerup', handlePointerUp);
       };
     }
-  }, [isDragging, handleMouseMove, handleMouseUp]);
+  }, [isDragging, handlePointerMove, handlePointerUp]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
+      if (animationFrameRef.current) {
+        window.cancelAnimationFrame(animationFrameRef.current);
+      }
     };
   }, []);
 
@@ -150,7 +191,8 @@ const Splitter = ({
             height: orientation === 'horizontal' ? size : '100%',
             minWidth: orientation === 'vertical' ? `${minSizes[index]}px` : 'auto',
             minHeight: orientation === 'horizontal' ? `${minSizes[index]}px` : 'auto',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            flexShrink: 0
           }}
         >
           {child}
@@ -168,15 +210,16 @@ const Splitter = ({
           key={`splitter-${i}`}
           ref={(el) => splitterRefs.current[i] = el}
           className={`splitter-gutter ${orientation} ${isDragging && dragIndex === i ? 'active' : ''}`}
-          onMouseDown={(e) => handleMouseDown(i, e)}
+          onPointerDown={(e) => handlePointerDown(i, e)}
           onDoubleClick={() => handleDoubleClick(i)}
           style={{
-            width: orientation === 'vertical' ? '8px' : '100%',
-            height: orientation === 'horizontal' ? '8px' : '100%',
+            width: orientation === 'vertical' ? (isDragging && dragIndex === i ? '12px' : '8px') : '100%',
+            height: orientation === 'horizontal' ? (isDragging && dragIndex === i ? '12px' : '8px') : '100%',
             cursor: orientation === 'vertical' ? 'col-resize' : 'row-resize',
             position: 'absolute',
-            [orientation === 'vertical' ? 'left' : 'top']: `calc(${(ratios.slice(0, i + 1).reduce((a, b) => a + b, 0) * 100).toFixed(2)}% - 4px)`,
-            zIndex: 10
+            [orientation === 'vertical' ? 'left' : 'top']: `calc(${(ratios.slice(0, i + 1).reduce((a, b) => a + b, 0) * 100).toFixed(2)}% - ${isDragging && dragIndex === i ? '6px' : '4px'})`,
+            zIndex: 1000,
+            pointerEvents: 'auto'
           }}
         >
           <div className="splitter-handle" />

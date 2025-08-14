@@ -56,15 +56,36 @@ export const savePreferences = async (prefs: Partial<UserPreferences>): Promise<
 
 // Get layout ratios for a specific route
 export const getLayoutRatios = (route: string): number[] | null => {
-  const prefs = loadPreferences();
-  return prefs.layoutRatios[route] || null;
+  try {
+    // Use localStorage directly for synchronous access
+    const stored = localStorage.getItem('pm.preferences');
+    if (stored) {
+      const prefs = JSON.parse(stored);
+      return prefs.layoutRatios?.[route] || null;
+    }
+    return null;
+  } catch (error) {
+    console.warn('Failed to get layout ratios:', error);
+    return null;
+  }
 };
 
 // Save layout ratios for a specific route
 export const saveLayoutRatios = (route: string, ratios: number[]): void => {
-  const prefs = loadPreferences();
-  prefs.layoutRatios[route] = ratios;
-  savePreferences(prefs);
+  try {
+    // Use localStorage directly for synchronous access
+    const stored = localStorage.getItem('pm.preferences');
+    let prefs = stored ? JSON.parse(stored) : { layoutRatios: {} };
+    
+    if (!prefs.layoutRatios) {
+      prefs.layoutRatios = {};
+    }
+    
+    prefs.layoutRatios[route] = ratios;
+    localStorage.setItem('pm.preferences', JSON.stringify(prefs));
+  } catch (error) {
+    console.warn('Failed to save layout ratios:', error);
+  }
 };
 
 // Reset layout ratios for a specific route
