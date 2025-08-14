@@ -58,3 +58,12 @@ jobs:
           git -c user.name='Mirror Bot' -c user.email='mirror-bot@users.noreply.github.com' \
             commit -m "Mirror ${GITHUB_SHA} (${GITHUB_REF_NAME})" || true
           git push -f origin main
+
+      - name: Upload source artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: constructbms-source-${{ github.sha }}
+          path: |
+            .
+          if-no-files-found: warn
+          retention-days: 7
