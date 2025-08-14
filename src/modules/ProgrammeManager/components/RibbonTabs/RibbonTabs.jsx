@@ -99,41 +99,13 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
         style: ribbonStyle
       });
     } catch (error) {
-      console.warn('Failed to save ribbon preferences:', error);
+      console.warn('Failed to save QAT position:', error);
     }
   };
 
-  // QAT action handlers
-  const handleUndo = () => {
-    console.info('Undo action triggered');
-  };
-
-  const handleRedo = () => {
-    console.info('Redo action triggered');
-  };
-
-  const handleSave = () => {
-    console.info('Save action triggered');
-  };
-
-  // Group dialog handlers
-  const openGroupDialog = (title, content) => {
-    setGroupDialog({ isOpen: true, title, content });
-  };
-
-  const closeGroupDialog = () => {
-    setGroupDialog({ isOpen: false, title: '', content: null });
-  };
-
-  // Minimise/restore ribbon handlers
   const toggleMinimise = useCallback(async () => {
     const newMinimised = !isMinimised;
     setIsMinimised(newMinimised);
-    
-    // Emit event for AppShell to adjust layout
-    window.dispatchEvent(new window.CustomEvent('RIBBON_MINIMISE_CHANGE', {
-      detail: { minimised: newMinimised }
-    }));
     
     try {
       await setRibbonPrefs({
@@ -141,8 +113,13 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
         qatPosition,
         style: ribbonStyle
       });
+      
+      // Emit event for AppShell to adjust layout
+      window.dispatchEvent(new window.CustomEvent('RIBBON_MINIMISE_CHANGE', {
+        detail: { minimised: newMinimised }
+      }));
     } catch (error) {
-      console.warn('Failed to save ribbon preferences:', error);
+      console.warn('Failed to save minimise state:', error);
     }
   }, [isMinimised, qatPosition, ribbonStyle]);
 
@@ -150,7 +127,6 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
     toggleMinimise();
   };
 
-  // Handle ribbon style change
   const handleStyleChange = async (newStyle) => {
     setRibbonStyle(newStyle);
     
@@ -161,11 +137,33 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
         style: newStyle
       });
     } catch (error) {
-      console.warn('Failed to save ribbon preferences:', error);
+      console.warn('Failed to save ribbon style:', error);
     }
   };
 
-  // Handle backstage open/close
+  const openGroupDialog = (title, content) => {
+    setGroupDialog({ isOpen: true, title, content });
+  };
+
+  const closeGroupDialog = () => {
+    setGroupDialog({ isOpen: false, title: '', content: null });
+  };
+
+  const handleUndo = () => {
+    // Implement undo functionality
+    console.log('Undo action');
+  };
+
+  const handleRedo = () => {
+    // Implement redo functionality
+    console.log('Redo action');
+  };
+
+  const handleSave = () => {
+    // Implement save functionality
+    console.log('Save action');
+  };
+
   const handleBackstageToggle = () => {
     setIsBackstageOpen(!isBackstageOpen);
   };
@@ -219,7 +217,7 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
           onClick={handleBackstageToggle}
           className={`project-ribbon-tab ribbon-tab ${isBackstageOpen ? 'active' : ''}`}
           tabIndex={0}
-          title="File"
+          title="File - Access file operations and settings"
         >
           File
         </button>
@@ -234,7 +232,7 @@ export default function RibbonTabs({ onExpandAll, onCollapseAll, contentRef }) {
             onDoubleClick={handleTabDoubleClick}
             className={`project-ribbon-tab ribbon-tab ${activeTab === tab ? 'active' : ''}`}
             tabIndex={0}
-            title={tab}
+            title={`${tab} - Switch to ${tab} tab`}
           >
             {tab}
           </button>

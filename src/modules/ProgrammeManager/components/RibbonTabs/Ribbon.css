@@ -20,6 +20,33 @@
   overflow-y: hidden;
 }
 
+/* Tab styling */
+.pm-ribbon__tabs .ribbon-tab {
+  background: transparent;
+  border: none;
+  color: var(--rbn-text-2);
+  font-size: var(--rbn-tab-size);
+  font-weight: var(--rbn-tab-weight);
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pm-ribbon__tabs .ribbon-tab:hover {
+  color: var(--rbn-text);
+  background: var(--rbn-hover);
+}
+
+.pm-ribbon__tabs .ribbon-tab.active {
+  color: var(--rbn-text);
+  border-bottom: 2px solid var(--rbn-accent);
+  background: var(--rbn-bg-elev);
+}
+
 /* Groups tray container */
 .pm-ribbon__tray {
   max-height: 160px;
@@ -66,13 +93,13 @@
   width: max-content;
 }
 
-/* Group styling */
+/* Group styling - consistent surface */
 .pm-ribbon .project-group {
   display: flex;
   flex-direction: column;
   min-width: 200px;
-  margin-right: 12px;
   padding: 10px;
+  gap: 8px;
   border: 1px solid var(--rbn-border);
   border-radius: 8px;
   background: var(--rbn-bg-elev);
@@ -103,9 +130,9 @@
 /* Group titles */
 .pm-ribbon .project-group-title {
   text-transform: uppercase;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  font-size: var(--rbn-group-title-size);
+  font-weight: var(--rbn-group-title-weight);
+  letter-spacing: var(--rbn-group-title-tracking);
   color: var(--rbn-text-muted);
   margin-top: 2px;
   margin-bottom: var(--rbn-gap);
@@ -124,8 +151,8 @@
   background: transparent;
   border: 1px solid transparent;
   color: var(--rbn-text);
-  font-size: 12px;
-  font-weight: 500;
+  font-size: var(--rbn-button-label-size);
+  font-weight: var(--rbn-button-label-weight);
   transition: all 0.15s ease;
   display: flex;
   align-items: center;
@@ -163,8 +190,8 @@
 
 .pm-ribbon .project-button.large .text-\[6px\],
 .pm-ribbon .project-button[data-size="large"] .text-\[6px\] {
-  font-size: 12px;
-  font-weight: 500;
+  font-size: var(--rbn-button-label-size);
+  font-weight: var(--rbn-button-label-weight);
   color: var(--rbn-text);
   text-align: center;
   text-transform: none;
@@ -198,8 +225,8 @@
 
 .pm-ribbon .project-button.standard .text-\[6px\],
 .pm-ribbon .project-button[data-size="standard"] .text-\[6px\] {
-  font-size: 12px;
-  font-weight: 500;
+  font-size: var(--rbn-button-label-size);
+  font-weight: var(--rbn-button-label-weight);
   color: var(--rbn-text);
   text-align: left;
   text-transform: none;
@@ -331,6 +358,9 @@
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pm-ribbon .progress-preset-button:hover {
@@ -401,6 +431,7 @@
   color: inherit;
 }
 
+/* Remove hardcoded colors - use CSS variables only */
 .pm-ribbon .text-gray-500,
 .pm-ribbon .text-gray-600,
 .pm-ribbon .text-gray-700 {
