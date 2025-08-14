@@ -26,8 +26,11 @@ const Splitter = ({
       try {
         const savedRatios = getLayoutRatios(storageKey);
         if (savedRatios && Array.isArray(savedRatios) && savedRatios.length === defaultRatios.length) {
+          console.log(`Loaded saved ratios for ${storageKey}:`, savedRatios);
           setRatios(savedRatios);
           onRatiosChange?.(savedRatios);
+        } else {
+          console.log(`No saved ratios found for ${storageKey}, using defaults:`, defaultRatios);
         }
       } catch (error) {
         console.warn('Failed to load saved ratios:', error);
@@ -40,6 +43,7 @@ const Splitter = ({
   const saveRatios = useCallback((newRatios) => {
     try {
       saveLayoutRatios(storageKey, newRatios);
+      console.log(`Saved ratios for ${storageKey}:`, newRatios);
     } catch (error) {
       console.warn('Failed to save ratios:', error);
     }

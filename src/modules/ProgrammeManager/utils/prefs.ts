@@ -95,6 +95,7 @@ export const saveLayoutRatios = (route: string, ratios: number[]): void => {
     // Validate ratios before saving
     if (Array.isArray(ratios) && ratios.length > 0) {
       const total = ratios.reduce((sum, ratio) => sum + ratio, 0);
+      
       // Normalize ratios to sum to 1.0
       const normalizedRatios = ratios.map(ratio => ratio / total);
       
@@ -102,6 +103,8 @@ export const saveLayoutRatios = (route: string, ratios: number[]): void => {
       localStorage.setItem('pm.preferences', JSON.stringify(prefs));
       
       console.log(`Saved layout ratios for ${route}:`, normalizedRatios);
+    } else {
+      console.warn(`Invalid ratios for ${route}:`, ratios);
     }
   } catch (error) {
     console.warn('Failed to save layout ratios:', error);

@@ -7,6 +7,8 @@
 }
 
 .splitter-gutter {
+  position: relative;
+  z-index: 2;
   background: transparent;
   transition: background-color 0.15s ease, width 0.15s ease, height 0.15s ease;
   display: flex;
@@ -15,35 +17,16 @@
   user-select: none;
   pointer-events: auto;
   touch-action: none;
-  position: relative;
-  z-index: 2;
 }
 
-/* Enlarge hit area with ::after pseudo-element */
+/* Enlarge hit area with ::after pseudo-element - 12px hit area */
 .splitter-gutter::after {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 12px;
-  height: 12px;
+  inset: -6px; /* 12px hit area */
   background: transparent;
   cursor: inherit;
   z-index: 1;
-}
-
-.splitter-gutter.vertical::after {
-  left: -6px;
-  right: -6px;
-  width: auto;
-}
-
-.splitter-gutter.horizontal::after {
-  top: -6px;
-  bottom: -6px;
-  height: auto;
 }
 
 .splitter-gutter:hover {
@@ -172,7 +155,7 @@
 }
 
 /* Prevent any content from overlaying gutters */
-.pm-pane {
+.pane {
   position: relative;
   z-index: 1;
 }
