@@ -119,7 +119,34 @@ const GanttChart = () => {
     
     setPxPerDay(newPxPerDay);
     setScrollLeft(newScrollLeft);
+    
+    // Emit zoom change event
+    const zoomEvent = new window.CustomEvent('GANTT_ZOOM_CHANGE', {
+      detail: { pixelsPerDay: newPxPerDay }
+    });
+    document.dispatchEvent(zoomEvent);
   }, [pxPerDay, minDate, maxDate, scrollLeft, containerSize.width]);
+
+  // Handle mouse move for cursor date
+  const handleMouseMove = useCallback((e) => {
+    const rect = chartAreaRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    
+    const cursorX = e.clientX - rect.left;
+    const currentDate = getDateAtPixel(cursorX, {
+      minDate,
+      maxDate,
+      pxPerDay,
+      viewportWidth: containerSize.width,
+      scrollLeft
+    });
+    
+    // Emit cursor move event
+    const cursorEvent = new window.CustomEvent('GANTT_CURSOR_MOVE', {
+      detail: { date: currentDate }
+    });
+    document.dispatchEvent(cursorEvent);
+  }, [minDate, maxDate, pxPerDay, containerSize.width, scrollLeft]);
 
   // Fit project function
   const fitProject = useCallback(() => {
@@ -137,6 +164,12 @@ const GanttChart = () => {
     setMaxDate(newMaxDate);
     setPxPerDay(newPxPerDay);
     setScrollLeft(0);
+    
+    // Emit zoom change event
+    const zoomEvent = new window.CustomEvent('GANTT_ZOOM_CHANGE', {
+      detail: { pixelsPerDay: newPxPerDay }
+    });
+    document.dispatchEvent(zoomEvent);
   }, [currentProjectId, tasks, containerSize.width]);
 
   // Fit selection function
@@ -156,6 +189,12 @@ const GanttChart = () => {
     setMaxDate(newMaxDate);
     setPxPerDay(newPxPerDay);
     setScrollLeft(0);
+    
+    // Emit zoom change event
+    const zoomEvent = new window.CustomEvent('GANTT_ZOOM_CHANGE', {
+      detail: { pixelsPerDay: newPxPerDay }
+    });
+    document.dispatchEvent(zoomEvent);
   }, [selectedTaskIds, tasks, containerSize.width]);
 
   // Expose fit functions globally
@@ -624,6 +663,7 @@ const GanttChart = () => {
           ref={chartAreaRef}
           onWheel={handleWheel}
           onScroll={handleScroll}
+          onMouseMove={handleMouseMove}
         >
           {/* Background Grid */}
           <div 

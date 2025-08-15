@@ -83,6 +83,9 @@ interface PlannerState {
   // View options state
   showCriticalPath: boolean;
   
+  // Data source state
+  dataSource: 'DB' | 'DEMO';
+  
   // Hydration pipeline state
   hydrationState: 'idle' | 'loadingProjects' | 'projectsLoaded' | 'hydrating' | 'ready' | 'error';
   hydrationError: string | null;
@@ -183,6 +186,9 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
   
   // View options state
   showCriticalPath: false,
+  
+  // Data source state
+  dataSource: 'DEMO' as const,
   
   // Hydration pipeline state
   hydrationState: 'idle',
@@ -758,6 +764,9 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
       // Initialize adapter mode and perform health check
       const mode = await initializeAdapterMode();
       console.log(`[PP][store] Adapter mode initialized: ${mode}`);
+      
+      // Set data source based on adapter mode
+      set({ dataSource: mode });
       
       await get().loadProjects();
       

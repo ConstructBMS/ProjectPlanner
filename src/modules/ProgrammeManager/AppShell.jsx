@@ -21,6 +21,7 @@ import ResourcesPane from './components/Resources/ResourcesPane';
 import ModelPanel from './components/FourD/ModelPanel';
 import Splitter from './components/common/Splitter';
 import PlannerDiagnostics from './components/Diagnostics/PlannerDiagnostics';
+import StatusBar from './components/StatusBar/StatusBar';
 import { getLayoutRatios, saveLayoutRatios, loadAllocationPreferences, setPaneVisible, setPaneWidth, loadFourDPreferences, setFourDPanelVisible, setFourDPanelWidth } from './utils/prefs';
 import { usePlannerStore } from './state/plannerStore';
 import './styles/projectplanner.css';
@@ -330,6 +331,9 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
           </svg>
         </button>
       )}
+
+      {/* Status Bar */}
+      <StatusBar />
 
       {/* Diagnostics Panel */}
       <PlannerDiagnostics
