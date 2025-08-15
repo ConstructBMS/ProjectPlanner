@@ -9,12 +9,25 @@ import {
   getTodayPosition,
   formatDate
 } from './ganttMath';
+import {
+  calculateFitProject,
+  calculateFitSelection,
+  getTodayDate,
+  isDateInRange,
+  getDateAtPixel,
+  calculateZoomAtCursor
+} from './timescale';
 import './GanttChart.css';
 
 const GanttChart = () => {
   const { tasks, links, selectedTaskIds, selectOne, toggleSelection, selectRange, lastSelectedTaskId, currentProjectId } = usePlannerStore();
   const containerRef = useRef(null);
+  const chartAreaRef = useRef(null);
   const [containerSize, setContainerSize] = useState({ width: 800, height: 600 });
+  const [scrollLeft, setScrollLeft] = useState(0);
+  const [pxPerDay, setPxPerDay] = useState(20);
+  const [minDate, setMinDate] = useState(new Date());
+  const [maxDate, setMaxDate] = useState(new Date());
 
   // Calculate timescale based on tasks and container size
   const scale = useMemo(() => {
@@ -69,36 +82,87 @@ const GanttChart = () => {
     }
   }, [selectOne, toggleSelection, selectRange, lastSelectedTaskId]);
 
+  // Handle wheel zoom
+  const handleWheel = useCallback((e) => {
+    if (!e.ctrlKey) return;
+    e.preventDefault();
+    
+    const rect = chartAreaRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    
+    const cursorX = e.clientX - rect.left;
+    const currentDate = getDateAtPixel(cursorX, {
+      minDate,
+      maxDate,
+      pxPerDay,
+      viewportWidth: containerSize.width,
+      scrollLeft
+    });
+    
+    // Calculate zoom factor
+    const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+    const newPxPerDay = Math.max(5, Math.min(100, pxPerDay * zoomFactor));
+    
+    // Calculate new scroll position to keep cursor date in same position
+    const { newScrollLeft } = calculateZoomAtCursor(
+      cursorX,
+      currentDate,
+      newPxPerDay,
+      { minDate, maxDate, pxPerDay, viewportWidth: containerSize.width, scrollLeft }
+    );
+    
+    setPxPerDay(newPxPerDay);
+    setScrollLeft(newScrollLeft);
+  }, [pxPerDay, minDate, maxDate, scrollLeft, containerSize.width]);
+
   // Fit project function
   const fitProject = useCallback(() => {
     if (!currentProjectId || tasks.length === 0) return;
     
     console.log('Fitting project to show all tasks:', currentProjectId);
     
-    // Auto-fit logic - adjust zoom to fit all tasks
-    const allBars = layoutBars(tasks, scale);
-    if (allBars.length > 0) {
-      // Find the earliest start and latest end
-      const minX = Math.min(...allBars.map(bar => bar.x));
-      const maxX = Math.max(...allBars.map(bar => bar.x + bar.width));
-      
-      // Calculate optimal zoom to fit all bars
-      const totalWidth = maxX - minX;
-      const availableWidth = containerSize.width - 100; // Leave some padding
-      
-      if (totalWidth > 0 && availableWidth > 0) {
-        // For now, we'll just log the fit calculation
-        // In a full implementation, this would adjust the scale
-        console.log('Fit calculation:', {
-          minX,
-          maxX,
-          totalWidth,
-          availableWidth,
-          tasksCount: tasks.length
-        });
-      }
-    }
-  }, [currentProjectId, tasks, scale, containerSize.width]);
+    const { minDate: newMinDate, maxDate: newMaxDate, pxPerDay: newPxPerDay } = calculateFitProject(
+      tasks,
+      containerSize.width,
+      30
+    );
+    
+    setMinDate(newMinDate);
+    setMaxDate(newMaxDate);
+    setPxPerDay(newPxPerDay);
+    setScrollLeft(0);
+  }, [currentProjectId, tasks, containerSize.width]);
+
+  // Fit selection function
+  const fitSelection = useCallback(() => {
+    if (selectedTaskIds.size === 0) return;
+    
+    console.log('Fitting selection to show selected tasks');
+    
+    const selectedTasks = tasks.filter(task => selectedTaskIds.has(task.id));
+    const { minDate: newMinDate, maxDate: newMaxDate, pxPerDay: newPxPerDay } = calculateFitSelection(
+      selectedTasks,
+      containerSize.width,
+      15
+    );
+    
+    setMinDate(newMinDate);
+    setMaxDate(newMaxDate);
+    setPxPerDay(newPxPerDay);
+    setScrollLeft(0);
+  }, [selectedTaskIds, tasks, containerSize.width]);
+
+  // Expose fit functions globally
+  useEffect(() => {
+    window.__PP_GANTT__ = {
+      fitProject,
+      fitSelection
+    };
+    
+    return () => {
+      delete window.__PP_GANTT__;
+    };
+  }, [fitProject, fitSelection]);
 
   // Listen for fit project events
   useEffect(() => {
@@ -131,6 +195,58 @@ const GanttChart = () => {
   useEffect(() => {
     handleResize();
   }, [handleResize]);
+
+  // Handle scroll events
+  const handleScroll = useCallback((e) => {
+    setScrollLeft(e.target.scrollLeft);
+  }, []);
+
+  // Render today line
+  const renderTodayLine = () => {
+    const today = getTodayDate();
+    const isTodayInRange = isDateInRange(today, {
+      minDate,
+      maxDate,
+      pxPerDay,
+      viewportWidth: containerSize.width,
+      scrollLeft
+    });
+    
+    if (!isTodayInRange) return null;
+    
+    const todayX = ((today.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24)) * pxPerDay - scrollLeft;
+    
+    return (
+      <div
+        className="gantt-today-line"
+        style={{
+          position: 'absolute',
+          left: todayX,
+          top: 0,
+          width: '1px',
+          height: '100%',
+          backgroundColor: 'var(--rbn-accent, #3b82f6)',
+          zIndex: 100,
+          pointerEvents: 'none'
+        }}
+      >
+        {/* Top marker */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: '-4px',
+            width: '8px',
+            height: '8px',
+            backgroundColor: 'var(--rbn-accent, #3b82f6)',
+            borderRadius: '50%',
+            border: '2px solid white',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+          }}
+        />
+      </div>
+    );
+  };
 
   // Generate timescale headers (2 rows: Month and Day)
   const renderTimescaleHeaders = () => {
@@ -337,25 +453,50 @@ const GanttChart = () => {
     ));
   };
 
-  // Render today line
-  const renderTodayLine = () => {
-    if (!todayPosition) return null;
-
+  // Render today line (using new timescale logic)
+  const renderTodayLineNew = () => {
+    const today = getTodayDate();
+    const isTodayInRange = isDateInRange(today, {
+      minDate,
+      maxDate,
+      pxPerDay,
+      viewportWidth: containerSize.width,
+      scrollLeft
+    });
+    
+    if (!isTodayInRange) return null;
+    
+    const todayX = ((today.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24)) * pxPerDay - scrollLeft;
+    
     return (
       <div
         className="gantt-today-line"
         style={{
-          left: todayPosition,
           position: 'absolute',
+          left: todayX,
           top: 0,
+          width: '1px',
           height: '100%',
-          backgroundColor: '#ef4444',
-          width: '2px',
-          opacity: 0.8,
-          zIndex: 5,
+          backgroundColor: 'var(--rbn-accent, #3b82f6)',
+          zIndex: 100,
           pointerEvents: 'none'
         }}
-      />
+      >
+        {/* Top marker */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: '-4px',
+            width: '8px',
+            height: '8px',
+            backgroundColor: 'var(--rbn-accent, #3b82f6)',
+            borderRadius: '50%',
+            border: '2px solid white',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+          }}
+        />
+      </div>
     );
   };
 
@@ -470,6 +611,9 @@ const GanttChart = () => {
             position: 'relative',
             overflow: 'auto'
           }}
+          ref={chartAreaRef}
+          onWheel={handleWheel}
+          onScroll={handleScroll}
         >
           {/* Background Grid */}
           <div 
@@ -485,7 +629,7 @@ const GanttChart = () => {
           >
             {renderWeekendShading()}
             {renderVerticalGridLines()}
-            {renderTodayLine()}
+            {renderTodayLineNew()}
           </div>
 
           {/* Links (behind bars) */}

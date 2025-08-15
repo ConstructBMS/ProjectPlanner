@@ -1374,11 +1374,12 @@ const StatusDatePicker = () => {
 };
 
 const ZoomToFitButton = () => {
-  const { zoomToFit } = useViewContext();
   const { tasks } = useTaskContext();
 
   const handleZoomToFit = () => {
-    zoomToFit();
+    if (window.__PP_GANTT__?.fitProject) {
+      window.__PP_GANTT__.fitProject();
+    }
   };
 
   const isDisabled = tasks.length === 0;
@@ -1386,11 +1387,36 @@ const ZoomToFitButton = () => {
   return (
     <RibbonButton
       icon={<ArrowsPointingOutIcon className='w-4 h-4' />}
-      label='Zoom to Fit'
+      label='Fit Project'
       onClick={handleZoomToFit}
       disabled={isDisabled}
       tooltip={
-        isDisabled ? 'No tasks to fit' : 'Zoom timeline to fit all tasks'
+        isDisabled ? 'No tasks to fit' : 'Fit timeline to show all project tasks'
+      }
+      className={isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
+    />
+  );
+};
+
+const FitSelectionButton = () => {
+  const { selectedTaskIds } = useTaskContext();
+
+  const handleFitSelection = () => {
+    if (window.__PP_GANTT__?.fitSelection) {
+      window.__PP_GANTT__.fitSelection();
+    }
+  };
+
+  const isDisabled = selectedTaskIds.size === 0;
+
+  return (
+    <RibbonButton
+      icon={<MagnifyingGlassPlusIcon className='w-4 h-4' />}
+      label='Fit Selection'
+      onClick={handleFitSelection}
+      disabled={isDisabled}
+      tooltip={
+        isDisabled ? 'No selection to fit' : 'Fit timeline to show selected tasks'
       }
       className={isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
     />
@@ -1751,6 +1777,7 @@ const ViewTab = ({ contentRef }) => {
         <RibbonGroup title='Zoom'>
           <ZoomGroup />
           <ZoomToFitButton />
+          <FitSelectionButton />
           <TodayButton />
         </RibbonGroup>
 
