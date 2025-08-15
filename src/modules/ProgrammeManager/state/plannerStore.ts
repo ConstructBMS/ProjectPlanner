@@ -51,6 +51,11 @@ interface PlannerState {
   selectedTaskIds: Set<string>;
   lastSelectedTaskId: string | null;
   
+  // Loading and error state
+  loading: boolean;
+  lastError: string | null;
+  hasInitialized: boolean;
+  
   // Mutation state
   pendingMutations: Map<string, any>;
   mutationTimeouts: Map<string, NodeJS.Timeout>;
@@ -106,6 +111,7 @@ interface PlannerState {
   
   // Selection management
   selectOne: (taskId: string) => void;
+  setSelectedTaskId: (taskId: string) => void; // Alias for selectOne
   toggleSelection: (taskId: string) => void;
   selectRange: (startId: string, endId: string) => void;
   clearSelection: () => void;
@@ -139,6 +145,11 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
   // UI state
   selectedTaskIds: new Set(),
   lastSelectedTaskId: null,
+  
+  // Loading and error state
+  loading: false,
+  lastError: null,
+  hasInitialized: false,
   
   // Mutation state
   pendingMutations: new Map(),
@@ -530,6 +541,9 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
   selectOne: (taskId: string) => {
     set({ selectedTaskIds: new Set([taskId]), lastSelectedTaskId: taskId });
   },
+  setSelectedTaskId: (taskId: string) => {
+    set({ selectedTaskIds: new Set([taskId]), lastSelectedTaskId: taskId });
+  },
   toggleSelection: (taskId: string) => {
     const newSelected = new Set(get().selectedTaskIds);
     if (newSelected.has(taskId)) {
@@ -705,6 +719,19 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
       console.error('Error creating chain links:', error);
       return false;
     }
+  },
+
+  // Loading and error management
+  setLoading: (loading: boolean) => {
+    set({ loading });
+  },
+
+  setError: (error: string | null) => {
+    set({ lastError: error });
+  },
+
+  clearError: () => {
+    set({ lastError: null });
   },
 
   // Hydration pipeline

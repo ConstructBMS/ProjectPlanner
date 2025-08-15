@@ -8,6 +8,7 @@ export default defineConfig({
     open: false,
     hmr: {
       overlay: false, // Disable error overlay for better performance
+      timeout: 30000
     },
   },
   build: {
