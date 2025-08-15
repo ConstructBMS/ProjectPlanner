@@ -1,5 +1,78 @@
 /* ProjectPlanner Ribbon - Clean Baseline */
 
+@layer pp-ribbon {
+  .pm-ribbon__tray { 
+    max-height: 160px; 
+    overflow-x: auto; 
+    overflow-y: hidden; 
+    padding: 8px 10px; 
+    background: var(--rbn-bg); 
+  }
+  
+  .rbn-group { 
+    background: var(--rbn-bg-elev); 
+    border: 1px solid var(--rbn-border); 
+    border-radius: 8px; 
+    padding: 10px; 
+    gap: 8px; 
+    display: flex; 
+    align-items: center; 
+    min-width: 200px; 
+  }
+  
+  .rbn-btn { 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 8px; 
+    padding: 8px 10px; 
+    border-radius: 6px; 
+    line-height: 1.2; 
+  }
+  
+  .rbn-label { 
+    font-size: 12px; 
+    font-weight: 500; 
+    color: var(--rbn-text); 
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+  }
+  
+  .rbn-icon-lg { 
+    width: 28px; 
+    height: 28px; 
+  }
+  
+  .rbn-icon-md { 
+    width: 20px; 
+    height: 20px; 
+  }
+  
+  .pm-ribbon__tabs { 
+    min-height: 40px; 
+    align-items: center; 
+    border-bottom: 1px solid var(--rbn-border); 
+  }
+  
+  .pm-ribbon__tabs .tab { 
+    padding: 8px 10px; 
+    color: var(--rbn-text-2); 
+    border-bottom: 2px solid transparent; 
+  }
+  
+  .pm-ribbon__tabs .tab[aria-selected="true"] { 
+    color: var(--rbn-text); 
+    border-color: var(--rbn-accent); 
+  }
+  
+  /* kill accidental dimming */
+  .pm-ribbon-wrap { 
+    opacity: 1 !important; 
+    filter: none !important; 
+  }
+}
+@layer pp-ribbon;
+
 /* Ribbon wrapper container */
 .pm-ribbon-wrap {
   position: sticky;
