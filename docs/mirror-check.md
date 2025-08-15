@@ -1,3 +1,3 @@
 # Mirror Check
 
-This file exists to trigger the Mirror workflow and verify the public mirror updates correctly.
+This doc triggers the Mirror workflow to verify the public mirror is updating.
