@@ -500,3 +500,93 @@ export const getAllGanttZoomPrefs = async (): Promise<ProjectPrefs> => {
     return { gantt: {} };
   }
 };
+
+/**
+ * Preferences utility for persisting user preferences
+ */
+
+const PREFIX = 'pm.';
+
+export interface Prefs {
+  // Tree expand state per project
+  treeExpanded: Record<string, Set<string>>;
+  
+  // Other preferences can be added here
+  [key: string]: any;
+}
+
+/**
+ * Get a preference value
+ */
+export function getPref<T>(key: string, defaultValue: T): T {
+  try {
+    const fullKey = `${PREFIX}${key}`;
+    const stored = localStorage.getItem(fullKey);
+    if (stored === null) return defaultValue;
+    return JSON.parse(stored);
+  } catch (error) {
+    console.warn('Failed to get preference:', key, error);
+    return defaultValue;
+  }
+}
+
+/**
+ * Set a preference value
+ */
+export function setPref<T>(key: string, value: T): void {
+  try {
+    const fullKey = `${PREFIX}${key}`;
+    localStorage.setItem(fullKey, JSON.stringify(value));
+  } catch (error) {
+    console.warn('Failed to set preference:', key, error);
+  }
+}
+
+/**
+ * Get tree expanded state for a project
+ */
+export function getTreeExpanded(projectId: string): Set<string> {
+  const expanded = getPref<Record<string, string[]>>('tree.expanded', {});
+  const projectExpanded = expanded[projectId] || [];
+  return new Set(projectExpanded);
+}
+
+/**
+ * Set tree expanded state for a project
+ */
+export function setTreeExpanded(projectId: string, expandedIds: Set<string>): void {
+  const expanded = getPref<Record<string, string[]>>('tree.expanded', {});
+  expanded[projectId] = Array.from(expandedIds);
+  setPref('tree.expanded', expanded);
+}
+
+/**
+ * Add a node to expanded state
+ */
+export function expandTreeNode(projectId: string, nodeId: string): void {
+  const expanded = getTreeExpanded(projectId);
+  expanded.add(nodeId);
+  setTreeExpanded(projectId, expanded);
+}
+
+/**
+ * Remove a node from expanded state
+ */
+export function collapseTreeNode(projectId: string, nodeId: string): void {
+  const expanded = getTreeExpanded(projectId);
+  expanded.delete(nodeId);
+  setTreeExpanded(projectId, expanded);
+}
+
+/**
+ * Toggle a node's expanded state
+ */
+export function toggleTreeNode(projectId: string, nodeId: string): void {
+  const expanded = getTreeExpanded(projectId);
+  if (expanded.has(nodeId)) {
+    expanded.delete(nodeId);
+  } else {
+    expanded.add(nodeId);
+  }
+  setTreeExpanded(projectId, expanded);
+}

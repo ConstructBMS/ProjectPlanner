@@ -1,134 +1,60 @@
 import { Task } from '../../data/types';
 
-export interface TreeNode {
-  id: string;
-  name: string;
-  task: Task;
-  children: TreeNode[];
-  level: number;
-  isExpanded?: boolean;
-}
+export type TreeNode = { id: string; name: string; children: TreeNode[] };
 
-/**
- * Builds a hierarchical tree structure from tasks
- * Uses WBS (Work Breakdown Structure) codes or parent_id relationships
- */
-export const buildTree = (tasks: Task[]): TreeNode[] => {
-  if (!tasks || tasks.length === 0) {
-    return [];
-  }
-
-  // Create a map of all tasks by ID for quick lookup
-  const taskMap = new Map<string, Task>();
-  tasks.forEach(task => {
-    taskMap.set(task.id, task);
-  });
-
-  // First, try to build tree using WBS codes
-  const wbsTree = buildTreeFromWBS(tasks);
-  if (wbsTree.length > 0) {
-    return wbsTree;
-  }
-
-  // Fallback to parent_id relationships
-  return buildTreeFromParentId(tasks, taskMap);
-};
-
-/**
- * Builds tree structure using WBS (Work Breakdown Structure) codes
- * WBS codes like "1", "1.1", "1.1.1" indicate hierarchy
- */
-const buildTreeFromWBS = (tasks: Task[]): TreeNode[] => {
-  const wbsTasks = tasks.filter(task => task.wbs && task.wbs.trim() !== '');
+export function buildTree(tasks: Array<any>): TreeNode[] {
+  if (!tasks?.length) return [];
   
-  if (wbsTasks.length === 0) {
-    return [];
+  // Prefer explicit parent_id
+  const byId = new Map<string, TreeNode>();
+  tasks.forEach(t => byId.set(String(t.id), { id: String(t.id), name: t.name || 'Untitled', children: [] }));
+
+  let usedParent = false;
+  tasks.forEach(t => {
+    const pid = t.parent_id ? String(t.parent_id) : null;
+    if (pid && byId.has(pid)) {
+      byId.get(pid)!.children.push(byId.get(String(t.id))!);
+      usedParent = true;
+    }
+  });
+  
+  if (usedParent) {
+    // roots are those never attached as children
+    const childIds = new Set<string>();
+    tasks.forEach(t => { if (t.parent_id) childIds.add(String(t.id)); });
+    return tasks.filter(t => !t.parent_id).map(t => byId.get(String(t.id))!);
   }
 
-  // Sort tasks by WBS code for proper hierarchy
-  wbsTasks.sort((a, b) => {
-    const wbsA = a.wbs || '';
-    const wbsB = b.wbs || '';
-    return wbsA.localeCompare(wbsB, undefined, { numeric: true });
-  });
-
-  const rootNodes: TreeNode[] = [];
-  const nodeMap = new Map<string, TreeNode>();
-
-  wbsTasks.forEach(task => {
-    const wbs = task.wbs || '';
-    const wbsParts = wbs.split('.');
-    
-    const node: TreeNode = {
-      id: task.id,
-      name: task.name || `Task ${task.id}`,
-      task,
-      children: [],
-      level: wbsParts.length - 1,
-      isExpanded: true
-    };
-
-    nodeMap.set(task.id, node);
-
-    if (wbsParts.length === 1) {
-      // Root level task
-      rootNodes.push(node);
-    } else {
-      // Find parent by WBS prefix
-      const parentWbs = wbsParts.slice(0, -1).join('.');
-      const parentTask = wbsTasks.find(t => t.wbs === parentWbs);
-      
-      if (parentTask && nodeMap.has(parentTask.id)) {
-        const parentNode = nodeMap.get(parentTask.id)!;
-        parentNode.children.push(node);
-      } else {
-        // If parent not found, treat as root
-        rootNodes.push(node);
-      }
-    }
-  });
-
-  return rootNodes;
-};
-
-/**
- * Builds tree structure using parent_id relationships
- */
-const buildTreeFromParentId = (tasks: Task[], taskMap: Map<string, Task>): TreeNode[] => {
-  const rootNodes: TreeNode[] = [];
-  const nodeMap = new Map<string, TreeNode>();
-
-  // First pass: create all nodes
-  tasks.forEach(task => {
-    const node: TreeNode = {
-      id: task.id,
-      name: task.name || `Task ${task.id}`,
-      task,
-      children: [],
-      level: 0,
-      isExpanded: true
-    };
-    nodeMap.set(task.id, node);
-  });
-
-  // Second pass: establish parent-child relationships
-  tasks.forEach(task => {
-    const node = nodeMap.get(task.id)!;
-    
-    if (task.parent_task_id && taskMap.has(task.parent_task_id)) {
-      const parentNode = nodeMap.get(task.parent_task_id)!;
-      parentNode.children.push(node);
-      
-      // Update level based on parent
-      node.level = parentNode.level + 1;
-    } else {
-      // No parent or parent not found, treat as root
-      rootNodes.push(node);
-    }
-  });
-
-  return rootNodes;
-};
+  // Fallback: infer from WBS like "1.2.3"
+  const root: Record<string, TreeNode> = {};
+  tasks
+    .sort((a,b)=>String(a.wbs||'').localeCompare(String(b.wbs||''), undefined, { numeric:true }))
+    .forEach(t => {
+      const w = String(t.wbs || t.id);
+      const parts = w.split('.');
+      let cursor: TreeNode | undefined;
+      let keyPath = '';
+      parts.forEach((p, idx) => {
+        keyPath = idx ? `${keyPath}.${p}` : p;
+        const existing =
+          idx === 0 ? root[keyPath] :
+          cursor!.children.find(c => c.name === keyPath);
+        if (!existing) {
+          const node: TreeNode = { 
+            id: idx === parts.length-1 ? String(t.id) : `${keyPath}__grp`, 
+            name: idx===parts.length-1 ? (t.name||w) : keyPath, 
+            children: [] 
+          };
+          if (idx === 0) root[keyPath] = node;
+          else cursor!.children.push(node);
+          cursor = node;
+        } else {
+          cursor = existing;
+        }
+      });
+    });
+  return Object.values(root);
+}
 
 /**
  * Flattens a tree structure for virtualization
