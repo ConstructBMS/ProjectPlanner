@@ -373,3 +373,26 @@
     background: #000;
   }
 }
+
+/* Critical Path Styling */
+.bar--critical {
+  border: 2px solid #ef4444 !important;
+  box-shadow: 0 0 0 2px #ef4444, 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  z-index: 3 !important;
+}
+
+.bar--critical:hover {
+  box-shadow: 0 0 0 3px #ef4444, 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Dark theme critical path */
+@media (prefers-color-scheme: dark) {
+  .bar--critical {
+    border-color: #f87171 !important;
+    box-shadow: 0 0 0 2px #f87171, 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+  }
+  
+  .bar--critical:hover {
+    box-shadow: 0 0 0 3px #f87171, 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+  }
+}

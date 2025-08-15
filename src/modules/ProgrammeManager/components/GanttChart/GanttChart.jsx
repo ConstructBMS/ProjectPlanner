@@ -17,10 +17,11 @@ import {
   getDateAtPixel,
   calculateZoomAtCursor
 } from './timescale';
+import { calculateCPM } from './cpm';
 import './GanttChart.css';
 
 const GanttChart = () => {
-  const { tasks, links, selectedTaskIds, selectOne, toggleSelection, selectRange, lastSelectedTaskId, currentProjectId } = usePlannerStore();
+  const { tasks, links, selectedTaskIds, selectOne, toggleSelection, selectRange, lastSelectedTaskId, currentProjectId, showCriticalPath } = usePlannerStore();
   const containerRef = useRef(null);
   const chartAreaRef = useRef(null);
   const [containerSize, setContainerSize] = useState({ width: 800, height: 600 });
@@ -53,6 +54,11 @@ const GanttChart = () => {
   const todayPosition = useMemo(() => {
     return getTodayPosition(scale);
   }, [scale]);
+
+  // Calculate CPM (Critical Path Method)
+  const cpmData = useMemo(() => {
+    return calculateCPM(tasks, links);
+  }, [tasks, links]);
 
   // Handle container resize
   const handleResize = useCallback(() => {
@@ -332,7 +338,7 @@ const GanttChart = () => {
     return headers;
   };
 
-  // Render task bars with selection styling
+  // Render task bars with selection and critical path styling
   const renderTaskBars = () => {
     return tasks.map((task, index) => {
       const bar = bars.find(b => b.taskId === task.id);
@@ -340,11 +346,13 @@ const GanttChart = () => {
 
       const y = index * scale.rowHeight;
       const isSelected = selectedTaskIds.has(task.id);
+      const isCritical = cpmData.criticalPath.includes(task.id);
+      const showCritical = showCriticalPath && isCritical;
       
       return (
         <div
           key={task.id}
-          className={`gantt-task-bar ${isSelected ? 'selected' : ''}`}
+          className={`gantt-task-bar ${isSelected ? 'selected' : ''} ${showCritical ? 'bar--critical' : ''}`}
           style={{
             left: bar.x,
             top: y + 5, // 5px padding from top of row
@@ -353,13 +361,15 @@ const GanttChart = () => {
             position: 'absolute',
             backgroundColor: isSelected ? '#3b82f6' : '#6b7280',
             borderRadius: '4px',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+            boxShadow: showCritical 
+              ? '0 0 0 2px #ef4444, 0 1px 3px rgba(0, 0, 0, 0.1)' 
+              : '0 1px 3px rgba(0, 0, 0, 0.1)',
             cursor: 'pointer',
             transition: 'all 0.2s ease',
-            zIndex: 2,
+            zIndex: showCritical ? 3 : 2,
             minWidth: '4px'
           }}
-          title={`${task.name} (${formatDate(bar.start)} - ${formatDate(bar.end)})`}
+          title={`${task.name} (${formatDate(bar.start)} - ${formatDate(bar.end)})${isCritical ? ' - Critical Path' : ''}`}
           onClick={(e) => handleTaskClick(e, task.id)}
         >
           {bar.width > 60 && (

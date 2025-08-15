@@ -80,6 +80,9 @@ interface PlannerState {
     finish: boolean;
   };
   
+  // View options state
+  showCriticalPath: boolean;
+  
   // Hydration pipeline state
   hydrationState: 'idle' | 'loadingProjects' | 'projectsLoaded' | 'hydrating' | 'ready' | 'error';
   hydrationError: string | null;
@@ -131,6 +134,9 @@ interface PlannerState {
   selectProject: (id: string) => Promise<void>;
   hydrate: (projectId: string) => Promise<void>;
   
+  // View options actions
+  toggleCriticalPath: () => void;
+  
   // Legacy task actions (kept for backward compatibility)
   renameTask: (taskId: string, newName: string) => void;
 }
@@ -174,6 +180,9 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
     start: false,
     finish: false
   },
+  
+  // View options state
+  showCriticalPath: false,
   
   // Hydration pipeline state
   hydrationState: 'idle',
@@ -930,6 +939,12 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
       });
       throw error;
     }
+  },
+
+  // View options actions
+  toggleCriticalPath: () => {
+    const state = get();
+    set({ showCriticalPath: !state.showCriticalPath });
   },
 
   // Legacy task actions (kept for backward compatibility)

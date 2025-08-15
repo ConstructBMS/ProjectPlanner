@@ -5,6 +5,7 @@ import { useViewContext } from '../../../context/ViewContext';
 import { useTaskContext } from '../../../context/TaskContext';
 import { useFilterContext } from '../../../context/FilterContext';
 import { useLayoutContext } from '../../../context/LayoutContext';
+import { usePlannerStore } from '../../../state/plannerStore';
 import { getSavedFilters, saveFilter, deleteFilter, getLastFilterId } from '../../../utils/prefs';
 import PrintExportDialog from '../../PrintExportDialog';
 import ResourceHistogram from '../../ResourceHistogram';
@@ -906,7 +907,7 @@ const ShowGridlinesToggle = () => {
 };
 
 const ShowCriticalPathToggle = () => {
-  const { viewState, toggleCriticalPath } = useViewContext();
+  const { showCriticalPath, toggleCriticalPath } = usePlannerStore();
 
   const handleToggle = () => {
     toggleCriticalPath();
@@ -917,7 +918,7 @@ const ShowCriticalPathToggle = () => {
       <label className='flex items-center space-x-2 cursor-pointer'>
         <input
           type='checkbox'
-          checked={viewState.showCriticalPath}
+          checked={showCriticalPath}
           onChange={handleToggle}
           className='w-3 h-3 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2'
         />
