@@ -1,252 +1,151 @@
-// Calendar utilities for working time shading
-
-export interface Holiday {
-  date: string; // YYYY-MM-DD format
-  name: string;
-  type: 'public' | 'company' | 'custom';
-}
-
-export interface ProjectCalendar {
-  workingDays: {
-    monday: boolean;
-    tuesday: boolean;
-    wednesday: boolean;
-    thursday: boolean;
-    friday: boolean;
-    saturday: boolean;
-    sunday: boolean;
-  };
-  workingHours: {
-    monday: number;
-    tuesday: number;
-    wednesday: number;
-    thursday: number;
-    friday: number;
-    saturday: number;
-    sunday: number;
-  };
-  holidays: Array<{
-    date: string;
-    label: string;
-  }>;
-}
-
-// Default working days: Monday to Friday
-const DEFAULT_WORKING_DAYS = [1, 2, 3, 4, 5]; // Monday = 1, Sunday = 0
-
-// Sample holidays (can be extended with real data)
-const SAMPLE_HOLIDAYS: Holiday[] = [
-  { date: '2024-01-01', name: 'New Year\'s Day', type: 'public' },
-  { date: '2024-12-25', name: 'Christmas Day', type: 'public' },
-  { date: '2024-12-26', name: 'Boxing Day', type: 'public' },
-  // Add more holidays as needed
-];
-
-// Project calendar cache
-const projectCalendars = new Map<string, ProjectCalendar>();
-
-// Default calendar
-const DEFAULT_CALENDAR: ProjectCalendar = {
-  workingDays: {
-    monday: true,
-    tuesday: true,
-    wednesday: true,
-    thursday: true,
-    friday: true,
-    saturday: false,
-    sunday: false,
-  },
-  workingHours: {
-    monday: 8,
-    tuesday: 8,
-    wednesday: 8,
-    thursday: 8,
-    friday: 8,
-    saturday: 0,
-    sunday: 0,
-  },
-  holidays: [],
-};
+// Holiday set - can be hydrated from DB later
+const HOLIDAYS = new Set<string>();
 
 /**
- * Check if a given date is a working day
- * @param date - Date to check
- * @returns true if the date is a working day (Monday-Friday and not a holiday)
+ * Check if a date is a working day (Monday-Friday, excluding holidays)
  */
-export function isWorkingDay(date: Date): boolean {
-  const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
-  
-  // Check if it's a weekend
-  if (!DEFAULT_WORKING_DAYS.includes(dayOfWeek)) {
-    return false;
-  }
-  
-  // Check if it's a holiday
-  const dateString = date.toISOString().split('T')[0]; // YYYY-MM-DD format
-  const isHoliday = SAMPLE_HOLIDAYS.some(holiday => holiday.date === dateString);
-  
-  return !isHoliday;
+export function isWorkingDay(d: Date): boolean {
+  const dow = d.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+  if (dow === 0 || dow === 6) return false; // Weekend
+  return !HOLIDAYS.has(d.toISOString().slice(0, 10)); // Not a holiday
 }
 
 /**
- * Get all holidays for a given date range
- * @param startDate - Start of date range
- * @param endDate - End of date range
- * @returns Array of holidays in the range
+ * Add working days to a start date, skipping weekends and holidays
  */
-export function getHolidays(startDate?: Date, endDate?: Date): Holiday[] {
-  if (!startDate || !endDate) {
-    return SAMPLE_HOLIDAYS;
+export function addWorkingDays(start: Date, days: number): Date {
+  const dir = Math.sign(days) || 1;
+  let remain = Math.abs(days);
+  let cur = new Date(start);
+  
+  while (remain > 0) {
+    cur.setDate(cur.getDate() + dir);
+    if (isWorkingDay(cur)) remain--;
   }
   
-  return SAMPLE_HOLIDAYS.filter(holiday => {
-    const holidayDate = new Date(holiday.date);
-    return holidayDate >= startDate && holidayDate <= endDate;
-  });
+  return cur;
+}
+
+/**
+ * Calculate the number of working days between two dates (exclusive of start)
+ */
+export function diffWorkingDays(a: Date, b: Date): number {
+  let cur = new Date(Math.min(a.getTime(), b.getTime()));
+  const end = new Date(Math.max(a.getTime(), b.getTime()));
+  let n = 0;
+  
+  while (cur <= end) {
+    if (isWorkingDay(cur)) n++;
+    cur.setDate(cur.getDate() + 1);
+  }
+  
+  return n - 1; // Exclusive of start
 }
 
 /**
  * Get the next working day from a given date
- * @param date - Starting date
- * @returns Next working day
  */
 export function getNextWorkingDay(date: Date): Date {
-  const nextDay = new Date(date);
-  nextDay.setDate(nextDay.getDate() + 1);
+  let next = new Date(date);
+  next.setDate(next.getDate() + 1);
   
-  while (!isWorkingDay(nextDay)) {
-    nextDay.setDate(nextDay.getDate() + 1);
+  while (!isWorkingDay(next)) {
+    next.setDate(next.getDate() + 1);
   }
   
-  return nextDay;
+  return next;
 }
 
 /**
  * Get the previous working day from a given date
- * @param date - Starting date
- * @returns Previous working day
  */
 export function getPreviousWorkingDay(date: Date): Date {
-  const prevDay = new Date(date);
-  prevDay.setDate(prevDay.getDate() - 1);
+  let prev = new Date(date);
+  prev.setDate(prev.getDate() - 1);
   
-  while (!isWorkingDay(prevDay)) {
-    prevDay.setDate(prevDay.getDate() - 1);
+  while (!isWorkingDay(prev)) {
+    prev.setDate(prev.getDate() - 1);
   }
   
-  return prevDay;
+  return prev;
 }
 
 /**
- * Calculate working days between two dates (inclusive)
- * @param startDate - Start date
- * @param endDate - End date
- * @returns Number of working days
+ * Add holidays to the holiday set
  */
-export function getWorkingDaysBetween(startDate: Date, endDate: Date): number {
-  let workingDays = 0;
-  const currentDate = new Date(startDate);
+export function addHoliday(date: Date | string): void {
+  const dateStr = typeof date === 'string' ? date : date.toISOString().slice(0, 10);
+  HOLIDAYS.add(dateStr);
+}
+
+/**
+ * Remove holidays from the holiday set
+ */
+export function removeHoliday(date: Date | string): void {
+  const dateStr = typeof date === 'string' ? date : date.toISOString().slice(0, 10);
+  HOLIDAYS.delete(dateStr);
+}
+
+/**
+ * Get all holidays
+ */
+export function getHolidays(): Set<string> {
+  return new Set(HOLIDAYS);
+}
+
+/**
+ * Set holidays from a list of date strings
+ */
+export function setHolidays(holidays: string[]): void {
+  HOLIDAYS.clear();
+  holidays.forEach(holiday => HOLIDAYS.add(holiday));
+}
+
+/**
+ * Clear all holidays
+ */
+export function clearHolidays(): void {
+  HOLIDAYS.clear();
+}
+
+/**
+ * Check if a date is a holiday
+ */
+export function isHoliday(date: Date | string): boolean {
+  const dateStr = typeof date === 'string' ? date : date.toISOString().slice(0, 10);
+  return HOLIDAYS.has(dateStr);
+}
+
+/**
+ * Get working days in a date range
+ */
+export function getWorkingDaysInRange(start: Date, end: Date): Date[] {
+  const workingDays: Date[] = [];
+  let current = new Date(start);
   
-  while (currentDate <= endDate) {
-    if (isWorkingDay(currentDate)) {
-      workingDays++;
+  while (current <= end) {
+    if (isWorkingDay(current)) {
+      workingDays.push(new Date(current));
     }
-    currentDate.setDate(currentDate.getDate() + 1);
+    current.setDate(current.getDate() + 1);
   }
   
   return workingDays;
 }
 
 /**
- * Set project calendar
- * @param projectId - Project ID
- * @param calendar - Calendar configuration
+ * Get non-working days in a date range
  */
-export function setProjectCalendar(projectId: string, calendar: ProjectCalendar): void {
-  projectCalendars.set(projectId, calendar);
+export function getNonWorkingDaysInRange(start: Date, end: Date): Date[] {
+  const nonWorkingDays: Date[] = [];
+  let current = new Date(start);
   
-  // Emit event for Gantt chart updates
-  window.dispatchEvent(new CustomEvent('PROJECT_CALENDAR_UPDATED', {
-    detail: { projectId, calendar }
-  }));
-}
-
-/**
- * Get project calendar
- * @param projectId - Project ID
- * @returns Project calendar or default calendar
- */
-export function getProjectCalendar(projectId: string): ProjectCalendar {
-  return projectCalendars.get(projectId) || DEFAULT_CALENDAR;
-}
-
-/**
- * Check if a given date is a working day for a specific project
- * @param date - Date to check
- * @param projectId - Project ID
- * @returns true if the date is a working day
- */
-export function isProjectWorkingDay(date: Date, projectId: string): boolean {
-  const calendar = getProjectCalendar(projectId);
-  const dayOfWeek = date.getDay();
-  const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-  const dayName = dayNames[dayOfWeek];
-  
-  // Check if it's a working day
-  if (!calendar.workingDays[dayName]) {
-    return false;
+  while (current <= end) {
+    if (!isWorkingDay(current)) {
+      nonWorkingDays.push(new Date(current));
+    }
+    current.setDate(current.getDate() + 1);
   }
   
-  // Check if it's a holiday
-  const dateString = date.toISOString().split('T')[0];
-  const isHoliday = calendar.holidays.some(holiday => holiday.date === dateString);
-  
-  return !isHoliday;
-}
-
-/**
- * Get working hours for a specific day and project
- * @param date - Date to check
- * @param projectId - Project ID
- * @returns Working hours for the day
- */
-export function getProjectWorkingHours(date: Date, projectId: string): number {
-  const calendar = getProjectCalendar(projectId);
-  const dayOfWeek = date.getDay();
-  const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-  const dayName = dayNames[dayOfWeek];
-  
-  return calendar.workingHours[dayName] || 0;
-}
-
-/**
- * Get holidays for a specific project
- * @param projectId - Project ID
- * @param startDate - Start of date range (optional)
- * @param endDate - End of date range (optional)
- * @returns Array of holidays
- */
-export function getProjectHolidays(projectId: string, startDate?: Date, endDate?: Date): Array<{date: string, label: string}> {
-  const calendar = getProjectCalendar(projectId);
-  
-  if (!startDate || !endDate) {
-    return calendar.holidays;
-  }
-  
-  return calendar.holidays.filter(holiday => {
-    const holidayDate = new Date(holiday.date);
-    return holidayDate >= startDate && holidayDate <= endDate;
-  });
-}
-
-/**
- * Initialize calendar system and listen for updates
- */
-export function initializeCalendarSystem(): void {
-  // Listen for calendar updates from the Working Time dialog
-  window.addEventListener('PROJECT_CALENDAR_UPDATED', (event) => {
-    const { projectId, calendar } = event.detail;
-    setProjectCalendar(projectId, calendar);
-    console.log('Calendar updated for project:', projectId, calendar);
-  });
+  return nonWorkingDays;
 }

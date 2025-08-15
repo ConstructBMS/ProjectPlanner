@@ -1,4 +1,5 @@
 import { Task, TaskLink } from '../../data/types';
+import { addWorkingDays, diffWorkingDays } from './calendar';
 
 export interface DateRange {
   start: Date;
@@ -31,7 +32,7 @@ export interface GanttScale {
   rowHeight: number;
 }
 
-// Convert task to date range with robust fallbacks
+// Convert task to date range with robust fallbacks and working day calculations
 export const toDateRange = (task: Task): DateRange | null => {
   if (!task.start_date) {
     return null;
@@ -43,18 +44,16 @@ export const toDateRange = (task: Task): DateRange | null => {
   if (task.end_date) {
     end = new Date(task.end_date);
   } else if (task.duration_days && task.duration_days > 0) {
-    end = new Date(start);
-    end.setDate(start.getDate() + task.duration_days);
+    // Use working days calculation for duration-only tasks
+    end = addWorkingDays(start, task.duration_days);
   } else {
-    // Default to 1 day if no duration specified
-    end = new Date(start);
-    end.setDate(start.getDate() + 1);
+    // Default to 1 working day if no duration specified
+    end = addWorkingDays(start, 1);
   }
 
   // Ensure end date is after start date
   if (end <= start) {
-    end = new Date(start);
-    end.setDate(start.getDate() + 1);
+    end = addWorkingDays(start, 1);
   }
 
   return { start, end };
@@ -72,8 +71,8 @@ export const layoutBars = (tasks: Task[], scale: GanttScale): BarPosition[] => {
     const daysFromStart = Math.floor((dateRange.start.getTime() - scale.startDate.getTime()) / (1000 * 60 * 60 * 24));
     const x = Math.max(daysFromStart * scale.pixelsPerDay, 0);
 
-    // Calculate width based on duration
-    const durationDays = Math.ceil((dateRange.end.getTime() - dateRange.start.getTime()) / (1000 * 60 * 60 * 24));
+    // Calculate width based on working days duration
+    const durationDays = diffWorkingDays(dateRange.start, dateRange.end);
     const width = Math.max(durationDays * scale.pixelsPerDay, 4); // Minimum 4px width
 
     bars.push({
