@@ -5,6 +5,7 @@ import useTaskManager from '../../../hooks/useTaskManager';
 import { useTaskContext } from '../../../context/TaskContext';
 import { useViewContext } from '../../../context/ViewContext';
 import { useUndoRedoContext } from '../../../context/UndoRedoContext';
+import { usePlannerStore } from '../../../state/plannerStore';
 import RibbonButton from '../ui/RibbonButton';
 import RibbonGroup from '../shared/RibbonGroup';
 import RibbonDropdown from '../shared/RibbonDropdown';
@@ -20,6 +21,7 @@ import {
   printProject,
 } from '../../../../../utils/printExportUtils';
 import Icon from '../ui/Icon';
+import { exportPNG, exportPDF } from '../../../Export/export';
 
 
 
@@ -128,6 +130,10 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
   // Get expand milestones function and tasks from task context
   const { expandMilestones, getVisibleTasks, tasks, taskLinks } =
     useTaskContext();
+
+  // Get current project from planner store
+  const { currentProjectId, projects } = usePlannerStore();
+  const currentProject = projects.find(p => p.id === currentProjectId);
 
 
 
@@ -962,12 +968,38 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     setShowExportMenu(false);
   }, []);
 
-  const handleExportOption = useCallback((option) => {
+  const handleExportOption = useCallback(async (option) => {
     setShowExportMenu(false);
-    setExportDialogMode('export');
-    setShowExportDialog(true);
-    console.info(`Export option selected: ${option}`);
-  }, []);
+    
+    // Check if there are tasks to export
+    if (!tasks || tasks.length === 0) {
+      console.warn('[PP][export] No tasks available for export');
+      return;
+    }
+    
+    try {
+      const projectName = currentProject?.name || 'Project';
+      const timestamp = new Date().toISOString().slice(0, 10);
+      const fileName = `${projectName}_${timestamp}`;
+      
+      switch (option) {
+        case 'PNG (Timeline Only)':
+          await exportPNG('.gantt-chart', fileName);
+          break;
+        case 'PDF (Timeline + Grid)':
+          await exportPDF('.gantt-chart', fileName);
+          break;
+        default:
+          // For other export options, use the existing dialog
+          setExportDialogMode('export');
+          setShowExportDialog(true);
+          console.info(`Export option selected: ${option}`);
+      }
+    } catch (error) {
+      console.error('[PP][export] Export failed:', error);
+      // Could add a toast notification here
+    }
+  }, [tasks, currentProject]);
 
   const handleExportDialogClose = useCallback(() => {
     setShowExportDialog(false);
@@ -977,32 +1009,32 @@ export default function HomeTab({ onExpandAll, onCollapseAll }) {
     {
       id: 'png',
       label: 'PNG (Timeline Only)',
-      disabled: false,
+      disabled: !hasDataToExport,
       action: () => handleExportOption('PNG (Timeline Only)'),
       icon: <Icon name="documentArrowDown" size="md" />
     },
     {
       id: 'pdf',
       label: 'PDF (Timeline + Grid)',
-      disabled: false,
+      disabled: !hasDataToExport,
       action: () => handleExportOption('PDF (Timeline + Grid)'),
       icon: <Icon name="documentArrowDown" size="md" />
     },
     {
       id: 'csv',
       label: 'CSV (Grid)',
-      disabled: false,
+      disabled: !hasDataToExport,
       action: () => handleExportOption('CSV (Grid)'),
       icon: <Icon name="documentArrowDown" size="md" />
     },
     {
       id: 'asta',
       label: 'Asta XML',
-      disabled: false,
+      disabled: !hasDataToExport,
       action: () => handleExportOption('Asta XML'),
       icon: <Icon name="documentArrowDown" size="md" />
     }
-  ], [handleExportOption]);
+  ], [handleExportOption, hasDataToExport]);
 
   // Check if there's data to export
   const hasDataToExport = tasks && tasks.length > 0;
