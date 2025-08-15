@@ -11,12 +11,7 @@ jobs:
         uses: actions/checkout@v4
         with: { fetch-depth: 0 }
 
-      - name: Guard against secret leakage
-        run: |
-          chmod +x tools/mirror/secret-guard.sh || true
-          ./tools/mirror/secret-guard.sh || true
-
-      - name: Setup SSH for mirror
+      - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.MIRROR_SSH_KEY }}" > ~/.ssh/id_rsa
@@ -58,12 +53,3 @@ jobs:
           git -c user.name='Mirror Bot' -c user.email='mirror-bot@users.noreply.github.com' \
             commit -m "Mirror ${GITHUB_SHA} (${GITHUB_REF_NAME})" || true
           git push -f origin main
-
-      - name: Upload source artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: constructbms-source-${{ github.sha }}
-          path: |
-            .
-          if-no-files-found: warn
-          retention-days: 7
