@@ -22,6 +22,7 @@ import ModelPanel from './components/FourD/ModelPanel';
 import Splitter from './components/common/Splitter';
 import PlannerDiagnostics from './components/Diagnostics/PlannerDiagnostics';
 import StatusBar from './components/StatusBar/StatusBar';
+import ErrorBoundary from './components/common/ErrorBoundary';
 import { getLayoutRatios, saveLayoutRatios, loadAllocationPreferences, setPaneVisible, setPaneWidth, loadFourDPreferences, setFourDPanelVisible, setFourDPanelWidth } from './utils/prefs';
 import { usePlannerStore } from './state/plannerStore';
 import './styles/projectplanner.css';
@@ -267,17 +268,23 @@ function AppShellContent({ projectId, onBackToPortfolio }) {
             >
               {/* ProgrammeTree - Left pane */}
               <div className='pane pane-tree'>
-                <ProgrammeTree />
+                <ErrorBoundary name="Tree">
+                  <ProgrammeTree />
+                </ErrorBoundary>
               </div>
 
               {/* TaskGrid - Middle pane */}
               <div className='pane pane-grid'>
-                <TaskGrid />
+                <ErrorBoundary name="Grid">
+                  <TaskGrid />
+                </ErrorBoundary>
               </div>
 
               {/* GanttChart - Right pane */}
               <div className='pane pane-gantt'>
-                <GanttChart />
+                <ErrorBoundary name="Gantt">
+                  <GanttChart />
+                </ErrorBoundary>
               </div>
             </Splitter>
           </div>
