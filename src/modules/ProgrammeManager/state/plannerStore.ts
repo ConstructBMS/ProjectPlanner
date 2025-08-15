@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getProjects, getTasks, getLinks, seedDemoTasks, updateTaskPartial, updateTasksBatch, getRealtimeChannel, unsubscribeRealtime, createLink, updateLink, deleteLink } from '../data/adapter.constructbms';
+import { getProjects, getTasks, getLinks, seedDemoTasks, updateTaskPartial, updateTasksBatch, getRealtimeChannel, unsubscribeRealtime, createLink, updateLink, deleteLink, healthCheck, initializeAdapterMode } from '../data/adapter.constructbms';
 import { Project, Task, TaskLink, TaskUpdate } from '../data/types';
 import { networkManager, isOnline } from '../utils/net';
 import { safeGetColumn, tableNames, columns } from '../data/adapter.config';
@@ -754,6 +754,10 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
     try {
       console.log('Starting hydration pipeline...');
       set({ hydrationState: 'loadingProjects', hydrationError: null });
+      
+      // Initialize adapter mode and perform health check
+      const mode = await initializeAdapterMode();
+      console.log(`[PP][store] Adapter mode initialized: ${mode}`);
       
       await get().loadProjects();
       

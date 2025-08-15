@@ -14,6 +14,12 @@ import {
 import { tables, safeGetColumn, tableNames, columns } from './adapter.config';
 import { generateDemoTasks, generateDemoLinks, markProjectSeeded } from './demo';
 
+// Adapter mode detection
+export type AdapterMode = 'DB' | 'DEMO';
+
+let adapterMode: AdapterMode = 'DB';
+let modeInitialized = false;
+
 // Realtime subscription management
 let currentSubscription = null;
 
@@ -52,11 +58,14 @@ export interface HealthCheckResult {
   message: string;
 }
 
-// Health check function
+// Health check function - lightweight select with count
 export const healthCheck = async (): Promise<HealthCheckResult[]> => {
   const results: HealthCheckResult[] = [];
   
-  for (const [key, tableName] of Object.entries(tables)) {
+  // Check each table with lightweight count query
+  const tablesToCheck = [tableNames.projects, tableNames.tasks, tableNames.links];
+  
+  for (const tableName of tablesToCheck) {
     try {
       const { data, error, count } = await supabase
         .from(tableName)
@@ -89,6 +98,57 @@ export const healthCheck = async (): Promise<HealthCheckResult[]> => {
   }
   
   return results;
+};
+
+// Check if database is healthy and has data
+export const isDatabaseHealthy = async (): Promise<boolean> => {
+  try {
+    const results = await healthCheck();
+    
+    // Check if all tables are accessible and have some data
+    const hasData = results.some(result => result.ok && result.count > 0);
+    const allAccessible = results.every(result => result.ok);
+    
+    return allAccessible && hasData;
+  } catch (error) {
+    console.warn('[PP][adapter] Health check failed:', error);
+    return false;
+  }
+};
+
+// Initialize adapter mode based on URL flag and database health
+export const initializeAdapterMode = async (): Promise<AdapterMode> => {
+  if (modeInitialized) {
+    return adapterMode;
+  }
+
+  // Check URL for demo flag
+  const urlParams = new URLSearchParams(window.location.search);
+  const forceDemo = urlParams.get('ppDemo') === '1';
+  
+  if (forceDemo) {
+    adapterMode = 'DEMO';
+    console.log('[PP][adapter] mode: DEMO (forced via ?ppDemo=1)');
+  } else {
+    // Check database health
+    const dbHealthy = await isDatabaseHealthy();
+    
+    if (dbHealthy) {
+      adapterMode = 'DB';
+      console.log('[PP][adapter] mode: DB (database healthy with data)');
+    } else {
+      adapterMode = 'DEMO';
+      console.log('[PP][adapter] mode: DEMO (database unavailable or empty)');
+    }
+  }
+  
+  modeInitialized = true;
+  return adapterMode;
+};
+
+// Get current adapter mode
+export const getAdapterMode = (): AdapterMode => {
+  return adapterMode;
 };
 
 // Get last error
@@ -486,6 +546,14 @@ const transformTaskLink = (rawData: any): TaskLink => ({
 
 // Main adapter functions
 export const getProjects = async (): Promise<Project[]> => {
+  // Initialize adapter mode if not already done
+  await initializeAdapterMode();
+  
+  if (adapterMode === 'DEMO') {
+    console.log('[PP][adapter] Using demo projects');
+    return generateDemoProjects();
+  }
+
   const { data, error } = await safeSupabaseQuery(
     tableNames.projects,
     'select',
@@ -496,7 +564,7 @@ export const getProjects = async (): Promise<Project[]> => {
   );
 
   if (error || !data || data.length === 0) {
-    console.warn(`[PP][adapter] ${tableNames.projects}: No data available, using demo projects`);
+    console.warn(`[PP][adapter] ${tableNames.projects}: No data available, falling back to demo projects`);
     return generateDemoProjects();
   }
 
@@ -504,6 +572,14 @@ export const getProjects = async (): Promise<Project[]> => {
 };
 
 export const getTasks = async (projectId: string): Promise<Task[]> => {
+  // Initialize adapter mode if not already done
+  await initializeAdapterMode();
+  
+  if (adapterMode === 'DEMO') {
+    console.log('[PP][adapter] Using demo tasks');
+    return generateDemoTasks(projectId);
+  }
+
   const { data, error } = await safeSupabaseQuery(
     tableNames.tasks,
     'select',
@@ -515,7 +591,7 @@ export const getTasks = async (projectId: string): Promise<Task[]> => {
   );
 
   if (error || !data || data.length === 0) {
-    console.warn(`[PP][adapter] ${tableNames.tasks}: No data available for project ${projectId}, using demo tasks`);
+    console.warn(`[PP][adapter] ${tableNames.tasks}: No data available for project ${projectId}, falling back to demo tasks`);
     return generateDemoTasks(projectId);
   }
 
@@ -523,6 +599,14 @@ export const getTasks = async (projectId: string): Promise<Task[]> => {
 };
 
 export const getLinks = async (projectId: string): Promise<TaskLink[]> => {
+  // Initialize adapter mode if not already done
+  await initializeAdapterMode();
+  
+  if (adapterMode === 'DEMO') {
+    console.log('[PP][adapter] Using demo links');
+    return generateDemoLinks(projectId, []);
+  }
+
   const { data, error } = await safeSupabaseQuery(
     'project_dependencies',
     'select',
@@ -533,7 +617,7 @@ export const getLinks = async (projectId: string): Promise<TaskLink[]> => {
   );
 
   if (error || !data || data.length === 0) {
-    console.warn(`[PP][adapter] project_dependencies: No data available for project ${projectId}, using demo links`);
+    console.warn(`[PP][adapter] project_dependencies: No data available for project ${projectId}, falling back to demo links`);
     return generateDemoLinks(projectId, []);
   }
 
