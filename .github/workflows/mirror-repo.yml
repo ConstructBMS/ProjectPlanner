@@ -2,14 +2,27 @@ name: Mirror Entire Repo
 
 on:
   push: {}
+  workflow_dispatch: {}   # <-- allows manual run from the Actions tab
 
 jobs:
   mirror:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with: { fetch-depth: 0 }
+
+      - name: Validate required secrets are present
+        env:
+          MIRROR_REPO_SSH: ${{ secrets.MIRROR_REPO_SSH }}
+          MIRROR_SSH_KEY:  ${{ secrets.MIRROR_SSH_KEY }}
+        run: |
+          if [ -z "${MIRROR_REPO_SSH}" ]; then
+            echo "::error::Missing secret MIRROR_REPO_SSH"; exit 1; fi
+          if [ -z "${MIRROR_SSH_KEY}" ]; then
+            echo "::error::Missing secret MIRROR_SSH_KEY"; exit 1; fi
+          echo "✅ Secrets detected"
 
       - name: Setup SSH
         run: |
@@ -53,3 +66,11 @@ jobs:
           git -c user.name='Mirror Bot' -c user.email='mirror-bot@users.noreply.github.com' \
             commit -m "Mirror ${GITHUB_SHA} (${GITHUB_REF_NAME})" || true
           git push -f origin main
+
+      - name: Upload source artifact (optional)
+        uses: actions/upload-artifact@v4
+        with:
+          name: constructbms-source-${{ github.sha }}
+          path: .
+          if-no-files-found: warn
+          retention-days: 7
